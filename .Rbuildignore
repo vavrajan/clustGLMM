@@ -1,0 +1,4 @@
+clusGLMM.Rproj
+^.*\.Rproj$
+^\.Rproj\.user$
+vignettes

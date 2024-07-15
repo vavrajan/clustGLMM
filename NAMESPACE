@@ -1,0 +1,58 @@
+useDynLib(clusGLMM, .registration=TRUE, .fixes = "C_")
+
+export("as_coda",
+       "clusGLMM", 
+       "default_param",
+       "default_save",
+       "default_tuning",
+       "default_varying",
+       "FindAllData", 
+       "FromCtoList", 
+       "FromCtoMatrix", 
+       "FromListtoC",
+       "FromListtoCoda",
+       "FromListtoMatrix", 
+       "FromMatrixtoC", 
+       "FromMatrixtoCoda",
+       "FromMatrixtoList",
+       "generate_longitudinal_mixed_type_data",
+       "nice_nrow_ncol", 
+       "PermuteClusterSpec", 
+       "plot_ACF", 
+       "plot_ACF_param",
+       "plot_all",
+       "plot_cat_vs_x_grouped", 
+       "plot_clusters", 
+       "plot_clusters_ECDF_param",
+       "plot_clusters_kerneldensity_param",
+       "plot_ECDF", 
+       "plot_ECDF_param", 
+       "plot_kerneldensity", 
+       "plot_kerneldensity_param",
+       "plot_num_vs_x_grouped", 
+       "plot_traceplots", 
+       "plot_traceplots_param", 
+       "pUig_dev", 
+       "RestrictionToModeGplus")
+
+S3method(summary, clusglmm)
+S3method(print, clusglmm)
+S3method(plot, clusglmm)
+S3method(print, summary.clusglmm)
+
+importFrom("coda", "as.mcmc.list", "mcmc")
+importFrom("colorspace", "diverge_hcl", "rainbow_hcl")
+importFrom("gaussquad", "hermite.he.quadrature.rules")
+importFrom("grDevices", "grey.colors")
+importFrom("graphics", "abline", "axis", "legend", "lines", "mtext",
+           "par", "rect", "segments", "text")
+importFrom("MASS", "polr")
+importFrom("methods", "is")
+importFrom("mvtnorm", "rmvnorm")
+importFrom("nnet", "multinom")
+importFrom("splines", "bs")
+importFrom("stats", "acf", "as.formula", "binomial", "density", "ecdf",
+           "glm", "kmeans", "lowess", "model.matrix", "na.pass",
+           "poisson", "rbinom", "rgamma", "rnorm", "rpois", "runif",
+           "sd")
+importFrom("utils", "head")

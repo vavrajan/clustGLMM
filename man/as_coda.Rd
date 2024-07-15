@@ -1,0 +1,165 @@
+\name{as_coda}
+\alias{as_coda}
+\alias{FromCtoList}
+\alias{FromCtoMatrix}
+\alias{FromListtoC}
+\alias{FromListtoCoda}
+\alias{FromListtoMatrix}
+\alias{FromMatrixtoC}
+\alias{FromMatrixtoCoda}
+\alias{FromMatrixtoList}
+\title{
+Change the output formats of \code{clusGLMM}
+}
+\description{
+Functions are used internally in \code{clusGLMM} or \code{pUig_dev} to prepare data as an input of C function or to process data coming from C functions. Works for separate parameters, hence to transfer all the samples \code{for} cycles through chains and parameters are necessary. This is done in \code{FromListtoMatrix} and \code{FromMatrixtoList} which are able to switch between \code{howsave = "list"} and \code{howsave = "matrix"}.
+}
+\usage{
+as_coda(mcmc, burnin=0, thin=1)
+FromCtoList(values, p, settings, yspecd1, yspecd2, family)
+FromCtoMatrix(values, p, settings, yspecd1, yspecd2, family)
+FromListtoC(chain, iterations, p, settings, yspecd1, yspecd2, family)
+FromListtoCoda(mcmc, burnin=0, thin=1)
+FromListtoMatrix(mcmc)
+FromMatrixtoC(draws, chain, iterations, p, settings)
+FromMatrixtoCoda(mcmc, burnin=0, thin=1)
+FromMatrixtoList(mcmc)
+}
+\arguments{
+  \item{values}{
+a vector of values to be stored.
+}
+  \item{p}{
+a string containing the name of the parameter. 
+}
+  \item{settings}{
+a matrix containing the information about model parameters.
+}
+  \item{yspecd1}{
+a list of outcome-specific sizes along the first dimension.
+}
+  \item{yspecd2}{
+a list of outcome-specific sizes along the second dimension.
+}
+  \item{family}{
+a vector of distributional families named by the outcome name in \code{data}.
+}
+  \item{chain}{
+a number of the chain to use.
+}
+  \item{iterations}{
+what iterations from a given chain to include.
+}
+  \item{draws}{
+a matrix of all sampled parameters from \code{clusGLMM}.
+}
+  \item{mcmc}{
+an output of \code{\link{clusGLMM}}.
+}
+  \item{burnin}{
+the length of burn-in period (default 0), i.e. number of initial samples to ignore for inference.
+}
+  \item{thin}{
+thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
+}
+}
+\details{
+Most of the functions are used internally in \code{clusGLMM} or \code{pUig_dev} to process data coming from C functions. Functions that start or end in C only convert a specific parameter. The functions that change between \code{howsave = "list"} and \code{howsave = "matrix"} go through every chain and every saved parameter.
+}
+\value{
+If \code{...ToList} then the output is a carefully structured list. Each chain \code{ch in 1:mcmc$chains} is saved in \code{mcmc$draws[[ch]]}. Then you select a parameter of your choice which may have even other sublists. For example, group-specific effects for numeric outcome would be accessed by
+\code{mcmc$draws[[ch]]$beta_num[[g]][[mcmc$Nums[1]]]}
+where \code{g} is the group.  
+
+If \code{...ToMatrix} then the output is a matrix with carefully named columns. First column is \code{chain} and contains the number dedicating the chain to which the row belongs to. Other columns are model parameters. For example, the first effect specific for group 2 for numeric outcome called "ynum" would be named \code{"beta_num_ynum(2)[1]"}. Note that the name of the variable has been pasted after the parameter name, then follows a group number in parentheses (only if parameter group-specific) and it ends with the dimensional coordinates in square brackets.
+
+If \code{...ToC} then the output is a long vector where all the parameter values are stacked together in the order assumed in C functions. 
+
+If \code{...ToCoda} then the output is a \code{mcmc.list} object from \code{library(coda)}. \code{as_coda} is a wrapper that triggers \code{...ToCoda} corresponding to \code{mcmc$howsave}. Then you can use environment for monitoring, investigating, plotting if you are familiar with it. However, a minor warning: the number of parameters is quite huge and can get overwhelming. Therefore, a set of plotting functions is provided with this package, see \code{\link{plot_all}}.  
+}
+\references{
+Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
+}
+\author{
+Jan Vávra
+}
+\seealso{
+\code{\link{clusGLMM}}, \code{\link{plot_all}}
+}
+\examples{
+
+###-----------------------------------------------------------------------------
+###     Generate some longitudinal mixed-type data
+###-----------------------------------------------------------------------------
+corr <- matrix(c(1, -0.5, -0.5, -0.4, -0.4,
+                 -0.5, 1, 0.3, 0.4, 0.5,
+                 -0.5, 0.3, 1, 0.2, 0.3,
+                 -0.4, 0.4, 0.2, 1, 0.1,
+                 -0.4, 0.5, 0.3, 0.1, 1), byrow = TRUE, ncol = 5)
+sdSigmas <- c(0.5, 0.5, 0.5, 0.5, 0.5)
+Sigma <- diag(sdSigmas) %*% corr %*% diag(sdSigmas)
+
+set.seed(31415)
+n <- 500
+ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
+                     G = 2, timepar = "cross", catpar = "fixed", 
+                     catsubjfix = TRUE,
+                     xin1 = 1, Sigma = Sigma,
+                     Kord = 5, Kcat = 4, kspec_bi_cat = FALSE)
+data <- ldata$data
+
+###-----------------------------------------------------------------------------
+###     Prepare inputs for clusGLMM
+###-----------------------------------------------------------------------------
+id <- "i"
+
+family <- c("num", "poi", "bin", "ord", "cat")
+names(family) <- Ys <- c("ynum", "ypoi", "ybin", "yord", "ycat")
+
+## Create list of formulae for each outcome
+formula <- list()
+for(y in Ys){
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- as.formula("~ f")
+  formula[[y]]$group <- as.formula("~ x")
+  formula[[y]]$random <- as.formula("~ 1")
+  formula[[y]]$offset <- ""
+}
+formula
+# intercept term will be group-specific 
+# since it appears in $group which has a preference over $fixed
+
+## All other inputs need to be prepared,
+## unless the default values are desired (varying, save, howsave, param, tuning).
+## See the tutorial for how these can be adjusted.
+
+###-----------------------------------------------------------------------------
+###     Final call of clusGLMM
+###-----------------------------------------------------------------------------
+
+iter <- 100    # the length of sampled chain
+Gmax <- 5      # maximal number of mixture components to be considered
+chains <- 2    # number of chains to be sampled 
+
+## No inits specified
+## Saved in "matrix" format
+mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
+                 G = Gmax, iter = iter, chains = chains,
+                 howsave = "matrix")
+                       
+###-----------------------------------------------------------------------------
+###     Changing formats
+###-----------------------------------------------------------------------------
+
+## How to change from "matrix" to "list":
+mcmc <- FromMatrixtoList(mcmc)
+
+## How to change from "list" to "matrix":
+mcmc <- FromListtoMatrix(mcmc)
+
+## How to change from "matrix" to mcmc from 'coda' package
+codamcmc <- FromMatrixtoCoda(mcmc, burnin = 10, thin = 1)
+
+## How to change from any howsave type to mcmc from 'coda' package
+codamcmc <- as_coda(mcmc, burnin = 10, thin = 1)
+}

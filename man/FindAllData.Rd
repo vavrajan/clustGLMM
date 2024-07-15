@@ -1,0 +1,148 @@
+\name{FindAllData}
+\alias{FindAllData}
+\title{
+Finds samples for specified univariate model parameter 
+}
+\description{
+This function takes an output of \code{clusGLMM} and finds all values related to specified model parameter in a given range (possibly thinned). The implementation reacts not only to what is given but also to what is NOT given. To use it appropriately you need to know which model parameters are group-specific, outcome-dependent and many dimensions do they have.
+}
+\usage{
+FindAllData(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
+            restrictedtoGplus = FALSE)
+}
+\arguments{
+  \item{mcmc}{
+an output of \code{\link{clusGLMM}} accepted in both formats (list or matrix).
+}
+  \item{what}{
+a name of the parameter to be extracted; see \code{names(mcmc$save)} for possible options. 
+}
+  \item{gspec}{
+a group specifier (values in \code{1:mcmc$G}); if not group-specific parameter this \emph{should be missing}.
+}
+  \item{dimspec}{
+a dimension specifier; not specifying this is possible only when the parameter is scalar.
+}
+  \item{yspec}{
+an outcome specifier; if the parameter is not outcome-dependent then this \emph{should be missing}.
+}
+  \item{burnin}{
+the length of burn-in period (default 0), i.e. number of initial samples to ignore for inference.
+}
+  \item{thin}{
+thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
+}
+  \item{ChainsToPlot}{
+a vector of chain numbers to be used.
+}
+  \item{restrictedtoGplus}{
+a boolean declaring whether the values should be taken from post-processed data by \code{RestrictionToModeGplus}.
+}
+}
+\details{
+This function is used mainly internally in plotting functions to find appropriate values given the name of the parameter \code{what}, group specification \code{gspec} (a number of a cluster), outcome specification \code{yspec} (name of the outcome) and dimension specification \code{dimspec}. For vector parameters \code{dimspec} is just a single number, if \code{what} is a matrix parameter then 2 numbers are expected.
+
+The returned values are regulated by changing \code{burnin} and \code{thin}. From each chain contained in \code{ChainsToPlot} only iterations in \code{seq(burnin+1, mcmc$iter, by = thin)} are returned. 
+}
+\value{
+A data frame of two columns:
+\describe{
+  \item{y}{the values of the required parameter,}
+  \item{chain}{the chain number to which the values correspond.}
+}
+}
+\references{
+Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
+}
+\author{
+Jan Vávra
+}
+\seealso{
+\code{\link{clusGLMM}}, \code{\link{plot_all}}
+}
+\examples{
+###-----------------------------------------------------------------------------
+###     Generate some longitudinal mixed-type data
+###-----------------------------------------------------------------------------
+corr <- matrix(c(1, -0.5, -0.5, -0.4, -0.4,
+                 -0.5, 1, 0.3, 0.4, 0.5,
+                 -0.5, 0.3, 1, 0.2, 0.3,
+                 -0.4, 0.4, 0.2, 1, 0.1,
+                 -0.4, 0.5, 0.3, 0.1, 1), byrow = TRUE, ncol = 5)
+sdSigmas <- c(0.5, 0.5, 0.5, 0.5, 0.5)
+Sigma <- diag(sdSigmas) %*% corr %*% diag(sdSigmas)
+
+set.seed(31415)
+n <- 500
+ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
+                     G = 2, timepar = "cross", catpar = "fixed", 
+                     catsubjfix = TRUE,
+                     xin1 = 1, Sigma = Sigma,
+                     Kord = 5, Kcat = 4, kspec_bi_cat = FALSE)
+data <- ldata$data
+
+###-----------------------------------------------------------------------------
+###     Prepare inputs for clusGLMM
+###-----------------------------------------------------------------------------
+id <- "i"
+
+family <- c("num", "poi", "bin", "ord", "cat")
+names(family) <- Ys <- c("ynum", "ypoi", "ybin", "yord", "ycat")
+
+## Create list of formulae for each outcome
+formula <- list()
+for(y in Ys){
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- as.formula("~ f")
+  formula[[y]]$group <- as.formula("~ x")
+  formula[[y]]$random <- as.formula("~ 1")
+  formula[[y]]$offset <- ""
+}
+formula
+# intercept term will be group-specific 
+# since it appears in $group which has a preference over $fixed
+
+## All other inputs need to be prepared,
+## unless the default values are desired (varying, save, howsave, param, tuning).
+## See the tutorial for how these can be adjusted.
+
+###-----------------------------------------------------------------------------
+###     Final call of clusGLMM
+###-----------------------------------------------------------------------------
+
+iter <- 100    # length of the sampled chain
+Gmax <- 5      # maximal number of mixture components to be considered
+chains <- 2    # number of chains to be sampled 
+
+mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
+                 G = Gmax, iter = iter, chains = chains)
+
+###-----------------------------------------------------------------------------
+###     The use of FindAllData
+###-----------------------------------------------------------------------------
+# Finding values for a specific parameter
+# beta_num is group-specific, outcome-dependent and is a vector
+FindAllData(mcmc, 
+            what = "beta_num", gspec = 2, dimspec = 1, yspec = "ynum", 
+            burnin = 0, thin = 1, ChainsToPlot = 1:chains)
+
+# beta_num_fix is not group-specific, but outcome-dependent and is a vector
+FindAllData(mcmc, 
+            what = "beta_num_fix", dimspec = 1, yspec = "ynum", 
+            burnin = 0, thin = 1, ChainsToPlot = 1:chains)
+
+mcmc$varying["InvSigma"]
+# InvSigma is not group-specific, not outcome-dependent, but is a symmetric matrix    
+# only elements [i,j] where i<=j are allowed
+FindAllData(mcmc, 
+            what = "InvSigma", dimspec = c(1,1), 
+            burnin = 50, thin = 1, ChainsToPlot = 1:chains)
+
+# corSigma is not group-specific, not outcome-dependent, but is a symmetric matrix without diagonal
+# only elements [i,j] where i<j are allowed
+FindAllData(mcmc, 
+            what = "corSigma", dimspec = c(1,2), 
+            burnin = 50, thin = 10, ChainsToPlot = 1:chains)
+
+}
+

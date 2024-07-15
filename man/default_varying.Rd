@@ -1,0 +1,129 @@
+\name{default_varying}
+\alias{default_param}
+\alias{default_save}
+\alias{default_tuning}
+\alias{default_varying}
+\title{
+clusGLMM - Setting default values
+}
+\description{
+The following functions are used for setting default values of auxiliary variables such as hyperparameters of indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
+}
+\usage{
+default_param()
+default_varying()
+default_tuning()
+default_save()
+}
+\details{
+If corresponding lists or vectors are not given to \code{\link{clusGLMM}} then these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} and then adjust them as you wish.  
+}
+\value{
+The output of \code{default_varying} is a named vector \code{varying} that contains a boolean for each model parameter that may be considered cluster-specific. The defaults are
+\describe{
+  \item{\code{varying["tau_num"] = TRUE}}{group-specific precisions for numeric outcomes,}
+  \item{\code{varying["c_ord"] = TRUE}}{group-specific ordered intercepts for ordinal outcomes,}
+  \item{\code{varying["InvSigma"] = FALSE}}{group-invariant combined precision matrix for all random effects,}
+  \item{\code{varying["InvQ"] = FALSE}}{group-invariant precision matrix used in prior for \code{InvSigma},}
+  \item{\code{varying["naY"] = FALSE}}{group-invariant imputed missing outcome values.}
+}
+
+The output of \code{default_save} is a named vector \code{save} that contains a boolean for each model parameter including some transformed parameters. Lets introduce all the model parameter together with the default \code{save} setting:
+\describe{
+  \item{\code{save["beta_num_fix"] = TRUE}}{fixed effects for numeric outcomes,}
+  \item{\code{save["beta_num"] = TRUE}}{group-specific effects for numeric outcomes,}
+  \item{\code{save["tau_num"] = TRUE}}{precisions for numeric outcomes,} 
+  \item{\code{save["sd_num"] = TRUE}}{standard deviations for numeric outcomes (transformed from \code{tau_num}),}
+  \item{\code{save["var_num"] = TRUE}}{variances for numeric outcomes (transformed from \code{tau_num}),}
+  \item{\code{save["beta_poi_fix"] = TRUE}}{fixed effects for count outcomes,}
+  \item{\code{save["beta_poi"] = TRUE}}{group-specific effects for count outcomes,}
+  \item{\code{save["beta_bin_fix"] = TRUE}}{fixed effects for binary outcomes,}
+  \item{\code{save["beta_bin"] = TRUE}}{group-specific effects for binary outcomes,}
+  \item{\code{save["beta_ord_fix"] = TRUE}}{fixed effects for ordinal outcomes,}
+  \item{\code{save["beta_ord"] = TRUE}}{group-specific effects for ordinal outcomes,}
+  \item{\code{save["c_ord"] = TRUE}}{ordered intercepts for ordinal outcomes,}
+  \item{\code{save["a_ord"] = FALSE}}{transformed ordered intercepts for ordinal outcomes into unrestricted variables,}
+  \item{\code{save["pi_ord"] = TRUE}}{transformed \code{a_ord} into probabilities,}
+  \item{\code{save["beta_cat_fix"] = TRUE}}{fixed effects for general categorical outcomes,} 
+  \item{\code{save["beta_cat"] = TRUE}}{group-specific effects for general categorical outcomes,}
+  \item{\code{save["InvSigma"] = TRUE}}{combined precision matrix for all random effects,}
+  \item{\code{save["Sigma"] = TRUE}}{combined covariance matrix for all random effects (transformed from \code{InvSigma}),}
+  \item{\code{save["sdSigma"] = TRUE}}{standard deviations for all random effects (transformed from \code{InvSigma}),} 
+  \item{\code{save["corSigma"] = TRUE}}{correlations between all random effects (transformed from \code{InvSigma}),}
+  \item{\code{save["detInvSigma"] = FALSE}}{determinant of \code{InvSigma} matrix,}
+  \item{\code{save["InvQ"] = FALSE}}{precision matrix used in prior for \code{InvSigma},}
+  \item{\code{save["Q"] = FALSE}}{covariance matrix used in prior for \code{InvSigma} (transformed from \code{InvQ}),}
+  \item{\code{save["detInvQ"] = FALSE}}{determinant of \code{InvQ} matrix,}
+  \item{\code{save["b"] = FALSE}}{a matrix of random effects for all outcomes and units,}
+  \item{\code{save["w"] = TRUE}}{mixture weights of length \code{G} that sum up to 1,}
+  \item{\code{save["ng"] = TRUE}}{cluster occupancies of length \code{G} that sum up to number of units,}
+  \item{\code{save["loglik"] = TRUE}}{NOT a log-likelihood but a very crude approximation to it created as an easy to evaluate byproduct of full-conditional cluster allocation probabilities,}
+  \item{\code{save["pUig"] = FALSE}}{a matrix of full-conditional cluster allocation probabilities,}
+  \item{\code{save["U"] = TRUE}}{a vector of current allocations of units into clusters (values in \code{1, ..., G}),}
+  \item{\code{save["Gplus"] = TRUE}}{a number of non-empty components,}
+  \item{\code{save["e0"] = TRUE}}{precision parameter for prior of \code{w},}
+  \item{\code{save["naY"] = FALSE}}{imputed missing outcome values.}
+}
+
+The output of \code{default_param} is a named list \code{param} that contains values of the hyperparameters needed to set up the priors. The default values are:
+\describe{
+\item{\code{param[["nu_0"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvSigma} (dimension of this matrix is automatically added to this value),}
+\item{\code{param[["nu_1"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvQ} (dimension of this matrix is automatically added to this value),}
+\item{\code{param[["gamma_a"]] = 1}}{prior shape for precision parameter \code{tau_num} for numeric outcomes,}
+\item{\code{param[["gamma_b"]] = 10}}{prior rate for precision parameter \code{tau_num} for numeric outcomes,}
+\item{\code{param[["sd_beta_num_fix"]] = 1}}{standard deviation for fixed effects for numeric outcomes,}
+\item{\code{param[["sd_beta_num"]] = 1}}{standard deviation for group-specific effects for numeric outcomes,}
+\item{\code{param[["sd_beta_poi_fix"]] = 1}}{standard deviation for fixed effects for count outcomes,}
+\item{\code{param[["sd_beta_poi"]] = 1}}{standard deviation for group-specific effects for count outcomes,}
+\item{\code{param[["sd_beta_bin_fix"]] = 1}}{standard deviation for fixed effects for binary outcomes,}
+\item{\code{param[["sd_beta_bin"]] = 1}}{standard deviation for group-specific effects for binary outcomes,}
+\item{\code{param[["sd_beta_ord_fix"]] = 1}}{standard deviation for fixed effects for ordinal outcomes,}
+\item{\code{param[["sd_beta_ord"]] = 1}}{standard deviation for group-specific effects for ordinal outcomes,}
+\item{\code{param[["api_prior"]] = 1}}{prior parameter for Dirichlet distribution of \code{pi_ord} (same for all levels),}
+\item{\code{param[["sd_beta_cat_fix"]] = 1}}{standard deviation for fixed effects for general categorical outcomes,}
+\item{\code{param[["sd_beta_cat"]] = 1}}{standard deviation for group-specific effects for general categorical outcomes,}
+\item{\code{param[["init_sd_b"]] = 0.01}}{standard deviation for sampling initial values of random effects \code{b},}
+\item{\code{param[["ae"]] = 1}}{prior shape of \code{e0},}
+\item{\code{param[["be"]] = 100}}{prior rate of \code{e0},}
+\item{\code{param[["InvV"]] = 0.01}}{diagonal element of the prior inverse scale matrix for InvQ.}
+}
+By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is the more sparse results are expected.  
+
+The output of \code{default_param} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
+\describe{
+\item{\code{$integer$freq_proposal_update = 10}}{every \code{freq_proposal_update} iterations change the proposal distributions for Metropolis steps,}
+\item{\code{$integer$times_proposal = 10}}{how many times propose new state within one Metropolis step,}
+\item{\code{$integer$maxiter = 25}}{maximum iterations allowed during Newton-Raphson update of proposal distribution,}
+\item{\code{$integer$maxnrep = 100}}{maximum number of repetitions of Newton-Raphson with a different start location,}
+\item{\code{$integer$kspec_bi_cat = 0}}{boolean as integer, if \code{TRUE} then each general categorical outcome has different set of random effects for each of \code{Kcat-1} levels,}
+\item{\code{$double$const_proposal_beta_poi_fix = 1.0}}{constant by which the proposal direction for \code{beta_poi_fix} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_poi = 1.0}}{constant by which the proposal direction for \code{beta_poi} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_bin_fix = 1.0}}{constant by which the proposal direction for \code{beta_bin_fix} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_bin = 1.0}}{constant by which the proposal direction for \code{beta_bin} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_ord_fix = 0.5}}{constant by which the proposal direction for \code{beta_ord_fix} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_ord = 0.5}}{constant by which the proposal direction for \code{beta_ord} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_cat_fix = 1.0}}{constant by which the proposal direction for \code{beta_cat_fix} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_cat = 1.0}}{constant by which the proposal direction for \code{beta_cat} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_a_ord = 0.5}}{constant by which the proposal direction for \code{a_ord} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_b = 0.5}}{constant by which the proposal direction for \code{b} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_e0 = 1.0}}{constant by which the proposal direction for \code{e0} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$tolerance = 1e-07}}{tolerance when computing norm of the shift within Newton-Raphson.}
+}
+
+}
+\references{
+Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
+}
+\author{
+Jan Vávra
+}
+\seealso{
+\code{\link{clusGLMM}}
+}
+\examples{
+(param <- default_param())
+(varying <- default_varying())
+(tuning <- default_tuning())
+(save <- default_save())
+
+}
