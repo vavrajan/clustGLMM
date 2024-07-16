@@ -156,7 +156,7 @@ varying["tau_num"] <- FALSE
 iter = 1000
 set.seed(12345)
 mcmc0 <- clusGLMM(formula = formula2, id = id, family = family["income"], data = data,
-                  G = 3, varying = varying, iter = iter, chains = 1, howsave = "matrix")
+                  G = 3, varying = varying, iter = iter, nchains = 1, howsave = "matrix")
 
 # preserve the interpretation of cluster labels by permuting cluster-specific parameters
 perm <- list()
@@ -164,7 +164,7 @@ perm[[1]] <- c(2, 3, 1)
 # mcmc0 <- PermuteClusterSpec(mcmc0, perm)
 
 plot_traceplots_param(mcmc0, "ng")
-plot_traceplots_param(mcmc0, "beta_num", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc0, "beta_num", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc0, "beta_num")
 plot_traceplots_param(mcmc0, "tau_num")
 ```
@@ -219,7 +219,7 @@ for(g in 1:3){
 ```{r mcmc1, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
 set.seed(12345)
 mcmc1 <- clusGLMM(formula = formula1, id = id, family = family, data = data,
-                  G = 3, varying = varying, iter = iter, chains = 1)
+                  G = 3, varying = varying, iter = iter, nchains = 1)
 # preserve the interpretation of cluster labels by permuting cluster-specific parameters
 perm <- list()
 perm[[1]] <- c(2, 3, 1) 
@@ -227,14 +227,14 @@ mcmc1 <- PermuteClusterSpec(mcmc1, perm)
 
 plot_traceplots_param(mcmc1, "ng")
 
-plot_traceplots_param(mcmc1, "beta_num", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc1, "beta_num", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc1, "beta_num")
 plot_clusters_kerneldensity_param(mcmc1, "tau_num")
 
-plot_traceplots_param(mcmc1, "beta_poi", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc1, "beta_poi", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc1, "beta_poi")
 
-plot_traceplots_param(mcmc1, "beta_ord", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc1, "beta_ord", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc1, "beta_ord")
 plot_clusters_kerneldensity_param(mcmc1, "c_ord")
 ```
@@ -297,21 +297,21 @@ for(g in 1:3){
 ```{r mcmc2, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
 set.seed(12345)
 mcmc2 <- clusGLMM(formula = formula2, id = id, family = family, data = data,
-                  G = 3, varying = varying, iter = iter, chains = 1)
+                  G = 3, varying = varying, iter = iter, nchains = 1)
 # preserve the interpretation of cluster labels by permuting cluster-specific parameters
 perm <- list()
 perm[[1]] <- c(2, 3, 1) 
 mcmc2 <- PermuteClusterSpec(mcmc2, perm)
 plot_traceplots_param(mcmc2, "ng")
 
-plot_traceplots_param(mcmc2, "beta_num", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc2, "beta_num", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc2, "beta_num")
 plot_clusters_kerneldensity_param(mcmc2, "tau_num")
 
-plot_traceplots_param(mcmc2, "beta_poi", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc2, "beta_poi", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc2, "beta_poi")
 
-plot_traceplots_param(mcmc2, "beta_ord", thin = 1, ChainsToPlot = 1)
+plot_traceplots_param(mcmc2, "beta_ord", thin = 1, chains = 1)
 plot_clusters_kerneldensity_param(mcmc2, "beta_ord")
 plot_clusters_kerneldensity_param(mcmc2, "c_ord")
 ```

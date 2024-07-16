@@ -1,29 +1,29 @@
 \name{as_coda}
 \alias{as_coda}
-\alias{FromCtoList}
-\alias{FromCtoMatrix}
-\alias{FromListtoC}
-\alias{FromListtoCoda}
-\alias{FromListtoMatrix}
-\alias{FromMatrixtoC}
-\alias{FromMatrixtoCoda}
-\alias{FromMatrixtoList}
+\alias{from_C_to_list}
+\alias{from_C_to_matrix}
+\alias{from_list_to_C}
+\alias{from_list_to_coda}
+\alias{from_list_to_matrix}
+\alias{from_matrix_to_C}
+\alias{from_matrix_to_coda}
+\alias{from_matrix_to_list}
 \title{
 Change the output formats of \code{clusGLMM}
 }
 \description{
-Functions are used internally in \code{clusGLMM} or \code{pUig_dev} to prepare data as an input of C function or to process data coming from C functions. Works for separate parameters, hence to transfer all the samples \code{for} cycles through chains and parameters are necessary. This is done in \code{FromListtoMatrix} and \code{FromMatrixtoList} which are able to switch between \code{howsave = "list"} and \code{howsave = "matrix"}.
+Functions are used internally in \code{clusGLMM} or \code{pUig_dev} to prepare data as an input of C function or to process data coming from C functions. Works for separate parameters, hence to transfer all the samples \code{for} cycles through chains and parameters are necessary. This is done in \code{from_list_to_matrix} and \code{from_matrix_to_list} which are able to switch between \code{howsave = "list"} and \code{howsave = "matrix"}.
 }
 \usage{
 as_coda(mcmc, burnin=0, thin=1)
-FromCtoList(values, p, settings, yspecd1, yspecd2, family)
-FromCtoMatrix(values, p, settings, yspecd1, yspecd2, family)
-FromListtoC(chain, iterations, p, settings, yspecd1, yspecd2, family)
-FromListtoCoda(mcmc, burnin=0, thin=1)
-FromListtoMatrix(mcmc)
-FromMatrixtoC(draws, chain, iterations, p, settings)
-FromMatrixtoCoda(mcmc, burnin=0, thin=1)
-FromMatrixtoList(mcmc)
+from_C_to_list(values, p, settings, yspecd1, yspecd2, family)
+from_C_to_matrix(values, p, settings, yspecd1, yspecd2, family)
+from_list_to_C(chain, iterations, p, settings, yspecd1, yspecd2, family)
+from_list_to_coda(mcmc, burnin=0, thin=1)
+from_list_to_matrix(mcmc)
+from_matrix_to_C(draws, chain, iterations, p, settings)
+from_matrix_to_coda(mcmc, burnin=0, thin=1)
+from_matrix_to_list(mcmc)
 }
 \arguments{
   \item{values}{
@@ -152,13 +152,13 @@ mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data,
 ###-----------------------------------------------------------------------------
 
 ## How to change from "matrix" to "list":
-mcmc <- FromMatrixtoList(mcmc)
+mcmc <- from_matrix_to_list(mcmc)
 
 ## How to change from "list" to "matrix":
-mcmc <- FromListtoMatrix(mcmc)
+mcmc <- from_list_to_matrix(mcmc)
 
 ## How to change from "matrix" to mcmc from 'coda' package
-codamcmc <- FromMatrixtoCoda(mcmc, burnin = 10, thin = 1)
+codamcmc <- from_matrix_to_coda(mcmc, burnin = 10, thin = 1)
 
 ## How to change from any howsave type to mcmc from 'coda' package
 codamcmc <- as_coda(mcmc, burnin = 10, thin = 1)

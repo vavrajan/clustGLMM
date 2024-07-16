@@ -4,14 +4,14 @@ function(mcmc, cols){
   ### 0) The type of saving results has to be "matrix" for the code below
   if(mcmc$howsave=="list"){
     # Then transfer to howsave="matrix" -- create mcmc$draws matrix
-    mcmc <- FromListtoMatrix(mcmc)
+    mcmc <- from_list_to_matrix(mcmc)
   }
   
   ### 1) Finding the mode
   # Using mcmc$draws$Gplus
   if(length(unique(mcmc$draws$Gplus)) == 1){
     TAB <- list()
-    for(ch in 1:mcmc$chains){
+    for(ch in 1:mcmc$nchains){
       TAB[[ch]] <- mcmc$iter
       names(TAB[[ch]]) <- as.character(mcmc$draws$Gplus[1])
     }
@@ -23,7 +23,7 @@ function(mcmc, cols){
   
   ### 2) Find the posterior draws with Gplus = modeGplus
   inds <- iters <- list()
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     submcmc <- mcmc$draws[mcmc$draws$chain==ch, c("chain", "Gplus")]
     inds[[ch]] <- which(submcmc$Gplus == modeGplus[[ch]])
     iters[[ch]] <- length(inds[[ch]])
@@ -46,7 +46,7 @@ function(mcmc, cols){
   
   ### 4) Creating submatrices of sampled cluster-specific parameters
   clusterspec <- list()
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     suball <- mcmc$draws[mcmc$draws$chain==ch, c("chain", "Gplus", paste0("ng[", 1:mcmc$G, "]"), cols)]
     suball <- suball[inds[[ch]], ]
     clusterspec[[ch]] <- matrix(0, nrow = 0, ncol = 1 + length(cols)/mcmc$G*modeGplus[[ch]])
@@ -68,7 +68,7 @@ created for each chain separately")
   
   ### 5) Prepare for k-means clustering
   forkmeans <- list()
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     forkmeans[[ch]] <- matrix(0, nrow = 0, ncol = length(cols)/mcmc$G)
     for(g in 1:modeGplus[[ch]]){
       forkmeans[[ch]] <- rbind(forkmeans[[ch]], clusterspec[[ch]][,grep(paste0("\\(", g, "\\)"), 
@@ -82,7 +82,7 @@ created for each chain separately")
   
   ### 6) Perform K-means clustering + checking the permutations
   Mrhos <- indmat <- rowuniques <- list()
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     # standardization
     forkmeans[[ch]] <- matrix(as.numeric(forkmeans[[ch]]), ncol = dim(forkmeans[[ch]])[2])
     colnames(forkmeans[[ch]]) <- paste0("V", 1:dim(forkmeans[[ch]])[2])
@@ -104,7 +104,7 @@ created for each chain separately")
   print(Mrhos)
   
   ### 7) Update the clusterspec matrix according to suggested permutations
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     head(clusterspec[[ch]])
     cnames <- colnames(clusterspec[[ch]])[grep("\\(1\\)", 
                                                colnames(clusterspec[[ch]]))]
@@ -128,7 +128,7 @@ created for each chain separately")
   
   ### 8) Switch w, U, pUig according to indmat
   wGplus <- ngGplus <- UGplus <- pUigGplus <- list()
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     ## w
     if(mcmc$save["w"]){
       suball <- mcmc$draws[mcmc$draws$chain==ch, c(paste0("w[", 1:mcmc$G, "]"),

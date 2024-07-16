@@ -1,14 +1,15 @@
-\name{FindAllData}
-\alias{FindAllData}
+\name{get_scalar_samples}
+\alias{get_scalar_samples}
 \title{
-Finds samples for specified univariate model parameter 
+Finds samples for specified scalar model parameter 
 }
 \description{
 This function takes an output of \code{clusGLMM} and finds all values related to specified model parameter in a given range (possibly thinned). The implementation reacts not only to what is given but also to what is NOT given. To use it appropriately you need to know which model parameters are group-specific, outcome-dependent and many dimensions do they have.
 }
 \usage{
-FindAllData(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
-            restrictedtoGplus = FALSE)
+get_scalar_samples(mcmc, what, gspec, dimspec, yspec, 
+                   burnin = 0, thin = 1, chains,
+                   restrictedtoGplus = FALSE)
 }
 \arguments{
   \item{mcmc}{
@@ -32,7 +33,7 @@ the length of burn-in period (default 0), i.e. number of initial samples to igno
   \item{thin}{
 thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
 }
-  \item{ChainsToPlot}{
+  \item{chains}{
 a vector of chain numbers to be used.
 }
   \item{restrictedtoGplus}{
@@ -42,7 +43,7 @@ a boolean declaring whether the values should be taken from post-processed data 
 \details{
 This function is used mainly internally in plotting functions to find appropriate values given the name of the parameter \code{what}, group specification \code{gspec} (a number of a cluster), outcome specification \code{yspec} (name of the outcome) and dimension specification \code{dimspec}. For vector parameters \code{dimspec} is just a single number, if \code{what} is a matrix parameter then 2 numbers are expected.
 
-The returned values are regulated by changing \code{burnin} and \code{thin}. From each chain contained in \code{ChainsToPlot} only iterations in \code{seq(burnin+1, mcmc$iter, by = thin)} are returned. 
+The returned values are regulated by changing \code{burnin} and \code{thin}. From each chain contained in \code{chains} only iterations in \code{seq(burnin+1, mcmc$iter, by = thin)} are returned. 
 }
 \value{
 A data frame of two columns:
@@ -112,37 +113,33 @@ formula
 
 iter <- 100    # length of the sampled chain
 Gmax <- 5      # maximal number of mixture components to be considered
-chains <- 2    # number of chains to be sampled 
+nchains <- 2   # number of chains to be sampled 
 
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, chains = chains)
+                 G = Gmax, iter = iter, nchains = nchains)
 
 ###-----------------------------------------------------------------------------
-###     The use of FindAllData
+###     The use of get_scalar_parameter_samples
 ###-----------------------------------------------------------------------------
 # Finding values for a specific parameter
 # beta_num is group-specific, outcome-dependent and is a vector
-FindAllData(mcmc, 
-            what = "beta_num", gspec = 2, dimspec = 1, yspec = "ynum", 
-            burnin = 0, thin = 1, ChainsToPlot = 1:chains)
+get_scalar_samples(mcmc, what = "beta_num", gspec = 2, dimspec = 1, yspec = "ynum", 
+                   burnin = 0, thin = 1, chains = 1:nchains)
 
 # beta_num_fix is not group-specific, but outcome-dependent and is a vector
-FindAllData(mcmc, 
-            what = "beta_num_fix", dimspec = 1, yspec = "ynum", 
-            burnin = 0, thin = 1, ChainsToPlot = 1:chains)
+get_scalar_samples(mcmc, what = "beta_num_fix", dimspec = 1, yspec = "ynum",
+                   burnin = 0, thin = 1, chains = 1:nchains)
 
 mcmc$varying["InvSigma"]
 # InvSigma is not group-specific, not outcome-dependent, but is a symmetric matrix    
 # only elements [i,j] where i<=j are allowed
-FindAllData(mcmc, 
-            what = "InvSigma", dimspec = c(1,1), 
-            burnin = 50, thin = 1, ChainsToPlot = 1:chains)
+get_scalar_samples(mcmc, what = "InvSigma", dimspec = c(1,1), 
+                   burnin = 50, thin = 1, chains = 1:nchains)
 
 # corSigma is not group-specific, not outcome-dependent, but is a symmetric matrix without diagonal
 # only elements [i,j] where i<j are allowed
-FindAllData(mcmc, 
-            what = "corSigma", dimspec = c(1,2), 
-            burnin = 50, thin = 10, ChainsToPlot = 1:chains)
+get_scalar_samples(mcmc, what = "corSigma", dimspec = c(1,2), 
+                   burnin = 50, thin = 10, chains = 1:nchains)
 
 }
 

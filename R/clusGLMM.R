@@ -31,7 +31,7 @@ function(
                 # if missing or NULL --> create your own
   tuning,    # list of tuning parameters
   iter = 1000,# length of sampled chain
-  chains = 1 # number of chains
+  nchains = 1 # number of chains
 ){
   # TODO make these function parameters
   threshold = 0.5
@@ -297,7 +297,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     message("Inits are missing, calculating...\n")
     initsgiven = 0
     inits <- list()
-    for(ch in 1:chains){
+    for(ch in 1:nchains){
       inits[[ch]] <- list()
       
       # parameters connected to classification
@@ -574,18 +574,10 @@ Change the save settings if you want to calculate these probabilities afterwards
       #colnames(inits[[ch]]$b) <- rannames
       
       
-      if(ch == chains){message("Inits are ready.\n")}
-    } # end for ch in 1:chains
+      if(ch == nchains){message("Inits are ready.\n")}
+    } # end for ch in 1:nchains
     
   } # end of missing(inits)
-  
-  if(howsave == "matrix"){
-    mcmc$draws <- data.frame()
-  }
-  
-  if((howsave == "list") || (howsave == "cmcmc")){
-    mcmc$draws <- list()
-  }
   
   
   ### Preparations for transfer from C to List output
@@ -832,11 +824,66 @@ Change the save settings if you want to calculate these probabilities afterwards
   last <- list()
   Usamples <- list()
   
-  message("Settings ready, about to start for ch in 1:chains.\n")
+  message("Settings ready, about to start for ch in 1:nchains.\n")
+  
+  nparams <- sum(settings[settings$save, "dimswithG"])
+  mcmc$param_names <- list()
+  cnames <- character(1+nparams)
+  cnames[1] <- "chain"
+  index <- 1
+  for(p in params){
+    if(settings[p,"save"] & settings[p,"dims"] > 0){
+      if(settings[p,"ydepd1"] & settings[p,"ydepd2"]){
+        aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
+                               p = p,
+                               settings = settings,
+                               yspecd1 = yspecd1[[p]],
+                               yspecd2 = yspecd2[[p]],
+                               family = sorted_family)
+      }
+      if(settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
+        aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
+                               p = p,
+                               settings = settings,
+                               yspecd1 = yspecd1[[p]],
+                               family = sorted_family)
+      }
+      if(!settings[p,"ydepd1"] & settings[p,"ydepd2"]){
+        aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
+                               p = p,
+                               settings = settings,
+                               yspecd2 = yspecd2[[p]],
+                               family = sorted_family)
+      }
+      if(!settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
+        aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
+                               p = p,
+                               settings = settings,
+                               family = sorted_family)
+      }
+      mcmc$param_names[[p]] <- colnames(aux)
+      cnames[(index+1):(index+settings[p,"dimswithG"])] <- colnames(aux)
+      index <- index + settings[p,"dimswithG"]
+    }else{
+      mcmc$param_names[[p]] <- c()
+    }
+  }
+
+  if(howsave == "matrix"){
+    # mcmc$draws <- data.frame()
+    mcmc$draws <- matrix(0, nrow = nchains*iter, ncol = 1+nparams)
+    mcmc$draws[,1] = rep(1:nchains, each=iter)
+    colnames(mcmc$draws) <- cnames
+    mcmc$draws = as.data.frame(mcmc$draws)
+  }
+  
+  if((howsave == "list") || (howsave == "cmcmc")){
+    mcmc$draws <- list()
+  }
   
   ### Now prepare inits for each chain
   # and generate chains
-  for(ch in 1:chains){
+  for(ch in 1:nchains){
     initsch <- inits[[ch]]
     # cinits
     cinits <- list()
@@ -1302,32 +1349,32 @@ Change the save settings if you want to calculate these probabilities afterwards
           }
         if(settings[p, "save"] & settings[p,"dims"] > 0){
           if(settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-            chain[[p]] <- FromCtoList(values = cmcmc[[p]],
-                                      p = p,
-                                      settings = settings,
-                                      yspecd1 = yspecd1[[p]],
-                                      yspecd2 = yspecd2[[p]],
-                                      family = sorted_family)
+            chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
+                                         p = p,
+                                         settings = settings,
+                                         yspecd1 = yspecd1[[p]],
+                                         yspecd2 = yspecd2[[p]],
+                                         family = sorted_family)
           }
           if(settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-            chain[[p]] <- FromCtoList(values = cmcmc[[p]],
-                                      p = p,
-                                      settings = settings,
-                                      yspecd1 = yspecd1[[p]],
-                                      family = sorted_family)
+            chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
+                                         p = p,
+                                         settings = settings,
+                                         yspecd1 = yspecd1[[p]],
+                                         family = sorted_family)
           }
           if(!settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-            chain[[p]] <- FromCtoList(values = cmcmc[[p]],
-                                      p = p,
-                                      settings = settings,
-                                      yspecd2 = yspecd2[[p]],
-                                      family = sorted_family)
+            chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
+                                         p = p,
+                                         settings = settings,
+                                         yspecd2 = yspecd2[[p]],
+                                         family = sorted_family)
           }
           if(!settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-            chain[[p]] <- FromCtoList(values = cmcmc[[p]],
-                                      p = p,
-                                      settings = settings,
-                                      family = sorted_family)
+            chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
+                                         p = p,
+                                         settings = settings,
+                                         family = sorted_family)
           }
         }
       }
@@ -1339,47 +1386,44 @@ Change the save settings if you want to calculate these probabilities afterwards
     if(howsave == "matrix"){
       # results will be returned in matrix (row = state number, col = variable)
       # column chain will distinguish from what chains it comes from
-
-      AllData <- matrix(ch, nrow = iter, ncol = 1)
-      colnames(AllData) <- "chain"
-
+      iters = ((ch-1)*iter+1):(ch*iter)
       for(p in params){
         if(p == "U"){
           cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G]
         }
         if(settings[p,"save"] & settings[p,"dims"] > 0){
           if(settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-            AllData <- cbind(AllData, FromCtoMatrix(values = cmcmc[[p]],
-                                                    p = p,
-                                                    settings = settings,
-                                                    yspecd1 = yspecd1[[p]],
-                                                    yspecd2 = yspecd2[[p]],
-                                                    family = sorted_family))
+            aux = from_C_to_matrix(values = cmcmc[[p]],
+                                   p = p,
+                                   settings = settings,
+                                   yspecd1 = yspecd1[[p]],
+                                   yspecd2 = yspecd2[[p]],
+                                   family = sorted_family)
           }
           if(settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-            AllData <- cbind(AllData, FromCtoMatrix(values = cmcmc[[p]],
-                                                    p = p,
-                                                    settings = settings,
-                                                    yspecd1 = yspecd1[[p]],
-                                                    family = sorted_family))
+            aux = from_C_to_matrix(values = cmcmc[[p]],
+                                   p = p,
+                                   settings = settings,
+                                   yspecd1 = yspecd1[[p]],
+                                   family = sorted_family)
           }
           if(!settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-            AllData <- cbind(AllData, FromCtoMatrix(values = cmcmc[[p]],
-                                                    p = p,
-                                                    settings = settings,
-                                                    yspecd2 = yspecd2[[p]],
-                                                    family = sorted_family))
+            aux = from_C_to_matrix(values = cmcmc[[p]],
+                                   p = p,
+                                   settings = settings,
+                                   yspecd2 = yspecd2[[p]],
+                                   family = sorted_family)
           }
           if(!settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-            AllData <- cbind(AllData, FromCtoMatrix(values = cmcmc[[p]],
-                                                    p = p,
-                                                    settings = settings,
-                                                    family = sorted_family))
+            aux = from_C_to_matrix(values = cmcmc[[p]],
+                                   p = p,
+                                   settings = settings,
+                                   family = sorted_family)
           }
+          mcmc$draws[iters, colnames(aux)] <- aux
         }
       }
 
-      mcmc$draws <- rbind(mcmc$draws, AllData)
       message(paste0("Saving the chain ", ch, " into one big matrix is completed.\n"))
     }
   } # end of chain
@@ -1407,13 +1451,13 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     
   clusters <- list()
-  clusteringU <- matrix(-1, nrow = as.numeric(n), ncol = chains)
-  certaintyU <- matrix(-1, nrow = as.numeric(n), ncol = chains)
-  for(ch in 1:chains){
-    Usamples[[ch]] <- FromCtoMatrix(values = Usamples[[ch]],
-                                    p = "U",
-                                    settings = settings,
-                                    family = sorted_family)
+  clusteringU <- matrix(-1, nrow = as.numeric(n), ncol = nchains)
+  certaintyU <- matrix(-1, nrow = as.numeric(n), ncol = nchains)
+  for(ch in 1:nchains){
+    Usamples[[ch]] <- from_C_to_matrix(values = Usamples[[ch]],
+                                       p = "U",
+                                       settings = settings,
+                                       family = sorted_family)
     TAB <- table(unlist(Usamples[[ch]]))
     TAB <- TAB[order(TAB, decreasing = T)]
     # Only the top modeGplus in frequency are considered
@@ -1439,7 +1483,9 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$last <- last
   mcmc$InitType <- ifelse(initsgiven, "given", "created")
 
-  mcmc$call <- "Model Based Clustering for Generalized Linear Mixed Models\n\n"
+  mcmc$call <- c("###------------------------------------------------------------###\n")
+  mcmc$call <- paste0(mcmc$call, "### Model Based Clustering for Generalized Linear Mixed Models ###\n")
+  mcmc$call <- paste0(mcmc$call, "###------------------------------------------------------------###\n")
   mcmc$call <- paste0(mcmc$call, "N = sample size: ", N, "\n")
   mcmc$call <- paste0(mcmc$call, "n = number of units: ", n, "\n")
   mcmc$call <- paste0(mcmc$call, "observations per unit (minimum): ", min(nsubj), " \n")
@@ -1461,7 +1507,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "\nOther saved group-specific parameters: ", 
                       paste0(gparams, collapse = ", "), "\n")
   mcmc$call <- paste0(mcmc$call, "\nMCMC sampling: \n")
-  mcmc$call <- paste0(mcmc$call, "chains = number of sampled chains: ", chains, "\n")
+  mcmc$call <- paste0(mcmc$call, "nchains = number of sampled chains: ", nchains, "\n")
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")
   mcmc$call <- paste0(mcmc$call, ifelse(initsgiven, 
                                         "Initialized with given values.", 
@@ -1470,7 +1516,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   
 
   mcmc$iter <- iter
-  mcmc$chains <- chains
+  mcmc$nchains <- nchains
   mcmc$n <- n
   mcmc$numbered_unique_ids <- numbered_unique_ids
   mcmc$Nums <- Nums

@@ -1,8 +1,8 @@
 plot_clusters <-
-function(mcmc, AllData, 
+function(mcmc, scalar_samples, 
          what, dimspec, yspec, whichg,
          burnin = 0, thin = 1, setparmfrow = TRUE,
-         ChainsToPlot, doKern = TRUE, doECDF = TRUE,
+         chains, doKern = TRUE, doECDF = TRUE,
          COL, labcex = 0.8, whatLAB, wherelegend = "topright",
          restrictedtoGplus = FALSE){
   if(setparmfrow){
@@ -13,16 +13,16 @@ function(mcmc, AllData,
   if(is.element(what,names(mcmc$varying))){
     if (!mcmc$varying[what]){stop("This parameter wasn't considered as cluster-specific.")}
   }
-  if(missing(ChainsToPlot)){
+  if(missing(chains)){
     if(restrictedtoGplus){
-      ChainsToPlot <- c(1)
+      chains <- c(1)
     }else{
-      ChainsToPlot <- 1:mcmc$chains
+      chains <- 1:mcmc$nchains
     }
   }else{
-    if(restrictedtoGplus & length(ChainsToPlot) > 1){
-      warning("It is recommended to use one chain only when restrictedtoGplus=T, only first element of ChainsToPlot will be used.")
-      ChainsToPlot <- ChainsToPlot[1]
+    if(restrictedtoGplus & length(chains) > 1){
+      warning("It is recommended to use one chain only when restrictedtoGplus=T, only first element of chains will be used.")
+      chains <- chains[1]
     }
   }
     
@@ -33,25 +33,25 @@ function(mcmc, AllData,
     }
   }
   G <- ifelse(restrictedtoGplus,
-              mcmc$modeGplus[[ChainsToPlot]],
+              mcmc$modeGplus[[chains]],
               mcmc$G)
   if(missing(whichg)){
     whichg <- 1:G
   }
   
-  if(missing(AllData)){
-    AllData <- data.frame()
+  if(missing(scalar_samples)){
+    scalar_samples <- data.frame()
     for(g in whichg){
-      pomData <- FindAllData(mcmc = mcmc, what = what, 
-                             gspec = g, dimspec = dimspec, yspec = yspec,
-                             burnin = burnin, thin = thin, ChainsToPlot = ChainsToPlot, 
-                             restrictedtoGplus = restrictedtoGplus)
+      pomData <- get_scalar_samples(mcmc = mcmc, what = what, 
+                                    gspec = g, dimspec = dimspec, yspec = yspec,
+                                    burnin = burnin, thin = thin, chains = chains,
+                                    restrictedtoGplus = restrictedtoGplus)
       if(restrictedtoGplus){
-        pomData <- pomData[[ChainsToPlot]]
+        pomData <- pomData[[chains]]
       }
       colnames(pomData) <- c(paste0("y(",g,")"), "chain")
-      if(is.element("chain", colnames(AllData))){AllData <- cbind(AllData, pomData)
-      }else{AllData <- pomData}
+      if(is.element("chain", colnames(scalar_samples))){scalar_samples <- cbind(scalar_samples, pomData)
+      }else{scalar_samples <- pomData}
     }
   }
   
@@ -80,7 +80,7 @@ function(mcmc, AllData,
   if(doKern){
     kernest <- data.frame()
     for(g in whichg){
-      dd <- density(AllData[is.element(AllData$chain, ChainsToPlot), paste0("y(",g,")")], na.rm = T)
+      dd <- density(scalar_samples[is.element(scalar_samples$chain, chains), paste0("y(",g,")")], na.rm = T)
       kernest <- rbind(kernest, data.frame(x=dd$x, y=dd$y, cluster = g))
     }
     plot(c(min(kernest$y),max(kernest$y)) ~ quantile(kernest$x, probs = c(0.03,0.97)), type = "n",
@@ -96,12 +96,12 @@ function(mcmc, AllData,
   }
   # ECDF
   if(doECDF){
-    plot(x = 1, y = 1, type = "n", xlim = c(min(AllData[,grep("y",colnames(AllData))]), max(AllData[,grep("y",colnames(AllData))])), ylim = c(0,1),
+    plot(x = 1, y = 1, type = "n", xlim = c(min(scalar_samples[,grep("y",colnames(scalar_samples))]), max(scalar_samples[,grep("y",colnames(scalar_samples))])), ylim = c(0,1),
          xlab = "", ylab = "")
     mtext(text = whatLAB, side = 1, line = 2.5, cex = labcex)
     mtext(text = "ECDF", side = 2, line = 2.5, cex = labcex)
     for(g in whichg){
-      plot(ecdf(AllData[,paste0("y(", g,")")]), 
+      plot(ecdf(scalar_samples[,paste0("y(", g,")")]), 
            col = COL[g], add = T, verticals = T, pch = NA)
     }
   }

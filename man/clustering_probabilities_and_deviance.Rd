@@ -1,5 +1,5 @@
-\name{pUig_dev}
-\alias{pUig_dev}
+\name{clustering_probabilities_and_deviance}
+\alias{clustering_probabilities_and_deviance}
 \title{
 Evaluate clustering probabilities and deviance of clusGLMM output
 }
@@ -7,8 +7,8 @@ Evaluate clustering probabilities and deviance of clusGLMM output
 To evaluate clustering probabilities all latent variables need to be integrated out of log-pdf contributions. Jointly modelled random effects for mixed-type outcomes cannot be integrated out in a closed formula. Hence, we utilize Laplace's approximation or even Adaptive Gaussian Quadrature (AGQ) in order to approximate these integrals. Samples of model parameters from \code{clusGLMM} are sent to C environment for faster evaluation.  
 }
 \usage{
-pUig_dev(mcmc, id, data, dynamic_prob = FALSE, 
-  start = 1, end = mcmc$iter, thin = 1, ChainsToUse = 1:mcmc$chains, 
+clustering_probabilities_and_deviance(mcmc, id, data, dynamic_prob = FALSE, 
+  start = 1, end = mcmc$iter, thin = 1, chains = 1:mcmc$nchains, 
   tolerance = mcmc$tuning$double$tolerance, 
   maxiter = mcmc$tuning$integer$maxiter, 
   maxnrep = mcmc$tuning$integer$maxnrep, 
@@ -36,7 +36,7 @@ an iteration number where to end.
   \item{thin}{
 a thinning that should be used between \code{start} and \code{end}; e.g. if \code{thin = 10} only every 10th iteration will be approximated. 
 }
-  \item{ChainsToUse}{
+  \item{chains}{
 chain number(s) for which the approximation should be computed. 
 }
   \item{tolerance}{
@@ -67,7 +67,7 @@ To approximate \code{totnran}-dimensional integral over random effects we use Ad
 
 }
 \value{
-  If \code{howsave = "list"}, then it is a list of outputs for different chains (from \code{ChainsToUse}). Each chain then contains the following quantities:
+  If \code{howsave = "list"}, then it is a list of outputs for different chains (from \code{chains}). Each chain then contains the following quantities:
   \describe{
     \item{\code{deviance}}{a scalar containing the model deviance,}
     \item{\code{dev_i}}{a vector of individual unit contribution to the model deviance,}
@@ -138,11 +138,11 @@ formula
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
-chains <- 2   # number of chains to be sampled 
+nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 100, chains = chains)
+                 G = Gmax, iter = 100, nchains = nchains)
 
 ###-----------------------------------------------------------------------------
 ###     Sample completely new data
@@ -157,24 +157,24 @@ ldatanew <- generate_longitudinal_mixed_type_data(n = nnew, n_i = 4,
 newdata <- ldatanew$data
 id <- "i"
 
-probs <- pUig_dev(mcmc, id, newdata,
-                  dynamic_prob = FALSE,
-                  start = 1,
-                  end = 100,
-                  thin = 1,
-                  ChainsToUse = 1:chains,
-                  tolerance = 1e-7, 
-                  maxiter = 100, 
-                  maxnrep = 20, 
-                  NGQ = 1)
+probs <- clustering_probabilities_and_deviance(mcmc, id, newdata,
+                                               dynamic_prob = FALSE,
+                                               start = 1,
+                                               end = 100,
+                                               thin = 1,
+                                               chains = 1:nchains,
+                                               tolerance = 1e-7, 
+                                               maxiter = 100,
+                                               maxnrep = 20, 
+                                               NGQ = 1)
 
 ###-----------------------------------------------------------------------------
 ###     Final clustering
 ###-----------------------------------------------------------------------------
 probmean <- ps <- list()
-clustering <- matrix(-1, nrow = as.numeric(nnew), ncol = mcmc$chains)
-certainty <- matrix(-1, nrow = as.numeric(nnew), ncol = mcmc$chains)
-for(ch in 1:mcmc$chains){
+clustering <- matrix(-1, nrow = as.numeric(nnew), ncol = mcmc$nchains)
+certainty <- matrix(-1, nrow = as.numeric(nnew), ncol = mcmc$nchains)
+for(ch in 1:mcmc$nchains){
   ps[[ch]] <- probs[probs$chain == ch, grep("pUig", colnames(probs))]
   psum <- summary(coda::mcmc(ps[[ch]]))
   probmean[[ch]] <- matrix(psum$statistics[,"Mean"], ncol = mcmc$G,

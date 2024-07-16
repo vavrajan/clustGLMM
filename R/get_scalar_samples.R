@@ -1,10 +1,10 @@
-FindAllData <-
-function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
+get_scalar_samples <-
+function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, chains,
          restrictedtoGplus = FALSE){
   if(thin < 1){
     stop("Thinning parameter has to be integer and thin >= 1.")
   }
-  AllData <- data.frame()
+  scalar_samples <- data.frame()
   
   ### All is saved in structured list
   if(restrictedtoGplus){
@@ -41,13 +41,13 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
       }
     }
     
-    if(!is.element(colname, colnames(all[[ChainsToPlot[1]]]))){
+    if(!is.element(colname, colnames(all[[chains[1]]]))){
       stop(paste("Wrong specification, column ", colname, " does not exist in sampled data freed of spurious clusters!"))
     }
     
-    AllData <- list()
+    scalar_samples <- list()
     
-    for(ch in ChainsToPlot){
+    for(ch in chains){
       auxdata <- data.frame(y=unlist(all[[ch]][, colname]), 
                             chain = ch,
                             inds = mcmc$inds[[ch]])
@@ -56,7 +56,7 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
       # thinning application
       auxdata <- auxdata[seq(1, dim(auxdata)[1], by = thin),]
       
-      AllData[[ch]] <- auxdata
+      scalar_samples[[ch]] <- auxdata
     }
     
     
@@ -67,62 +67,62 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
       
       v <- mcmc$settings[what,]
         
-      for(ch in ChainsToPlot){
+      for(ch in chains){
         if(v$isspec){
           if(v$isy){
             # group-specific and y-specific
             if(v$D == 0){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states, yspec], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states, yspec], chain = ch))
             }
             if(v$D == 1){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][states,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][states,dimspec[1],dimspec[2]], chain = ch))
             }
           }else{
             # group-specific but not y-specific
             if(v$D == 0){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states], chain = ch))
             }
             if(v$D == 1){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states,dimspec[1],dimspec[2]], chain = ch))
             }
           } # end of else of if is g-specific
         }else{
           if(v$isy){
             # not group-specific but y-specific
             if(v$D == 0){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][states, yspec], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states, yspec], chain = ch))
             }
             if(v$D == 1){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][states,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][states,dimspec[1],dimspec[2]], chain = ch))
             }
           }else{
             # neither group-specific nor y-specific
             if(v$D == 0){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][states], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states], chain = ch))
             }
             if(v$D == 1){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              AllData <- rbind(AllData, data.frame(y=mcmc$draws[[ch]][[what]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states,dimspec[1],dimspec[2]], chain = ch))
             }
           }
         } 
-      } # end of for ch in ChainsToPlot
+      } # end of for ch in chains
     }# end of if mcmc$howsave == list
     
     ### All is saved in large matrix
     if(mcmc$howsave == "matrix"){
-      #mcmc, burnin, iter, what, gspec, dimspec, yspec, thin, ChainsToPlot
+      #mcmc, burnin, iter, what, gspec, dimspec, yspec, thin, chains
       colname <- what
       
       if(!missing(yspec)){
@@ -149,13 +149,13 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, ChainsToPlot,
         stop(paste("Wrong specification, column ", colname, " does not exist in mcmc$draws!"))
       }
       
-      AllData <- data.frame()
+      scalar_samples <- data.frame()
       
-      for(ch in ChainsToPlot){
-        AllData <- rbind(AllData, data.frame(y=mcmc$draws[states + (ch-1)*mcmc$iter, colname], chain = ch))
+      for(ch in chains){
+        scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[states + (ch-1)*mcmc$iter, colname], chain = ch))
       }
       
     } # end of if howsave="matrix"
   }
-  return(AllData)
+  return(scalar_samples)
 }

@@ -9,7 +9,7 @@ First, initial values are set based on separate univariate GLMMs for each indivi
 \usage{
 clusGLMM(formula, id, family, data, G,  
   varying, save, howsave, param, inits, tuning, 
-  iter = 1000, chains = 1)
+  iter = 1000, nchains = 1)
 }
 \arguments{
   \item{formula}{
@@ -57,7 +57,7 @@ a list of integer valued and double-valued tuning parameters. See also 'Details'
   \item{iter}{
 length of each sampled chain.
 }
-  \item{chains}{
+  \item{nchains}{
 number of chains to be sampled.
 }
 }
@@ -107,8 +107,9 @@ The algorithm also requires a set \code{tuning} of parameters that tune the samp
 \value{
 The most important output:
 \item{draws}{generated samples saved either in large matrix (\code{howsave = "matrix"}) or a list indexed by chain number (\code{howsave = "matrix"}).}
+\item{param_names}{individual parameter (column) names in structured list by general parameter name.}
 
-Inputs given to the function: \code{iter}, \code{chains}, \code{family} (sorted by type), \code{formula}, \code{G}, \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
+Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G}, \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
 
 Other newly defined quantities included in the output are:
 \item{call}{summary of what has been fitted,}
@@ -203,11 +204,11 @@ formula
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
-chains <- 2   # number of chains to be sampled 
+nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 100, chains = chains)
+                 G = Gmax, iter = 100, nchains = nchains)
 
 ## Extract the last state
 inits <- mcmc$last
@@ -216,7 +217,7 @@ inits <- mcmc$last
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
                  G = Gmax, 
                  inits = inits, 
-                 iter = 500, chains = chains)
+                 iter = 500, nchains = nchains)
                        
 ## Note that sampling takes time, so parallelization for different chains is recommended.
 ## See the full tutorial. 

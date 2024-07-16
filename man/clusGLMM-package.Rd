@@ -1,6 +1,5 @@
 \name{clusGLMM-package}
 \alias{clusGLMM-package}
-\alias{clusGLMM}
 \docType{package}
 \title{
 \packageTitle{clusGLMM}

@@ -2,20 +2,21 @@ useDynLib(clusGLMM, .registration=TRUE, .fixes = "C_")
 
 export("as_coda",
        "clusGLMM", 
+       "clustering_probabilities_and_deviance", 
        "default_param",
        "default_save",
        "default_tuning",
        "default_varying",
-       "FindAllData", 
-       "FromCtoList", 
-       "FromCtoMatrix", 
-       "FromListtoC",
-       "FromListtoCoda",
-       "FromListtoMatrix", 
-       "FromMatrixtoC", 
-       "FromMatrixtoCoda",
-       "FromMatrixtoList",
+       "from_C_to_list", 
+       "from_C_to_matrix", 
+       "from_list_to_C",
+       "from_list_to_coda",
+       "from_list_to_matrix", 
+       "from_matrix_to_C", 
+       "from_matrix_to_coda",
+       "from_matrix_to_list",
        "generate_longitudinal_mixed_type_data",
+       "get_scalar_samples", 
        "nice_nrow_ncol", 
        "PermuteClusterSpec", 
        "plot_ACF", 
@@ -32,7 +33,6 @@ export("as_coda",
        "plot_num_vs_x_grouped", 
        "plot_traceplots", 
        "plot_traceplots_param", 
-       "pUig_dev", 
        "RestrictionToModeGplus")
 
 S3method(summary, clusglmm)
@@ -52,7 +52,7 @@ importFrom("mvtnorm", "rmvnorm")
 importFrom("nnet", "multinom")
 importFrom("splines", "bs")
 importFrom("stats", "acf", "as.formula", "binomial", "density", "ecdf",
-           "glm", "kmeans", "lowess", "model.matrix", "na.pass",
+           "glm", "kmeans", "lowess", "median", "model.matrix", "na.pass",
            "poisson", "rbinom", "rgamma", "rnorm", "rpois", "runif",
            "sd")
 importFrom("utils", "head")

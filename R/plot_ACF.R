@@ -1,26 +1,26 @@
 plot_ACF <-
-function(mcmc, AllData, 
+function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max = 30, ChainsToPlot,
+         burnin = 0, thin = 1, lag.max = 30, chains,
          COL, move.width = 0.3, labcex = 1, whatLAB,
          restrictedtoGplus = FALSE){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(opar)
-  if(missing(ChainsToPlot)){ChainsToPlot <- 1:mcmc$chains}
+  if(missing(chains)){chains <- 1:mcmc$nchains}
   #if (missing(gspec)){gspec <- 1}
   if(!missing(yspec)){if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Ords, mcmc$Bins, mcmc$Cats))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
-  if(missing(AllData)){
-    AllData <- FindAllData(mcmc = mcmc, what = what, 
-                           gspec = gspec, dimspec = dimspec, yspec = yspec,
-                           burnin = burnin, thin = thin, ChainsToPlot = ChainsToPlot, 
-                           restrictedtoGplus = restrictedtoGplus)
+  if(missing(scalar_samples)){
+    scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what,
+                                         gspec = gspec, dimspec = dimspec, yspec = yspec,
+                                         burnin = burnin, thin = thin, chains = chains,
+                                         restrictedtoGplus = restrictedtoGplus)
   }
   if(restrictedtoGplus){
-    subiter <- dim(AllData[[ChainsToPlot[1]]])[1]
+    subiter <- dim(scalar_samples[[chains[1]]])[1]
   }else{
-    subiter <- sum(AllData$chain == ChainsToPlot[1])
+    subiter <- sum(scalar_samples$chain == chains[1])
   }
   if(lag.max >= subiter){lag.max <- subiter-1}
   
@@ -33,7 +33,7 @@ function(mcmc, AllData,
     
     if(!missing(gspec)){
       if(restrictedtoGplus){
-        if(gspec > min(unlist(mcmc$modeGplus)[as.character(ChainsToPlot)])){
+        if(gspec > min(unlist(mcmc$modeGplus)[as.character(chains)])){
           stop("You have asked for g such that may not be included in one of the chains")
         }
       }
@@ -53,10 +53,10 @@ function(mcmc, AllData,
   }
   
   if(missing(COL)){
-    if(mcmc$chains == 1){
+    if(mcmc$nchains == 1){
       COL <- "grey"
     }else{
-      COL <- diverge_hcl(mcmc$chains, c = 80, l =70)
+      COL <- diverge_hcl(mcmc$nchains, c = 80, l =70)
     }
   }
   
@@ -66,15 +66,15 @@ function(mcmc, AllData,
   mtext(text = "Lag", side = 1, line = 2.5, cex = labcex)
   mtext(text = "ACF", side = 2, line = 2.5, cex = labcex)
   #mtext(whatLAB, side = 3, line = 0.5)
-  pom <- seq(-move.width, move.width, length.out = length(ChainsToPlot)+1)
-  posun <- (pom[1:length(ChainsToPlot)]+pom[2:(1+length(ChainsToPlot))])/2
+  pom <- seq(-move.width, move.width, length.out = length(chains)+1)
+  posun <- (pom[1:length(chains)]+pom[2:(1+length(chains))])/2
   chcount <- 0
-  for(ch in ChainsToPlot){
+  for(ch in chains){
     chcount <- chcount+1
     if(restrictedtoGplus){
-      yy <- AllData[[ch]]$y
+      yy <- scalar_samples[[ch]]$y
     }else{
-      yy <- AllData$y[AllData$chain == ch]
+      yy <- scalar_samples$y[scalar_samples$chain == ch]
     }
     pomACF <- acf(yy, lag.max = lag.max, plot = F, na.action = na.pass)$acf[,1,1]
     lines(pomACF ~ c(0:lag.max + posun[chcount]),

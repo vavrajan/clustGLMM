@@ -1,10 +1,10 @@
-FromCtoList <-
-function(values, 
-                        p,
-                        settings,
-                        yspecd1,
-                        yspecd2,
-                        family)        # parameter to be listed
+from_C_to_list <-
+function(values,
+         p,
+         settings,
+         yspecd1,
+         yspecd2,
+         family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
   # save, isspec, G, isy, ynums, yords, ybins, iter, 

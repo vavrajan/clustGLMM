@@ -139,11 +139,11 @@ formula
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
-chains <- 2   # number of chains to be sampled 
+nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 1000, chains = chains)
+                 G = Gmax, iter = 1000, nchains = nchains)
 
 # for the sake of an example we have too short iter
 # use higher iter for proper inference
@@ -183,15 +183,15 @@ head(mcmc$UGplus[[1]][,1:20])
 ## first we have to recognize which chain has which meaning
 neff <- mcmc$ngrp[["ynum"]]
 opar <- par(no.readonly = TRUE)
-par(mfrow = c(chains,neff), mar = c(4,4,1,1))
-for(ch in 1:chains){
+par(mfrow = c(nchains,neff), mar = c(4,4,1,1))
+for(ch in 1:nchains){
   TAB <- table(mcmc$last[[ch]]$U)
   nonempty <- as.numeric(names(TAB)[which(TAB>0)]) 
   
   for(i in 1:neff){
     plot_clusters(mcmc = mcmc, what = "beta_num", 
                   yspec = "ynum", dimspec = i, whichg = nonempty,
-                  setparmfrow = FALSE, ChainsToPlot = ch,
+                  setparmfrow = FALSE, chains = ch,
                   doECDF = FALSE)
     # true values
     for(gg in 1:2){
@@ -222,42 +222,42 @@ mcmc <- PermuteClusterSpec(mcmc, perm)
 thin <- 10
 
 ## probabilites w
-for(ch in 1:mcmc$chains){
+for(ch in 1:mcmc$nchains){
   par(mfrow = c(mcmc$modeGplus[[ch]],4))
   for(g in 1:mcmc$modeGplus[[ch]]){
     plot_traceplots(mcmc = mcmc, what = "w", 
                     dimspec = g, 
                     whatLAB = paste0("w[",g,"]"),
-                    thin = thin, ChainsToPlot = ch, labcex = 0.6, 
+                    thin = thin, chains = ch, labcex = 0.6, 
                     restrictedtoGplus = TRUE)
     plot_kerneldensity(mcmc = mcmc, what = "w",
                        dimspec = g,  
                        whatLAB = paste0("w[",g,"]"),
-                       thin = thin, ChainsToPlot = ch, labcex = 0.6, 
+                       thin = thin, chains = ch, labcex = 0.6, 
                        restrictedtoGplus = TRUE)
     plot_ECDF(mcmc = mcmc, what = "w", 
               dimspec = g, 
               whatLAB = paste0("w[",g,"]"),
-              thin = thin, ChainsToPlot = ch, labcex = 0.6, 
+              thin = thin, chains = ch, labcex = 0.6, 
               restrictedtoGplus = TRUE)
     plot_ACF(mcmc = mcmc, what = "w", 
              dimspec = g, 
              whatLAB = paste0("w[",g,"]"),
-             thin = thin, lag.max = 30, ChainsToPlot = ch, labcex = 0.6, 
+             thin = thin, lag.max = 30, chains = ch, labcex = 0.6, 
              restrictedtoGplus = TRUE)
   }
 }
 
 ## beta_num
 nfr <- length(mcmc$lgrpnames$ynum)
-for(ch in 1:mcmc$chains){
+for(ch in 1:mcmc$nchains){
   par(mfrow = c(mcmc$modeGplus[[ch]],nfr))
   for(g in 1:mcmc$modeGplus[[ch]]){
     # traceplots
     for(i in 1:nfr){
       plot_traceplots(mcmc = mcmc, what = "beta_num", 
                       gspec = g, yspec = "ynum", dimspec = i,
-                      thin = thin, ChainsToPlot = ch, labcex = 0.6, 
+                      thin = thin, chains = ch, labcex = 0.6, 
                       restrictedtoGplus = TRUE)
     }
   }

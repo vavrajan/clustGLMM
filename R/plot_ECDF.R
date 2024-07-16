@@ -1,20 +1,20 @@
 plot_ECDF <-
-function(mcmc, AllData, 
+function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, ChainsToPlot,
+         burnin = 0, thin = 1, chains,
          COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(opar)
-  if (missing(ChainsToPlot)){ChainsToPlot <- 1:mcmc$chains}
+  if (missing(chains)){chains <- 1:mcmc$nchains}
   #if (missing(gspec)){gspec <- 1}
   if (!missing(yspec)){if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Ords, mcmc$Bins, mcmc$Cats))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
-  if (missing(AllData)){
-    AllData <- FindAllData(mcmc = mcmc, what = what, 
-                           gspec = gspec, dimspec = dimspec, yspec = yspec,
-                           burnin = burnin, thin = thin, ChainsToPlot = ChainsToPlot, 
-                           restrictedtoGplus = restrictedtoGplus)
+  if (missing(scalar_samples)){
+    scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what, 
+                                         gspec = gspec, dimspec = dimspec, yspec = yspec,
+                                         burnin = burnin, thin = thin, chains = chains, 
+                                         restrictedtoGplus = restrictedtoGplus)
   }
   if (missing(whatLAB)){
     whatLAB <- what
@@ -25,7 +25,7 @@ function(mcmc, AllData,
     
     if(!missing(gspec)){
       if(restrictedtoGplus){
-        if(gspec > min(unlist(mcmc$modeGplus)[as.character(ChainsToPlot)])){
+        if(gspec > min(unlist(mcmc$modeGplus)[as.character(chains)])){
           stop("You have asked for g such that may not be included in one of the chains")
         }
       }
@@ -47,13 +47,13 @@ function(mcmc, AllData,
   if(restrictedtoGplus){
     Max <- -Inf
     Min <- Inf
-    for(ch in ChainsToPlot){
-      Max <- max(c(AllData[[ch]]$y, Max), na.rm = T)
-      Min <- min(c(AllData[[ch]]$y, Min), na.rm = T)
+    for(ch in chains){
+      Max <- max(c(scalar_samples[[ch]]$y, Max), na.rm = T)
+      Min <- min(c(scalar_samples[[ch]]$y, Min), na.rm = T)
     }
   }else{
-    Max <- max(AllData$y)
-    Min <- min(AllData$y)
+    Max <- max(scalar_samples$y)
+    Min <- min(scalar_samples$y)
   }
   
   #if(missing(whatLAB)){
@@ -72,23 +72,23 @@ function(mcmc, AllData,
   #}
   
   if(missing(COL)){
-    if(mcmc$chains == 1){
+    if(mcmc$nchains == 1){
       COL <- "grey"
     }else{
-      COL <- diverge_hcl(mcmc$chains, c = 80, l =70)
+      COL <- diverge_hcl(mcmc$nchains, c = 80, l =70)
     }
   }
-  #if (missing(COL)){COL <- topo.colors(mcmc$chains, alpha = 1)}
+  #if (missing(COL)){COL <- topo.colors(mcmc$nchains, alpha = 1)}
   
   plot(x = 1, y = 1, type = "n", xlim = c(Min, Max), ylim = c(0,1),
        xlab = "", ylab = "")
   mtext(text = whatLAB, side = 1, line = 2.5, cex = labcex)
   mtext(text = "ECDF", side = 2, line = 2.5, cex = labcex)
-  for(ch in ChainsToPlot){
+  for(ch in chains){
     if(restrictedtoGplus){
-      yy <- AllData[[ch]]$y
+      yy <- scalar_samples[[ch]]$y
     }else{
-      yy <- AllData$y[AllData$chain == ch]
+      yy <- scalar_samples$y[scalar_samples$chain == ch]
     }
     plot(ecdf(yy), col = COL[ch], add = T, verticals = T, pch = NA)
   }

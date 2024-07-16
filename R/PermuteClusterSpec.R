@@ -5,7 +5,7 @@ function(mcmc, perm){
   # ... and so on
   
   ## permute only the restricted parameters according to given list of permutations
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     # permute w
     if((!is.null(mcmc$wGplus)) & (length(mcmc$wGplus) > 0)){
       auxwGplus <- matrix(-1, nrow = dim(mcmc$wGplus[[ch]])[1], ncol = 0)
@@ -58,14 +58,14 @@ function(mcmc, perm){
       mcmc$clusterspec[[ch]] <- aux
     }
     
-  } # end of for ch in 1:chains
+  } # end of for ch in 1:nchains
   
   
   ## permute everything in the original data  
   if(mcmc$howsave == "matrix"){
     # data are save in matrix mcmc$draws
     draws <- matrix(0, nrow = 0, ncol = dim(mcmc$draws)[2])
-    for(ch in 1:mcmc$chains){
+    for(ch in 1:mcmc$nchains){
       aux <- mcmc$draws[mcmc$draws$chain == ch, ]
       
       # permute w
@@ -131,7 +131,7 @@ function(mcmc, perm){
   
   if(mcmc$howsave == "list"){
     # data are saved in lists
-    for(ch in 1:mcmc$chains){
+    for(ch in 1:mcmc$nchains){
       # permute w
       if(mcmc$save["w"]){
         auxw <- matrix(-1, nrow = dim(mcmc$draws[[ch]]$w)[1], ncol = 0)
@@ -194,7 +194,7 @@ function(mcmc, perm){
   
   ## Permute mcmc$last, the last values
   # data are saved in lists
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     # permute w
     mcmc$last[[ch]]$w <- mcmc$last[[ch]]$w[perm[[ch]]]
     

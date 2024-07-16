@@ -1,29 +1,47 @@
 \name{summary.clusglmm}
 \alias{summary.clusglmm}
+\alias{print.summary.clusglmm}
 \title{
 Computing the summary statistics of outputs of \code{clusGLMM}
 }
 \description{
-A method for computing the summary statistics of class \code{clusglmm}, the outputs of \code{clusGLMM}.
+A method for computing and printing the summary statistics of class \code{clusglmm}, the outputs of \code{clusGLMM} function.
 }
 \usage{
 summary(object, ...)
+print(x, chains=c(1), summary_type="statistics", ...)
 }
 \arguments{
   \item{object}{
 an object of class \code{"clusglmm"}, an output of \code{clusGLMM} function.
 }
+  \item{x}{
+an object of class \code{"summary.clusglmm"}, an output of \code{summary.clusGLMM} function.
+}
+  \item{chains}{
+a vector of chain numbers to print summary results of.
+}
+  \item{summary_type}{
+either \code{"statistics"} or \code{"quantiles"}.
+}
   \item{...}{
-other arguments.
+other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
 }
 }
 \details{
-  TODO describe what and how is computed for the summary.
+  \code{print.summary} prints \code{call} and a brief summary of clustering for selected \code{chains}. Then, again for each selected chain prints the summary statistics as in \code{library(coda)}. You can choose one of the tables (\code{"statistics"} or \code{"quantiles"}) by \code{summary_type}. 
 }
 \value{
-  Returns a list of:
-  \item{call}{A string describing the model defined to be estimated.}
-  \item{clustering}{Summary of the clustering based on sampled indicators.}
+  \code{summary} returns a list of:
+  \item{call}{a string describing the model defined to be estimated,}
+  \item{G}{maximal number of underlying clusters,}
+  \item{modeGplus}{the most frequent number of non-empty clusters per each chain,}
+  \item{clustering}{matrix of assigned clusters for each unit based on sampled indicators,}
+  \item{certainty}{matrix of certainties (the highest clustering probability among G other) for each unit based on sampled indicators,}
+  \item{clusters}{labels of non-empty clusters for each chain separately,}
+  \item{coda_summary}{output of \code{coda} summary for each chain separately,}
+  \item{fnames}{vector of parameter names invariant to clustering,}
+  \item{gnames}{cluster-specific parameter names only for cluster 1.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
@@ -32,7 +50,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}, \code{\link{summary.clusglmm}}
+\code{\link{clusGLMM}}, \code{\link{print.summary.clusglmm}}, \code{\link{summary.mcmc}}
 }
 \examples{
 
@@ -87,15 +105,15 @@ formula
 
 iter <- 100    # the length of sampled chain
 Gmax <- 5      # maximal number of mixture components to be considered
-chains <- 2    # number of chains to be sampled 
+nchains <- 2   # number of chains to be sampled 
 
 ## No inits specified
 ## Saved in "matrix" format
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, chains = chains,
+                 G = Gmax, iter = iter, nchains = nchains,
                  howsave = "matrix")
 
 mcmc
-s <- summary.clusglmm(mcmc)
+s <- summary(mcmc)
 s
 }

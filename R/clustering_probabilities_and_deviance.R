@@ -1,4 +1,4 @@
-pUig_dev <-
+clustering_probabilities_and_deviance <-
 function(mcmc,      # MCMC generated parameters
          #   output of Metropolis_within_Gibbs_MBC_NumBinOrdCat
          id,     # name of the id variable in data
@@ -8,7 +8,7 @@ function(mcmc,      # MCMC generated parameters
          start = 1,
          end = mcmc$iter,
          thin = 1,
-         ChainsToUse = 1:mcmc$chains,
+         chains = 1:mcmc$nchains,
          tolerance = mcmc$tuning$double$tolerance, # tolerance when computing norm of the shift within Newton-Raphson
          maxiter = mcmc$tuning$integer$maxiter, # maximum iterations allowed during Newton-Raphson update of proposal distribution
          maxnrep = mcmc$tuning$integer$maxnrep,
@@ -154,14 +154,6 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   }
   
   
-  if(mcmc$howsave == "matrix"){
-    output <- data.frame()
-  }
-  
-  if(mcmc$howsave == "list"){
-    output <- list()
-  }
-  
   # Creating model matrix containing all needed columns for C
   finX <- data.frame(id = data[,id])
   Xcolnames <- numeric()
@@ -291,7 +283,33 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   
   head(finX)
   
-  for(ch in ChainsToUse){
+  # all the following three are going to be saved
+  nparams <- sum(mcmc$settings[c("deviance", "dev_i", "pUig_int"), "dimswithG"])
+  if(mcmc$howsave == "matrix"){
+    param_names <- list()
+    output <- matrix(0, nrow = length(chains)*niter, ncol = 2+nparams)
+    output[,1] = rep(chains, each=niter)
+    output[,2] = rep(iterations, length(chains))
+    cnames <- character(2+nparams)
+    cnames[1] = "chain"
+    cnames[2] = "m"
+    index = 2
+    for(p in c("deviance", "dev_i", "pUig_int")){
+      aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
+                             p = p, settings = settings, family = mcmc$family)
+      param_names[[p]] <- colnames(aux)
+      cnames[(index+1):(index+settings[p,"dimswithG"])] = colnames(aux)
+      index = index + settings[p,"dimswithG"]
+    }
+    colnames(output) <- cnames
+    output = as.data.frame(output)
+  }
+  
+  if(mcmc$howsave == "list"){
+    output <- list()
+  }
+  
+  for(ch in chains){
     # arrays/fields where those variables are and will be stored
     cpUig_int <- double(niter*settings["pUig_int", "dimswithG"])
     cdeviance <- double(niter*settings["deviance", "dimswithG"])
@@ -299,63 +317,63 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     #if(dev){cdeviance <- double(niter*cdimswithK["deviance"])}else{cdeviance <- as.double(0)}
     
     if(mcmc$howsave == "list"){
-      cbeta_num_fix <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_num_fix", settings, 
-                                   yspecd1 = mcmc$yspecd1$beta_num_fix,
-                                   family=mcmc$family)
-      cbeta_num <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_num", settings, 
-                               yspecd1 = mcmc$yspecd1$beta_num,
-                               family=mcmc$family)
-      ctau_num  <- FromListtoC(mcmc$draws[[ch]], iterations, "tau_num", settings,
-                               family=mcmc$family)
-      cbeta_poi_fix <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_poi_fix", settings, 
-                                   yspecd1 = mcmc$yspecd1$beta_poi_fix,
-                                   family=mcmc$family)
-      cbeta_poi <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_poi", settings, 
-                               yspecd1 = mcmc$yspecd1$beta_poi,
-                               family=mcmc$family)
-      cbeta_bin_fix <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_bin_fix", settings, 
-                                   yspecd1 = mcmc$yspecd1$beta_bin_fix,
-                                   family=mcmc$family)
-      cbeta_bin <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_bin", settings, 
-                               yspecd1 = mcmc$yspecd1$beta_bin,
-                               family=mcmc$family)
-      cbeta_ord_fix <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_ord_fix", settings, 
-                                   yspecd1 = mcmc$yspecd1$beta_ord_fix,
-                                   family=mcmc$family)
-      cbeta_ord <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_ord", settings, 
-                               yspecd1 = mcmc$yspecd1$beta_ord,
-                               family=mcmc$family)
-      cc_ord    <- FromListtoC(mcmc$draws[[ch]], iterations, "c_ord", settings, 
-                               yspecd1 = mcmc$yspecd1$c_ord,
-                               family=mcmc$family)
-      cbeta_cat_fix <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_cat_fix", settings, 
-                                   yspecd1 = mcmc$yspecd1$beta_cat_fix, 
-                                   yspecd2 = mcmc$yspecd2$beta_cat_fix,
-                                   family=mcmc$family)
-      cbeta_cat <- FromListtoC(mcmc$draws[[ch]], iterations, "beta_cat", settings,
-                               yspecd1 = mcmc$yspecd1$beta_cat, 
-                               yspecd2 = mcmc$yspecd2$beta_cat,
-                               family=mcmc$family)
-      cInvSigma <- FromListtoC(mcmc$draws[[ch]], iterations, "InvSigma", settings,
-                               family=mcmc$family)
-      cw        <- FromListtoC(mcmc$draws[[ch]], iterations, "w", settings,
-                               family=mcmc$family)
+      cbeta_num_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_num_fix", settings, 
+                                      yspecd1 = mcmc$yspecd1$beta_num_fix,
+                                      family=mcmc$family)
+      cbeta_num <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_num", settings, 
+                                  yspecd1 = mcmc$yspecd1$beta_num,
+                                  family=mcmc$family)
+      ctau_num  <- from_list_to_C(mcmc$draws[[ch]], iterations, "tau_num", settings,
+                                  family=mcmc$family)
+      cbeta_poi_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_poi_fix", settings, 
+                                      yspecd1 = mcmc$yspecd1$beta_poi_fix,
+                                      family=mcmc$family)
+      cbeta_poi <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_poi", settings,
+                                  yspecd1 = mcmc$yspecd1$beta_poi,
+                                  family=mcmc$family)
+      cbeta_bin_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_bin_fix", settings, 
+                                      yspecd1 = mcmc$yspecd1$beta_bin_fix,
+                                      family=mcmc$family)
+      cbeta_bin <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_bin", settings, 
+                                  yspecd1 = mcmc$yspecd1$beta_bin,
+                                  family=mcmc$family)
+      cbeta_ord_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_ord_fix", settings,
+                                      yspecd1 = mcmc$yspecd1$beta_ord_fix,
+                                      family=mcmc$family)
+      cbeta_ord <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_ord", settings, 
+                                  yspecd1 = mcmc$yspecd1$beta_ord,
+                                  family=mcmc$family)
+      cc_ord    <- from_list_to_C(mcmc$draws[[ch]], iterations, "c_ord", settings, 
+                                  yspecd1 = mcmc$yspecd1$c_ord,
+                                  family=mcmc$family)
+      cbeta_cat_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_cat_fix", settings, 
+                                      yspecd1 = mcmc$yspecd1$beta_cat_fix, 
+                                      yspecd2 = mcmc$yspecd2$beta_cat_fix,
+                                      family=mcmc$family)
+      cbeta_cat <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_cat", settings,
+                                  yspecd1 = mcmc$yspecd1$beta_cat, 
+                                  yspecd2 = mcmc$yspecd2$beta_cat,
+                                  family=mcmc$family)
+      cInvSigma <- from_list_to_C(mcmc$draws[[ch]], iterations, "InvSigma", settings,
+                                  family=mcmc$family)
+      cw        <- from_list_to_C(mcmc$draws[[ch]], iterations, "w", settings,
+                                  family=mcmc$family)
     }
     if(mcmc$howsave == "matrix"){
-      cbeta_num_fix <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_num_fix", settings)
-      cbeta_num <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_num", settings)
-      ctau_num  <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "tau_num", settings)
-      cbeta_poi_fix <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_poi_fix", settings)
-      cbeta_poi <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_poi", settings)
-      cbeta_bin_fix <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_bin_fix", settings)
-      cbeta_bin <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_bin", settings)
-      cbeta_ord_fix <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_ord_fix", settings)
-      cbeta_ord <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_ord", settings)
-      cc_ord    <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "c_ord", settings)
-      cbeta_cat_fix <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_cat_fix", settings)
-      cbeta_cat <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "beta_cat", settings)
-      cInvSigma <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "InvSigma", settings)
-      cw        <- FromMatrixtoC(mcmc$draws, chain = ch, iterations, "w", settings)
+      cbeta_num_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_num_fix", settings)
+      cbeta_num <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_num", settings)
+      ctau_num  <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "tau_num", settings)
+      cbeta_poi_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_poi_fix", settings)
+      cbeta_poi <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_poi", settings)
+      cbeta_bin_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_bin_fix", settings)
+      cbeta_bin <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_bin", settings)
+      cbeta_ord_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_ord_fix", settings)
+      cbeta_ord <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_ord", settings)
+      cc_ord    <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "c_ord", settings)
+      cbeta_cat_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_cat_fix", settings)
+      cbeta_cat <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_cat", settings)
+      cInvSigma <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "InvSigma", settings)
+      cw        <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "w", settings)
     }
     
     #dyn.load("Cfun/pUig_dev.dll")
@@ -470,8 +488,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
       chain <- list()
       for(p in c("deviance", "dev_i", "pUig_int")){
         if(settings[p, "save"]){
-          chain[[p]] <- FromCtoList(cmcmc[[p]], p, settings,
-                                    family=mcmc$family)
+          chain[[p]] <- from_C_to_list(cmcmc[[p]], p, settings, family=mcmc$family)
         }
       }
       chain[["m"]] <- iterations
@@ -480,19 +497,11 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     }
 
     if(mcmc$howsave == "matrix"){
-      # results will be returned in structured list - the same way as original R function
-      AllData <- matrix(ch, nrow = niter, ncol = 1)
-      AllData <- cbind(AllData, matrix(iterations, nrow = niter, ncol = 1))
-      colnames(AllData) <- c("chain", "m")
-
+      # results will be returned in matrix - the same way as original R function
       for(p in c("deviance", "dev_i", "pUig_int")){
-        if(settings[p, "save"]){
-          AllData <- cbind(AllData, 
-                           FromCtoMatrix(cmcmc[[p]], p, settings, family=mcmc$family))
-        }
+        aux = from_C_to_matrix(cmcmc[[p]], p, settings, family=mcmc$family)
+        output[iterations + (ch-1)*niter, colnames(aux)] <- aux
       }
-      
-      output <- rbind(output, AllData)
     }
     
   }  # end of for ch in 1:chains

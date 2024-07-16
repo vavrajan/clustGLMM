@@ -25,39 +25,39 @@ There are 4 main plots to be created:
 All of these for one specific parameter can be plotted by \code{plot_all}. These functions above work only for a univariate parameter. Plots for all elements of a multivariate parameter can be created using \code{..._param} functions. A special function is \code{plot_clusters} which allows to compare densities or ECDFs of univariate group-specific parameter across non-empty clusters.  
 }
 \usage{
-plot_ACF(mcmc, AllData, what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max = 30, ChainsToPlot, 
+plot_ACF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
+         burnin = 0, thin = 1, lag.max = 30, chains, 
          COL, move.width = 0.3, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
-plot_ECDF(mcmc, AllData, what, gspec, dimspec, yspec,
-          burnin = 0, thin = 1, ChainsToPlot, 
+plot_ECDF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
+          burnin = 0, thin = 1, chains, 
           COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
-plot_kerneldensity(mcmc, AllData, what, gspec, dimspec, yspec, 
-                   burnin = 0, thin = 1, ChainsToPlot, 
+plot_kerneldensity(mcmc, scalar_samples, what, gspec, dimspec, yspec, 
+                   burnin = 0, thin = 1, chains, 
                    dolegend = FALSE, COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
-plot_traceplots(mcmc, AllData, what, gspec, dimspec, yspec,
-                burnin = 0, thin = 1, ChainsToPlot, 
+plot_traceplots(mcmc, scalar_samples, what, gspec, dimspec, yspec,
+                burnin = 0, thin = 1, chains, 
                 COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
-plot_all(mcmc, AllData, what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max, ChainsToPlot, trueval, setparmfrow = TRUE, 
+plot_all(mcmc, scalar_samples, what, gspec, dimspec, yspec,
+         burnin = 0, thin = 1, lag.max, chains, trueval, setparmfrow = TRUE, 
          COL, move.width = 0.3, whatLAB, restrictedtoGplus = FALSE)
-plot_ACF_param(mcmc, what, burnin = 0, thin = 1, lag.max = 30, ChainsToPlot)
-plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, ChainsToPlot)
-plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, ChainsToPlot)
-plot_traceplots_param(mcmc, what, burnin = 0, thin = 1, ChainsToPlot)
-plot_clusters(mcmc, AllData, what, dimspec, yspec, whichg,
+plot_ACF_param(mcmc, what, burnin = 0, thin = 1, lag.max = 30, chains)
+plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, chains)
+plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, chains)
+plot_traceplots_param(mcmc, what, burnin = 0, thin = 1, chains)
+plot_clusters(mcmc, scalar_samples, what, dimspec, yspec, whichg,
               burnin = 0, thin = 1, setparmfrow = TRUE, 
-              ChainsToPlot, doKern = TRUE, doECDF = TRUE,
+              chains, doKern = TRUE, doECDF = TRUE,
               COL, labcex = 0.8, whatLAB, wherelegend = "topright",
               restrictedtoGplus = FALSE)
-plot_clusters_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, ChainsToPlot)
-plot_clusters_ECDF_param(mcmc, what, burnin = 0, thin = 1, ChainsToPlot)
+plot_clusters_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, chains)
+plot_clusters_ECDF_param(mcmc, what, burnin = 0, thin = 1, chains)
 }
 \arguments{
   \item{mcmc}{
 an output of \code{\link{clusGLMM}} accepted in both formats (list or matrix).
 }
-  \item{AllData}{
-an output of \code{FindAllData}, overrides any given \code{burnin} or \code{thin}.
+  \item{scalar_samples}{
+an output of \code{get_scalar_samples}, overrides any given \code{burnin} or \code{thin}.
 }
   \item{burnin}{
 the length of burn-in period for each chain (number of not included initial values); default is 0.
@@ -80,7 +80,7 @@ an outcome specifier; if the parameter is not outcome-dependent then this \emph{
   \item{lag.max}{
 maximal lag value to be plotted in ACF.
 }
-  \item{ChainsToPlot}{
+  \item{chains}{
 a vector of chain numbers to be plotted.
 }
   \item{trueval}{
@@ -90,10 +90,10 @@ a true value of the parameter to be plotted by vertical/horizontal line.
 whether \code{par(mfrow = c(2,2))} should be set before creating all 4 plots.
 }
   \item{COL}{
-colors for different chains; default values are set by \code{diverge_hcl(mcmc$chains, c = 80, l = 70)}.
+colors for different chains; default values are set by \code{diverge_hcl(mcmc$nchains, c = 80, l = 70)}.
 }
   \item{move.width}{
-ACF for different chains are jittered around the actual lag by \code{seq(-move.width, move.width, length.out = length(ChainsToPlot)+1)}
+ACF for different chains are jittered around the actual lag by \code{seq(-move.width, move.width, length.out = length(chains)+1)}
 }
   \item{whatLAB}{
 the label for the parameter; default corresponds to the label for that parameter that would be used in \emph{matrix} format of the output. 
@@ -121,9 +121,9 @@ a boolean declaring whether ECDFs should be plotted for comparing different clus
 }
 }
 \details{
-  \code{AllData} is a \code{data.frame} of two columns: \code{y} containing chosen samples and \code{chain} declaring the chain number. This could be created using \code{\link{FindAllData}}, see its help file for more details. If missing, \code{FindAllData} is called anyway with the given specifications.
+  \code{scalar_samples} is a \code{data.frame} of two columns: \code{y} containing chosen samples and \code{chain} declaring the chain number. This could be created using \code{\link{get_scalar_samples}}, see its help file for more details. If missing, \code{get_scalar_samples} is called anyway with the given specifications.
   Iterations are selected by \code{seq(burnin+1, mcmc$iter, by = thin)}.
-  Parameter is selected by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. More details here: \code{\link{FindAllData}}.
+  Parameter is selected by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. More details here: \code{\link{get_scalar_samples}}.
   
   Description of the plots:
   \describe{
@@ -149,7 +149,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}, \code{\link{FindAllData}}, \code{\link{nice_nrow_ncol}}, \code{\link{RestrictionToModeGplus}}.
+\code{\link{clusGLMM}}, \code{\link{get_scalar_samples}}, \code{\link{nice_nrow_ncol}}, \code{\link{RestrictionToModeGplus}}.
 }
 \examples{
 
@@ -203,11 +203,11 @@ formula
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
-chains <- 2   # number of chains to be sampled 
+nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 1500, chains = chains)
+                 G = Gmax, iter = 1500, nchains = nchains)
                        
 ###-----------------------------------------------------------------------------
 ###     Creating plots
@@ -215,7 +215,7 @@ mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data,
 
 ## Traceplots of number of non-empty clusters
 # Plotting with defaults values:
-# thin = 1, burnin = 0, ChainsToPlot = 1:mcmc$chains
+# thin = 1, burnin = 0, chains = 1:mcmc$nchains
 opar <- par(mfrow = c(1, 1), mar = c(4, 4, 1, 1))
 plot_traceplots(mcmc = mcmc, what = "Gplus")
 # Omitting the burn-in-period
@@ -288,13 +288,13 @@ nonempty <- as.numeric(names(TAB)[which(TAB>0)])
 neff <- mcmc$ngrp[[mcmc$Nums[1]]]
 par(mfrow = c(length(mcmc$Nums), neff), mar = c(4, 4, 1, 1))
 
-for (y in mcmc$Nums) {
-  for (i in 1:neff) {
+for(y in mcmc$Nums){
+  for(i in 1:neff){
     plot_clusters(mcmc = mcmc, what = "beta_num", 
                   yspec = y, dimspec = i, whichg = nonempty,
-                  setparmfrow = FALSE, ChainsToPlot = ch,
+                  setparmfrow = FALSE, chains = ch,
                   doECDF = FALSE)
-    for (gg in 1:2) {
+    for(gg in 1:2){
       abline(v = ldata$beta_num[[gg]][i], col = "black", lty = 2)
     }
   }

@@ -1,9 +1,9 @@
-FromMatrixtoC <-
+from_matrix_to_C <-
 function(draws,
-                          chain,
-                          iterations,
-                          p,
-                          settings)
+         chain,
+         iterations,
+         p,
+         settings)
 {
   if(missing(chain)){
     subdraws <- draws

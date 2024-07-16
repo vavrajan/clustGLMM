@@ -117,11 +117,11 @@ formula
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
-chains <- 2   # number of chains to be sampled 
+nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 1500, chains = chains)
+                 G = Gmax, iter = 1500, nchains = nchains)
                        
 ###-----------------------------------------------------------------------------
 ###     Clustering based on not post-processed data (using sampled indicators)
@@ -134,7 +134,7 @@ modeGplus <- as.numeric(tapply(mcmc$all$Gplus, mcmc$all$chain,
                                function(x){names(table(x))[which.max(table(x))]}))
 
 clusters <- list()
-for(ch in 1:chains){
+for(ch in 1:nchains){
   TAB <- table(unlist(mcmc$all[mcmc$all$chain == ch,grep("U\\\\[",colnames(mcmc$all))]))
   TAB <- TAB[order(TAB, decreasing = TRUE)]
   clusters[[ch]] <- as.numeric(names(TAB)[1:modeGplus[ch]])
@@ -143,8 +143,8 @@ TAB # clusters are labelled from 0 to mcmc$G-1
 clusters # the labels of non-empty clusters in each chain 
 
 Us <- mcmc$all[,c("chain", paste0("U[",1:n,"]"))]
-clusteringU <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$chains)
-certaintyU <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$chains)
+clusteringU <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
+certaintyU <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
 for(i in 1:n){
   TAB <- table(Us[,i+1], Us$chain)
   # the cluster is the one with the highest frequency
@@ -156,7 +156,7 @@ for(i in 1:n){
 clusteringU[certaintyU < threshold] <- 0
 
 # proposed clustering by each chain separately
-for(ch in 1:mcmc$chains){
+for(ch in 1:mcmc$nchains){
   data[,paste0("clustering",ch)] <- clusteringU[data[,id],ch]
   data[,paste0("certainty",ch)] <- certaintyU[data[,id],ch]
 }

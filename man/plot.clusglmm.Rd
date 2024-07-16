@@ -101,18 +101,18 @@ formula
 
 iter <- 100    # the length of sampled chain
 Gmax <- 5      # maximal number of mixture components to be considered
-chains <- 2    # number of chains to be sampled 
+nchains <- 2   # number of chains to be sampled 
 
 ## No inits specified
 ## Saved in "matrix" format
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, chains = chains,
+                 G = Gmax, iter = iter, nchains = nchains,
                  howsave = "matrix")
 
 # traceplots by default                       
 plot(mcmc)
 plot(mcmc, "Gplus")
-plot(mcmc, "beta_num", burnin=10, thin=2, ChainsToPlot=c(1))
+plot(mcmc, "beta_num", burnin=10, thin=2, chains=c(1))
 
 # change the plot type
 plot(mcmc, "w", "ACF")

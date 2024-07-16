@@ -87,12 +87,12 @@ formula
 
 iter <- 100    # the length of sampled chain
 Gmax <- 5      # maximal number of mixture components to be considered
-chains <- 2    # number of chains to be sampled 
+nchains <- 2   # number of chains to be sampled 
 
 ## No inits specified
 ## Saved in "matrix" format
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, chains = chains,
+                 G = Gmax, iter = iter, nchains = nchains,
                  howsave = "matrix")
 
 mcmc

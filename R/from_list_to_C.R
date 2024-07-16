@@ -1,4 +1,4 @@
-FromListtoC <-
+from_list_to_C <-
 function(chain,
          iterations,
          p,
