@@ -60,10 +60,10 @@ an output of \code{\link{clusGLMM}} accepted in both formats (list or matrix).
 an output of \code{get_scalar_samples}, overrides any given \code{burnin} or \code{thin}.
 }
   \item{burnin}{
-the length of burn-in period for each chain (number of not included initial values); default is 0.
+the length of burn-in period (default 0), i.e. number of initial samples to ignore for inference.
 }
   \item{thin}{
-a thinning parameter, only every \code{thin}th value between \code{burnin} and \code{mcmc$iter} is gathered.
+thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
 }
   \item{what}{
 a name of the parameter to be extracted; see \code{names(mcmc$save)} for possible options. 

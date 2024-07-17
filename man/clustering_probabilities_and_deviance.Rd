@@ -34,7 +34,7 @@ an iteration number where to start.
 an iteration number where to end.
 }
   \item{thin}{
-a thinning that should be used between \code{start} and \code{end}; e.g. if \code{thin = 10} only every 10th iteration will be approximated. 
+a thinning that should be used between \code{start} and \code{end}; e.g. if \code{thin = 10} only every 10th iteration will be approximated; default is 1. 
 }
   \item{chains}{
 chain number(s) for which the approximation should be computed. 

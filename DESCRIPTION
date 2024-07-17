@@ -21,4 +21,4 @@ Description: Provides an MCMC sampler for modelling multivariate regression mode
   Final units clustering can be done quickly based on sampled allocation indicators
   or by proper exploration of posterior distribution of classification probabilities.
 License: GPL-2
-Imports: coda, colorspace, gaussquad, graphics, grDevices, MASS, methods, mvtnorm, nnet, splines, stats, utils
+Imports: coda, colorspace, gaussquad, graphics, grDevices, HDInterval, MASS, methods, mvtnorm, nnet, splines, stats, utils
