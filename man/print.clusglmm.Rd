@@ -18,12 +18,12 @@ other arguments.
 }
 }
 \details{
-  Call.
+  First, it prints \code{x$call} that summarizes what has been fitted including sample sizes, number of units, observations per unit, chosen maximal number of clusters, overview of outcomes and selected types, group-specific formulae for outcomes, list of other group-specific parameters and summary of the MCMC sampling. 
 
-  Clustering.
+  Next, it summarizes the clustering based on sampled indicators \code{U} for each chain separately. First, \code{modeGplus}, the most frequent value of \code{Gplus} - number of non-empty components, is determined. Then, all samples of cluster indicators \code{U} are gathered from all units to determine \code{modeGplus} most frequent cluster labels, stored in \code{clusters}. To each unit \code{i} we assign the cluster label from \code{clusters} that maximizes the frequency of samples of \code{U[i]}, stored in \code{clustering}. We also keep the relative frequency to the assigned cluster, stored in \code{certainty}. By choosing reasonable \code{threshold}, e.g. \code{0.5}, you can make a unit unclassified (0) if the \code{certainty} is not high enough: \code{clustering[certainty < threshold] <- 0}. 
 }
 \value{
-  Prints strings.
+  No returned value, only prints.
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5

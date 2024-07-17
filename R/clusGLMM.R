@@ -34,8 +34,7 @@ function(
   nchains = 1 # number of chains
 ){
   # TODO make these function parameters
-  threshold = 0.5
-  clusteringU_modeGplus = FALSE
+  clusteringU_modeGplus = TRUE
   
   # require("MASS")
   # require("nnet")
@@ -1442,11 +1441,12 @@ Change the save settings if you want to calculate these probabilities afterwards
                                      names(tab)[which.max(tab)]}))
   }
   
-  fun <- function(U){tab = table(U)
+  fun <- function(U){
+    tab = table(U)
     if(clusteringU_modeGplus){
       tab <- tab[as.character(clusters[[ch]])]
     }
-    as.numeric(names(which.max(tab)))
+    c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
   }
     
     
@@ -1461,12 +1461,11 @@ Change the save settings if you want to calculate these probabilities afterwards
     TAB <- table(unlist(Usamples[[ch]]))
     TAB <- TAB[order(TAB, decreasing = T)]
     # Only the top modeGplus in frequency are considered
-    clusters[[ch]] <- as.numeric(names(TAB)[1:modeGplus[ch]])
+    clusters[[ch]] <- sort(as.numeric(names(TAB)[1:modeGplus[ch]]))
     
-    clusteringU[,ch] <- apply(Usamples[[ch]], 2, fun)
-    certaintyU[,ch] <- apply(Usamples[[ch]], 2, function(U){tab = table(U)
-      max(tab) / iter
-    })
+    ccU <- apply(Usamples[[ch]], 2, fun)
+    clusteringU[,ch] <- ccU[1, ]
+    certaintyU[,ch] <- ccU[2, ]
   }
   # units with frequency ratio smaller than threshold remain unclassified (group 0)
   # clusteringU[certaintyU < threshold] <- 0
