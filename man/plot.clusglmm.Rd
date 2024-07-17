@@ -34,7 +34,7 @@ Depending on \code{how} the following functions are called:
   \item{clusters_kerneldensity}{creates kernel density estimator plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_kerneldensity_param}}.}
 }
 
-These functions except also \code{burnin} (initial part of the chain to be ignored), \code{thin} (plot only every \code{thin}th sample) and \code{ChainsToPlot} (a vector of chain numbers to be plotted).
+These functions except also \code{burnin} (initial part of the chain to be ignored), \code{thin} (plot only every \code{thin}th sample) and \code{chains} (a vector of chain numbers to be plotted).
 }
 \value{
   No returned value, only creates plots.

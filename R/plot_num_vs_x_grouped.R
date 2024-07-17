@@ -11,13 +11,20 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
   gs = sort(unique(data[data[,group] != 0,group]))
   G = length(gs)
   # color definition
-  COL <- c("grey70", rainbow_hcl(G, c = 80, l = 70))
-  dCOL <- c("grey40", rainbow_hcl(G, c = 80, l = 50))
-  names(COL) <- names(dCOL) <- c("0", gs)
+  has0 <- (sum(data[,group] == 0) > 1)
+  COL <- rainbow_hcl(G, c = 80, l = 70)
+  dCOL <- rainbow_hcl(G, c = 80, l = 50)
+  names(COL) <- names(dCOL) <- ggs <- gs
+  if(has0){
+    COL <- c("grey70", COL)
+    dCOL <- c("grey40", dCOL)
+    names(COL) <- names(dCOL) <- c("0", gs)
+    ggs <- c(0, gs)
+  }
   
   plot(x = c(0,1), y = c(0,1), type = "n", 
-       xlim = range(data[,x]),
-       ylim = range(data[,y]),
+       xlim = range(data[,x], na.rm=TRUE),
+       ylim = range(data[,y], na.rm=TRUE),
        xlab = x,
        ylab = y)
   for(i in units){
@@ -28,11 +35,6 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
   
   # add lowess curves for each group
   if(add_lowess){
-    if(sum(data[,group] == 0) > 1){
-      ggs = c(0, gs)
-    }else{
-      ggs = gs
-    }
     for(g in ggs){
       lines(lowess(data[data[,group]==g,x], data[data[,group]==g,y]),
             col = dCOL[as.character(g)], lwd = 5)

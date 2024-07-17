@@ -1497,6 +1497,20 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "bin: ", paste0(Bins, collapse = ", "), "\n")
   mcmc$call <- paste0(mcmc$call, "ord: ", paste0(Ords, collapse = ", "), "\n")
   mcmc$call <- paste0(mcmc$call, "cat: ", paste0(Cats, collapse = ", "), "\n")
+  mcmc$call <- paste0(mcmc$call, "\nFixed effects invariant towards clustering: \n")
+  for(y in Ys){
+    mcmc$call <- paste0(mcmc$call, y, " ~ ", formula[[y]]$fixed[2], "\n")
+  }
+  mcmc$call <- paste0(mcmc$call, "\nRandom effects invariant towards clustering: \n")
+  for(y in Ys){
+    mcmc$call <- paste0(mcmc$call, y, " ~ ", formula[[y]]$random[2], "\n")
+  }
+  mcmc$call <- paste0(mcmc$call, "\nThe structure of covariance matrix Sigma for random effects: \n")
+  for(y in Ys){
+    for(l in length(lrannames[[y]])){
+      paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
+    }
+  }
   mcmc$call <- paste0(mcmc$call, "\nGroup-specific formulae for outcomes: \n")
   for(y in Ys){
     mcmc$call <- paste0(mcmc$call, y, " ~ ", formula[[y]]$group[2], "\n")
