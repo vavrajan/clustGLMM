@@ -1,5 +1,5 @@
-\name{clusGLMM}
-\alias{clusGLMM}
+\name{clustGLMM}
+\alias{clustGLMM}
 \title{
 Sample MCMC for a mixture of GLMMs of mixed-type
 }
@@ -7,7 +7,7 @@ Sample MCMC for a mixture of GLMMs of mixed-type
 First, initial values are set based on separate univariate GLMMs for each individual outcome. Then, an inner \code{C} function is called to do the hard work of sampling (Metropolis within Gibbs sampling). Outputs are processed and returned in required format (either in nicely organized lists or one huge \code{all} matrix).
 }
 \usage{
-clusGLMM(formula, id, family, data, G,  
+clustGLMM(formula, id, family, data, G,  
   varying, save, howsave, param, inits, tuning, 
   iter = 1000, nchains = 1)
 }
@@ -175,7 +175,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -200,24 +200,24 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
 nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 100, nchains = nchains)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = 100, nchains = nchains)
 
 ## Extract the last state
 inits <- mcmc$last
 
 ## Initialize with inits
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, 
-                 inits = inits, 
-                 iter = 500, nchains = nchains)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, 
+                  inits = inits, 
+                  iter = 500, nchains = nchains)
                        
 ## Note that sampling takes time, so parallelization for different chains is recommended.
 ## See the full tutorial. 

@@ -2,10 +2,10 @@
 \alias{RestrictionToModeGplus}
 \alias{PermuteClusterSpec}
 \title{
-Post-process the clusGLMM sampled chains
+Post-process the clustGLMM sampled chains
 }
 \description{
-Sampling MCMC chains via \code{\link{clusGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. Many clusters are eventually empty and only some cluster labels survive. Given random initialization, different chains may end up with different labels of non-empty clusters including their total count. The function \code{RestrictionToModeGplus} performs the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016).
+Sampling MCMC chains via \code{\link{clustGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. Many clusters are eventually empty and only some cluster labels survive. Given random initialization, different chains may end up with different labels of non-empty clusters including their total count. The function \code{RestrictionToModeGplus} performs the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016).
 }
 \usage{
 RestrictionToModeGplus(mcmc, cols)
@@ -13,7 +13,7 @@ PermuteClusterSpec(mcmc, perm)
 }
 \arguments{
   \item{mcmc}{
-an output of \code{\link{clusGLMM}} accepted in both formats (list or matrix).
+an output of \code{\link{clustGLMM}} accepted in both formats (list or matrix).
 }
   \item{cols}{
 a vector of column names of cluster-specific variables to be used for k-means clustering. If missing, all cluster-specific parameters are used. 
@@ -85,7 +85,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}, \code{\link{plot_all}}, \code{\link{nice_nrow_ncol}}, \code{\link{RestrictionToModeGplus}}.
+\code{\link{clustGLMM}}, \code{\link{plot_all}}, \code{\link{nice_nrow_ncol}}, \code{\link{RestrictionToModeGplus}}.
 }
 \examples{
 ###-----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -135,15 +135,15 @@ formula
 
 
 ###-----------------------------------------------------------------------------
-###     Sampling chains by clusGLMM
+###     Sampling chains by clustGLMM
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
 nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 1000, nchains = nchains)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = 1000, nchains = nchains)
 
 # for the sake of an example we have too short iter
 # use higher iter for proper inference

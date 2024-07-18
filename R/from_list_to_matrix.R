@@ -73,7 +73,7 @@ from_list_to_matrix <- function(mcmc){
   }
   
   retmcmc$howsave <- "matrix"
-  class(retmcmc) <- "clusglmm"
+  class(retmcmc) <- "clustglmm"
   
   return(retmcmc)
 }

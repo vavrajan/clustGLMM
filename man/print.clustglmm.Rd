@@ -1,43 +1,29 @@
-\name{plot.clusglmm}
-\alias{plot.clusglmm}
+\name{print.clustglmm}
+\alias{print.clustglmm}
 \title{
-Plot the outputs of \code{clusGLMM}
+Printing the outputs of \code{clustGLMM}
 }
 \description{
-Triggers plotting functions for selected parameter depending on the choice of the plot.
+A method for printing objects of class \code{clustglmm}, the outputs of \code{clustGLMM}.
 }
 \usage{
-plot(x, what="ng", how="traceplots", ...)
+print(x, ...)
 }
 \arguments{
   \item{x}{
-an object of class \code{"clusglmm"}, an output of \code{clusGLMM} function.
-}
-  \item{what}{
-a string containing the name of the parameter. 
-}
-  \item{how}{
-a string declaring the type of the plot to be created.
+an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
 }
   \item{...}{
 other arguments.
 }
 }
 \details{
-Depending on \code{how} the following functions are called:
-\describe{
-  \item{ACF}{creates auto-correlation function plot, calls \code{\link{plot_ACF_param}}.}
-  \item{ECDF}{creates empirical cumulative distribution function plot, calls \code{\link{plot_ECDF_param}}.}
-  \item{kerneldensity}{creates kernel density estimator plot, calls \code{\link{plot_kerneldensity_param}}.}
-  \item{traceplots}{creates traceplots (samples vs iteration), calls \code{\link{plot_traceplots_param}}.}
-  \item{clusters_ECDF}{creates empirical cumulative distribution function plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_ECDF_param}}.}
-  \item{clusters_kerneldensity}{creates kernel density estimator plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_kerneldensity_param}}.}
-}
+  First, it prints \code{x$call} that summarizes what has been fitted including sample sizes, number of units, observations per unit, chosen maximal number of clusters, overview of outcomes and selected types, fixed-effects common to all groups, random-effects with the structure of \code{Sigma} matrix, group-specific formulae for outcomes, list of other group-specific parameters and summary of the MCMC sampling. 
 
-These functions except also \code{burnin} (initial part of the chain to be ignored), \code{thin} (plot only every \code{thin}th sample) and \code{chains} (a vector of chain numbers to be plotted).
+  Next, if \code{x$G > 1}, it summarizes the clustering based on sampled indicators \code{U} for each chain separately. First, \code{modeGplus}, the most frequent value of \code{Gplus} - number of non-empty components, is determined. Then, all samples of cluster indicators \code{U} are gathered from all units to determine \code{modeGplus} most frequent cluster labels, stored in \code{clusters}. To each unit \code{i} we assign the cluster label from \code{clusters} that maximizes the frequency of samples of \code{U[i]}, stored in \code{clustering}. We also keep the relative frequency to the assigned cluster, stored in \code{certainty}. By choosing reasonable \code{threshold}, e.g. \code{0.5}, you can make a unit unclassified (0) if the \code{certainty} is not high enough: \code{clustering[certainty < threshold] <- 0}. 
 }
 \value{
-  No returned value, only creates plots.
+  No returned value, only prints.
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
@@ -46,7 +32,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}, \code{\link{plot_all}}
+\code{\link{clustGLMM}}
 }
 \examples{
 
@@ -71,7 +57,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -96,7 +82,7 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 iter <- 100    # the length of sampled chain
@@ -105,20 +91,10 @@ nchains <- 2   # number of chains to be sampled
 
 ## No inits specified
 ## Saved in "matrix" format
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, nchains = nchains,
-                 howsave = "matrix")
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = iter, nchains = nchains,
+                  howsave = "matrix")
 
-# traceplots by default                       
-plot(mcmc)
-plot(mcmc, "Gplus")
-plot(mcmc, "beta_num", burnin=10, thin=2, chains=c(1))
-
-# change the plot type
-plot(mcmc, "w", "ACF")
-plot(mcmc, "sdSigma", "ECDF")
-plot(mcmc, "corSigma", "kerneldensity")
-plot(mcmc, "beta_bin", "clusters_kerneldensity")
-plot(mcmc, "beta_ord", "clusters_ECDF")
+mcmc
 
 }

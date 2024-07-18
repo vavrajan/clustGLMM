@@ -1,4 +1,4 @@
-print.clusglmm <- function(x, ...){
+print.clustglmm <- function(x, ...){
   cat("Call:\n\n")
   cat(x$call)
   

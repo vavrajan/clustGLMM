@@ -1,7 +1,7 @@
 useDynLib(clustGLMM, .registration=TRUE, .fixes = "C_")
 
 export("as_coda",
-       "clusGLMM", 
+       "clustGLMM", 
        "clustering_probabilities_and_deviance", 
        "default_param",
        "default_save",
@@ -35,11 +35,11 @@ export("as_coda",
        "plot_traceplots_param", 
        "RestrictionToModeGplus")
 
-S3method(summary, clusglmm)
-S3method(predict, clusglmm)
-S3method(print, clusglmm)
-S3method(plot, clusglmm)
-S3method(print, summary.clusglmm)
+S3method(summary, clustglmm)
+S3method(predict, clustglmm)
+S3method(print, clustglmm)
+S3method(plot, clustglmm)
+S3method(print, summary.clustglmm)
 
 importFrom("coda", "as.mcmc.list", "mcmc")
 importFrom("colorspace", "diverge_hcl", "rainbow_hcl")

@@ -1,10 +1,10 @@
-\name{predict.clusglmm}
-\alias{predict.clusglmm}
+\name{predict.clustglmm}
+\alias{predict.clustglmm}
 \title{
 Estimate predictors from formulae
 }
 \description{
-Predicts the linear combinations of fixed and group part of the model formulae of \code{clusGLMM} output.
+Predicts the linear combinations of fixed and group part of the model formulae of \code{clustGLMM} output.
 }
 \usage{
 predict(object, newdata, 
@@ -14,7 +14,7 @@ predict(object, newdata,
 }
 \arguments{
   \item{object}{
-an object of class \code{"clusglmm"}, an output of \code{clusGLMM} function.
+an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
 }
   \item{newdata}{
 a \code{data.frame} containing all columns needed to construct model matrices.
@@ -86,7 +86,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}
+\code{\link{clustGLMM}}
 }
 \examples{
 
@@ -111,7 +111,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -136,7 +136,7 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 iter <- 100    # the length of sampled chain
@@ -145,9 +145,9 @@ nchains <- 2   # number of chains to be sampled
 
 ## No inits specified
 ## Saved in "matrix" format
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, nchains = nchains,
-                 howsave = "matrix")
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = iter, nchains = nchains,
+                  howsave = "matrix")
 predict(mcmc, newdata = data, type = "lp")
 
 # predict the evolution in time for covariate f=0

@@ -1,29 +1,47 @@
-\name{print.clusglmm}
-\alias{print.clusglmm}
+\name{summary.clustglmm}
+\alias{summary.clustglmm}
+\alias{print.summary.clustglmm}
 \title{
-Printing the outputs of \code{clusGLMM}
+Computing the summary statistics of outputs of \code{clustGLMM}
 }
 \description{
-A method for printing objects of class \code{clusglmm}, the outputs of \code{clusGLMM}.
+A method for computing and printing the summary statistics of class \code{clustglmm}, the outputs of \code{clustGLMM} function.
 }
 \usage{
-print(x, ...)
+summary(object, ...)
+print(x, chains=c(1), summary_type="statistics", ...)
 }
 \arguments{
+  \item{object}{
+an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
+}
   \item{x}{
-an object of class \code{"clusglmm"}, an output of \code{clusGLMM} function.
+an object of class \code{"summary.clustglmm"}, an output of \code{summary.clustGLMM} function.
+}
+  \item{chains}{
+a vector of chain numbers to print summary results of.
+}
+  \item{summary_type}{
+either \code{"statistics"} or \code{"quantiles"}.
 }
   \item{...}{
-other arguments.
+other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
 }
 }
 \details{
-  First, it prints \code{x$call} that summarizes what has been fitted including sample sizes, number of units, observations per unit, chosen maximal number of clusters, overview of outcomes and selected types, fixed-effects common to all groups, random-effects with the structure of \code{Sigma} matrix, group-specific formulae for outcomes, list of other group-specific parameters and summary of the MCMC sampling. 
-
-  Next, if \code{x$G > 1}, it summarizes the clustering based on sampled indicators \code{U} for each chain separately. First, \code{modeGplus}, the most frequent value of \code{Gplus} - number of non-empty components, is determined. Then, all samples of cluster indicators \code{U} are gathered from all units to determine \code{modeGplus} most frequent cluster labels, stored in \code{clusters}. To each unit \code{i} we assign the cluster label from \code{clusters} that maximizes the frequency of samples of \code{U[i]}, stored in \code{clustering}. We also keep the relative frequency to the assigned cluster, stored in \code{certainty}. By choosing reasonable \code{threshold}, e.g. \code{0.5}, you can make a unit unclassified (0) if the \code{certainty} is not high enough: \code{clustering[certainty < threshold] <- 0}. 
+  \code{print.summary} prints \code{call} and a brief summary of clustering for selected \code{chains}. Then, again for each selected chain prints the summary statistics as in \code{library(coda)}. You can choose one of the tables (\code{"statistics"} or \code{"quantiles"}) by \code{summary_type}. 
 }
 \value{
-  No returned value, only prints.
+  \code{summary} returns a list of:
+  \item{call}{a string describing the model defined to be estimated,}
+  \item{G}{maximal number of underlying clusters,}
+  \item{modeGplus}{the most frequent number of non-empty clusters per each chain,}
+  \item{clustering}{matrix of assigned clusters for each unit based on sampled indicators,}
+  \item{certainty}{matrix of certainties (the highest clustering probability among G other) for each unit based on sampled indicators,}
+  \item{clusters}{labels of non-empty clusters for each chain separately,}
+  \item{coda_summary}{output of \code{coda} summary for each chain separately,}
+  \item{fnames}{vector of parameter names invariant to clustering,}
+  \item{gnames}{cluster-specific parameter names only for cluster 1.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
@@ -32,7 +50,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}
+\code{\link{clustGLMM}}, \code{\link{print.summary.clustglmm}}, \code{\link{summary.mcmc}}
 }
 \examples{
 
@@ -57,7 +75,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -82,7 +100,7 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 iter <- 100    # the length of sampled chain
@@ -91,10 +109,11 @@ nchains <- 2   # number of chains to be sampled
 
 ## No inits specified
 ## Saved in "matrix" format
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, nchains = nchains,
-                 howsave = "matrix")
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = iter, nchains = nchains,
+                  howsave = "matrix")
 
 mcmc
-
+s <- summary(mcmc)
+s
 }

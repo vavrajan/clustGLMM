@@ -1,10 +1,10 @@
 \name{clustering_probabilities_and_deviance}
 \alias{clustering_probabilities_and_deviance}
 \title{
-Evaluate clustering probabilities and deviance of clusGLMM output
+Evaluate clustering probabilities and deviance of clustGLMM output
 }
 \description{
-To evaluate clustering probabilities all latent variables need to be integrated out of log-pdf contributions. Jointly modelled random effects for mixed-type outcomes cannot be integrated out in a closed formula. Hence, we utilize Laplace's approximation or even Adaptive Gaussian Quadrature (AGQ) in order to approximate these integrals. Samples of model parameters from \code{clusGLMM} are sent to C environment for faster evaluation.  
+To evaluate clustering probabilities all latent variables need to be integrated out of log-pdf contributions. Jointly modelled random effects for mixed-type outcomes cannot be integrated out in a closed formula. Hence, we utilize Laplace's approximation or even Adaptive Gaussian Quadrature (AGQ) in order to approximate these integrals. Samples of model parameters from \code{clustGLMM} are sent to C environment for faster evaluation.  
 }
 \usage{
 clustering_probabilities_and_deviance(mcmc, id, data, dynamic_prob = FALSE, 
@@ -16,7 +16,7 @@ clustering_probabilities_and_deviance(mcmc, id, data, dynamic_prob = FALSE,
 }
 \arguments{
   \item{mcmc}{
-an output of \code{\link{clusGLMM}}.
+an output of \code{\link{clustGLMM}}.
 }
   \item{id}{
 a string, name of the column containing unit ID. Moreover, new units not used in MCMC sampling can be used here.  
@@ -84,7 +84,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}
+\code{\link{clustGLMM}}
 }
 \examples{
 
@@ -109,7 +109,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -134,15 +134,15 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
 nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 100, nchains = nchains)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = 100, nchains = nchains)
 
 ###-----------------------------------------------------------------------------
 ###     Sample completely new data

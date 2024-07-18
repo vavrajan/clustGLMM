@@ -4,7 +4,7 @@
 Finds samples for specified scalar model parameter 
 }
 \description{
-This function takes an output of \code{clusGLMM} and finds all values related to specified model parameter in a given range (possibly thinned). The implementation reacts not only to what is given but also to what is NOT given. To use it appropriately you need to know which model parameters are group-specific, outcome-dependent and many dimensions do they have.
+This function takes an output of \code{clustGLMM} and finds all values related to specified model parameter in a given range (possibly thinned). The implementation reacts not only to what is given but also to what is NOT given. To use it appropriately you need to know which model parameters are group-specific, outcome-dependent and many dimensions do they have.
 }
 \usage{
 get_scalar_samples(mcmc, what, gspec, dimspec, yspec, 
@@ -13,7 +13,7 @@ get_scalar_samples(mcmc, what, gspec, dimspec, yspec,
 }
 \arguments{
   \item{mcmc}{
-an output of \code{\link{clusGLMM}} accepted in both formats (list or matrix).
+an output of \code{\link{clustGLMM}} accepted in both formats (list or matrix).
 }
   \item{what}{
 a name of the parameter to be extracted; see \code{names(mcmc$save)} for possible options. 
@@ -59,7 +59,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}, \code{\link{plot_all}}
+\code{\link{clustGLMM}}, \code{\link{plot_all}}
 }
 \examples{
 ###-----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -108,15 +108,15 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 iter <- 100    # length of the sampled chain
 Gmax <- 5      # maximal number of mixture components to be considered
 nchains <- 2   # number of chains to be sampled 
 
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, nchains = nchains)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = iter, nchains = nchains)
 
 ###-----------------------------------------------------------------------------
 ###     The use of get_scalar_parameter_samples

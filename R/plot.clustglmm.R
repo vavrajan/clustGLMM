@@ -1,4 +1,4 @@
-plot.clusglmm <- function(x, what="ng", how="traceplots", ...){
+plot.clustglmm <- function(x, what="ng", how="traceplots", ...){
   switch(how,
          "ACF" = plot_ACF_param(x, what, ...),
          "ECDF" = plot_ECDF_param(x, what, ...),

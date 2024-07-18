@@ -9,10 +9,10 @@
 \alias{from_matrix_to_coda}
 \alias{from_matrix_to_list}
 \title{
-Change the output formats of \code{clusGLMM}
+Change the output formats of \code{clustGLMM}
 }
 \description{
-Functions are used internally in \code{clusGLMM} or \code{pUig_dev} to prepare data as an input of C function or to process data coming from C functions. Works for separate parameters, hence to transfer all the samples \code{for} cycles through chains and parameters are necessary. This is done in \code{from_list_to_matrix} and \code{from_matrix_to_list} which are able to switch between \code{howsave = "list"} and \code{howsave = "matrix"}.
+Functions are used internally in \code{clustGLMM} or \code{pUig_dev} to prepare data as an input of C function or to process data coming from C functions. Works for separate parameters, hence to transfer all the samples \code{for} cycles through chains and parameters are necessary. This is done in \code{from_list_to_matrix} and \code{from_matrix_to_list} which are able to switch between \code{howsave = "list"} and \code{howsave = "matrix"}.
 }
 \usage{
 as_coda(mcmc, burnin=0, thin=1)
@@ -51,10 +51,10 @@ a number of the chain to use.
 what iterations from a given chain to include.
 }
   \item{draws}{
-a matrix of all sampled parameters from \code{clusGLMM}.
+a matrix of all sampled parameters from \code{clustGLMM}.
 }
   \item{mcmc}{
-an output of \code{\link{clusGLMM}}.
+an output of \code{\link{clustGLMM}}.
 }
   \item{burnin}{
 the length of burn-in period (default 0), i.e. number of initial samples to ignore for inference.
@@ -64,7 +64,7 @@ thinning rate (default 1); only every \code{thin}th value is used for inference 
 }
 }
 \details{
-Most of the functions are used internally in \code{clusGLMM} or \code{pUig_dev} to process data coming from C functions. Functions that start or end in C only convert a specific parameter. The functions that change between \code{howsave = "list"} and \code{howsave = "matrix"} go through every chain and every saved parameter.
+Most of the functions are used internally in \code{clustGLMM} or \code{pUig_dev} to process data coming from C functions. Functions that start or end in C only convert a specific parameter. The functions that change between \code{howsave = "list"} and \code{howsave = "matrix"} go through every chain and every saved parameter.
 }
 \value{
 If \code{...ToList} then the output is a carefully structured list. Each chain \code{ch in 1:mcmc$chains} is saved in \code{mcmc$draws[[ch]]}. Then you select a parameter of your choice which may have even other sublists. For example, group-specific effects for numeric outcome would be accessed by
@@ -84,7 +84,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}, \code{\link{plot_all}}
+\code{\link{clustGLMM}}, \code{\link{plot_all}}
 }
 \examples{
 
@@ -109,7 +109,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -134,7 +134,7 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 iter <- 100    # the length of sampled chain
@@ -143,9 +143,9 @@ chains <- 2    # number of chains to be sampled
 
 ## No inits specified
 ## Saved in "matrix" format
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = iter, chains = chains,
-                 howsave = "matrix")
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = iter, chains = chains,
+                  howsave = "matrix")
                        
 ###-----------------------------------------------------------------------------
 ###     Changing formats

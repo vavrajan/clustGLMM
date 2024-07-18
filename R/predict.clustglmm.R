@@ -1,4 +1,4 @@
-predict.clusglmm <- 
+predict.clustglmm <- 
 function(object, newdata, 
          type="lp-fg", how="samples", fun_posterior=mean, 
          level=0.95, interval="ET",

@@ -5,7 +5,7 @@
 Plotting clustered longitudinal (panel) data 
 }
 \description{
-Functions that work with longitudinal data and plot the outcomes with respect to some grouping, e.g. clustering found by \code{\link{clusGLMM}}. 
+Functions that work with longitudinal data and plot the outcomes with respect to some grouping, e.g. clustering found by \code{\link{clustGLMM}}. 
 }
 \usage{
 plot_num_vs_x_grouped(data, y = "y", x = "x", group = "g", id = "i", units, 
@@ -63,7 +63,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}
+\code{\link{clustGLMM}}
 }
 \examples{
 
@@ -88,7 +88,7 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = 4,
 data <- ldata$data
 
 ###-----------------------------------------------------------------------------
-###     Prepare inputs for clusGLMM
+###     Prepare inputs for clustGLMM
 ###-----------------------------------------------------------------------------
 id <- "i"
 
@@ -113,15 +113,15 @@ formula
 ## See the tutorial for how these can be adjusted.
 
 ###-----------------------------------------------------------------------------
-###     Final call of clusGLMM
+###     Final call of clustGLMM
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
 nchains <- 2  # number of chains to be sampled 
 
 ## No inits specified
-mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
-                 G = Gmax, iter = 1500, nchains = nchains)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
+                  G = Gmax, iter = 1500, nchains = nchains)
                        
 ###-----------------------------------------------------------------------------
 ###     Clustering based on not post-processed data (using sampled indicators)

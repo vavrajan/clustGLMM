@@ -1,4 +1,4 @@
-print.summary.clusglmm <- function(x, chains=c(1), summary_type="statistics", ...){
+print.summary.clustglmm <- function(x, chains=c(1), summary_type="statistics", ...){
   cat("Call:\n")
   cat(x$call)
   cat("\n## Clustering based on sampled indicators:\n")

@@ -1,4 +1,4 @@
-summary.clusglmm <- function(object, ...){
+summary.clustglmm <- function(object, ...){
   coda = as_coda(object, ...)
   
   # computes necessary outputs for summary
@@ -25,6 +25,6 @@ summary.clusglmm <- function(object, ...){
               fnames=fnames,
               gnames=gnames)
   
-  class(res) <- "summary.clusglmm"
+  class(res) <- "summary.clustglmm"
   return(res)
 }

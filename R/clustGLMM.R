@@ -1,6 +1,6 @@
 #mcmc_MBC_GLMMs <- function(...) UseMethod("mbcglmms")
 #mbcglmms.default <-
-clusGLMM <- 
+clustGLMM <- 
 function(
   formula,   # list of formulas for each of the variables
   id,        # column name of IDs declaring which observations come from the same unit
@@ -1566,7 +1566,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$yspecd2 <- yspecd2
   mcmc$isYna <- cisYna
   
-  class(mcmc) <- "clusglmm"
+  class(mcmc) <- "clustglmm"
   return(mcmc)
   
 }

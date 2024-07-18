@@ -4,7 +4,7 @@
 \alias{default_tuning}
 \alias{default_varying}
 \title{
-clusGLMM - Setting default values
+clustGLMM - Setting default values
 }
 \description{
 The following functions are used for setting default values of auxiliary variables such as hyperparameters of indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
@@ -16,7 +16,7 @@ default_tuning()
 default_save()
 }
 \details{
-If corresponding lists or vectors are not given to \code{\link{clusGLMM}} then these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} and then adjust them as you wish.  
+If corresponding lists or vectors are not given to \code{\link{clustGLMM}} then these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} and then adjust them as you wish.  
 }
 \value{
 The output of \code{default_varying} is a named vector \code{varying} that contains a boolean for each model parameter that may be considered cluster-specific. The defaults are
@@ -118,7 +118,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clusGLMM}}
+\code{\link{clustGLMM}}
 }
 \examples{
 (param <- default_param())
