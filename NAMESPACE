@@ -1,4 +1,4 @@
-useDynLib(clusGLMM, .registration=TRUE, .fixes = "C_")
+useDynLib(clustGLMM, .registration=TRUE, .fixes = "C_")
 
 export("as_coda",
        "clusGLMM", 

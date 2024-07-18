@@ -11,7 +11,7 @@ options(width = 110)
 ```
 
 ```{r libraries, warning=FALSE}
-library("clusGLMM")
+library("clustGLMM")
 library("colorspace")
 library("mvtnorm")
 library("splines")

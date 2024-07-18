@@ -1,4 +1,4 @@
-Package: clusGLMM
+Package: clustGLMM
 Title: Model-Based Clustering of Mixed-Type Longitudinal Data
 Version: 1.0
 Encoding: UTF-8
