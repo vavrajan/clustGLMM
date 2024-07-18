@@ -36,6 +36,7 @@ export("as_coda",
        "RestrictionToModeGplus")
 
 S3method(summary, clusglmm)
+S3method(predict, clusglmm)
 S3method(print, clusglmm)
 S3method(plot, clusglmm)
 S3method(print, summary.clusglmm)
