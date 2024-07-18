@@ -148,7 +148,6 @@ nchains <- 2   # number of chains to be sampled
 mcmc <- clusGLMM(formula = formula, id = id, family = family, data = data, 
                  G = Gmax, iter = iter, nchains = nchains,
                  howsave = "matrix")
-                 
 predict(mcmc, newdata = data, type = "lp")
 
 # predict the evolution in time for covariate f=0
