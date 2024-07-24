@@ -13,7 +13,8 @@ summary.clustglmm <- function(object, ...){
   for(p in rownames(fset)){
     fnames <- c(fnames, object$param_names[[p]])
   }
-  gnames <- grep("\\(1\\)", rownames(coda_summary[[1]]$statistics))
+  gnames <- rownames(coda_summary[[1]]$statistics)[
+    grep("\\(1\\)", rownames(coda_summary[[1]]$statistics))]
   
   res <- list(call=object$call,
               G=object$G,

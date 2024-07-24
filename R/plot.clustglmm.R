@@ -5,6 +5,6 @@ plot.clustglmm <- function(x, what="ng", how="traceplots", ...){
          "kerneldensity" = plot_kerneldensity_param(x, what, ...),
          "traceplots" = plot_traceplots_param(x, what, ...),
          "clusters_ECDF" = plot_clusters_ECDF_param(x, what, ...),
-         "clustesr_kerneldensity" = plot_clusters_kerneldensity_param(x, what, ...)
+         "clusters_kerneldensity" = plot_clusters_kerneldensity_param(x, what, ...)
          )
 }

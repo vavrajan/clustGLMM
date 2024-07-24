@@ -4,7 +4,7 @@ print.clustglmm <- function(x, ...){
   
   if(x$G > 1){
     cat("\n## Clustering based on sampled indicators:\n")
-    for(ch in x$chains){
+    for(ch in 1:x$nchains){
       cat("-----------------------------------------------------------------------\n")
       cat(paste0("Chain ", ch, "\n"))
       cat("-----------------------------------------------------------------------\n")

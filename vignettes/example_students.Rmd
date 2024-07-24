@@ -163,20 +163,21 @@ perm <- list()
 perm[[1]] <- c(2, 3, 1) 
 # mcmc0 <- PermuteClusterSpec(mcmc0, perm)
 
-plot_traceplots_param(mcmc0, "ng")
-plot_traceplots_param(mcmc0, "beta_num", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc0, "beta_num")
-plot_traceplots_param(mcmc0, "tau_num")
+mcmc0
+
+plot(mcmc0)
+plot(mcmc0, "beta_num", thin = 1, chains = 1)
+plot(mcmc0, "beta_num", how="clusters_kerneldensity", thin = 1, chains = 1)
+plot(mcmc0, "tau_num")
 ```
 
-### Clustering based on sampled U values
-```{r clusteringU, echo=FALSE}
+```{r clusteringU, echo=TRUE}
 clusteringU <- function(mcmc, data, id, threshold = 0.5){
   clusteringU <- mcmc$clustering
   clusteringU[mcmc$certainty < threshold] <- 0
   
   # proposed clustering by each chain separately
-  for(ch in 1:mcmc$chains){
+  for(ch in 1:mcmc$nchains){
     data[, paste0("clustering", ch)] <- clusteringU[data[, id], ch]
     data[, paste0("certainty", ch)] <- mcmc$certainty[data[, id], ch]
   }
@@ -198,7 +199,9 @@ codamcmc0 <- as_coda(mcmc0)
 sumcodamcmc0 <- summary(codamcmc0)
 # coda summaries
 sumcodamcmc0$statistics[grep("beta_num", rownames(sumcodamcmc0$statistics)), ]
-sumcodamcmc0$quantiles[grep("beta_num", rownames(sumcodamcmc0$quantiles)), ]
+# or just use
+summary(mcmc0)
+print(summary(mcmc0), summary_type="quantiles")
 ```
 
 ```{r codamcmc0_income, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
@@ -225,21 +228,22 @@ perm <- list()
 perm[[1]] <- c(2, 3, 1) 
 mcmc1 <- PermuteClusterSpec(mcmc1, perm)
 
-plot_traceplots_param(mcmc1, "ng")
+mcmc1
 
-plot_traceplots_param(mcmc1, "beta_num", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc1, "beta_num")
-plot_clusters_kerneldensity_param(mcmc1, "tau_num")
+plot(mcmc1)
 
-plot_traceplots_param(mcmc1, "beta_poi", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc1, "beta_poi")
+plot(mcmc1, "beta_num", thin = 1, chains = 1)
+plot(mcmc1, "beta_num", how="clusters_kerneldensity")
+plot(mcmc1, "tau_num", how="clusters_kerneldensity")
 
-plot_traceplots_param(mcmc1, "beta_ord", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc1, "beta_ord")
-plot_clusters_kerneldensity_param(mcmc1, "c_ord")
+plot(mcmc1, "beta_poi", thin = 1, chains = 1)
+plot(mcmc1, "beta_poi", how="clusters_kerneldensity")
+
+plot(mcmc1, "beta_ord", thin = 1, chains = 1)
+plot(mcmc1, "beta_ord", how="clusters_kerneldensity")
+plot(mcmc1, "c_ord", how="clusters_kerneldensity")
 ```
 
-### Clustering based on sampled U values
 ```{r clusteringU_mcmc1, echo=TRUE}
 data <- clusteringU(mcmc1, data, id = id, threshold = 0.5)
 data1 <- data[data$j==1, ]
@@ -257,6 +261,8 @@ sumcodamcmc1$quantiles[grep("beta_num", rownames(sumcodamcmc1$quantiles)), ]
 sumcodamcmc1$statistics[grep("beta_poi", rownames(sumcodamcmc1$statistics)), ]
 sumcodamcmc1$statistics[grep("beta_ord", rownames(sumcodamcmc1$statistics)), ]
 sumcodamcmc1$statistics[grep("c_ord", rownames(sumcodamcmc1$statistics)), ]
+# or just use
+summary(mcmc1)
 ```
 
 ```{r codamcmc1_income, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
@@ -302,21 +308,23 @@ mcmc2 <- clustGLMM(formula = formula2, id = id, family = family, data = data,
 perm <- list()
 perm[[1]] <- c(2, 3, 1) 
 mcmc2 <- PermuteClusterSpec(mcmc2, perm)
-plot_traceplots_param(mcmc2, "ng")
 
-plot_traceplots_param(mcmc2, "beta_num", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc2, "beta_num")
-plot_clusters_kerneldensity_param(mcmc2, "tau_num")
+mcmc2
 
-plot_traceplots_param(mcmc2, "beta_poi", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc2, "beta_poi")
+plot(mcmc2, "ng")
 
-plot_traceplots_param(mcmc2, "beta_ord", thin = 1, chains = 1)
-plot_clusters_kerneldensity_param(mcmc2, "beta_ord")
-plot_clusters_kerneldensity_param(mcmc2, "c_ord")
+plot(mcmc2, "beta_num", thin = 1, chains = 1)
+plot(mcmc2, "beta_num", how="clusters_kerneldensity")
+plot(mcmc2, "tau_num", how="clusters_kerneldensity")
+
+plot(mcmc2, "beta_poi", thin = 1, chains = 1)
+plot(mcmc2, "beta_poi", how="clusters_kerneldensity")
+
+plot(mcmc2, "beta_ord", thin = 1, chains = 1)
+plot(mcmc2, "beta_ord", how="clusters_kerneldensity")
+plot(mcmc2, "c_ord", how="clusters_kerneldensity")
 ```
 
-### Clustering based on sampled U values
 ```{r clusteringU_mcmc2, echo=TRUE}
 data <- clusteringU(mcmc2, data, id = id, threshold = 0.5)
 data1 <- data[data$j==1, ]
@@ -334,6 +342,8 @@ sumcodamcmc2$quantiles[grep("beta_num", rownames(sumcodamcmc2$quantiles)), ]
 sumcodamcmc2$statistics[grep("beta_poi", rownames(sumcodamcmc2$statistics)), ]
 sumcodamcmc2$statistics[grep("beta_ord", rownames(sumcodamcmc2$statistics)), ]
 sumcodamcmc2$statistics[grep("c_ord", rownames(sumcodamcmc2$statistics)), ]
+# or just use
+summary(mcmc2)
 ```
 
 ```{r codamcmc2_income, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}

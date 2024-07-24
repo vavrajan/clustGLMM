@@ -25,11 +25,11 @@ print.summary.clustglmm <- function(x, chains=c(1), summary_type="statistics", .
     cat(paste0("Number of chains = ", x$coda_summary[[ch]]$nchain, "\n"))
     cat(paste0("Sample size per chain = ", ceiling((x$coda_summary[[ch]]$end - x$coda_summary[[ch]]$start+1) / x$coda_summary[[ch]]$nchain), "\n"))
     cat("\nCluster-invariant parameters:\n")
-    print(x$coda_summary[[ch]][[summary_type]][x$fnames,])
+    print(s[x$fnames,])
     for(g in x$clusters[[ch]]){
       gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), x$gnames)
       cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
-      print(x$coda_summary[[ch]][[summary_type]][gnames,])
+      print(s[gnames,])
     }
   }
 }
