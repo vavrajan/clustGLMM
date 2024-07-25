@@ -231,6 +231,13 @@ function(mcmc, perm){
       mcmc$last[[ch]][[p]] <- aux
     }
   }
+  
+  ## Permute other outputs saved in mcmc
+  # clustering, clusters
+  for(ch in 1:mcmc$nchains){
+    mcmc$clustering[, ch] <- sapply(mcmc$clustering[, ch], function(g){which(perm[[ch]] == g)})
+    mcmc$clusters[[ch]] <- sort(sapply(mcmc$clusters[[ch]], function(g){which(perm[[ch]] == g)}))
+  }
     
   return(mcmc)
 }
