@@ -17,6 +17,7 @@ function(object, newdata,
   params <- colnames(object$draws)[-1]
   draws <- object$draws[object$draws$chain == chain, params]
   draws <- draws[seq(burnin+1, object$iter, by=thin), ]
+  res <- list()
   
   if(how == "samples"){
     if(is.element(type, c("lp-f", "lf-g", "lp-fg"))){
@@ -98,7 +99,7 @@ function(object, newdata,
         
         for(ig in 1:length(gs)){
           g <- gs[ig]
-          gnames <- params[grep(paste0(beta_fix_name, "_", y, "\\(", g, "\\)"), params)]
+          gnames <- params[grep(paste0(beta_grp_name, "_", y, "\\(", g, "\\)"), params)]
           beta_grp <- apply(draws[, gnames], 2, fun_posterior)
           res_grp[, ig] <- gX %*% beta_grp
         }
@@ -113,7 +114,7 @@ function(object, newdata,
           res[[y]][["fit"]] <- res_grp
         }
         if(type == "lp-fg"){
-          res[[y]][["fit"]] <- res_fix + res_grp
+          res[[y]][["fit"]] <- matrix(rep(res_fix, dim(res_grp)[2]), ncol=dim(res_grp)[2]) + res_grp
         }
         # lwr and upr
         if(interval == "ET"){
@@ -133,4 +134,6 @@ function(object, newdata,
       stop("Unknown type for predicting with how=plugin.")
     }
   }
+  
+  return(res)
 }

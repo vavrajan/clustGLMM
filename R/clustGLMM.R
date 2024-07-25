@@ -1508,7 +1508,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "\nThe structure of covariance matrix Sigma for random effects: \n")
   for(y in Ys){
     for(l in 1:length(lrannames[[y]])){
-      paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
+      mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
     }
   }
   mcmc$call <- paste0(mcmc$call, "\nGroup-specific formulae for outcomes: \n")

@@ -160,8 +160,8 @@ mcmc0 <- clustGLMM(formula = formula2, id = id, family = family["income"], data 
 
 # preserve the interpretation of cluster labels by permuting cluster-specific parameters
 perm <- list()
-perm[[1]] <- c(2, 3, 1) 
-# mcmc0 <- PermuteClusterSpec(mcmc0, perm)
+perm[[1]] <- c(2, 1, 3) 
+mcmc0 <- PermuteClusterSpec(mcmc0, perm)
 
 mcmc0
 
@@ -208,13 +208,28 @@ print(summary(mcmc0), summary_type="quantiles")
 par(mar=c(4,4,1,0.5))
 age_grid <- seq(18, 40, by = 0.1)
 plot_num_vs_x_grouped(data, "income", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+
+newdata <- data.frame(age = age_grid)
+newdata[, bsnames] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                         degree = degree, intercept = FALSE)
+# samples method
+predg <- predict(mcmc0, newdata, type="lp-fg", how="samples", gs=1:mcmc0$G, chain=1, burnin=100)
+# plugin method
+# predg <- predict(mcmc0, newdata, type="lp-fg", how="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
 for(g in 1:3){
-  rows <- grep(paste0("beta_num_income\\(",g,"\\)"), rownames(sumcodamcmc0$statistics))
-  beta_num <- sumcodamcmc0$statistics[rows, "Mean"]
   lines(x = age_grid,
-        y = beta_num[1] + bs(age_grid, knots = inner, Boundary.knots = bound, 
-                             degree = degree, intercept = FALSE) %*% as.matrix(beta_num[-1]),
+        y = predg$income$fit[,paste0("(",g,")")],
         col = COL[g], lwd = 3)
+  if(!is.null(predg$income$lwr)){
+    lines(x = age_grid,
+          y = predg$income$lwr[,paste0("(",g,")")],
+          col = COL[g], lty = 2)
+  }
+  if(!is.null(predg$income$upr)){
+    lines(x = age_grid,
+          y = predg$income$upr[,paste0("(",g,")")],
+          col = COL[g], lty = 2)
+  }
 }
 ```
 
@@ -225,7 +240,7 @@ mcmc1 <- clustGLMM(formula = formula1, id = id, family = family, data = data,
                    G = 3, varying = varying, iter = iter, nchains = 1)
 # preserve the interpretation of cluster labels by permuting cluster-specific parameters
 perm <- list()
-perm[[1]] <- c(2, 3, 1) 
+perm[[1]] <- c(2, 1, 3) 
 mcmc1 <- PermuteClusterSpec(mcmc1, perm)
 
 mcmc1
@@ -273,16 +288,63 @@ for(g in 1:3){
          b = sumcodamcmc1$statistics[paste0("beta_num_income(",g,")[2]"), "Mean"],
          col = COL[g], lwd = 3)
 }
+
+# or using predict
+par(mar=c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, "income", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+
+# samples method
+predg <- predict(mcmc1, newdata, type="lp-fg", how="samples", gs=1:mcmc1$G, chain=1, burnin=100)
+# plugin method
+# predg <- predict(mcmc0, newdata, type="lp-fg", how="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
+for(g in 1:3){
+  lines(x = age_grid,
+        y = predg$income$fit[,paste0("(",g,")")],
+        col = COL[g], lwd = 3)
+  if(!is.null(predg$income$lwr)){
+    lines(x = age_grid,
+          y = predg$income$lwr[,paste0("(",g,")")],
+          col = COL[g], lty = 2)
+  }
+  if(!is.null(predg$income$upr)){
+    lines(x = age_grid,
+          y = predg$income$upr[,paste0("(",g,")")],
+          col = COL[g], lty = 2)
+  }
+}
 ```
 
 ```{r codamcmc1_ntrips, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
 par(mar=c(4,4,1,0.5))
 plot_num_vs_x_grouped(data, "ntrips", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
-age_grid <- seq(18, 40, by = 0.1)
 for(g in 1:3){
   lines(x = age_grid,
         y = exp(sumcodamcmc1$statistics[paste0("beta_poi_ntrips(",g,")[2]"), "Mean"] * age_grid + sumcodamcmc1$statistics[paste0("beta_poi_ntrips(",g,")[1]"), "Mean"]),
         col = COL[g], lwd = 3)
+}
+
+# or using predict
+par(mar=c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, "ntrips", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+
+# samples method
+predg <- predict(mcmc1, newdata, type="lp-fg", how="samples", gs=1:mcmc1$G, chain=1, burnin=100)
+# plugin method
+# predg <- predict(mcmc0, newdata, type="lp-fg", how="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
+for(g in 1:3){
+  lines(x = age_grid,
+        y = exp(predg$ntrips$fit[,paste0("(",g,")")]),
+        col = COL[g], lwd = 3)
+  if(!is.null(predg$ntrips$lwr)){
+    lines(x = age_grid,
+          y = exp(predg$ntrips$lwr[,paste0("(",g,")")]),
+          col = COL[g], lty = 2)
+  }
+  if(!is.null(predg$ntrips$upr)){
+    lines(x = age_grid,
+          y = exp(predg$ntrips$upr[,paste0("(",g,")")]),
+          col = COL[g], lty = 2)
+  }
 }
 ```
 
@@ -296,6 +358,7 @@ for(g in 1:3){
            col = COL[g], lwd = 3)
   }
 }
+
 ```
 
 
