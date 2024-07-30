@@ -9,7 +9,7 @@ A method for computing and printing the summary statistics of class \code{clustg
 }
 \usage{
 summary(object, ...)
-print(x, chains=c(1), summary_type="statistics", ...)
+print(x, chains=c(1), type="statistics", ...)
 }
 \arguments{
   \item{object}{
@@ -21,7 +21,7 @@ an object of class \code{"summary.clustglmm"}, an output of \code{summary.clustG
   \item{chains}{
 a vector of chain numbers to print summary results of.
 }
-  \item{summary_type}{
+  \item{type}{
 either \code{"statistics"} or \code{"quantiles"}.
 }
   \item{...}{
@@ -29,7 +29,7 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
 }
 }
 \details{
-  \code{print.summary} prints \code{call} and a brief summary of clustering for selected \code{chains}. Then, again for each selected chain prints the summary statistics as in \code{library(coda)}. You can choose one of the tables (\code{"statistics"} or \code{"quantiles"}) by \code{summary_type}. 
+  \code{print.summary} prints \code{call} and a brief summary of clustering for selected \code{chains}. Then, again for each selected chain prints the summary statistics as in \code{library(coda)}. You can choose one of the tables (\code{"statistics"} or \code{"quantiles"}) by \code{type}. 
 }
 \value{
   \code{summary} returns a list of:
@@ -115,5 +115,6 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 
 mcmc
 s <- summary(mcmc)
-s
+print(s, type="statistics")
+print(s, type="quantiles")
 }

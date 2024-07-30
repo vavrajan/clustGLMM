@@ -7,7 +7,7 @@ Plot the outputs of \code{clustGLMM}
 Triggers plotting functions for selected parameter depending on the choice of the plot.
 }
 \usage{
-plot(x, what="ng", how="traceplots", ...)
+plot(x, what="ng", which="traceplots", ...)
 }
 \arguments{
   \item{x}{
@@ -16,7 +16,7 @@ an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
   \item{what}{
 a string containing the name of the parameter. 
 }
-  \item{how}{
+  \item{which}{
 a string declaring the type of the plot to be created.
 }
   \item{...}{
@@ -24,7 +24,7 @@ other arguments.
 }
 }
 \details{
-Depending on \code{how} the following functions are called:
+Depending on \code{which} the following functions are called:
 \describe{
   \item{ACF}{creates auto-correlation function plot, calls \code{\link{plot_ACF_param}}.}
   \item{ECDF}{creates empirical cumulative distribution function plot, calls \code{\link{plot_ECDF_param}}.}

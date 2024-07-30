@@ -1492,14 +1492,18 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "observations per unit (maximum): ", max(nsubj), " \n")
   mcmc$call <- paste0(mcmc$call, "G = maximal number of clusters: ", G, "\n")
   mcmc$call <- paste0(mcmc$call, "\nOverview of outcomes: \n")
-  mcmc$call <- paste0(mcmc$call, "num: ", paste0(Nums, collapse = ", "), "\n")
-  mcmc$call <- paste0(mcmc$call, "poi: ", paste0(Pois, collapse = ", "), "\n")
-  mcmc$call <- paste0(mcmc$call, "bin: ", paste0(Bins, collapse = ", "), "\n")
-  mcmc$call <- paste0(mcmc$call, "ord: ", paste0(Ords, collapse = ", "), "\n")
-  mcmc$call <- paste0(mcmc$call, "cat: ", paste0(Cats, collapse = ", "), "\n")
-  mcmc$call <- paste0(mcmc$call, "\nFixed effects invariant towards clustering: \n")
+  if(length(Nums) > 0){mcmc$call <- paste0(mcmc$call, "num: ", paste0(Nums, collapse = ", "), "\n")}
+  if(length(Pois) > 0){mcmc$call <- paste0(mcmc$call, "poi: ", paste0(Pois, collapse = ", "), "\n")}
+  if(length(Bins) > 0){mcmc$call <- paste0(mcmc$call, "bin: ", paste0(Bins, collapse = ", "), "\n")}
+  if(length(Ords) > 0){mcmc$call <- paste0(mcmc$call, "ord: ", paste0(Ords, collapse = ", "), "\n")}
+  if(length(Cats) > 0){mcmc$call <- paste0(mcmc$call, "cat: ", paste0(Cats, collapse = ", "), "\n")}
+  mcmc$call <- paste0(mcmc$call, "\nFixed effects invariant towards clustering (in order of appearance): \n")
   for(y in Ys){
-    mcmc$call <- paste0(mcmc$call, y, " ~ ", formula[[y]]$fixed[2], "\n")
+    if(length(lfixnames[[y]]) > 0){
+      mcmc$call <- paste0(mcmc$call, y, " ~ ", paste0(lfixnames[[y]], collapse = ", "), "\n")
+    }else{
+      mcmc$call <- paste0(mcmc$call, y, " ~ 0 \n")
+    }
   }
   mcmc$call <- paste0(mcmc$call, "\nRandom effects invariant towards clustering: \n")
   for(y in Ys){
@@ -1511,14 +1515,21 @@ Change the save settings if you want to calculate these probabilities afterwards
       mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
     }
   }
-  mcmc$call <- paste0(mcmc$call, "\nGroup-specific formulae for outcomes: \n")
+  mcmc$call <- paste0(mcmc$call, "\nGroup-specific effects for outcomes (in order of appearance): \n")
   for(y in Ys){
-    mcmc$call <- paste0(mcmc$call, y, " ~ ", formula[[y]]$group[2], "\n")
+    if(length(lgrpnames[[y]]) > 0){
+      mcmc$call <- paste0(mcmc$call, y, " ~ ", paste0(lgrpnames[[y]], collapse = ", "), "\n")
+    }else{
+      mcmc$call <- paste0(mcmc$call, y, " ~ 0 \n")
+    }
   }
-  gparams <- rownames(settings)[settings$save & settings$isspec]
+  gparams <- rownames(settings)[settings$isspec]
   gparams <- gparams[!grepl("beta", gparams)]
-  mcmc$call <- paste0(mcmc$call, "\nOther saved group-specific parameters: ", 
+  mcmc$call <- paste0(mcmc$call, "\nOther group-specific parameters: ", 
                       paste0(gparams, collapse = ", "), "\n")
+  saved_params <- rownames(settings)[settings$save]
+  mcmc$call <- paste0(mcmc$call, "\nList of saved parameters in $draws: ", 
+                      paste0(saved_params, collapse = ", "), "\n")
   mcmc$call <- paste0(mcmc$call, "\nMCMC sampling: \n")
   mcmc$call <- paste0(mcmc$call, "nchains = number of sampled chains: ", nchains, "\n")
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")

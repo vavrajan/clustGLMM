@@ -1,22 +1,23 @@
-print.summary.clustglmm <- function(x, chains=c(1), summary_type="statistics", ...){
-  cat("Call:\n")
-  cat(x$call)
-  cat("\n## Clustering based on sampled indicators:\n")
-  for(ch in chains){
-    cat("-----------------------------------------------------------------------\n")
-    cat(paste0("Chain ", ch, "\n"))
-    cat("-----------------------------------------------------------------------\n")
-    cat(paste0("The most-frequent number of non-empty clusters: ", x$modeGplus[ch], "\n"))
-    cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G, x$clusters[[ch]]), collapse = ", "), "\n"))
-    cat(paste0("Non-empty clusters: ", paste0(x$clusters[[ch]], collapse = ", "), "\n"))
-    print(summary(factor(x$clustering[,ch])))
-    cat(paste0("Average certainty of clustering into a cluster: \n"))
-    print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
-  }
+print.summary.clustglmm <- function(x, chains=c(1), type="statistics", ...){
+  # cat("Call:\n")
+  # cat(x$call)
+  # cat("\n## Clustering based on sampled indicators:\n")
+  # for(ch in chains){
+  #   cat("-----------------------------------------------------------------------\n")
+  #   cat(paste0("Chain ", ch, "\n"))
+  #   cat("-----------------------------------------------------------------------\n")
+  #   cat(paste0("The most-frequent number of non-empty clusters: ", x$modeGplus[ch], "\n"))
+  #   cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G, x$clusters[[ch]]), collapse = ", "), "\n"))
+  #   cat(paste0("Non-empty clusters: ", paste0(x$clusters[[ch]], collapse = ", "), "\n"))
+  #   print(summary(factor(x$clustering[,ch])))
+  #   cat(paste0("Average certainty of clustering into a cluster: \n"))
+  #   print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
+  # }
+  # 
   
   cat("\n## Summary of the sampled parameters:\n")
   for(ch in chains){
-    s <- x$coda_summary[[ch]][[summary_type]]
+    s <- x$coda_summary[[ch]][[type]]
     cat("-----------------------------------------------------------------------\n")
     cat(paste0("Chain ", ch, "\n"))
     cat("-----------------------------------------------------------------------\n")

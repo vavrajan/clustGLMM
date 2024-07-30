@@ -169,6 +169,7 @@ plot(mcmc0)
 plot(mcmc0, "beta_num", thin = 1, chains = 1)
 plot(mcmc0, "beta_num", how="clusters_kerneldensity", thin = 1, chains = 1)
 plot(mcmc0, "tau_num")
+plot(mcmc0, "tau_num", burnin=100)
 ```
 
 ```{r clusteringU, echo=TRUE}

@@ -7,8 +7,8 @@ Estimate predictors from formulae
 Predicts the linear combinations of fixed and group part of the model formulae of \code{clustGLMM} output.
 }
 \usage{
-predict(object, newdata, 
-        type=c("lp", "lp-f", "lp-g", "lp-fg"), how=c("samples", "plugin"),
+predict(object, newdata, y=names(object$family)[1],
+        type=c("lp", "response"), method=c("samples", "plugin"), what=c("fg", "f", "g"),
         fun_posterior=mean, level=0.95, interval=c("none", "ET", "HPD"),
         chain=1, burnin=0, thin=1, gs=object$clusters[[chain]], ...)
 }
@@ -19,11 +19,17 @@ an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
   \item{newdata}{
 a \code{data.frame} containing all columns needed to construct model matrices.
 }
-  \item{type}{
-what should be predicted; one of \code{"lp-f"}, \code{"lp-g"}, \code{"lp"="lp-fg"} (default), see Details below.
+  \item{y}{
+a string; outcome to be predicted.
 }
-  \item{how}{
+  \item{type}{
+what should be predicted; one of \code{"lp"}, \code{"response"}, ..., see Details below.
+}
+  \item{method}{
 the method of predicting; one of \code{"samples"} (default) or \code{"plugin"}, see Details below.
+}
+  \item{what}{
+more detailed clarification to the selected \code{type}.
 }
   \item{fun_posterior}{
 a function summarizing samples into an estimator of location parameter of posterior distribution; e.g. \code{mean} or \code{median}.
@@ -53,11 +59,12 @@ other arguments.
 \details{
 Depending on \code{type} the following is computed:
 \describe{
-  \item{lp}{reconstructs the linear predictor for each of the considered outcomes. You can specify by adding "-f", "-g", "-fg" which part of the predictor should be reconstructed: the fixed part invariant to all clusters, the group-specific part for chosen clusters \code{gs} or sum of both.}
+  \item{lp}{reconstructs the linear predictor for given outcome \code{y}. You can specify by \code{what}: "f", "g", "fg" which part of the predictor should be reconstructed: the fixed part invariant to all clusters, the group-specific part for chosen clusters \code{gs} or sum of both (default).}
+  \item{response}{... to be implemented.}
   \item{...}{other to be implemented?!?}
 }
 
-As we approximate the posterior distribution with samples, there may be several ways on obtaining the posterior estimate of desired quantity (\code{type}). Depending on \code{how} we proceed in the following way:
+As we approximate the posterior distribution with samples, there may be several ways on obtaining the posterior estimate of desired quantity (\code{type}). Depending on \code{method} we proceed in the following way:
 \describe{
   \item{samples}{treat the desired quantity as a parametric function, evaluate it with all (closely specified) samples in \code{object$draws} and estimate it by \code{fun_posterior}. This option allows for construction of credible intervals.}
   \item{plugin}{estimate the model parameters with \code{fun_posterior} first and then plug them into the function defining the quantity. Does not provide credible intervals (yet?).}
@@ -71,7 +78,7 @@ The computation of credible intervals is given by \code{interval}:
 }
 }
 \value{
-Returns a list named by all considered outcomes. Each contains another list with
+For given outcome \code{y} returns a list with
 \describe{
   \item{$fit}{the estimate of the posterior location.}
   \item{$lwr}{the lower bound of credible interval.}
