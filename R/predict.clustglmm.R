@@ -1,5 +1,5 @@
 predict.clustglmm <- 
-function(object, newdata, y=names(object$family)[1],
+function(object, newdata, y=names(object$family)[1], k=NA,
          type="lp", method="samples", what="fg",
          fun_posterior=mean, 
          level=0.95, interval="ET",
@@ -13,6 +13,16 @@ function(object, newdata, y=names(object$family)[1],
   params <- colnames(object$draws)[-1]
   draws <- object$draws[object$draws$chain == chain, params]
   draws <- draws[seq(burnin+1, object$iter, by=thin), ]
+  if((missing(k) | (is.na(k))) & (object$family[y] == "cat")){
+    warning(paste0("Outcome ", y, " is categorical, but level k not given. I continue with k=1."))
+    k=1
+  }
+  
+  if(object$family[y] == "cat"){
+    nametag <- paste0("\\[[0-9]+,",k,"\\]")
+  }else{
+    nametag <- "\\[[0-9]+\\]"
+  }
   
   if(method == "samples"){
     if(type == "lp"){
@@ -24,7 +34,7 @@ function(object, newdata, y=names(object$family)[1],
       beta_fix_name <- paste0("beta_",object$family[[y]],"_fix")
       beta_grp_name <- paste0("beta_",object$family[[y]])
       
-      fnames <- params[grep(paste0(beta_fix_name, "_", y, "\\["), params)]
+      fnames <- params[grep(paste0(beta_fix_name, "_", y, nametag), params)]
       beta_fix <- draws[, fnames]
       res_fix <- fX %*% t(beta_fix)
       
@@ -40,7 +50,7 @@ function(object, newdata, y=names(object$family)[1],
       if(is.element(what, c("g", "fg"))){
         for(ig in 1:length(gs)){
           g <- gs[ig]
-          gnames <- params[grep(paste0(beta_grp_name, "_", y, "\\(", g, "\\)"), params)]
+          gnames <- params[grep(paste0(beta_grp_name, "_", y, "\\(", g, "\\)", nametag), params)]
           beta_grp <- draws[, gnames]
           
           samples[, ig, ] <- samples[, ig, ] + gX %*% t(beta_grp)
@@ -87,7 +97,7 @@ function(object, newdata, y=names(object$family)[1],
       beta_fix_name <- paste0("beta_",object$family[[y]],"_fix")
       beta_grp_name <- paste0("beta_",object$family[[y]])
       
-      fnames <- params[grep(paste0(beta_fix_name, "_", y, "\\["), params)]
+      fnames <- params[grep(paste0(beta_fix_name, "_", y, nametag), params)]
       beta_fix <- apply(draws[, fnames], 2, fun_posterior)
       res_fix <- fX %*% beta_fix
       
@@ -95,7 +105,7 @@ function(object, newdata, y=names(object$family)[1],
       
       for(ig in 1:length(gs)){
         g <- gs[ig]
-        gnames <- params[grep(paste0(beta_grp_name, "_", y, "\\(", g, "\\)"), params)]
+        gnames <- params[grep(paste0(beta_grp_name, "_", y, "\\(", g, "\\)", nametag), params)]
         beta_grp <- apply(draws[, gnames], 2, fun_posterior)
         res_grp[, ig] <- gX %*% beta_grp
       }

@@ -7,7 +7,7 @@ Estimate predictors from formulae
 Predicts the linear combinations of fixed and group part of the model formulae of \code{clustGLMM} output.
 }
 \usage{
-predict(object, newdata, y=names(object$family)[1],
+predict(object, newdata, y=names(object$family)[1], k=NA,
         type=c("lp", "response"), method=c("samples", "plugin"), what=c("fg", "f", "g"),
         fun_posterior=mean, level=0.95, interval=c("none", "ET", "HPD"),
         chain=1, burnin=0, thin=1, gs=object$clusters[[chain]], ...)
@@ -21,6 +21,9 @@ a \code{data.frame} containing all columns needed to construct model matrices.
 }
   \item{y}{
 a string; outcome to be predicted.
+}
+  \item{k}{
+an integer; level of categorical outcome to be predicted.
 }
   \item{type}{
 what should be predicted; one of \code{"lp"}, \code{"response"}, ..., see Details below.
@@ -158,11 +161,12 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 predict(mcmc, newdata = data, type = "lp")
 
 # predict the evolution in time for covariate f=0
-newdata0 <- data.frame("x" = seq(0, 1, length.out=100), "f"=0)
-predict(mcmc, newdata = newdata0, type = "lp")
+newdata <- data.frame("x" = seq(0, 1, length.out=100), "f"=factor(0, levels=c(0,1)))
 
-# predict the evolution in time for covariate f=1
-newdata1 <- data.frame("x" = seq(0, 1, length.out=100), "f"=1)
-predict(mcmc, newdata = newdata1, type = "lp")
+# numeric outcome
+predict(mcmc, newdata, y="ynum", type="lp", what="fg")
+
+# categorical outcome
+predict(mcmc, newdata, y="ycat", k=1, type="lp", what="fg")
 
 }
