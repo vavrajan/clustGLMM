@@ -11,7 +11,7 @@ Functions that work with longitudinal data and plot the outcomes with respect to
 plot_num_vs_x_grouped(data, y = "y", x = "x", group = "g", id = "i", units, 
                       xbreaks, add_lowess = TRUE, legend_placement = "topright")
 plot_cat_vs_x_grouped(data, y = "y", x = "x", group = "g", 
-                      xbreaks, margin = 0.05, reverse = FALSE)
+                      xbreaks, main = NA, margin = 0.05, reverse = FALSE)
 }
 \arguments{
   \item{data}{

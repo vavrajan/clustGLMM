@@ -14,7 +14,7 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
   has0 <- (sum(data[,group] == 0) > 1)
   COL <- rainbow_hcl(G, c = 80, l = 70)
   dCOL <- rainbow_hcl(G, c = 80, l = 50)
-  names(COL) <- names(dCOL) <- ggs <- gs
+  names(COL) <- names(dCOL) <- ggs <- as.character(gs)
   if(has0){
     COL <- c("grey70", COL)
     dCOL <- c("grey40", dCOL)
@@ -29,6 +29,7 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
        ylab = y)
   for(i in units){
     datai <- data[data[[id]] == i, ]
+    datai <- datai[order(datai[,x]),] # order by x value
     lines(datai[,x], datai[,y], col = COL[as.character(datai[1,group])], 
           lty = 1, lwd = 1)
   }
@@ -36,8 +37,10 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
   # add lowess curves for each group
   if(add_lowess){
     for(g in ggs){
-      lines(lowess(data[data[,group]==g,x], data[data[,group]==g,y]),
-            col = dCOL[as.character(g)], lwd = 5)
+      gdata <- data[data[,group]==g,]
+      gdata <- gdata[order(gdata[,x]),]
+      lws <- loess.smooth(gdata[,x], gdata[,y])
+      lines(lws, col = dCOL[as.character(g)], lwd = 5)
     }
   }
   
