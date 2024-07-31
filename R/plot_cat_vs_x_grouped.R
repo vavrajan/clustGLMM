@@ -1,5 +1,5 @@
 plot_cat_vs_x_grouped <-
-function(data, y = "y", x = "x", group = "g", xbreaks, margin = 0.05, reverse = FALSE){
+function(data, y = "y", x = "x", group = "g", xbreaks, main = NA, margin = 0.05, reverse = FALSE){
   # opar <- par(no.readonly = TRUE)
   # on.exit(par(opar))
   
@@ -29,6 +29,7 @@ function(data, y = "y", x = "x", group = "g", xbreaks, margin = 0.05, reverse = 
   plot(0, G0, type = "n",
        xlim = range(data[,x]), ylim = c(0-G0*0.03,G0), 
        xlab = x, ylab = "Group",
+       main = main,
        xaxt = ifelse(missing(xbreaks),"s","n"), yaxt = "n")
   axis(2, 0:(G0-1)+0.5, labels = labels, las = 2)
   

@@ -167,7 +167,7 @@ mcmc0
 
 plot(mcmc0)
 plot(mcmc0, "beta_num", thin = 1, chains = 1)
-plot(mcmc0, "beta_num", how="clusters_kerneldensity", thin = 1, chains = 1)
+plot(mcmc0, "beta_num", which="clusters_kerneldensity", thin = 1, chains = 1)
 plot(mcmc0, "tau_num")
 plot(mcmc0, "tau_num", burnin=100)
 ```
@@ -214,21 +214,21 @@ newdata <- data.frame(age = age_grid)
 newdata[, bsnames] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
                          degree = degree, intercept = FALSE)
 # samples method
-predg <- predict(mcmc0, newdata, type="lp-fg", how="samples", gs=1:mcmc0$G, chain=1, burnin=100)
+predg <- predict(mcmc0, newdata, y="income", type="lp", what="fg", method="samples", gs=1:mcmc0$G, chain=1, burnin=100)
 # plugin method
-# predg <- predict(mcmc0, newdata, type="lp-fg", how="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
+# predg <- predict(mcmc0, newdata, type="lp", what="fg", method="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
 for(g in 1:3){
   lines(x = age_grid,
-        y = predg$income$fit[,paste0("(",g,")")],
+        y = predg$fit[,paste0("(",g,")")],
         col = COL[g], lwd = 3)
-  if(!is.null(predg$income$lwr)){
+  if(!is.null(predg$lwr)){
     lines(x = age_grid,
-          y = predg$income$lwr[,paste0("(",g,")")],
+          y = predg$lwr[,paste0("(",g,")")],
           col = COL[g], lty = 2)
   }
-  if(!is.null(predg$income$upr)){
+  if(!is.null(predg$upr)){
     lines(x = age_grid,
-          y = predg$income$upr[,paste0("(",g,")")],
+          y = predg$upr[,paste0("(",g,")")],
           col = COL[g], lty = 2)
   }
 }
@@ -249,15 +249,15 @@ mcmc1
 plot(mcmc1)
 
 plot(mcmc1, "beta_num", thin = 1, chains = 1)
-plot(mcmc1, "beta_num", how="clusters_kerneldensity")
-plot(mcmc1, "tau_num", how="clusters_kerneldensity")
+plot(mcmc1, "beta_num", which="clusters_kerneldensity")
+plot(mcmc1, "tau_num", which="clusters_kerneldensity")
 
 plot(mcmc1, "beta_poi", thin = 1, chains = 1)
-plot(mcmc1, "beta_poi", how="clusters_kerneldensity")
+plot(mcmc1, "beta_poi", which="clusters_kerneldensity")
 
 plot(mcmc1, "beta_ord", thin = 1, chains = 1)
-plot(mcmc1, "beta_ord", how="clusters_kerneldensity")
-plot(mcmc1, "c_ord", how="clusters_kerneldensity")
+plot(mcmc1, "beta_ord", which="clusters_kerneldensity")
+plot(mcmc1, "c_ord", which="clusters_kerneldensity")
 ```
 
 ```{r clusteringU_mcmc1, echo=TRUE}
@@ -295,21 +295,21 @@ par(mar=c(4,4,1,0.5))
 plot_num_vs_x_grouped(data, "income", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
 
 # samples method
-predg <- predict(mcmc1, newdata, type="lp-fg", how="samples", gs=1:mcmc1$G, chain=1, burnin=100)
+predg <- predict(mcmc1, newdata, y="income", type="lp", what="fg", method="samples", gs=1:mcmc1$G, chain=1, burnin=100)
 # plugin method
-# predg <- predict(mcmc0, newdata, type="lp-fg", how="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
+# predg <- predict(mcmc0, newdata, type="lp", what="fg", method="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
 for(g in 1:3){
   lines(x = age_grid,
-        y = predg$income$fit[,paste0("(",g,")")],
+        y = predg$fit[,paste0("(",g,")")],
         col = COL[g], lwd = 3)
-  if(!is.null(predg$income$lwr)){
+  if(!is.null(predg$lwr)){
     lines(x = age_grid,
-          y = predg$income$lwr[,paste0("(",g,")")],
+          y = predg$lwr[,paste0("(",g,")")],
           col = COL[g], lty = 2)
   }
-  if(!is.null(predg$income$upr)){
+  if(!is.null(predg$upr)){
     lines(x = age_grid,
-          y = predg$income$upr[,paste0("(",g,")")],
+          y = predg$upr[,paste0("(",g,")")],
           col = COL[g], lty = 2)
   }
 }
@@ -329,21 +329,21 @@ par(mar=c(4,4,1,0.5))
 plot_num_vs_x_grouped(data, "ntrips", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
 
 # samples method
-predg <- predict(mcmc1, newdata, type="lp-fg", how="samples", gs=1:mcmc1$G, chain=1, burnin=100)
+predg <- predict(mcmc1, newdata, y="ntrips", type="lp", what="fg", method="samples", gs=1:mcmc1$G, chain=1, burnin=100)
 # plugin method
-# predg <- predict(mcmc0, newdata, type="lp-fg", how="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
+# predg <- predict(mcmc0, newdata, type="lp", what="fg", method="plugin", gs=1:mcmc0$G, chain=1, burnin=100)
 for(g in 1:3){
   lines(x = age_grid,
-        y = exp(predg$ntrips$fit[,paste0("(",g,")")]),
+        y = exp(predg$fit[,paste0("(",g,")")]),
         col = COL[g], lwd = 3)
-  if(!is.null(predg$ntrips$lwr)){
+  if(!is.null(predg$lwr)){
     lines(x = age_grid,
-          y = exp(predg$ntrips$lwr[,paste0("(",g,")")]),
+          y = exp(predg$lwr[,paste0("(",g,")")]),
           col = COL[g], lty = 2)
   }
-  if(!is.null(predg$ntrips$upr)){
+  if(!is.null(predg$upr)){
     lines(x = age_grid,
-          y = exp(predg$ntrips$upr[,paste0("(",g,")")]),
+          y = exp(predg$upr[,paste0("(",g,")")]),
           col = COL[g], lty = 2)
   }
 }
@@ -378,15 +378,15 @@ mcmc2
 plot(mcmc2, "ng")
 
 plot(mcmc2, "beta_num", thin = 1, chains = 1)
-plot(mcmc2, "beta_num", how="clusters_kerneldensity")
-plot(mcmc2, "tau_num", how="clusters_kerneldensity")
+plot(mcmc2, "beta_num", which="clusters_kerneldensity")
+plot(mcmc2, "tau_num", which="clusters_kerneldensity")
 
 plot(mcmc2, "beta_poi", thin = 1, chains = 1)
-plot(mcmc2, "beta_poi", how="clusters_kerneldensity")
+plot(mcmc2, "beta_poi", which="clusters_kerneldensity")
 
 plot(mcmc2, "beta_ord", thin = 1, chains = 1)
-plot(mcmc2, "beta_ord", how="clusters_kerneldensity")
-plot(mcmc2, "c_ord", how="clusters_kerneldensity")
+plot(mcmc2, "beta_ord", which="clusters_kerneldensity")
+plot(mcmc2, "c_ord", which="clusters_kerneldensity")
 ```
 
 ```{r clusteringU_mcmc2, echo=TRUE}

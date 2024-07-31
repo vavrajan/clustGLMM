@@ -1,0 +1,450 @@
+---
+title: "Example analysis of beech trees"
+author: "Jan Vávra"
+date: "2024-05-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 110)
+```
+
+```{r libraries, warning=FALSE}
+library("clustGLMM")
+library("colorspace")
+library("mvtnorm")
+library("splines")
+library("MASS")
+library("coda")
+```
+
+## Forest Health Status data
+
+Results of an annual survey in the forest of Rothenbuch by Technical University, Munich since 1982. Data available for beech trees only, accessed from https://www.uni-goettingen.de/de/551625.html.
+
+```{r beech_data, echo=TRUE, message=FALSE}
+library(readr)
+beech <- read_delim("https://www.uni-goettingen.de/de/document/download/f5ef58e05aff8b6546dcf993aa73a480.raw/beach.raw", 
+                    delim = "\t", escape_double = FALSE, na=c("", "na", "."),
+                    trim_ws = TRUE)
+beech <- as.data.frame(beech)
+head(beech)
+beech[c(1676:1679, 1795:1796), ]
+summary(beech)
+```
+
+```{r beech_data_nums_vs_year, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+# Numeric variables vs year
+beech$group <- 0
+ynums <- c("age", "canopyd", "gradient", "alt", "depth", "ph")
+
+par(mfrow=nice_nrow_ncol(length(ynums)), mar=c(4,4,0.5,0.5))
+for(y in ynums){
+  plot_num_vs_x_grouped(beech, y=y, x="year", group="group", id="id")
+}
+```
+
+```{r beech_data_cats_vs_year, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+# Factor variables vs year
+beech$fdefol <- factor(beech$defol, 
+                       levels=c(0, 12.5, 25, 37.5, 50, 62.5, 75),
+                       labels=c(0, 1, 2, 2, 3, 3, 3))
+beech$fhumus <- factor(beech$humus,
+                       levels=0:9,
+                       labels=c(0:3,rep(4,6)))
+beech$fcanopy <- factor(beech$canopyd,
+                        levels=seq(0,100, by=10),
+                        labels=c(0,0,0,0,1,1,1,1,2,2,3))
+
+ycats <- c("fdefol", "watermoisture", "alkali", "fhumus", "type", "fert", "fcanopy")
+
+par(mfrow=nice_nrow_ncol(length(ycats)), mar=c(4,4,2.5,0.5))
+for(y in ycats){
+  beech[,y] <- factor(beech[,y])
+  plot_cat_vs_x_grouped(beech, y=y, x="year", group="group", main=y)
+}
+```
+
+```{r beech_data_nums_vs_age, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+# Numeric variables vs age
+par(mfrow=nice_nrow_ncol(length(ynums[-1])), mar=c(4,4,0.5,0.5))
+for(y in ynums[-1]){
+  plot_num_vs_x_grouped(beech, y=y, x="age", group="group", id="id")
+}
+```
+
+```{r beech_data_cats_vs_age, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+# Factor variables vs age
+par(mfrow=nice_nrow_ncol(length(ycats)), mar=c(4,4,2.5,0.5))
+for(y in ycats){
+  beech[,y] <- factor(beech[,y])
+  plot_cat_vs_x_grouped(beech, y=y, x="age", group="group", main=y)
+}
+```
+
+## Outcomes vs year
+```{r preparation_for_clustGLMM_year, echo=TRUE}
+# splines
+degree <- 2
+knots <- c(1983, 1990, 1997, 2004)
+inner <- knots[-c(1, length(knots))]
+bound <- knots[c(1, length(knots))]
+splB <- bs(beech$year, knots = inner, Boundary.knots = bound, 
+           degree = degree, intercept = FALSE)
+spldim <- dim(splB)[2]
+bsnames_year <- paste0("bs_year",1:spldim)
+beech[,bsnames_year] <- splB
+
+# outcomes and regressors to be used
+family <- c("num", "ord", "ord", "ord") 
+names(family) <- Ys <- c("ph", "fcanopy", "fdefol", "fhumus")
+
+id <- "id"
+formula_year <- list()
+for(y in Ys){
+  # formula = group-specific spline curves
+  formula_year[[y]] <- list()
+  formula_year[[y]]$fixed <- as.formula("~ 1")
+  formula_year[[y]]$group <- as.formula(paste0("~ ", paste(bsnames_year, collapse = " + ")))
+  formula_year[[y]]$random <- as.formula("~ 1")
+  formula_year[[y]]$offset <- ""
+}
+
+# Group-specificity of other model parameters
+(varying <- default_varying())
+(save <- default_save())
+save["naY"] <- TRUE
+```
+```{r mcmc_year, message=FALSE, echo=TRUE}
+iter = 1000
+set.seed(12345)
+mcmc_year <- clustGLMM(formula = formula_year, id = id, family = family, data = beech,
+                       G = 3, varying = varying, save = save,
+                       iter = iter, nchains = 3, howsave = "matrix")
+
+# preserve the interpretation of cluster labels by permuting cluster-specific parameters
+#perm <- list()
+#perm[[1]] <- c(1, 2, 3) 
+#perm[[2]] <- c(1, 2, 3) 
+#mcmc <- PermuteClusterSpec(mcmc, perm)
+```
+
+```{r mcmc_year_summary, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+mcmc_year
+summary(mcmc_year)
+plot(mcmc_year, chains=1:3)
+ch <- 1
+burnin <- 10
+thin <- 1
+plot(mcmc_year, "beta_num", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "tau_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+
+plot(mcmc_year, "beta_ord", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "beta_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "c_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "corSigma", which="kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "naY", which="kerneldensity", burnin=burnin, thin=thin, chains=ch)
+```
+
+
+```{r clusteringU, echo=TRUE}
+clusteringU <- function(mcmc, data, id, threshold = 0.5){
+  clusteringU <- mcmc$clustering
+  clusteringU[mcmc$certainty < threshold] <- 0
+  
+  # proposed clustering by each chain separately
+  for(ch in 1:mcmc$nchains){
+    data[, paste0("clustering", ch)] <- clusteringU[as.character(data[, id]), ch]
+    data[, paste0("certainty", ch)] <- mcmc$certainty[as.character(data[, id]), ch]
+  }
+  
+  return(data)
+}
+```
+
+```{r clusteringU_mcmc_year, echo=TRUE}
+beech_year <- clusteringU(mcmc_year, beech, id = id, threshold = 0.5)
+beech_year1 <- beech_year[match(unique(beech_year[,id]), beech_year[,id]),]
+table(beech_year1[,paste0("clustering",ch)])
+```
+
+```{r ynum_vs_year_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+COL <- rainbow_hcl(mcmc_year$modeGplus[ch], c = 80, l = 50)
+year_grid <- seq(1983, 2004, by = 0.1)
+par(mfrow=nice_nrow_ncol(length(mcmc_year$Nums)), mar=c(4,4,1,0.5))
+for(y in mcmc_year$Nums){
+  par(mar=c(4,4,1,0.5))
+  plot_num_vs_x_grouped(beech_year, y=y, x="year", g=paste0("clustering",ch), id=id, 
+                        legend_placement="topright", add_lowess = FALSE)
+  
+  newdata <- data.frame(year = year_grid)
+  newdata[, bsnames_year] <- bs(year_grid, knots = inner, Boundary.knots = bound, 
+                                degree = degree, intercept = FALSE)
+  pred_year <- predict(mcmc_year, newdata, y=y, type="lp", what="fg", method="samples",
+                       burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc_year$modeGplus[ch]){
+    g <- mcmc_year$clusters[[ch]][ig]
+    lines(x = year_grid,
+          y = pred_year$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred_year$lwr)){
+      lines(x = year_grid,
+            y = pred_year$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred_year$upr)){
+      lines(x = year_grid,
+            y = pred_year$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r yord_vs_year_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc_year$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc_year$Ords){
+  newdata <- data.frame(year = year_grid)
+  newdata[, bsnames_year] <- bs(year_grid, knots = inner, Boundary.knots = bound, 
+                                degree = degree, intercept = FALSE)
+  pred_year <- predict(mcmc_year, newdata, y=y, type="lp", what="fg", method="samples",
+                       burnin=burnin, thin=thin, chain=ch)
+  plot(x=0, y=0, type="n",
+       xlim=range(year_grid), ylim=range(unlist(pred_year)),
+       xlab="year", ylab="linear predictor",
+       main=y)
+  for(ig in 1:mcmc_year$modeGplus[ch]){
+    g <- mcmc_year$clusters[[ch]][ig]
+    lines(x = year_grid,
+          y = pred_year$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred_year$lwr)){
+      lines(x = year_grid,
+            y = pred_year$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred_year$upr)){
+      lines(x = year_grid,
+            y = pred_year$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r yord_vs_year_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc_year$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc_year$Ords){
+  plot_cat_vs_x_grouped(beech_year, y=y, x="year", paste0("clustering",ch), main=y)
+}
+```
+```{r beech_year_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(mcmc_year$nchains), mar=c(4,4,2,0.5))
+for(ch in 1:mcmc_year$nchains){
+  COL <- rainbow_hcl(mcmc_year$modeGplus[ch], c = 80, l = 50)
+  names(COL) <- mcmc_year$clusters[[ch]]
+  plot(beech_year1$y ~ beech_year1$x, asp=1,
+       xlab="x", ylab="y", main=paste0("chain = ", ch),
+       cex=2, pch=21, bg=COL[as.character(beech_year1[,paste0("clustering",ch)])])
+}
+```
+
+## Outcomes vs age
+```{r preparation_for_clustGLMM_age, echo=TRUE}
+# splines
+degree <- 2
+knots <- c(0, 80, 160, 240)
+inner <- knots[-c(1, length(knots))]
+bound <- knots[c(1, length(knots))]
+splB <- bs(beech$age, knots = inner, Boundary.knots = bound, 
+           degree = degree, intercept = FALSE)
+spldim <- dim(splB)[2]
+bsnames_age <- paste0("bs_age",1:spldim)
+beech[,bsnames_age] <- splB
+
+# outcomes and regressors to be used
+family_age <- c("num", 
+                "bin", "bin", 
+                "ord", "ord", "ord", "ord", "ord") 
+names(family_age) <- Ys_age <- c("ph", 
+                                 "fert", "type", 
+                                 "alkali", "fcanopy", "fdefol", "fhumus", "watermoisture")
+
+id <- "id"
+formula_age <- list()
+for(y in Ys_age){
+  # formula = group-specific spline curves
+  formula_age[[y]] <- list()
+  formula_age[[y]]$fixed <- as.formula("~ 1")
+  formula_age[[y]]$group <- as.formula(paste0("~ ", paste(bsnames_age, collapse = " + ")))
+  formula_age[[y]]$random <- as.formula("~ 1")
+  formula_age[[y]]$offset <- ""
+}
+
+# Group-specificity of other model parameters
+(varying <- default_varying())
+(save <- default_save())
+save["naY"] <- TRUE
+```
+```{r mcmc_age, message=FALSE, echo=TRUE}
+iter = 1000
+set.seed(12345)
+mcmc_age <- clustGLMM(formula = formula_age, id = id, family = family_age, data = beech,
+                      G = 3, varying = varying, save = save, 
+                      iter = iter, nchains = 3, howsave = "matrix")
+
+# preserve the interpretation of cluster labels by permuting cluster-specific parameters
+#perm <- list()
+#perm[[1]] <- c(1, 2, 3) 
+#perm[[2]] <- c(1, 2, 3) 
+#mcmc <- PermuteClusterSpec(mcmc, perm)
+```
+
+```{r mcmc_age_summary, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+mcmc_age
+summary(mcmc_age)
+plot(mcmc_age, chains=1:3)
+ch <- 2
+burnin <- 10
+thin <- 1
+plot(mcmc_age, "beta_num", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "tau_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+
+plot(mcmc_age, "beta_bin", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "beta_bin", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+
+plot(mcmc_age, "beta_ord", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "beta_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "c_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "corSigma", which="kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "naY", which="kerneldensity", burnin=burnin, thin=thin, chains=ch)
+```
+
+```{r clusteringU_mcmc_age, echo=TRUE}
+beech_age <- clusteringU(mcmc_age, beech, id = id, threshold = 0.5)
+beech_age1 <- beech_age[match(unique(beech_age[,id]), beech_age[,id]),]
+table(beech_age1[,paste0("clustering",ch)])
+```
+
+```{r ynum_vs_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+COL <- rainbow_hcl(mcmc_age$modeGplus[ch], c = 80, l = 50)
+age_grid <- seq(0, 240, by = 0.5)
+par(mfrow=nice_nrow_ncol(length(mcmc_age$Nums)), mar=c(4,4,1,0.5))
+for(y in mcmc_age$Nums){
+  par(mar=c(4,4,1,0.5))
+  plot_num_vs_x_grouped(beech_age, y=y, x="age", g=paste0("clustering",ch), id=id, 
+                        legend_placement="topright", add_lowess = FALSE)
+  
+  newdata <- data.frame(age = age_grid)
+  newdata[, bsnames_age] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                               degree = degree, intercept = FALSE)
+  pred_age <- predict(mcmc_age, newdata, y=y, type="lp", what="fg", method="samples",
+                      burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc_age$modeGplus[ch]){
+    g <- mcmc_age$clusters[[ch]][ig]
+    lines(x = age_grid,
+          y = pred_age$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred_age$lwr)){
+      lines(x = age_grid,
+            y = pred_age$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred_age$upr)){
+      lines(x = age_grid,
+            y = pred_age$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r ybin_vs_age_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc_age$Bins)), mar=c(4,4,2,0.5))
+for(y in mcmc_age$Bins){
+  newdata <- data.frame(age = age_grid)
+  newdata[, bsnames_age] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                                degree = degree, intercept = FALSE)
+  pred_age <- predict(mcmc_age, newdata, y=y, type="lp", what="fg", method="samples",
+                      burnin=burnin, thin=thin, chain=ch)
+  plot(x=0, y=0, type="n",
+       xlim=range(age_grid), ylim=range(unlist(pred_age)),
+       xlab="age", ylab="linear predictor",
+       main=y)
+  for(ig in 1:mcmc_age$modeGplus[ch]){
+    g <- mcmc_age$clusters[[ch]][ig]
+    lines(x = age_grid,
+          y = pred_age$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred_age$lwr)){
+      lines(x = age_grid,
+            y = pred_age$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred_age$upr)){
+      lines(x = age_grid,
+            y = pred_age$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r ybin_vs_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc_age$Bins)), mar=c(4,4,2,0.5))
+for(y in mcmc_age$Bins){
+  plot_cat_vs_x_grouped(beech_age, y=y, x="age", paste0("clustering",ch), main=y)
+}
+```
+
+```{r yord_vs_age_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc_age$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc_age$Ords){
+  newdata <- data.frame(age = age_grid)
+  newdata[, bsnames_age] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                                degree = degree, intercept = FALSE)
+  pred_age <- predict(mcmc_age, newdata, y=y, type="lp", what="fg", method="samples",
+                      burnin=burnin, thin=thin, chain=ch)
+  plot(x=0, y=0, type="n",
+       xlim=range(age_grid), ylim=range(unlist(pred_age)),
+       xlab="age", ylab="linear predictor",
+       main=y)
+  for(ig in 1:mcmc_age$modeGplus[ch]){
+    g <- mcmc_age$clusters[[ch]][ig]
+    lines(x = age_grid,
+          y = pred_age$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred_age$lwr)){
+      lines(x = age_grid,
+            y = pred_age$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred_age$upr)){
+      lines(x = age_grid,
+            y = pred_age$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r yord_vs_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc_age$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc_age$Ords){
+  plot_cat_vs_x_grouped(beech_age, y=y, x="age", paste0("clustering",ch), main=y)
+}
+```
+
+```{r beech_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(mcmc_age$nchains), mar=c(4,4,2,0.5))
+for(ch in 1:mcmc_age$nchains){
+  COL <- rainbow_hcl(mcmc_age$modeGplus[ch], c = 80, l = 50)
+  names(COL) <- mcmc_age$clusters[[ch]]
+  plot(beech_age1$y ~ beech_age1$x, asp=1,
+       xlab="x", ylab="y", main=paste0("chain = ", ch),
+       cex=2, pch=21, bg=COL[as.character(beech_age1[,paste0("clustering",ch)])])
+}
+```
