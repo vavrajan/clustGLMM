@@ -240,6 +240,7 @@ for(y in mcmc_year$Ords){
   plot_cat_vs_x_grouped(beech_year, y=y, x="year", paste0("clustering",ch), main=y)
 }
 ```
+
 ```{r beech_year_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4}
 par(mfrow=nice_nrow_ncol(mcmc_year$nchains), mar=c(4,4,2,0.5))
 for(ch in 1:mcmc_year$nchains){
@@ -437,6 +438,7 @@ for(y in mcmc_age$Ords){
   plot_cat_vs_x_grouped(beech_age, y=y, x="age", paste0("clustering",ch), main=y)
 }
 ```
+
 
 ```{r beech_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4}
 par(mfrow=nice_nrow_ncol(mcmc_age$nchains), mar=c(4,4,2,0.5))
