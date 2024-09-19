@@ -1,0 +1,280 @@
+---
+title: "Example analysis of sleepstudy data"
+author: "Jan Vávra"
+date: "2024-09-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 110)
+```
+
+```{r libraries, warning=FALSE}
+library("clustGLMM")
+library("colorspace")
+library("mvtnorm")
+library("splines")
+library("MASS")
+library("coda")
+library("lme4")
+library("lattice")
+```
+
+## sleepstudy data
+
+These data are from the study described in Belenky et al. (2003), for the most sleep-deprived group (3 hours time-in-bed) and for the first 10 days of the study, up to the recovery period. The original study analyzed speed (1/(reaction time)) and treated day as a categorical rather than a continuous predictor.
+
+The average reaction time per day (in milliseconds) for subjects in a sleep deprivation study. Days 0-1 were adaptation and training (T1/T2), day 2 was baseline (B); sleep deprivation started after day 2.
+
+A data frame with 180 observations on the following 3 variables:
+
+* `Reaction` - Average reaction time (ms)
+* `Days` - Number of days of sleep deprivation
+* `Subject` - Subject number on which the observation was made.
+
+Apparently, each subject has his/her own linear trend of worsening the reaction time:
+
+```{r sleepstudy_data, echo=TRUE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+data(sleepstudy)
+xyplot(Reaction ~ Days | Subject, sleepstudy, type = c("g","p","r"),
+       index = function(x,y) coef(lm(y ~ x))[1],
+       xlab = "Days of sleep deprivation",
+       ylab = "Average reaction time (ms)", aspect = "xy")
+```
+We can plot them all together.  
+```{r beech_data_num_vs_days, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
+# Numeric variables vs Days
+sleepstudy$group <- 0
+par(mfrow=c(1,1), mar=c(4,4,0.5,0.5))
+plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="group", id="Subject")
+```
+Now that we suspect each subject from having his own trend we may be interested in identification of those vulnerable/resistent to sleep deprivation. Yes, we could do it arbitrarily by comparing individual slopes, but is there some clustering method for longitudinal data? It could be done with `library(clustGLMM)` as one of the simplest examples. 
+
+## How to work with `clustGLMM`
+Since `clustGLMM` is designed primarily for multiple responses of possibly different type we have to set up the call more thoroughly than when using other R functions. First, we will declare the response of the model (`Reaction`) and its family type (`num`) declaring we want it to be treated as numerical outcome (the same as family `gaussian`). We also declare the name of ID variable (`Subject`).
+
+```{r preparation_for_clustGLMM, echo=TRUE}
+# outcomes and their families
+family <- c("num") 
+names(family) <- Ys <- c("Reaction")
+
+# ID variable
+id <- "Subject"
+```
+
+The most important thing is to set up the model formula, which is decomposed to 4 sections:
+
+* `fixed` - regression coefficients to be invariant across latent groups (every cluster will have the same value of this coefficient).
+* `group` - regression coefficients to be specific for each latent group. Important! If there is some overlap between regressors used in `fixed` and `group`, then by default these parameters are considered to be group-specific. Therefore, with the setting below, `(Intercept)` will be group-specific!
+* `random` - apriori centered effects to be specific for each individual given by `id`. 
+* `offset` - a name of the column to serve as an offset (irrelevant for this example), by default set to empty string denoting no offset assumed. 
+
+```{r formula_for_clustGLMM, echo=TRUE}
+# Regression model set up
+formula <- list()
+for(y in Ys){       # this creates the same formula for all outcomes (but in general they do not have to be the same!)
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- as.formula("~ 1")             # in the end empty
+  formula[[y]]$group <- as.formula(paste0("~ Days"))  # group-specific intercept + slope
+  formula[[y]]$random <- as.formula("~ 1 + Days")     # subject-specific intercept + slope
+  formula[[y]]$offset <- ""                           # no offset, could be omitted
+}
+```
+
+
+When calling function `clustGLMM` you have to decide on 
+
+* `G` - the number of latent components, 
+* `iter` - number of iterations (length of chain),
+* `nchains` - number of chains to be sampled (not in parallel!),
+* `howsave` - either `matrix` (default) or `list`, depends on how you prefer to save the outputs: in one huge matrix with systematically named columns or in nicely structured list?
+* ... other parameters will be discussed later.
+
+```{r mcmc_first_call, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
+set.seed(12345)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
+                  G = 2, iter = 1000, nchains = 3, howsave = "matrix")
+```
+
+Default print method summarizes the call and informs you about the clustering based on sampled cluster allocation indicators `U`. Clearly, in all three chains the two groups eventually merged into just one group as it apparently was not beneficial to discriminate between different two types of slopes. Note that due to random initialization of allocation to groups the number of the survived group differs across the chains.
+```{r mcmc_first_call_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
+mcmc
+plot(mcmc)
+```
+
+Maybe, if we will not allow subjects to have their specific slope and provide only two options for the slope then we can actually detect two latent groups. We need to change the `random` formula: 
+
+```{r formula_only_random_intercept, echo=TRUE}
+formula[["Reaction"]]$random <- as.formula("~ 1")
+```
+
+```{r mcmc_second_call, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
+set.seed(12345)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
+                  G = 2, iter = 1000, nchains = 3, howsave = "matrix")
+```
+Now we get very contraditory results. Chain 1 splits the groups into 3 + 15, chain 2 into 13 + 5 and chain 3 merges them into one big cluster. Also when you have a look into the summaries we obtain very unexpected values for intercepts and slopes. 
+```{r mcmc_second_call_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
+ch <- 1
+burnin <- 200
+thin <- 1
+
+sum_mcmc <- summary(mcmc, burnin=burnin, thin=thin)
+print(sum_mcmc, chains=ch)
+plot(mcmc, chains=1:3)
+plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+```
+
+The reason is simple, our prior distribution was too informative. It has heavily shrunk the estimates towards zero, which is undesirable in this case. Therefore, we need to play more with other model settings:
+
+* `varying` - booleans declaring other model parameters to be group-specific,
+* `save` - booleans declaring which model parameters should be saved,
+* `param` - hyperparameter values for the prior distribution,
+* `tuning` - set of parameters that can adjust the sampling algorithm.
+
+When any of these four is not given, then defaults are used. Defaults can be obtained via `default_...()` functions. You can change the values manually and supply them to the call of function `clustGLMM`: 
+
+```{r change_default_settings_for_clustGLMM, echo=TRUE}
+varying <- default_varying()
+varying["tau_num"] <- FALSE
+param <- default_param()
+param["sd_beta_num"] <- 100
+save <- default_save()
+save["b"] <- save["U"] <- TRUE
+tuning <- default_tuning()
+```
+
+Here we have changed the precision parameter for numeric outcomes to not be group-specific as it was before. Then, we have changed the standard deviation for the group-specific regression coefficients for numerical outcomes from 1 to be 100, this should make the prior sufficiently flat. We would also like to save the random effects and allocation indicators which is not done by default as it can be demanding on memory for larger datasets. We keep the tuning parameters the same, they do not have to be given to the function. 
+
+```{r mcmc_init, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
+set.seed(12345)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
+                  G = 2, varying = varying, param = param, save = save,
+                  iter = 1000, nchains = 3, howsave = "matrix")
+```
+
+Within the first 1000 iterations the allocation towars clusters is very fluid: 
+
+```{r mcmc_init_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
+plot(mcmc, chains=1:3)
+sum_mcmc <- summary(mcmc)
+print(sum_mcmc, chains=1)
+plot(mcmc, "beta_num", chains=1)
+```
+
+What if 1000 iterations was not enough to converge to the stationary distribution? You can always take the last sampled values and use them to continue in sampling:
+
+```{r mcmc, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
+inits <- mcmc$last
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
+                  G = 2, varying = varying, param = param, save = save,
+                  inits = inits,
+                  iter = 10000, nchains = 3, howsave = "matrix")
+
+plot(mcmc, chains=1:3)
+```
+
+You can always restrict the summary analysis to the chain with burnin and thinning of your choice:
+
+```{r mcmc_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
+ch <- 1
+burnin <- 0
+thin <- 1
+
+sum_mcmc <- summary(mcmc, burnin=burnin, thin=thin)
+print(sum_mcmc, chains=ch)
+plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=1)
+plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=2)
+plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=3)
+plot(mcmc, "tau_num", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+plot(mcmc, "sdSigma", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+```
+
+Clustering based on sampled indicators is already included in the output. The following function adds the resulting clustering (with certainty) for each chain separately to the dataset. The plotting functions require the grouping variable to be included in it...
+
+```{r clusteringU, echo=TRUE}
+clusteringU <- function(mcmc, data, id, threshold = 0.5){
+  clusteringU <- mcmc$clustering
+  clusteringU[mcmc$certainty < threshold] <- 0
+  
+  # proposed clustering by each chain separately
+  for(ch in 1:mcmc$nchains){
+    data[, paste0("clustering", ch)] <- clusteringU[as.character(data[, id]), ch]
+    data[, paste0("certainty", ch)] <- mcmc$certainty[as.character(data[, id]), ch]
+  }
+  
+  return(data)
+}
+```
+
+We can see that chains 1 and 2 have switched meaning of cluster labels 1 and 2.
+```{r clusteringU_mcmc, echo=TRUE}
+sleepstudy <- clusteringU(mcmc, sleepstudy, id = id, threshold = 0.5)
+sleepstudy1 <- sleepstudy[match(unique(sleepstudy[,id]), sleepstudy[,id]),]
+table(sleepstudy1[,paste0("clustering",1)])
+table(sleepstudy1[,paste0("clustering",2)])
+table(sleepstudy1[,paste0("clustering",3)])
+```
+
+It could be unified by performing permutation of all saved parameters:
+```{r permute_mcmc, echo=TRUE}
+perm <- list()
+perm[[1]] <- c(1, 2) # preserve the meaning from the first chain
+perm[[2]] <- c(2, 1) # reverse the meaning to resemble the first chain
+perm[[3]] <- c(1, 2) # keep this one the same
+mcmc <- PermuteClusterSpec(mcmc, perm)
+mcmc$clustering
+```
+
+Clustering based on sampled indicators is the most simple way to do it. However, it is still possible to explore the posterior distribution of clustering probability and determine the clustering based on it instead. It is possible to do with `clustering_probabilities_and_deviance` function:
+```{r permute_mcmc, echo=TRUE}
+probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
+                                               dynamic_prob = FALSE,
+                                               start = 1,
+                                               end = mcmc$iter,
+                                               thin = 1,
+                                               chains = 1:mcmc$nchains,
+                                               tolerance = 1e-7, 
+                                               maxiter = 100,
+                                               maxnrep = 20, 
+                                               NGQ = 1)
+```
+
+Finally, we can use `predict` function to replicate the linear predictor (excluding random effects) and plot the posterior mean curves for the estimated two groups. We can also see who was clustered into which cluster:
+```{r ynum_vs_days_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+ch <- 1
+burnin <- 0
+thin <- 1
+COL <- rainbow_hcl(mcmc$modeGplus[ch], c = 80, l = 50)
+grid <- 0:9
+
+par(mfrow=nice_nrow_ncol(length(mcmc$Nums)), mar=c(4,4,1,0.5))
+for(y in mcmc$Nums){
+  par(mar=c(4,4,1,0.5))
+  plot_num_vs_x_grouped(sleepstudy, y=y, x="Days", g=paste0("clustering",ch), id=id, 
+                        legend_placement="topright", add_lowess = FALSE)
+  
+  newdata <- data.frame(Days = grid)
+  pred <- predict(mcmc, newdata, y=y, type="lp", what="fg", method="samples",
+                  burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc$modeGplus[ch]){
+    g <- mcmc$clusters[[ch]][ig]
+    lines(x = grid,
+          y = pred$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred$lwr)){
+      lines(x = grid,
+            y = pred$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred$upr)){
+      lines(x = grid,
+            y = pred$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```

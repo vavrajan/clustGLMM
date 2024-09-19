@@ -222,6 +222,9 @@ Change the save settings if you want to calculate these probabilities afterwards
   Xcolnames <- numeric()
   fcols <- gcols <- rcols <- ocols <- list()
   for(y in Ys){
+    if(is.null(formula[[y]]$offset)){
+      formula[[y]]$offset <- ""
+    }
     fauxX <- model.matrix(formula[[y]]$fixed, data)
     gauxX <- model.matrix(formula[[y]]$group, data)
     rauxX <- model.matrix(formula[[y]]$random, data)

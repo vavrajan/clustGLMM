@@ -18,7 +18,7 @@ a structured list containing formulae for all modelled outcomes. Let \code{y} be
 \item{\code{$fixed}}{\code{formula} for effects common to all clusters,}
 \item{\code{$group}}{\code{formula} for cluster-specific effects,}
 \item{\code{$random}}{\code{formula} for \code{id}-specific effects,}
-\item{\code{$offset}}{a column name from \code{data} to be used as an offset; empty "" means no offset.}
+\item{\code{$offset}}{a column name from \code{data} to be used as an offset; by default it is set to empty "", which means no offset.}
 }}
   \item{id}{
 a string, name of the column containing unit ID.

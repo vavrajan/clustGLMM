@@ -18,7 +18,7 @@ function(mcmc,      # MCMC generated parameters
 ){
   ### Every auxiliary values are stored within mcmc output
   # Such as save, calc, varying, ...
-  message("\nR function pUig_dev succesfully called.\n")
+  # message("\nR function pUig_dev succesfully called.\n")
   
   # Find roots and weights for Adaptive Gaussian Quadrature
   # require("gaussquad")
@@ -281,10 +281,10 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   cnran <- as.numeric(mcmc$nran) # number of RANDOM regressors with variables y
   cnoff <- as.numeric(mcmc$noff) # number of OFFSET regressors with variables y
   
-  head(finX)
+  # head(finX)
   
   # all the following three are going to be saved
-  nparams <- sum(mcmc$settings[c("deviance", "dev_i", "pUig_int"), "dimswithG"])
+  nparams <- sum(settings[c("deviance", "dev_i", "pUig_int"), "dimswithG"])
   if(mcmc$howsave == "matrix"){
     param_names <- list()
     output <- matrix(0, nrow = length(chains)*niter, ncol = 2+nparams)
