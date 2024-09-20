@@ -13,7 +13,8 @@ function(data, y = "y", x = "x", group = "g", xbreaks, main = NA, margin = 0.05,
   seql <- seq(40, 80, length.out = ncat)
   if(is0){
     labels <- c(0,gs)
-    mCOL[,1] <- grey.colors(ncat, start = 0.25, end = 0.75)
+    # mCOL[,1] <- grey.colors(ncat, start = 0.25, end = 0.75)
+    mCOL[,1] <- slategrey.colors(ncat, start = 0.0, end = 0.9)
     if(G > 0){
       for(l in 1:ncat){
         mCOL[l,2:(G+1)] <- rainbow_hcl(G, c = 80, l = seql[l])

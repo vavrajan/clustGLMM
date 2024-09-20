@@ -209,26 +209,33 @@ for(y in mcmc_year$Ords){
   newdata <- data.frame(year = year_grid)
   newdata[, bsnames_year] <- bs(year_grid, knots = inner, Boundary.knots = bound, 
                                 degree = degree, intercept = FALSE)
-  pred_year <- predict(mcmc_year, newdata, y=y, type="lp", what="fg", method="samples",
-                       burnin=burnin, thin=thin, chain=ch)
+  maxk <- mcmc$Kord[y]
+  pred_age <- list()
+  for(k in 1:maxk){
+    pred_year[[k]] <- predict(mcmc_year, newdata, y=y, type="lp", 
+                              what="fg", method="samples", k=k,
+                              burnin=burnin, thin=thin, chain=ch)
+  }
   plot(x=0, y=0, type="n",
        xlim=range(year_grid), ylim=range(unlist(pred_year)),
        xlab="year", ylab="linear predictor",
        main=y)
-  for(ig in 1:mcmc_year$modeGplus[ch]){
-    g <- mcmc_year$clusters[[ch]][ig]
-    lines(x = year_grid,
-          y = pred_year$fit[,paste0("(",g,")")],
-          col = COL[ig], lwd = 3)
-    if(!is.null(pred_year$lwr)){
+  for(k in 1:maxk){
+    for(ig in 1:mcmc_year$modeGplus[ch]){
+      g <- mcmc_year$clusters[[ch]][ig]
       lines(x = year_grid,
-            y = pred_year$lwr[,paste0("(",g,")")],
-            col = COL[ig], lty = 2)
-    }
-    if(!is.null(pred_year$upr)){
-      lines(x = year_grid,
-            y = pred_year$upr[,paste0("(",g,")")],
-            col = COL[ig], lty = 2)
+            y = pred_year[[k]]$fit[,paste0("(",g,")")],
+            col = COL[ig], lwd = 3)
+      if(!is.null(pred_year[[k]]$lwr) | maxk==1){
+        lines(x = year_grid,
+              y = pred_year[[k]]$lwr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+      if(!is.null(pred_year[[k]]$upr) | maxk==1){
+        lines(x = year_grid,
+              y = pred_year[[k]]$upr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
     }
   }
 }
@@ -407,26 +414,33 @@ for(y in mcmc_age$Ords){
   newdata <- data.frame(age = age_grid)
   newdata[, bsnames_age] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
                                 degree = degree, intercept = FALSE)
-  pred_age <- predict(mcmc_age, newdata, y=y, type="lp", what="fg", method="samples",
-                      burnin=burnin, thin=thin, chain=ch)
+  maxk <- mcmc$Kord[y]
+  pred_age <- list()
+  for(k in 1:maxk){
+    pred_age[[k]] <- predict(mcmc_age, newdata, y=y, type="lp", 
+                             what="fg", method="samples", k=k,
+                             burnin=burnin, thin=thin, chain=ch)
+  }
   plot(x=0, y=0, type="n",
        xlim=range(age_grid), ylim=range(unlist(pred_age)),
-       xlab="age", ylab="linear predictor",
+       xlab="age", ylab="linear predictor - ordered intercept",
        main=y)
-  for(ig in 1:mcmc_age$modeGplus[ch]){
-    g <- mcmc_age$clusters[[ch]][ig]
-    lines(x = age_grid,
-          y = pred_age$fit[,paste0("(",g,")")],
-          col = COL[ig], lwd = 3)
-    if(!is.null(pred_age$lwr)){
+  for(k in 1:maxk){
+    for(ig in 1:mcmc_age$modeGplus[ch]){
+      g <- mcmc_age$clusters[[ch]][ig]
       lines(x = age_grid,
-            y = pred_age$lwr[,paste0("(",g,")")],
-            col = COL[ig], lty = 2)
-    }
-    if(!is.null(pred_age$upr)){
-      lines(x = age_grid,
-            y = pred_age$upr[,paste0("(",g,")")],
-            col = COL[ig], lty = 2)
+            y = pred_age[[k]]$fit[,paste0("(",g,")")],
+            col = COL[ig], lwd = 3)
+      if(!is.null(pred_age[[k]]$lwr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$lwr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+      if(!is.null(pred_age[[k]]$upr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$upr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
     }
   }
 }

@@ -108,7 +108,8 @@ plot_clusters_kerneldensity_param <-
               }
             }else{
               # the size of the dimension depends on outcomes
-              par(mfrow = c(length(chains), v$d1), mar = c(4,4,1,1))
+              # par(mfrow = c(length(chains), v$d1), mar = c(4,4,1,1))
+              par(mfrow = nice_nrow_ncol(length(chains)*v$d1), mar = c(4,4,1,1))
               for(ch in chains){
                 for(i in 1:v$d1){
                   plot_clusters(mcmc = mcmc, what = what, 

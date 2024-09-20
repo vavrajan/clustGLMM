@@ -144,6 +144,11 @@ param["sd_beta_num"] <- 100
 save <- default_save()
 save["b"] <- save["U"] <- TRUE
 tuning <- default_tuning()
+
+# also it appears that the intercept can be common to both clusters
+formula[["Reaction"]]$fixed <- as.formula("~ 1")
+formula[["Reaction"]]$group <- as.formula("~ -1 + Days")
+param["sd_beta_num_fix"] <- 100
 ```
 
 Here we have changed the precision parameter for numeric outcomes to not be group-specific as it was before. Then, we have changed the standard deviation for the group-specific regression coefficients for numerical outcomes from 1 to be 100, this should make the prior sufficiently flat. We would also like to save the random effects and allocation indicators which is not done by default as it can be demanding on memory for larger datasets. We keep the tuning parameters the same, they do not have to be given to the function. 
@@ -185,10 +190,10 @@ thin <- 1
 
 sum_mcmc <- summary(mcmc, burnin=burnin, thin=thin)
 print(sum_mcmc, chains=ch)
+plot(mcmc, "beta_num_fix", burnin=burnin, thin=thin, chains=1:3)
 plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
-plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=1)
-plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=2)
-plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=3)
+plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "beta_num_fix", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 plot(mcmc, "tau_num", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 plot(mcmc, "sdSigma", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 ```
@@ -230,7 +235,7 @@ mcmc$clustering
 ```
 
 Clustering based on sampled indicators is the most simple way to do it. However, it is still possible to explore the posterior distribution of clustering probability and determine the clustering based on it instead. It is possible to do with `clustering_probabilities_and_deviance` function:
-```{r permute_mcmc, echo=TRUE}
+```{r clustering_probabilities, echo=TRUE, results=FALSE}
 probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
                                                dynamic_prob = FALSE,
                                                start = 1,
@@ -241,6 +246,35 @@ probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
                                                maxiter = 100,
                                                maxnrep = 20, 
                                                NGQ = 1)
+```
+
+```{r add_probs_to_mcmc, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+colnames(probs)
+for(i in 1:mcmc$n){
+  for(g in 1:mcmc$G){
+    mcmc$draws[, paste0("pUig_int(",g,")[",i,"]")] <- probs[, paste0("pUig_int[",i,",",g,"]")]
+  }
+}
+mcmc$settings["pUig_int", ] <- mcmc$settings["U", ]
+mcmc$settings["pUig_int", c("isspec", "dimswithG")] <- c(1, mcmc$G * mcmc$n)
+
+plot(mcmc, "pUig_int", "clusters_kerneldensity", burnin=burnin, thin=thin, chains=1)
+```
+```{r add_deviance_to_mcmc, echo=TRUE}
+for(i in 1:mcmc$n){
+  mcmc$draws[, paste0("dev[",i,"]")] <- probs[, paste0("dev_i[",i,"]")]
+}
+mcmc$draws[, "deviance"] <- probs[, "deviance"]
+mcmc$settings["deviance", ] <- mcmc$settings["loglik", ]
+mcmc$settings["dev", ] <- mcmc$settings["U", ]
+```
+
+```{r plot_deviance, echo=TRUE, fig.align='center', fig.width=10, fig.height=5}
+plot(mcmc, "deviance", "traceplots", burnin=burnin, thin=thin, chains=1:3)
+```
+
+```{r plot_dev_by_i, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+plot(mcmc, "dev", "kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 ```
 
 Finally, we can use `predict` function to replicate the linear predictor (excluding random effects) and plot the posterior mean curves for the estimated two groups. We can also see who was clustered into which cluster:

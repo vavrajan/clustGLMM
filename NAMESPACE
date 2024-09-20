@@ -33,7 +33,9 @@ export("as_coda",
        "plot_num_vs_x_grouped", 
        "plot_traceplots", 
        "plot_traceplots_param", 
-       "RestrictionToModeGplus")
+       "RestrictionToModeGplus",
+       "slategray.colors",
+       "slategrey.colors")
 
 S3method(summary, clustglmm)
 S3method(predict, clustglmm)

@@ -16,8 +16,10 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
   dCOL <- rainbow_hcl(G, c = 80, l = 50)
   names(COL) <- names(dCOL) <- ggs <- as.character(gs)
   if(has0){
-    COL <- c("grey70", COL)
-    dCOL <- c("grey40", dCOL)
+    COL <- c("slategray3", COL)
+    dCOL <- c("slategray", dCOL)
+    #COL <- c("grey70", COL)
+    #dCOL <- c("grey40", dCOL)
     names(COL) <- names(dCOL) <- c("0", gs)
     ggs <- c(0, gs)
   }

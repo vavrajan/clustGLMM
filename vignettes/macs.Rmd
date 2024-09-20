@@ -1,0 +1,238 @@
+---
+title: "MACS analysis with clustGLMM"
+author: "Jan Vávra"
+date: "2024-09-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 110)
+```
+
+```{r libraries, warning=FALSE}
+library("clustGLMM")
+library("colorspace")
+library("mvtnorm")
+library("splines")
+library("MASS")
+library("coda")
+```
+
+## Loading the dataset
+```{r load_macs, warning=FALSE}
+# load("vignettes/macs.RData")
+load("macs.RData")
+head(macs)
+summary(macs)
+```
+```{r macs_nums_vs_Time, echo=TRUE, fig.align='center', fig.width=10, fig.height=5}
+# Numeric variables vs Time
+macs$group <- 0
+ynums <- c("CD4", "cesd")
+
+par(mfrow=nice_nrow_ncol(length(ynums)), mar=c(4,4,0.5,0.5))
+for(y in ynums){
+  plot_num_vs_x_grouped(macs, y=y, x="Time", group="group", id="ID")
+}
+```
+
+```{r macs_cats_vs_Time, echo=TRUE, fig.align='center', fig.width=10, fig.height=5}
+# Factor variables vs Time
+macs$fdrug <- factor(macs$drug,
+                     levels=0:1,
+                     labels=0:1)
+macs$fcigpacks <- factor(macs$cigpacks, 
+                         levels=0:4,
+                         labels=0:4)
+macs$fsexpartners <- factor(macs$sexpartners,
+                            levels=0:10,
+                            labels=c("0", "1", "2-4", "2-4", "2-4", "5-9", "5-9", "5-9", "5-9", "5-9", "10+"))
+
+ycats <- c("fdrug", "fcigpacks", "fsexpartners")
+
+par(mfrow=nice_nrow_ncol(length(ycats)), mar=c(4,4,2.5,0.5))
+for(y in ycats){
+  plot_cat_vs_x_grouped(macs, y=y, x="Time", group="group", main=y)
+}
+```
+
+```{r preparation_for_clustGLMM, echo=TRUE}
+# splines
+degree <- 2
+knots <- c(-3, -1, 1, 3, 5.5)
+inner <- knots[-c(1, length(knots))]
+bound <- knots[c(1, length(knots))]
+splB <- bs(macs$Time, knots = inner, Boundary.knots = bound, 
+           degree = degree, intercept = FALSE)
+spldim <- dim(splB)[2]
+bsnames_Time <- paste0("bs_Time",1:spldim)
+macs[,bsnames_Time] <- splB
+
+# outcomes and regressors to be used
+family <- c("num", "num", "bin", "ord", "ord") 
+names(family) <- Ys <- c("CD4", "cesd", "drug", "fcigpacks", "fsexpartners")
+
+id <- "ID"
+formula <- list()
+for(y in Ys){
+  # formula = group-specific spline curves
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- as.formula("~ 1")
+  formula[[y]]$group <- as.formula(paste0("~ ", paste(bsnames_Time, collapse = " + ")))
+  formula[[y]]$random <- as.formula("~ 1")
+  formula[[y]]$offset <- ""
+}
+
+# Group-specificity of other model parameters
+varying <- default_varying()
+save <- default_save()
+param <- default_param()
+param["sd_beta_num"] <- 1000
+```
+
+```{r mcmc, message=FALSE, echo=TRUE, results=FALSE, warning=TRUE}
+iter = 1000
+set.seed(12345)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = macs,
+                  G = 2, varying = varying, save = save, param = param,
+                  iter = iter, nchains = 3, howsave = "matrix")
+
+# preserve the interpretation of cluster labels by permuting cluster-specific parameters
+perm <- list()
+perm[[1]] <- c(1, 2) 
+perm[[2]] <- c(2, 1) 
+perm[[3]] <- c(1, 2) 
+mcmc <- PermuteClusterSpec(mcmc, perm)
+```
+
+
+```{r mcmc_summary, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+mcmc
+summary(mcmc)
+plot(mcmc, chains=1:3)
+ch <- 1
+burnin <- 100
+thin <- 1
+plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "tau_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+
+plot(mcmc, "beta_bin", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "beta_bin", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+
+plot(mcmc, "beta_ord", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "beta_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "c_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "corSigma", which="kerneldensity", burnin=burnin, thin=thin, chains=ch)
+```
+
+
+
+```{r clusteringU, echo=TRUE}
+clusteringU <- function(mcmc, data, id, threshold = 0.5){
+  clusteringU <- mcmc$clustering
+  clusteringU[mcmc$certainty < threshold] <- 0
+  
+  # proposed clustering by each chain separately
+  for(ch in 1:mcmc$nchains){
+    data[, paste0("clustering", ch)] <- clusteringU[as.character(data[, id]), ch]
+    data[, paste0("certainty", ch)] <- mcmc$certainty[as.character(data[, id]), ch]
+  }
+  
+  return(data)
+}
+```
+
+```{r clusteringU_mcmc, echo=TRUE}
+macs <- clusteringU(mcmc, macs, id = id, threshold = 0.5)
+macs1 <- macs[match(unique(macs[,id]), macs[,id]),]
+table(macs[,paste0("clustering",1)])
+table(macs[,paste0("clustering",2)])
+table(macs[,paste0("clustering",3)])
+```
+
+```{r ynum_vs_Time_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+ch <- 1
+COL <- rainbow_hcl(mcmc$modeGplus[ch], c = 80, l = 50)
+Time_grid <- seq(-3, 5.5, by = 0.1)
+
+par(mfrow=nice_nrow_ncol(length(mcmc$Nums)), mar=c(4,4,1,0.5))
+for(y in mcmc$Nums){
+  plot_num_vs_x_grouped(macs, y=y, x="Time", g=paste0("clustering",ch), id=id, 
+                        legend_placement="topright", add_lowess = FALSE)
+  
+  newdata <- data.frame(Time = Time_grid)
+  newdata[, bsnames_Time] <- bs(Time_grid, knots = inner, Boundary.knots = bound, 
+                                degree = degree, intercept = FALSE)
+  pred <- predict(mcmc, newdata, y=y, type="lp", what="fg", method="samples",
+                  burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc$modeGplus[ch]){
+    g <- mcmc$clusters[[ch]][ig]
+    lines(x = Time_grid,
+          y = pred$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred$lwr)){
+      lines(x = Time_grid,
+            y = pred$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred$upr)){
+      lines(x = Time_grid,
+            y = pred$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r ybinord_vs_Time_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(c(mcmc$Bins, mcmc$Ords))), mar=c(4,4,2,0.5))
+for(y in c(mcmc$Bins, mcmc$Ords)){
+  newdata <- data.frame(Time = Time_grid)
+  newdata[, bsnames_Time] <- bs(Time_grid, knots = inner, Boundary.knots = bound, 
+                                degree = degree, intercept = FALSE)
+  maxk <- ifelse(mcmc$family[y] == "ord", mcmc$Kord[y], 1)
+  pred <- list()
+  for(k in 1:maxk){
+    pred[[k]] <- predict(mcmc, newdata, y=y, type="lp", what="fg", method="samples",
+                         k=k,
+                         burnin=burnin, thin=thin, chain=ch)
+  }
+  plot(x=0, y=0, type="n",
+       xlim=range(Time_grid), ylim=range(unlist(pred)),
+       xlab="Time", ylab=paste0("linear predictor", 
+                                ifelse(mcmc$family[y] == "ord",
+                                       " - ordered intercept",
+                                       "")),
+       main=y)
+  for(k in 1:maxk){
+    for(ig in 1:mcmc$modeGplus[ch]){
+      g <- mcmc$clusters[[ch]][ig]
+      lines(x = Time_grid,
+            y = pred[[k]]$fit[,paste0("(",g,")")],
+            col = COL[ig], lwd = 3)
+      if(!is.null(pred$lwr) | maxk==1){
+        lines(x = Time_grid,
+              y = pred[[k]]$lwr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+      if(!is.null(pred$upr) | maxk==1){
+        lines(x = Time_grid,
+              y = pred[[k]]$upr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+    }
+  }
+}
+```
+
+```{r ybinord_vs_Time_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(c(mcmc$Bins, mcmc$Ords))), mar=c(4,4,2,0.5))
+for(y in c(mcmc$Bins, mcmc$Ords)){
+  plot_cat_vs_x_grouped(macs, y=y, x="Time", paste0("clustering",ch), main=y)
+}
+```
+
+
+

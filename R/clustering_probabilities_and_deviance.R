@@ -379,7 +379,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     #dyn.load("Cfun/pUig_dev.dll")
     #dyn.unload("Cfun/pUig_dev.dll")
     
-    print("About to start C computations.")
+    # print("About to start C computations.")
     # print(ch)
     # print(mcmc$G)
     # print(niter)

@@ -13,9 +13,18 @@ function(object, newdata, y=names(object$family)[1], k=NA,
   params <- colnames(object$draws)[-1]
   draws <- object$draws[object$draws$chain == chain, params]
   draws <- draws[seq(burnin+1, object$iter, by=thin), ]
-  if((missing(k) | (is.na(k))) & (object$family[y] == "cat")){
-    warning(paste0("Outcome ", y, " is categorical, but level k not given. I continue with k=1."))
-    k=1
+  if(object$family[y] == "ord"){
+    if(missing(k) | (is.na(k)) | !is.element(k, 1:object$Kord[y])){
+      warning(paste0("Outcome ", y, " is ordinal, but level k (for the choice of intercept) not given. Only values 1, ..., ", object$Kord[y], " are permitted. I continue with k=1."))
+      k=1
+    }
+  }
+  
+  if(object$family[y] == "cat"){
+    if(missing(k) | (is.na(k)) | !is.element(k, 1:object$Kcat[y])){
+      warning(paste0("Outcome ", y, " is categorical, but level k not given. Only values 1, ..., ", object$Kcat[y], " are permitted. I continue with k=1."))
+      k=1
+    }
   }
   
   if(object$family[y] == "cat"){
@@ -54,6 +63,21 @@ function(object, newdata, y=names(object$family)[1], k=NA,
           beta_grp <- draws[, gnames]
           
           samples[, ig, ] <- samples[, ig, ] + gX %*% t(beta_grp)
+        }
+      }
+      
+      if(object$family[y] == "ord"){
+        if(object$varying["c_ord"]){
+          for(ig in 1:length(gs)){
+            g <- gs[ig]
+            c_ord_name <- paste0("c_ord_", y, "(", g, ")[", k, "]")
+            samples[, ig, ] <- samples[, ig, ] - draws[, c_ord_name]
+          }
+        }else{
+          c_ord_name <- paste0("c_ord_", y, "[", k, "]")
+          for(j in 1:dim(samples)[2]){
+            samples[, j, ] <- samples[, j, ] - draws[, c_ord_name]
+          }
         }
       }
       
@@ -122,6 +146,23 @@ function(object, newdata, y=names(object$family)[1], k=NA,
       if(what == "fg"){
         res[["fit"]] <- matrix(rep(res_fix, dim(res_grp)[2]), ncol=dim(res_grp)[2]) + res_grp
       }
+      if(object$family[y] == "ord"){
+        if(object$varying["c_ord"]){
+          if(what != "f"){
+            for(ig in 1:length(gs)){
+              g <- gs[ig]
+              c_ord_name <- paste0("c_ord_", y, "(", g, ")[", k, "]")
+              res[["fit"]][,ig] <- res[["fit"]][,ig] - fun_posterior(draws[, c_ord_name])
+            }
+          }
+        }else{
+          c_ord_name <- paste0("c_ord_", y, "\\[", k, "\\]")
+          for(j in 1:dim(res[["fit"]])[2]){
+            res[["fit"]][, j] <- res[["fit"]][, j] - fun_posterior(draws[, c_ord_name])
+          }
+        }
+      }
+      
       # lwr and upr
       if(interval == "ET"){
         # todo

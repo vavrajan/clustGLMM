@@ -23,7 +23,7 @@ a \code{data.frame} containing all columns needed to construct model matrices.
 a string; outcome to be predicted.
 }
   \item{k}{
-an integer; level of categorical outcome to be predicted.
+an integer; level of ordinal or categorical outcome to be predicted.
 }
   \item{type}{
 what should be predicted; one of \code{"lp"}, \code{"response"}, ..., see Details below.
