@@ -8,7 +8,8 @@ This function takes an output of \code{clustGLMM} and finds all values related t
 }
 \usage{
 get_scalar_samples(mcmc, what, gspec, dimspec, yspec, 
-                   burnin = 0, thin = 1, chains,
+                   burnin = 0, thin = 1, 
+                   iterations, chains,
                    restrictedtoGplus = FALSE)
 }
 \arguments{
@@ -34,7 +35,7 @@ the length of burn-in period (default 0), i.e. number of initial samples to igno
 thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
 }
   \item{iterations}{
-a vector of iterations numbers to extract, overrides any \code{burnin} or \code{thin}. 
+a vector of iterations numbers to extract, overrides any given \code{burnin} or \code{thin}. 
 }
   \item{chains}{
 a vector of chain numbers to be used.
@@ -46,13 +47,14 @@ a boolean declaring whether the values should be taken from post-processed data 
 \details{
 This function is used mainly internally in plotting functions to find appropriate values given the name of the parameter \code{what}, group specification \code{gspec} (a number of a cluster), outcome specification \code{yspec} (name of the outcome) and dimension specification \code{dimspec}. For vector parameters \code{dimspec} is just a single number, if \code{what} is a matrix parameter then 2 numbers are expected.
 
-The returned values are regulated by changing \code{burnin} and \code{thin}. From each chain contained in \code{chains} only iterations in \code{seq(burnin+1, mcmc$iter, by = thin)} are returned. 
+\code{iterations} declares which \code{m} values should be gathered. If \code{iterations} is missing, the returned values are regulated by changing \code{burnin} and \code{thin}. First, only iterations with \code{m > burnin} are selected, then, from the remaining values only \code{seq(1, total_remaining_count, by=thin)} are selected.
 }
 \value{
-A data frame of two columns:
+A list (for each element of \code{chains}) containing \code{data.frame} of three columns: 
 \describe{
-  \item{y}{the values of the required parameter,}
-  \item{chain}{the chain number to which the values correspond.}
+  \item{m}{iteration numbers,}
+  \item{chain}{the chain number,}
+  \item{y}{the values of the required parameter.}
 }
 }
 \references{

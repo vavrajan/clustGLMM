@@ -1,21 +1,22 @@
 plot_kerneldensity <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, chains,
+         burnin = 0, thin = 1, iterations, chains,
          dolegend = FALSE,
          COL, labcex = 1, whatLAB,
          restrictedtoGplus = FALSE){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(opar)
-  if (missing(chains)){chains <- 1:mcmc$nchains}
+  if (missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
-  if (!missing(yspec)){if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Ords, mcmc$Bins, mcmc$Cats))){stop("Unexisting response variable specified.")}}
+  if (!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
   if (missing(scalar_samples)){
     scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what, 
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
-                                         burnin = burnin, thin = thin, chains = chains, 
+                                         burnin = burnin, thin = thin, 
+                                         iterations= iterations, chains = chains, 
                                          restrictedtoGplus = restrictedtoGplus)
   }
   if (missing(whatLAB)){
@@ -55,11 +56,7 @@ function(mcmc, scalar_samples,
   
   kernest <- data.frame()
   for(ch in chains){
-    if(restrictedtoGplus){
-      dd <- density(scalar_samples[[ch]]$y, na.rm = T)
-    }else{
-      dd <- density(scalar_samples$y[scalar_samples$chain == ch], na.rm = T)
-    }
+    dd <- density(scalar_samples[[ch]]$y, na.rm = T)
     kernest <- rbind(kernest, data.frame(x=dd$x, y=dd$y, chain = ch))
   }
   plot(c(min(kernest$y),max(kernest$y)) ~ quantile(kernest$x, probs = c(0.03,0.97)), type = "n",
@@ -70,16 +67,6 @@ function(mcmc, scalar_samples,
     lines(kernest$y[kernest$chain==ch] ~ kernest$x[kernest$chain == ch],
           col = COL[ch], lty = 1, lwd = 2)
   }
-  #theme_set(theme_classic())
-  #options(scipen = 10000)
-  #require(scales)
-  #g <- ggplot(scalar_samples, aes(y)) + 
-  #    geom_density(aes(fill=factor(chain)), alpha=0.7) + 
-  #    labs(x = whatLAB,
-  #         y = "Density",
-  #         fill = "Chain") + 
-  #    scale_fill_manual(values = COL[chains]) 
-  #g
   if(dolegend){
     legend("topright", legend = chains,
           col = COL[chains], lty =1, bty = "n", title = "Chain", cex = 0.8)

@@ -209,7 +209,7 @@ for(y in mcmc_year$Ords){
   newdata <- data.frame(year = year_grid)
   newdata[, bsnames_year] <- bs(year_grid, knots = inner, Boundary.knots = bound, 
                                 degree = degree, intercept = FALSE)
-  maxk <- mcmc$Kord[y]
+  maxk <- mcmc_year$Kord[y]
   pred_age <- list()
   for(k in 1:maxk){
     pred_year[[k]] <- predict(mcmc_year, newdata, y=y, type="lp", 
@@ -414,7 +414,7 @@ for(y in mcmc_age$Ords){
   newdata <- data.frame(age = age_grid)
   newdata[, bsnames_age] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
                                 degree = degree, intercept = FALSE)
-  maxk <- mcmc$Kord[y]
+  maxk <- mcmc_age$Kord[y]
   pred_age <- list()
   for(k in 1:maxk){
     pred_age[[k]] <- predict(mcmc_age, newdata, y=y, type="lp", 

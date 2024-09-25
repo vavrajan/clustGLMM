@@ -1,19 +1,20 @@
 plot_ECDF <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, chains,
+         burnin = 0, thin = 1, iterations, chains,
          COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(opar)
-  if (missing(chains)){chains <- 1:mcmc$nchains}
+  if (missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
-  if (!missing(yspec)){if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Ords, mcmc$Bins, mcmc$Cats))){stop("Unexisting response variable specified.")}}
+  if (!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
   if (missing(scalar_samples)){
     scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what, 
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
-                                         burnin = burnin, thin = thin, chains = chains, 
+                                         burnin = burnin, thin = thin, 
+                                         iterations = iterations, chains = chains, 
                                          restrictedtoGplus = restrictedtoGplus)
   }
   if (missing(whatLAB)){
@@ -44,32 +45,13 @@ function(mcmc, scalar_samples,
     }
   }
   
-  if(restrictedtoGplus){
-    Max <- -Inf
-    Min <- Inf
-    for(ch in chains){
-      Max <- max(c(scalar_samples[[ch]]$y, Max), na.rm = T)
-      Min <- min(c(scalar_samples[[ch]]$y, Min), na.rm = T)
-    }
-  }else{
-    Max <- max(scalar_samples$y)
-    Min <- min(scalar_samples$y)
+  xmax <- -Inf
+  xmin <- Inf
+  for(ch in chains){
+    scalar_samples[[ch]]$y[is.infinite(scalar_samples[[ch]]$y)] <- NA
+    xmax <- max(c(scalar_samples[[ch]]$y, xmax), na.rm = TRUE)
+    xmin <- min(c(scalar_samples[[ch]]$y, xmin), na.rm = TRUE)
   }
-  
-  #if(missing(whatLAB)){
-  #  if(is.element(what, names(mcmc$spec)) & mcmc$spec[what]){
-  #    whatLAB <- paste0(what, 
-  #                      ifelse(is.list(mcmc[[1]][[what]][[gspec]]), ifelse(yspec=="",paste0("_",yspec), ""), ""),
-  #                      "(",gspec,")",
-  #                      ifelse(is.na(dimspec[1]),"",
-  #                             paste0("[",paste(dimspec,collapse=","),"]")))
-  #  }else{
-  #    whatLAB <- paste0(what, 
-  #                      ifelse(is.list(mcmc[[1]][[what]]), ifelse(yspec=="",paste0("_",yspec), ""), ""),
-  #                      ifelse(is.na(dimspec[1]),"",
-  #                             paste0("[",paste(dimspec,collapse=","),"]")))
-  #  }
-  #}
   
   if(missing(COL)){
     if(mcmc$nchains == 1){
@@ -78,18 +60,12 @@ function(mcmc, scalar_samples,
       COL <- diverge_hcl(mcmc$nchains, c = 80, l =70)
     }
   }
-  #if (missing(COL)){COL <- topo.colors(mcmc$nchains, alpha = 1)}
   
-  plot(x = 1, y = 1, type = "n", xlim = c(Min, Max), ylim = c(0,1),
+  plot(x = 1, y = 1, type = "n", xlim = c(xmin, xmax), ylim = c(0,1),
        xlab = "", ylab = "")
   mtext(text = whatLAB, side = 1, line = 2.5, cex = labcex)
   mtext(text = "ECDF", side = 2, line = 2.5, cex = labcex)
   for(ch in chains){
-    if(restrictedtoGplus){
-      yy <- scalar_samples[[ch]]$y
-    }else{
-      yy <- scalar_samples$y[scalar_samples$chain == ch]
-    }
-    plot(ecdf(yy), col = COL[ch], add = T, verticals = T, pch = NA)
+    plot(ecdf(scalar_samples[[ch]]$y), col = COL[ch], add = T, verticals = T, pch = NA)
   }
 }

@@ -26,31 +26,31 @@ All of these for one specific parameter can be plotted by \code{plot_all}. These
 }
 \usage{
 plot_ACF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max = 30, chains, 
+         burnin = 0, thin = 1, lag.max = 30, iterations, chains, 
          COL, move.width = 0.3, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
 plot_ECDF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
-          burnin = 0, thin = 1, chains, 
+          burnin = 0, thin = 1, iterations, chains, 
           COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
 plot_kerneldensity(mcmc, scalar_samples, what, gspec, dimspec, yspec, 
-                   burnin = 0, thin = 1, chains, 
+                   burnin = 0, thin = 1, iterations, chains, 
                    dolegend = FALSE, COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
 plot_traceplots(mcmc, scalar_samples, what, gspec, dimspec, yspec,
-                burnin = 0, thin = 1, chains, 
+                burnin = 0, thin = 1, iterations, chains, 
                 COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
 plot_all(mcmc, scalar_samples, what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max, chains, trueval, setparmfrow = TRUE, 
+         burnin = 0, thin = 1, lag.max, iterations, chains, trueval, setparmfrow = TRUE, 
          COL, move.width = 0.3, whatLAB, restrictedtoGplus = FALSE)
-plot_ACF_param(mcmc, what, burnin = 0, thin = 1, lag.max = 30, chains)
-plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, chains)
-plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, chains)
-plot_traceplots_param(mcmc, what, burnin = 0, thin = 1, chains)
-plot_clusters(mcmc, scalar_samples, what, dimspec, yspec, whichg,
+plot_ACF_param(mcmc, what, burnin = 0, thin = 1, lag.max = 30, iterations, chains, setparmfrow = TRUE)
+plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
+plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
+plot_traceplots_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
+plot_clusters(mcmc, what, dimspec, yspec, whichg,
               burnin = 0, thin = 1, setparmfrow = TRUE, 
-              chains, doKern = TRUE, doECDF = TRUE,
+              iterations, chains, doKern = TRUE, doECDF = TRUE,
               COL, labcex = 0.8, whatLAB, wherelegend = "topright",
               restrictedtoGplus = FALSE)
-plot_clusters_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, chains)
-plot_clusters_ECDF_param(mcmc, what, burnin = 0, thin = 1, chains)
+plot_clusters_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
+plot_clusters_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
 }
 \arguments{
   \item{mcmc}{
@@ -58,13 +58,7 @@ an output of \code{\link{clustGLMM}} accepted in both formats (list or matrix).
 }
   \item{scalar_samples}{
 an output of \code{get_scalar_samples}, overrides any given \code{burnin} or \code{thin}.
-}
-  \item{burnin}{
-the length of burn-in period (default 0), i.e. number of initial samples to ignore for inference.
-}
-  \item{thin}{
-thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
-}
+}  
   \item{what}{
 a name of the parameter to be extracted; see \code{names(mcmc$save)} for possible options. 
 }
@@ -77,8 +71,17 @@ a dimension specifier; not specifying this is possible only when the parameter i
   \item{yspec}{
 an outcome specifier; if the parameter is not outcome-dependent then this \emph{should be missing}.
 }
+  \item{burnin}{
+the length of burn-in period (default 0), i.e. number of initial samples to ignore for inference.
+}
+  \item{thin}{
+thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
+}
   \item{lag.max}{
 maximal lag value to be plotted in ACF.
+}
+  \item{iterations}{
+a vector of iterations numbers to extract, overrides any given \code{burnin} or \code{thin}. 
 }
   \item{chains}{
 a vector of chain numbers to be plotted.
@@ -87,7 +90,7 @@ a vector of chain numbers to be plotted.
 a true value of the parameter to be plotted by vertical/horizontal line.
 }
   \item{setparmfrow}{
-whether \code{par(mfrow = c(2,2))} should be set before creating all 4 plots.
+whether \code{par(mfrow = ..)} should be set automatically before creating all plots.
 }
   \item{COL}{
 colors for different chains; default values are set by \code{diverge_hcl(mcmc$nchains, c = 80, l = 70)}.
@@ -121,8 +124,8 @@ a boolean declaring whether ECDFs should be plotted for comparing different clus
 }
 }
 \details{
-  \code{scalar_samples} is a \code{data.frame} of two columns: \code{y} containing chosen samples and \code{chain} declaring the chain number. This could be created using \code{\link{get_scalar_samples}}, see its help file for more details. If missing, \code{get_scalar_samples} is called anyway with the given specifications.
-  Iterations are selected by \code{seq(burnin+1, mcmc$iter, by = thin)}.
+  \code{scalar_samples} is a list (for each element of \code{chains}) containing \code{data.frame} of three columns: \code{chain} declaring the chain number, \code{m} declaring the iterations numbers and \code{y} containing chosen samples. This could be created using \code{\link{get_scalar_samples}}, see its help file for more details. If missing, \code{\link{get_scalar_samples}} is called anyway with the given specifications.
+  If \code{iterations} is missing, first, only iterations with \code{m > burnin} are selected, then, from the remaining values only \code{seq(1, total_remaining_count, by=thin)} are selected.
   Parameter is selected by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. More details here: \code{\link{get_scalar_samples}}.
   
   Description of the plots:
@@ -136,7 +139,7 @@ a boolean declaring whether ECDFs should be plotted for comparing different clus
   
   Using the functions above you can only plot a univariate model parameter which is specified by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. If you would like to plot results for all parameters that are associated with parameter \code{what} then \code{..._param} functions can do this for you automatically. Using function \code{\link{nice_nrow_ncol}} plots are arranged into a most effective grid. Moreover, parameters which are symmetric matrices (with or without diagonal) are arranged as expected and only the upper triangle is filled with plots. See examples below.
   
-  Special function in this collection is \code{plot_clusters} which allows to plot kernel density estimates or empirical cumulative distribution function of the same parameters for different cluster labels (\code{whichg}). There are also \code{plot_clusters_kerneldensity_param} and \code{plot_clusters_ECDF_param} functions that create the plots automatically for a set of given parameter \code{what}, however, the plotted cluster labels only include those within the last sampled set of parameters \code{mcmc$last}. 
+  Special function in this collection is \code{plot_clusters} which allows to plot kernel density estimates or empirical cumulative distribution function of the same parameters for different cluster labels (\code{whichg}) into one plot. There are also \code{plot_clusters_kerneldensity_param} and \code{plot_clusters_ECDF_param} functions that create the plots automatically for a set of given parameter \code{what}, however, the plotted cluster labels only include those in \code{mcmc$clusters} of corresponding chain. 
   
 }
 \value{

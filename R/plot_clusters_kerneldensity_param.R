@@ -1,5 +1,5 @@
 plot_clusters_kerneldensity_param <-
-  function(mcmc, what, burnin = 0, thin = 1, chains){
+  function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow=TRUE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
     v <- c(mcmc$settings[what, ])
@@ -10,8 +10,9 @@ plot_clusters_kerneldensity_param <-
     if(v$yords){Ys <- c(Ys, mcmc$Ords)}
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
-    if(missing(chains)){chains = 1:mcmc$nchains}
+    if(missing(chains)){chains = mcmc$chains}
     nonempty <- mcmc$clusters
+    par(mar = c(4,4,1,1))
     
     if(v$dimswithG > 0){  
       if(v$sym){
@@ -19,12 +20,13 @@ plot_clusters_kerneldensity_param <-
           if(v$isspec){
             # symmetric matrix with diagonal is group-specific
             for(ch in chains){
-              par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
               for(i in 1:v$d1){
                 for(j in 1:v$d2){
                   plot_clusters(mcmc = mcmc, what = what, 
                                 dimspec = c(i,j), whichg = nonempty[[ch]], 
-                                burnin = burnin, thin = thin, chains = ch,
+                                burnin = burnin, thin = thin, 
+                                iterations = iterations, chains = ch,
                                 setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                                 labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
                 }
@@ -38,14 +40,20 @@ plot_clusters_kerneldensity_param <-
           if(v$isspec){
             # symmetric matrix withOUT diagonal is group-specific
             for(ch in chains){
-              par(mfrow = c(v$d1-1, v$d2-1), mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = c(v$d1-1, v$d2-1))}
               for(i in 1:(v$d1-1)){
                 for(j in 2:v$d2){
-                  plot_clusters(mcmc = mcmc, what = what, 
-                                dimspec = c(i,j), whichg = nonempty[[ch]], 
-                                burnin = burnin, thin = thin, chains = ch,
-                                setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
-                                labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
+                  if(i < j){
+                    plot_clusters(mcmc = mcmc, what = what, 
+                                  dimspec = c(i,j), whichg = nonempty[[ch]], 
+                                  burnin = burnin, thin = thin, 
+                                  iterations = iterations, chains = ch,
+                                  setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
+                                  labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
+                  }else{
+                    plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
+                         xaxt = "n", yaxt = "n", bty = "n")
+                  }
                 }
               }
             }
@@ -62,23 +70,25 @@ plot_clusters_kerneldensity_param <-
             # zero-dimensional parameter
             if(v$isy){
               # y-specific 
-              par(mfrow = c(length(chains), length(Ys)), mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = c(length(chains), length(Ys)))}
               for(ch in chains){
                 for(y in Ys){
                   plot_clusters(mcmc = mcmc, what = what, 
                                 yspec = y, whichg = nonempty[[ch]],
-                                burnin = burnin, thin = thin, chains = ch,
+                                burnin = burnin, thin = thin, 
+                                iterations = iterations, chains = ch,
                                 setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                                 labcex = 0.6)
                 }
               }
             }else{
               # not y-specific, but still g-specific
-              par(mfrow = nice_nrow_ncol(length(chains)), mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = nice_nrow_ncol(length(chains)))}
               for(ch in chains){
                 plot_clusters(mcmc = mcmc, what = what,
                               whichg = nonempty[[ch]],
-                              burnin = burnin, thin = thin, chains = ch,
+                              burnin = burnin, thin = thin, 
+                              iterations = iterations, chains = ch,
                               setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                               labcex = 0.6)
               }
@@ -91,12 +101,12 @@ plot_clusters_kerneldensity_param <-
               # the size of the dimension depends on outcomes
               for(ch in chains){
                 for(y in Ys){
-                  par(mfrow = nice_nrow_ncol(mcmc$yspecd1[[what]][[y]]), 
-                      mar = c(4,4,1,1))
+                  if(setparmfrow){par(mfrow = nice_nrow_ncol(mcmc$yspecd1[[what]][[y]]))}
                   for(i in 1:mcmc$yspecd1[[what]][[y]]){
                     plot_clusters(mcmc = mcmc, what = what, 
                                   yspec = y, dimspec = i, whichg = nonempty[[ch]],
-                                  burnin = burnin, thin = thin, chains = ch,
+                                  burnin = burnin, thin = thin, 
+                                  iterations = iterations, chains = ch,
                                   setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                                   labcex = 0.6)
                   }
@@ -104,13 +114,14 @@ plot_clusters_kerneldensity_param <-
               }
             }else{
               # the size of the dimension depends on outcomes
-              # par(mfrow = c(length(chains), v$d1), mar = c(4,4,1,1))
-              par(mfrow = nice_nrow_ncol(length(chains)*v$d1), mar = c(4,4,1,1))
+              # par(mfrow = c(length(chains), v$d1))}
+              if(setparmfrow){par(mfrow = nice_nrow_ncol(length(chains)*v$d1))}
               for(ch in chains){
                 for(i in 1:v$d1){
                   plot_clusters(mcmc = mcmc, what = what, 
                                 dimspec = i, whichg = nonempty[[ch]],
-                                burnin = burnin, thin = thin, chains = ch,
+                                burnin = burnin, thin = thin, 
+                                iterations = iterations, chains = ch,
                                 setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                                 labcex = 0.6)
                 }
@@ -134,12 +145,13 @@ plot_clusters_kerneldensity_param <-
                   }else{
                     d2 = v$d2
                   }
-                  par(mfrow = c(d1,d2), mar = c(4,4,1,1))
+                  if(setparmfrow){par(mfrow = c(d1,d2))}
                   for(i in 1:d1){
                     for(j in 1:d2){
                       plot_clusters(mcmc = mcmc, what = what, 
                                     yspec = y, dimspec = c(i,j), whichg = nonempty[[ch]],
-                                    burnin = burnin, thin = thin, chains = ch,
+                                    burnin = burnin, thin = thin, 
+                                    iterations = iterations, chains = ch,
                                     setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                                     labcex = 0.6)
                     }
@@ -149,12 +161,13 @@ plot_clusters_kerneldensity_param <-
             }else{
               # none dimension is y-specific
               for(ch in chains){
-                par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+                if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
                 for(i in 1:v$d1){
                   for(j in 1:v$d2){
                     plot_clusters(mcmc = mcmc, what = what, 
                                   dimspec = c(i,j), whichg = nonempty[[ch]],
-                                  burnin = burnin, thin = thin, chains = ch,
+                                  burnin = burnin, thin = thin, 
+                                  iterations = iterations, chains = ch,
                                   setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
                                   labcex = 0.6)
                   }

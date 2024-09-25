@@ -106,7 +106,7 @@ The algorithm also requires a set \code{tuning} of parameters that tune the samp
 }
 \value{
 The most important output:
-\item{draws}{generated samples saved either in large matrix (\code{howsave = "matrix"}) or a list indexed by chain (\code{chain}) and iteration (\code{m}) number (\code{howsave = "matrix"}).}
+\item{draws}{a list indexed by chain with generated samples saved either in large matrix (\code{howsave = "matrix"}) or a carefully structured list (\code{howsave = "list"}).}
 \item{param_names}{individual parameter (column) names in structured list by general parameter name.}
 
 Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G}, \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.

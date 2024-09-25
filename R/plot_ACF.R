@@ -1,27 +1,24 @@
 plot_ACF <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max = 30, chains,
+         burnin = 0, thin = 1, lag.max = 30, iterations, chains,
          COL, move.width = 0.3, labcex = 1, whatLAB,
          restrictedtoGplus = FALSE){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(opar)
-  if(missing(chains)){chains <- 1:mcmc$nchains}
+  if(missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
-  if(!missing(yspec)){if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Ords, mcmc$Bins, mcmc$Cats))){stop("Unexisting response variable specified.")}}
+  if(!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
   if(missing(scalar_samples)){
     scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what,
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
-                                         burnin = burnin, thin = thin, chains = chains,
+                                         burnin = burnin, thin = thin, 
+                                         iterations = iterations, chains = chains,
                                          restrictedtoGplus = restrictedtoGplus)
   }
-  if(restrictedtoGplus){
-    subiter <- dim(scalar_samples[[chains[1]]])[1]
-  }else{
-    subiter <- sum(scalar_samples$chain == chains[1])
-  }
+  subiter <- max(unlist(lapply(scalar_samples, function(x){dim(x)[1]})), na.rm=TRUE)
   if(lag.max >= subiter){lag.max <- subiter-1}
   
   if(missing(whatLAB)){
@@ -71,12 +68,7 @@ function(mcmc, scalar_samples,
   chcount <- 0
   for(ch in chains){
     chcount <- chcount+1
-    if(restrictedtoGplus){
-      yy <- scalar_samples[[ch]]$y
-    }else{
-      yy <- scalar_samples$y[scalar_samples$chain == ch]
-    }
-    pomACF <- acf(yy, lag.max = lag.max, plot = F, na.action = na.pass)$acf[,1,1]
+    pomACF <- acf(scalar_samples[[ch]]$y, lag.max = lag.max, plot = F, na.action = na.pass)$acf[,1,1]
     lines(pomACF ~ c(0:lag.max + posun[chcount]),
           col = COL[ch], lwd = 2)
     segments(x0 = c(0:lag.max)+posun[chcount], 

@@ -1,15 +1,15 @@
 plot_clusters <-
-function(mcmc, scalar_samples, 
+function(mcmc, 
          what, dimspec, yspec, whichg,
-         burnin = 0, thin = 1, setparmfrow = TRUE,
-         chains, doKern = TRUE, doECDF = TRUE,
+         burnin = 0, thin = 1, iterations, chains, 
+         setparmfrow = TRUE, doKern = TRUE, doECDF = TRUE,
          COL, labcex = 0.8, whatLAB, wherelegend = "topright",
          restrictedtoGplus = FALSE){
   if(setparmfrow){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
     par(mfrow = c(1,sum(c(doKern, doECDF))))
-    }
+  }
   if(is.element(what,names(mcmc$varying))){
     if (!mcmc$varying[what]){stop("This parameter wasn't considered as cluster-specific.")}
   }
@@ -17,7 +17,7 @@ function(mcmc, scalar_samples,
     if(restrictedtoGplus){
       chains <- c(1)
     }else{
-      chains <- 1:mcmc$nchains
+      chains <- mcmc$chains
     }
   }else{
     if(restrictedtoGplus & length(chains) > 1){
@@ -28,32 +28,35 @@ function(mcmc, scalar_samples,
     
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   if(!missing(yspec)){
-    if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Bins, mcmc$Ords, mcmc$Cats))){
+    if(!is.element(yspec, names(mcmc$family))){
       stop("Unexisting response variable specified.")
     }
   }
   G <- ifelse(restrictedtoGplus,
-              mcmc$modeGplus[[chains]],
+              mcmc$modeGplus[chains],
               mcmc$G)
   if(missing(whichg)){
     whichg <- 1:G
   }
   
-  if(missing(scalar_samples)){
-    scalar_samples <- data.frame()
+  scalar_samples <- data.frame()
+  for(ch in chains){
     for(g in whichg){
-      pomData <- get_scalar_samples(mcmc = mcmc, what = what, 
-                                    gspec = g, dimspec = dimspec, yspec = yspec,
-                                    burnin = burnin, thin = thin, chains = chains,
-                                    restrictedtoGplus = restrictedtoGplus)
-      if(restrictedtoGplus){
-        pomData <- pomData[[chains]]
+      aux <- get_scalar_samples(mcmc = mcmc, what = what,
+                                gspec = g, dimspec = dimspec, yspec = yspec,
+                                burnin = burnin, thin = thin, 
+                                iterations = iterations, chains = ch,
+                                restrictedtoGplus = restrictedtoGplus)
+      if(g == whichg[1]){
+        colnames(aux[[ch]])[which(colnames(aux[[ch]])=="y")] <- paste0("y(",g,")")
+        ssch = aux[[ch]]
+      }else{
+        ssch[,paste0("y(",g,")")] <- aux[[ch]]$y
       }
-      colnames(pomData) <- c(paste0("y(",g,")"), "chain")
-      if(is.element("chain", colnames(scalar_samples))){scalar_samples <- cbind(scalar_samples, pomData)
-      }else{scalar_samples <- pomData}
     }
+    scalar_samples <- rbind(scalar_samples, ssch)
   }
+
   
   if (missing(whatLAB)){
     whatLAB <- what
@@ -80,7 +83,7 @@ function(mcmc, scalar_samples,
   if(doKern){
     kernest <- data.frame()
     for(g in whichg){
-      dd <- density(scalar_samples[is.element(scalar_samples$chain, chains), paste0("y(",g,")")], na.rm = T)
+      dd <- density(scalar_samples[, paste0("y(",g,")")], na.rm = T)
       kernest <- rbind(kernest, data.frame(x=dd$x, y=dd$y, cluster = g))
     }
     plot(c(min(kernest$y),max(kernest$y)) ~ quantile(kernest$x, probs = c(0.03,0.97)), type = "n",
@@ -96,13 +99,16 @@ function(mcmc, scalar_samples,
   }
   # ECDF
   if(doECDF){
-    plot(x = 1, y = 1, type = "n", xlim = c(min(scalar_samples[,grep("y",colnames(scalar_samples))]), max(scalar_samples[,grep("y",colnames(scalar_samples))])), ylim = c(0,1),
+    plot(x = 1, y = 1, type = "n", 
+         xlim = c(min(scalar_samples[,grep("y",colnames(scalar_samples))]), 
+                  max(scalar_samples[,grep("y",colnames(scalar_samples))])), 
+         ylim = c(0,1),
          xlab = "", ylab = "")
     mtext(text = whatLAB, side = 1, line = 2.5, cex = labcex)
     mtext(text = "ECDF", side = 2, line = 2.5, cex = labcex)
     for(g in whichg){
       plot(ecdf(scalar_samples[,paste0("y(", g,")")]), 
-           col = COL[g], add = T, verticals = T, pch = NA)
+           col = COL[g], add = TRUE, verticals = TRUE, pch = NA)
     }
   }
 }

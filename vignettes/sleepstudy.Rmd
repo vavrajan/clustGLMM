@@ -211,22 +211,16 @@ probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
                                                NGQ = 1)
 ```
 
-```{r add_probs_to_mcmc, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
-colnames(probs$draws)
-mcmc$draws[, colnames(probs$draws)[-c(1,2)]] <- probs$draws[, colnames(probs$draws)[-c(1,2)]]
-mcmc$settings["pUig_int", ] <- mcmc$settings["U", ]
-mcmc$settings["pUig_int", c("isspec", "dimswithG")] <- c(1, mcmc$G * mcmc$n)
-mcmc$settings["deviance", ] <- mcmc$settings["loglik", ]
-mcmc$settings["dev_i", ] <- mcmc$settings["U", ]
-
-plot(mcmc, "pUig_int", "clusters_kerneldensity", burnin=burnin, thin=thin, chains=1)
+```{r plot_probs, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+colnames(probs$draws[[1]])
+plot(probs, burnin=burnin, thin=thin, chains=1)
 ```
 ```{r plot_deviance, echo=TRUE, fig.align='center', fig.width=10, fig.height=5}
-plot(mcmc, "deviance", "traceplots", burnin=burnin, thin=thin, chains=1:3)
+plot(probs, "deviance", "traceplots", burnin=burnin, thin=thin, chains=1:3)
 ```
 
 ```{r plot_dev_i, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
-plot(mcmc, "dev_i", "kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+plot(probs, "dev_i", "kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 ```
 
 Finally, we can use `predict` function to replicate the linear predictor (excluding random effects) and plot the posterior mean curves for the estimated two groups. We can also see who was clustered into which cluster:
@@ -289,6 +283,7 @@ plot(predY, bty="l")
 
 # 
 sleepstudy$grouplcmm <- fitlcmm$pprob[sleepstudy$id, "class"]
+par(mar=c(4,4,1,1))
 plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="grouplcmm", id="Subject", add_lowess = FALSE)
 lines(x=predY$times[,"Days"], y=predY$pred[,"Ypred_class1"], col = COL[1], lwd=3)
 lines(x=predY$times[,"Days"], y=predY$pred[,"Ypred_class2"], col = COL[2], lwd=2)
@@ -306,6 +301,7 @@ plot(fitflexmix)
 predflexmix <- predict(fitflexmix)
 sleepstudy$groupflexmix <- fitflexmix@cluster
 
+par(mar=c(4,4,1,1))
 plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="groupflexmix", id="Subject", add_lowess = FALSE)
 lines(predflexmix$Comp.1 ~ sleepstudy$Days, col = COL[1], lwd=3)
 lines(predflexmix$Comp.2 ~ sleepstudy$Days, col = COL[2], lwd=3)

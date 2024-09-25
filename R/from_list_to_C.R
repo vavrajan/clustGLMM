@@ -1,5 +1,5 @@
 from_list_to_C <-
-function(chain,
+function(draws,
          iterations,
          p,
          settings,
@@ -15,9 +15,10 @@ function(chain,
   if(v$yords){Ys <- c(Ys, names(family)[is.element(family, c("ord", "cumulative"))])}
   if(v$ycats){Ys <- c(Ys, names(family)[is.element(family, c("cat", "categorical"))])}
   
-  if(missing(iterations)){iterations <- 1:v$iter}
+  if(missing(iterations)){iterations <- draws$m}
+  ind_iterations <- is.element(draws$m, iterations)  
   
-  sumd1 <- ifelse(missing(yspecd1), ifelse(v$d1==0,1,v$d1)*length(Ys), sum(yspecd1))
+  sumd1 <- ifelse(v$ydepd1, sum(yspecd1), ifelse(v$d1==0,1,v$d1)*length(Ys))
   RET <- c()
   
   
@@ -26,9 +27,10 @@ function(chain,
       if(length(Ys) > 0){
         if(v$D==0){
           for(i in iterations){
+            di = which(draws$m==i)
             for(k in 1:v$G){
               for(y in 1:length(Ys)){
-                RET <- c(RET, as.data.frame(chain[[p]][[k]][i, Ys[y]]))
+                RET <- c(RET, as.data.frame(draws[[p]][[k]][di, Ys[y]]))
               }
             }
           }
@@ -36,9 +38,10 @@ function(chain,
         
         if(v$D==1){
           for(i in iterations){
+            di = which(draws$m==i)
             for(k in 1:v$G){
               for(y in 1:length(Ys)){
-                RET <- c(RET, chain[[p]][[k]][[Ys[y]]][i, ])
+                RET <- c(RET, draws[[p]][[k]][[Ys[y]]][di, ])
               }
             }
           }
@@ -46,32 +49,33 @@ function(chain,
         
         if(v$D==2){
           for(i in iterations){
+            di = which(draws$m==i)
             for(k in 1:v$G){
               for(y in 1:length(Ys)){
-                d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-                d2 = ifelse(missing(yspecd2), v$d2, yspecd2[Ys[y]])
+                d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+                d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
                 if(v$sym){
                   # matrix is symmetrical and only upper-right triangle is stored
                   # d1 = d2
                   if(v$diag){
                     for(col in 1:d1){
                       for(row in 1:col){
-                        RET <- c(RET, chain[[p]][[k]][[Ys[y]]][i, row, col])
+                        RET <- c(RET, draws[[p]][[k]][[Ys[y]]][di, row, col])
                       }
                     }
                   }else{
                     for(col in 2:d1){
                       for(row in 1:(col-1)){
-                        RET <- c(RET, chain[[p]][[k]][[Ys[y]]][i, row, col])
+                        RET <- c(RET, draws[[p]][[k]][[Ys[y]]][di, row, col])
                       }
                     }
                   } # end of else of diag
                 }else{
                   # matrix is general rectangular --> all is stored
                   if(v$BYROW){
-                    RET <- c(RET, t(chain[[p]][[k]][[Ys[y]]][i,,]))
+                    RET <- c(RET, t(draws[[p]][[k]][[Ys[y]]][di,,]))
                   }else{
-                    RET <- c(RET, chain[[p]][[k]][[Ys[y]]][i,,])
+                    RET <- c(RET, draws[[p]][[k]][[Ys[y]]][di,,])
                   }
                 } # end of else of sym
               }
@@ -83,19 +87,21 @@ function(chain,
       # is class-specific, however not y-specific
 
       if(v$D==0){
-        RET <- c(t(chain[[p]][iterations, ]))
+        RET <- c(t(draws[[p]][is.element(draws$m, iterations), ]))
       } # end of D==0
       
       if(v$D==1){
         for(i in iterations){
+          di = which(draws$m==i)
           for(k in 1:v$G){
-            RET <- c(RET, chain[[p]][[k]][i,])
+            RET <- c(RET, draws[[p]][[k]][di,])
           }
         }
       } # end of D==1
       
       if(v$D==2){
         for(i in iterations){
+          di = which(draws$m==i)
           for(k in 1:v$G){
             if(v$sym){
               # matrix is symmetrical and only upper-right triangle is stored
@@ -103,22 +109,22 @@ function(chain,
               if(v$diag){
                 for(col in 1:v$d1){
                   for(row in 1:col){
-                    RET <- c(RET, chain[[p]][[k]][i, row, col])
+                    RET <- c(RET, draws[[p]][[k]][di, row, col])
                   }
                 }
               }else{
                 for(col in 2:v$d1){
                   for(row in 1:(col-1)){
-                    RET <- c(RET, chain[[p]][[k]][i, row, col])
+                    RET <- c(RET, draws[[p]][[k]][di, row, col])
                   }
                 }
               } # end of else of diag
             }else{
               # matrix is general rectangular --> all is stored
               if(v$BYROW){
-                RET <- c(RET, t(chain[[p]][[k]][i,,]))
+                RET <- c(RET, t(draws[[p]][[k]][di,,]))
               }else{
-                RET <- c(RET, chain[[p]][[k]][i,,])
+                RET <- c(RET, draws[[p]][[k]][di,,])
               }
             } # end of else of sym
           }
@@ -132,44 +138,46 @@ function(chain,
       if(length(Ys) > 0){
         # not class-specific, but still y-specific
         if(v$D==0){
-          RET <- c(t(chain[[p]]))
+          RET <- c(t(draws[[p]][is.element(draws$m, iterations), ]))
         } # end of D==0
       
         if(v$D==1){
           for(i in iterations){
+            di = which(draws$m==i)
             for(y in 1:length(Ys)){
-              RET <- c(RET, chain[[p]][[Ys[y]]][i, ])
+              RET <- c(RET, draws[[p]][[Ys[y]]][di, ])
             }
           }
         } # end of D==1
         
         if(v$D==2){
           for(i in iterations){
+            di = which(draws$m==i)
             for(y in 1:length(Ys)){
-              d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-              d2 = ifelse(missing(yspecd2), v$d2, yspecd2[Ys[y]])
+              d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+              d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
               if(v$sym){
                 # matrix is symmetrical and only upper-right triangle is stored
                 # d1 = d2
                 if(v$diag){
                   for(col in 1:d1){
                     for(row in 1:col){
-                      RET <- c(RET, chain[[p]][[Ys[y]]][i, row, col])
+                      RET <- c(RET, draws[[p]][[Ys[y]]][di, row, col])
                     }
                   }
                 }else{
                   for(col in 2:d1){
                     for(row in 1:(col-1)){
-                      RET <- c(RET, chain[[p]][[Ys[y]]][i, row, col])
+                      RET <- c(RET, draws[[p]][[Ys[y]]][di, row, col])
                     }
                   }
                 } # end of else of diag
               }else{
                 # matrix is general rectangular --> all is stored
                 if(v$BYROW){
-                  RET <- c(RET, t(chain[[p]][[Ys[y]]][i,,]))
+                  RET <- c(RET, t(draws[[p]][[Ys[y]]][di,,]))
                 }else{
-                  RET <- c(RET, chain[[p]][[Ys[y]]][i,,])
+                  RET <- c(RET, draws[[p]][[Ys[y]]][di,,])
                 }
               } # end of else of sym
             }
@@ -180,37 +188,38 @@ function(chain,
       # is NEITHER class-specific, nor y-specific
       
       if(v$D==0){
-        RET <- chain[[p]][iterations]
+        RET <- draws[[p]][is.element(draws$m, iterations)]
       } # end of D==0
       
       if(v$D==1){
-        RET <- c(t(chain[[p]][iterations,]))
+        RET <- c(t(draws[[p]][is.element(draws$m, iterations),]))
       } # end of D==1
       
       if(v$D==2){
         for(i in iterations){
+          di = which(draws$m==i)
           if(v$sym){
             # matrix is symmetrical and only upper-right triangle is stored
             # d1 = d2
             if(v$diag){
               for(col in 1:v$d1){
                 for(row in 1:col){
-                  RET <- c(RET, chain[[p]][i, row, col])
+                  RET <- c(RET, draws[[p]][di, row, col])
                 }
               }
             }else{
               for(col in 2:v$d1){
                 for(row in 1:(col-1)){
-                  RET <- c(RET, chain[[p]][i, row, col])
+                  RET <- c(RET, draws[[p]][di, row, col])
                 }
               }
             } # end of else of diag
           }else{
             # matrix is general rectangular --> all is stored
             if(v$BYROW){
-              RET <- c(RET, t(chain[[p]][i,,]))
+              RET <- c(RET, t(draws[[p]][di,,]))
             }else{
-              RET <- c(RET, chain[[p]][i,,])
+              RET <- c(RET, draws[[p]][di,,])
             }
           } # end of else of sym
         }

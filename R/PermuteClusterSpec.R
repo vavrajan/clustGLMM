@@ -64,9 +64,9 @@ function(mcmc, perm){
   ## permute everything in the original data  
   if(mcmc$howsave == "matrix"){
     # data are save in matrix mcmc$draws
-    draws <- matrix(0, nrow = 0, ncol = dim(mcmc$draws)[2])
+    draws <- list()
     for(ch in 1:mcmc$nchains){
-      aux <- mcmc$draws[mcmc$draws$chain == ch, ]
+      aux <- mcmc$draws[[ch]]
       
       # permute U
       if(mcmc$save["U"]){
@@ -124,7 +124,7 @@ function(mcmc, perm){
         gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
         aux[,gnames] <- auxcs[,pnames]
       } 
-      draws <- rbind(draws, aux)
+      draws[[ch]] <- aux
     }
     mcmc$draws <- draws
   }

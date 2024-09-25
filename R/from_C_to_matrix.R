@@ -2,14 +2,15 @@ from_C_to_matrix <-
 function(values,
          p,
          settings,
-         yspecd1,
-         yspecd2,
+         yspecd1=NULL,
+         yspecd2=NULL,
          family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
   # save, isspec, G, isy, ynums, yords, ybins, iter, 
   # d1, d2, BYROW, sym, diag, diagval, D
   v <- c(settings[p, ])
+  niter <- length(values) / v$dimswithG
   Ys <- c()
   if(v$ynums){Ys <- c(Ys, names(family)[is.element(family, c("num", "gaussian"))])}
   if(v$ypois){Ys <- c(Ys, names(family)[is.element(family, c("poi", "poisson"))])}
@@ -17,13 +18,15 @@ function(values,
   if(v$yords){Ys <- c(Ys, names(family)[is.element(family, c("ord", "cumulative"))])}
   if(v$ycats){Ys <- c(Ys, names(family)[is.element(family, c("cat", "categorical"))])}
   
-  sumd1 <- ifelse(missing(yspecd1), v$d1*length(Ys), sum(yspecd1))
+  sumd1 <- ifelse(v$ydepd1, sum(yspecd1), v$d1*length(Ys))
   #sumd1 <- v$d1*length(Ys)
   
   if(missing(values) | (length(values) == 0)){
-    RET <- as.data.frame(matrix(NA, nrow = v$iter, ncol = 0, byrow = TRUE))
+    RET <- as.data.frame(matrix(NA, nrow = niter, ncol = 0, byrow = TRUE))
   }else{
-    RET <- as.data.frame(matrix(values, nrow = v$iter, ncol = v$dimswithG, byrow = TRUE))
+    RET <- as.data.frame(matrix(values, 
+                                nrow = niter, 
+                                ncol = v$dimswithG, byrow = TRUE))
   
     # what remains is to set colnames properly
     
@@ -40,7 +43,7 @@ function(values,
           for(k in 1:v$G){
             dimy = 0
             for(y in 1:length(Ys)){
-              d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
+              d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
               colnames(RET)[(k-1)*sumd1 + dimy + 1:d1] <- paste0(p,"_",Ys[y],"(",k,")[",1:d1,"]")
               dimy = dimy + d1
             }
@@ -52,8 +55,8 @@ function(values,
           for(k in 1:v$G){
             dimy = 0
             for(y in 1:length(Ys)){
-              d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-              d2 = ifelse(missing(yspecd2), v$d2, yspecd2[Ys[y]])
+              d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+              d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
               cnames <- c()
               if(v$sym){
                 # matrix is symmetrical and only upper-right triangle is stored
@@ -163,7 +166,7 @@ function(values,
         if(v$D==1){
           dimy = 0
           for(y in 1:length(Ys)){
-            d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
+            d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
             colnames(RET)[dimy + 1:d1] <- paste0(p,"_",Ys[y],"[",1:d1,"]")
             dimy = dimy + d1
           }
@@ -172,8 +175,8 @@ function(values,
         if(v$D==2){
           dimy = 0
           for(y in 1:length(Ys)){
-            d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-            d2 = ifelse(missing(yspecd2), v$d2, yspecd2[Ys[y]])
+            d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+            d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
             cnames <- c()
             if(v$sym){
               # matrix is symmetrical and only upper-right triangle is stored

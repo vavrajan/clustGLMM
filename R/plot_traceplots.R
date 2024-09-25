@@ -1,20 +1,21 @@
 plot_traceplots <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, chains,
+         burnin = 0, thin = 1, iterations, chains,
          COL, labcex = 1, whatLAB,
          restrictedtoGplus = FALSE){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(par(opar))
-  if (missing(chains)){chains <- 1:mcmc$nchains}
+  if (missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
-  if (!missing(yspec)){if(!is.element(yspec, c(mcmc$Nums, mcmc$Pois, mcmc$Ords, mcmc$Bins, mcmc$Cats))){stop("Unexisting response variable specified.")}}
+  if (!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
   if (missing(scalar_samples)){
     scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what, 
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
-                                         burnin = burnin, thin = thin, chains = chains,
+                                         burnin = burnin, thin = thin, 
+                                         iterations = iterations, chains = chains,
                                          restrictedtoGplus = restrictedtoGplus)
   }
   if (missing(whatLAB)){
@@ -45,18 +46,14 @@ function(mcmc, scalar_samples,
     }
   }
   
-  if(restrictedtoGplus){
-    Max <- -Inf
-    Min <- Inf
-    for(ch in chains){
-      scalar_samples[[ch]]$y[is.infinite(scalar_samples[[ch]]$y)] <- NA
-      Max <- max(c(scalar_samples[[ch]]$y, Max), na.rm = T)
-      Min <- min(c(scalar_samples[[ch]]$y, Min), na.rm = T)
-    }
-  }else{
-    scalar_samples$y[is.infinite(scalar_samples$y)] <- NA
-    Max <- max(scalar_samples$y, na.rm = T)
-    Min <- min(scalar_samples$y, na.rm = T)
+  ymax <- xmax <- -Inf
+  ymin <- xmin <- Inf
+  for(ch in chains){
+    scalar_samples[[ch]]$y[is.infinite(scalar_samples[[ch]]$y)] <- NA
+    ymax <- max(c(scalar_samples[[ch]]$y, ymax), na.rm = TRUE)
+    ymin <- min(c(scalar_samples[[ch]]$y, ymin), na.rm = TRUE)
+    xmax <- max(c(scalar_samples[[ch]]$m, xmax), na.rm = TRUE)
+    xmin <- min(c(scalar_samples[[ch]]$m, xmin), na.rm = TRUE)
   }
   
   if(missing(COL)){
@@ -67,20 +64,13 @@ function(mcmc, scalar_samples,
     }
   }
   
-  plot(c(Min, Max) ~ c((burnin+1), mcmc$iter), 
-       ylim = c(Min-0.05*(Max-Min), Max+0.05*(Max-Min)),
+  plot(c(ymin, ymax) ~c(xmin, xmax), 
+       ylim = c(ymin-0.05*(ymax-ymin), ymax+0.05*(ymax-ymin)),
        ylab = "", xlab = "", type= "n")
   mtext(text = "Iteration", side = 1, line = 2.5, cex = labcex)
   mtext(text = whatLAB, side = 2, line = 2.5, cex = labcex)
   for(ch in chains){
-    if(restrictedtoGplus){
-      yy <- scalar_samples[[ch]]$y
-      xx <- scalar_samples[[ch]]$inds[scalar_samples[[ch]]$chain == ch]
-    }else{
-      yy <- scalar_samples$y[scalar_samples$chain == ch]
-      xx <- c(seq(burnin+1, mcmc$iter, by = thin))
-    }
-    lines(yy ~ xx, col = COL[ch])
+    lines(y ~ m, data = scalar_samples[[ch]], col = COL[ch])
   }
   # legend
   #legend("top", legend = chains, ncol = length(chains),

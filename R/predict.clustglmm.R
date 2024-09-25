@@ -10,9 +10,9 @@ function(object, newdata, y=names(object$family)[1], k=NA,
   }
   
   alpha_half <- (1-level)/2
-  params <- colnames(object$draws)[-1]
-  draws <- object$draws[object$draws$chain == chain, params]
-  draws <- draws[seq(burnin+1, object$iter, by=thin), ]
+  params <- colnames(object$draws[[chain]])[-1]
+  draws <- object$draws[[chain]][object$draws[[chain]]$m > burnin, params]
+  draws <- draws[seq(1, dim(draws)[1], by=thin), ]
   if(object$family[y] == "ord"){
     if(missing(k) | (is.na(k)) | !is.element(k, 1:object$Kord[y])){
       warning(paste0("Outcome ", y, " is ordinal, but level k (for the choice of intercept) not given. Only values 1, ..., ", object$Kord[y], " are permitted. I continue with k=1."))

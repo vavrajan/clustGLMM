@@ -1,5 +1,5 @@
 plot_kerneldensity_param <-
-function(mcmc, what, burnin = 0, thin = 1, chains){
+function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
   opar <- par(no.readonly = TRUE)
   on.exit(par(opar))
   v <- c(mcmc$settings[what, ])
@@ -10,8 +10,9 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
   if(v$yords){Ys <- c(Ys, mcmc$Ords)}
   if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
   
-  if(missing(chains)){chains = 1:mcmc$nchains}
+  if(missing(chains)){chains = mcmc$chains}
   nonempty <- mcmc$clusters
+  par(mar = c(4,4,1,1))
   
   if(v$dimswithG > 0){  
     if(v$sym){
@@ -19,42 +20,48 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
         if(v$isspec){
           # symmetric matrix with diagonal is group-specific
           for(g in 1:v$G){
-            par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
             for(i in 1:v$d1){
               for(j in 1:v$d2){
                 if(i <= j){
                   plot_kerneldensity(mcmc = mcmc, what = what, 
                                      gspec = g, dimspec = c(i,j), 
-                                     burnin = burnin, thin = thin, chains = chains,
+                                     burnin = burnin, thin = thin, 
+                                     iterations = iterations, chains = chains,
                                      labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
                 }else{
-                  pomdata <- get_scalar_samples(mcmc = mcmc, what = what, 
+                  auxdata <- get_scalar_samples(mcmc = mcmc, what = what, 
                                                 gspec = g, dimspec = c(j,i),
-                                                burnin = burnin, thin = thin, chains = chains)
+                                                burnin = burnin, thin = thin, 
+                                                iterations = iterations, chains = chains)
                   plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
                        xaxt = "n", yaxt = "n", bty = "n")
-                  text(0.5,0.5, labels = format(mean(pomdata$y), digits = 2, nsmall = 2))
+                  means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                  text(0.5,0.5, labels = format(mean(unlist(means[chains])), digits = 2, nsmall = 2))
                 }
               }
             }
           }
         }else{
           # symmetric matrix with diagonal is not group-specific
-          par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+          if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
           for(i in 1:v$d1){
             for(j in 1:v$d2){
               if(i <= j){
                 plot_kerneldensity(mcmc = mcmc, what = what, 
                                    dimspec = c(i,j),
-                                   burnin = burnin, thin = thin, chains = chains,
+                                   burnin = burnin, thin = thin, 
+                                   iterations = iterations, chains = chains,
                                    labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
               }else{
-                pomdata <- get_scalar_samples(mcmc = mcmc, what = what, 
+                auxdata <- get_scalar_samples(mcmc = mcmc, what = what, 
                                               dimspec = c(j,i),
-                                              burnin = burnin, thin = thin, chains = chains)
+                                              burnin = burnin, thin = thin, 
+                                              iterations = iterations, chains = chains)
                 plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
                      xaxt = "n", yaxt = "n", bty = "n")
-                text(0.5,0.5, labels = format(mean(pomdata$y), digits = 2, nsmall = 2))
+                means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                text(0.5,0.5, labels = format(mean(unlist(means[chains])), digits = 2, nsmall = 2))
               }
             }
           }
@@ -63,45 +70,55 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
         if(v$isspec){
           # symmetric matrix withOUT diagonal is group-specific
           for(g in 1:v$G){
-            par(mfrow = c(v$d1-1, v$d2-1), mar = c(4,4,1,1))
-            for(i in 1:(v$d1-1)){
-              for(j in 2:v$d2){
+            if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
+            for(i in 1:v$d1){
+              for(j in 1:v$d2){
                 if(i < j){
                   plot_kerneldensity(mcmc = mcmc, what = what, 
                                      gspec = g, dimspec = c(i,j), 
-                                     burnin = burnin, thin = thin, chains = chains,
+                                     burnin = burnin, thin = thin, 
+                                     iterations = iterations, chains = chains,
                                      labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
                 }else{
-                  pomdata <- get_scalar_samples(mcmc = mcmc, what = what, 
-                                                gspec = g, dimspec = c(j,i),
-                                                burnin = burnin, thin = thin, chains = chains)
                   plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
-                       xaxt = "n", yaxt = "n", bty = "n")
-                  text(0.5,0.5, labels = format(mean(pomdata$y), digits = 2, nsmall = 2))
+                         xaxt = "n", yaxt = "n", bty = "n")
+                  if(i == j){
+                    text(0.5,0.5, labels = as.character(v$diagval))
+                  }else{
+                    auxdata <- get_scalar_samples(mcmc = mcmc, what = what, 
+                                                  gspec = g, dimspec = c(j,i),
+                                                  burnin = burnin, thin = thin, 
+                                                  iterations = iterations, chains = chains)
+                    means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                    text(0.5,0.5, labels = format(mean(unlist(means[chains])), digits = 2, nsmall = 2))
+                  }
                 }
               }
             }
           }
         }else{
           # symmetric matrix withOUT diagonal is not group-specific
-          par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+          if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
           for(i in 1:v$d1){
             for(j in 1:v$d2){
               if(i < j){
                 plot_kerneldensity(mcmc = mcmc, what = what, 
                                    dimspec = c(i,j), 
-                                   burnin = burnin, thin = thin, chains = chains,
+                                   burnin = burnin, thin = thin, 
+                                   iterations = iterations, chains = chains,
                                    labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
               }else{
                 plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
                      xaxt = "n", yaxt = "n", bty = "n")
                 if(i == j){
-                  text(0.5,0.5, labels = "1")
+                  text(0.5,0.5, labels = as.character(v$diagval))
                 }else{
-                  pomdata <- get_scalar_samples(mcmc = mcmc, what = what, 
+                  auxdata <- get_scalar_samples(mcmc = mcmc, what = what, 
                                                 dimspec = c(j,i),
-                                                burnin = burnin, thin = thin, chains = chains)
-                  text(0.5,0.5, labels = format(mean(pomdata$y), digits = 2, nsmall = 2))
+                                                burnin = burnin, thin = thin, 
+                                                iterations = iterations, chains = chains)
+                  means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                  text(0.5,0.5, labels = format(mean(unlist(means[chains])), digits = 2, nsmall = 2))
                 }
               }
             }
@@ -117,12 +134,13 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
           if(v$isy){
             # y-specific 
             for(ch in chains){
-              par(mfrow = c(length(nonempty[[ch]]), length(Ys)), mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = c(length(nonempty[[ch]]), length(Ys)))}
               for(g in nonempty[[ch]]){
                 for(y in Ys){
                   plot_kerneldensity(mcmc = mcmc, what = what,
                                      gspec = g, yspec = y,
-                                     burnin = burnin, thin = thin, chains = ch, 
+                                     burnin = burnin, thin = thin, 
+                                     iterations = iterations, chains = ch, 
                                      labcex = 0.6)
                 }
               }
@@ -138,11 +156,12 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
             #                        labcex = 0.6)
             #   }
             # }
-            par(mfrow = nice_nrow_ncol(v$G), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = nice_nrow_ncol(v$G))}
             for(g in 1:v$G){
               plot_kerneldensity(mcmc = mcmc, what = what,
                                  gspec = g,
-                                 burnin = burnin, thin = thin, chains = ch, 
+                                 burnin = burnin, thin = thin, 
+                                 iterations = iterations, chains = ch, 
                                  labcex = 0.6)
             }
           }
@@ -154,13 +173,13 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
             # the size of the dimension depends on outcomes
             for(ch in chains){
               for(y in Ys){
-                par(mfrow = c(length(nonempty[[ch]]),mcmc$yspecd1[[what]][[y]]), 
-                    mar = c(4,4,1,1))
+                if(setparmfrow){par(mfrow = c(length(nonempty[[ch]]),mcmc$yspecd1[[what]][[y]]))}
                 for(g in nonempty[[ch]]){
                   for(i in 1:mcmc$yspecd1[[what]][[y]]){
                     plot_kerneldensity(mcmc = mcmc, what = what,
                                        gspec = g, yspec = y, dimspec = i,
-                                       burnin = burnin, thin = thin, chains = ch, 
+                                       burnin = burnin, thin = thin, 
+                                       iterations = iterations, chains = ch, 
                                        labcex = 0.6)
                   }
                 }
@@ -168,12 +187,13 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
             }
           }else{
             # the size of the dimension does NOT depend on outcomes
-            par(mfrow = c(v$G, v$d1), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = c(v$G, v$d1))}
             for(g in 1:v$G){
               for(i in 1:v$d1){
                 plot_kerneldensity(mcmc = mcmc, what = what,
                                    gspec = g, dimspec = i,
-                                   burnin = burnin, thin = thin, chains = chains, 
+                                   burnin = burnin, thin = thin, 
+                                   iterations = iterations, chains = chains, 
                                    labcex = 0.6)
               }
             }
@@ -197,12 +217,13 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
                   d2 = v$d2
                 }
                 for(g in nonempty[[ch]]){
-                  par(mfrow = c(d1,d2), mar = c(4,4,1,1))
+                  if(setparmfrow){par(mfrow = c(d1,d2))}
                   for(i in 1:d1){
                     for(j in 1:d2){
                       plot_kerneldensity(mcmc = mcmc, what = what,
                                          gspec = g, yspec = y, dimspec = c(i,j),
-                                         burnin = burnin, thin = thin, chains = ch, 
+                                         burnin = burnin, thin = thin, 
+                                         iterations = iterations, chains = ch, 
                                          labcex = 0.6)
                     }
                   }
@@ -213,12 +234,13 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
             # none dimension is y-specific
             for(ch in chains){
               for(g in nonempty[[ch]]){
-                par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+                if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
                 for(i in 1:v$d1){
                   for(j in 1:v$d2){
                     plot_kerneldensity(mcmc = mcmc, what = what,
                                        gspec = g, dimspec = c(i,j),
-                                       burnin = burnin, thin = thin, chains = ch, 
+                                       burnin = burnin, thin = thin, 
+                                       iterations = iterations, chains = ch, 
                                        labcex = 0.6)
                   }
                 }
@@ -233,18 +255,20 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
           # zero-dimensional parameter
           if(v$isy){
             # y-specific
-            par(mfrow = nice_nrow_ncol(length(Ys)), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = nice_nrow_ncol(length(Ys)))}
             for(y in Ys){
               plot_kerneldensity(mcmc = mcmc, what = what,
                                  yspec = y,
-                                 burnin = burnin, thin = thin, chains = chains, 
+                                 burnin = burnin, thin = thin, 
+                                 iterations = iterations, chains = chains, 
                                  labcex = 0.6)
             }
           }else{
             # not y-specific, neither g-specific
-            par(mfrow = c(1,1), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = c(1,1))}
             plot_kerneldensity(mcmc = mcmc, what = what,
-                               burnin = burnin, thin = thin, chains = chains,
+                               burnin = burnin, thin = thin, 
+                               iterations = iterations, chains = chains,
                                labcex = 0.6)
           }
         }
@@ -254,22 +278,23 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
           if(v$ydepd1){
             # the size of the dimension depends on outcomes
             for(y in Ys){
-              par(mfrow = nice_nrow_ncol(mcmc$yspecd1[[what]][[y]]), 
-                  mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = nice_nrow_ncol(mcmc$yspecd1[[what]][[y]]))}
               for(i in 1:mcmc$yspecd1[[what]][[y]]){
                 plot_kerneldensity(mcmc = mcmc, what = what,
                                    yspec = y, dimspec = i,
-                                   burnin = burnin, thin = thin, chains = chains, 
+                                   burnin = burnin, thin = thin, 
+                                   iterations = iterations, chains = chains, 
                                    labcex = 0.6)
               }
             }
           }else{
             # the size of the dimension depends on outcomes
-            par(mfrow = nice_nrow_ncol(v$d1), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = nice_nrow_ncol(v$d1))}
             for(i in 1:v$d1){
               plot_kerneldensity(mcmc = mcmc, what = what,
                                  dimspec = i,
-                                 burnin = burnin, thin = thin, chains = chains, 
+                                 burnin = burnin, thin = thin, 
+                                 iterations = iterations, chains = chains, 
                                  labcex = 0.6)
             }
           }
@@ -290,24 +315,26 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
               }else{
                 d2 = v$d2
               }
-              par(mfrow = c(d1,d2), mar = c(4,4,1,1))
+              if(setparmfrow){par(mfrow = c(d1,d2))}
               for(i in 1:d1){
                 for(j in 1:d2){
                   plot_kerneldensity(mcmc = mcmc, what = what,
                                      yspec = y, dimspec = c(i,j),
-                                     burnin = burnin, thin = thin, chains = chains, 
+                                     burnin = burnin, thin = thin, 
+                                     iterations = iterations, chains = chains, 
                                      labcex = 0.6)
                 }
               }
             }
           }else{
             # none dimension is y-specific
-            par(mfrow = c(v$d1, v$d2), mar = c(4,4,1,1))
+            if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
             for(i in 1:v$d1){
               for(j in 1:v$d2){
                 plot_kerneldensity(mcmc = mcmc, what = what,
                                    dimspec = c(i,j),
-                                   burnin = burnin, thin = thin, chains = chains, 
+                                   burnin = burnin, thin = thin, 
+                                   iterations = iterations, chains = chains, 
                                    labcex = 0.6)
               }
             }

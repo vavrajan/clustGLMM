@@ -2,14 +2,15 @@ from_C_to_list <-
 function(values,
          p,
          settings,
-         yspecd1,
-         yspecd2,
+         yspecd1=NULL,
+         yspecd2=NULL,
          family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
   # save, isspec, G, isy, ynums, yords, ybins, iter, 
   # d1, d2, BYROW, sym, diag, diagval, D
   v <- c(settings[p, ])
+  niter <- length(values) / v$dimswithG
   Ys <- c()
   if(v$ynums){Ys <- c(Ys, names(family)[is.element(family, c("num", "gaussian"))])}
   if(v$ypois){Ys <- c(Ys, names(family)[is.element(family, c("poi", "poisson"))])}
@@ -17,7 +18,7 @@ function(values,
   if(v$yords){Ys <- c(Ys, names(family)[is.element(family, c("ord", "cumulative"))])}
   if(v$ycats){Ys <- c(Ys, names(family)[is.element(family, c("cat", "categorical"))])}
   
-  sumd1 <- ifelse(missing(yspecd1), v$d1*length(Ys), sum(yspecd1))
+  sumd1 <- ifelse(v$ydepd1, sum(yspecd1), v$d1*length(Ys))
   #sumd1 <- v$d1*length(Ys)
   
   if(v$isspec){
@@ -35,11 +36,11 @@ function(values,
           # }
           
           ## better --> no need for [[y]] --> can be stored in matrix with columns names Ys
-          RET[[k]] <- matrix(0, nrow = v$iter, ncol = length(Ys))
+          RET[[k]] <- matrix(0, nrow = niter, ncol = length(Ys))
           colnames(RET[[k]]) <- Ys
           for(y in 1:length(Ys)){
             RET[[k]][, Ys[y]] = values[seq(from = (k-1)*length(Ys)+y, 
-                                           to = v$G*length(Ys)*v$iter, 
+                                           to = v$G*length(Ys)*niter, 
                                            by = v$G*length(Ys))]
           }
           
@@ -51,10 +52,10 @@ function(values,
           RET[[k]] <- list()
           dimy = 0
           for(y in 1:length(Ys)){
-            d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
+            d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
             #d1 = v$d1
-            RET[[k]][[Ys[y]]] <- matrix(0, nrow = v$iter, ncol = d1)
-            for(i in 1:v$iter){
+            RET[[k]][[Ys[y]]] <- matrix(0, nrow = niter, ncol = d1)
+            for(i in 1:niter){
               RET[[k]][[Ys[y]]][i, ] <- values[(i-1)*v$G*sumd1 + (k-1)*sumd1 + dimy + 1:d1]
             }
             dimy = dimy + d1
@@ -67,19 +68,19 @@ function(values,
           RET[[k]] <- list()
           if(v$sym){
             if(v$diag){
-              dimtot = ifelse(missing(yspecd1), length(Ys)*v$d1*(v$d1+1)/2,sum(yspecd1*(yspecd1+1)/2))
+              dimtot = ifelse(v$ydepd1, sum(yspecd1*(yspecd1+1)/2), length(Ys)*v$d1*(v$d1+1)/2)
             }else{
-              dimtot = ifelse(missing(yspecd1), length(Ys)*(v$d1-1)*v$d1/2,sum((yspecd1-1)*yspecd1/2))
+              dimtot = ifelse(v$ydepd1, sum((yspecd1-1)*yspecd1/2), length(Ys)*(v$d1-1)*v$d1/2)
             }
           }else{
-            dimtot = ifelse(missing(yspecd1)|missing(yspecd2), length(Ys)*v$d1*v$d2, sum(yspecd1*yspecd2))
+            dimtot = ifelse(v$ydepd1|v$ydepd2, sum(yspecd1*yspecd2), length(Ys)*v$d1*v$d2)
           }
           dimy = 0
           for(y in 1:length(Ys)){
-            d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-            d2 = ifelse(missing(yspecd2), v$d2, yspecd2[Ys[y]])
-            RET[[k]][[Ys[y]]] <- array(0, dim = c(v$iter, d1, d2))
-            for(i in 1:v$iter){
+            d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+            d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
+            RET[[k]][[Ys[y]]] <- array(0, dim = c(niter, d1, d2))
+            for(i in 1:niter){
               if(v$sym){
                 # matrix is symmetrical and only upper-right triangle is stored
                 # d1 = d2
@@ -123,12 +124,12 @@ function(values,
       # is class-specific, however not y-specific
       
       if(v$D==0){
-        RET <- matrix(0, nrow = v$iter, ncol = v$G)
+        RET <- matrix(0, nrow = niter, ncol = v$G)
         for(k in 1:v$G){
           # no need to do [[k]] --> can be stored in matrix
           # column corresponds to k
           RET[, k] = values[seq(from = k,
-                                to = v$G*v$iter,
+                                to = v$G*niter,
                                 by = v$G)]
           
         }
@@ -136,8 +137,8 @@ function(values,
       
       if(v$D==1){
         for(k in 1:v$G){
-          RET[[k]] <- matrix(0, nrow = v$iter, ncol = v$d1)
-          for(i in 1:v$iter){
+          RET[[k]] <- matrix(0, nrow = niter, ncol = v$d1)
+          for(i in 1:niter){
             RET[[k]][i, ] <- values[(i-1)*v$G*v$d1 + (k-1)*v$d1 + 1:v$d1]          
           }
         }
@@ -145,8 +146,8 @@ function(values,
       
       if(v$D==2){
         for(k in 1:v$G){
-          RET[[k]] <- array(0, dim = c(v$iter, v$d1, v$d2))
-          for(i in 1:v$iter){
+          RET[[k]] <- array(0, dim = c(niter, v$d1, v$d2))
+          for(i in 1:niter){
             if(v$sym){
               # matrix is symmetrical and only upper-right triangle is stored
               # d1 = d2
@@ -198,11 +199,11 @@ function(values,
         # }
         
         ## better --> no need for [[y]] --> can be stored in matrix with columns names Ys
-        RET <- matrix(0, nrow = v$iter, ncol = length(Ys))
+        RET <- matrix(0, nrow = niter, ncol = length(Ys))
         colnames(RET) <- Ys
         for(y in 1:length(Ys)){
           RET[, Ys[y]] = values[seq(from = y,
-                                    to = length(Ys)*v$iter,
+                                    to = length(Ys)*niter,
                                     by = length(Ys))]
         }
         
@@ -210,12 +211,12 @@ function(values,
       
       if(v$D==1){
         RET <- list()
-        dimtot = ifelse(missing(yspecd1), length(Ys)*v$d1, sum(yspecd1))
+        dimtot = ifelse(v$ydepd1, sum(yspecd1), length(Ys)*v$d1)
         dimy = 0
         for(y in 1:length(Ys)){
-          d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-          RET[[Ys[y]]] <- matrix(0, nrow = v$iter, ncol = d1)
-          for(i in 1:v$iter){
+          d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+          RET[[Ys[y]]] <- matrix(0, nrow = niter, ncol = d1)
+          for(i in 1:niter){
             RET[[Ys[y]]][i, ] <- values[(i-1)*dimtot + dimy + 1:d1]
           }
           dimy = dimy + d1
@@ -226,19 +227,19 @@ function(values,
         RET <- list()
         if(v$sym){
           if(v$diag){
-            dimtot = ifelse(missing(yspecd1), length(Ys)*v$d1*(v$d1+1)/2, sum(yspecd1*(yspecd1+1)/2))
+            dimtot = ifelse(v$ydepd1, sum(yspecd1*(yspecd1+1)/2), length(Ys)*v$d1*(v$d1+1)/2)
           }else{
-            dimtot = ifelse(missing(yspecd1), length(Ys)*(v$d1-1)*v$d1/2, sum((yspecd1-1)*yspecd1/2))
+            dimtot = ifelse(v$ydepd1, sum((yspecd1-1)*yspecd1/2), length(Ys)*(v$d1-1)*v$d1/2)
           }
         }else{
-          dimtot = ifelse(missing(yspecd1)|missing(yspecd2), length(Ys)*v$d1*v$d2, sum(yspecd1*yspecd2))
+          dimtot = ifelse(v$ydepd1|v$ydepd2, sum(yspecd1*yspecd2), length(Ys)*v$d1*v$d2)
         }
         dimy = 0
         for(y in 1:length(Ys)){
-          d1 = ifelse(missing(yspecd1), v$d1, yspecd1[Ys[y]])
-          d2 = ifelse(missing(yspecd2), v$d2, yspecd2[Ys[y]])
-          RET[[Ys[y]]] <- array(0, dim = c(v$iter, d1, d2))
-          for(i in 1:v$iter){
+          d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
+          d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
+          RET[[Ys[y]]] <- array(0, dim = c(niter, d1, d2))
+          for(i in 1:niter){
             if(v$sym){
               # matrix is symmetrical and only upper-right triangle is stored
               # d1 = d2
@@ -285,12 +286,12 @@ function(values,
       } # end of D==0
       
       if(v$D==1){
-        RET <-  matrix(values, nrow = v$iter, ncol = v$d1, byrow = v$BYROW)
+        RET <-  matrix(values, nrow = niter, ncol = v$d1, byrow = v$BYROW)
       } # end of D==1
       
       if(v$D==2){
-        RET <- array(0, dim = c(v$iter, v$d1, v$d2))
-        for(i in 1:v$iter){
+        RET <- array(0, dim = c(niter, v$d1, v$d2))
+        for(i in 1:niter){
           if(v$sym){
             # matrix is symmetrical and only upper-right triangle is stored
             # d1 = d2
