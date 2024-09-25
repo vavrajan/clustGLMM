@@ -11,11 +11,7 @@ plot_ECDF_param <-
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
     if(missing(chains)){chains = 1:mcmc$nchains}
-    nonempty <- list()
-    for(ch in 1:mcmc$nchains){
-      TAB <- table(mcmc$last[[ch]]$U)
-      nonempty[[ch]] <- sort(as.numeric(names(TAB)[which(TAB>0)]))
-    }
+    nonempty <- mcmc$clusters
     
     if(v$dimswithG > 0){  
       if(v$sym){
@@ -133,14 +129,21 @@ plot_ECDF_param <-
               }
             }else{
               # not y-specific, but still g-specific
-              for(ch in chains){
-                par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])), mar = c(4,4,1,1))
-                for(g in nonempty[[ch]]){
-                  plot_ECDF(mcmc = mcmc, what = what,
-                            gspec = g,
-                            burnin = burnin, thin = thin, chains = ch, 
-                            labcex = 0.6)
-                }
+              # for(ch in chains){
+              #   par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])), mar = c(4,4,1,1))
+              #   for(g in nonempty[[ch]]){
+              #     plot_ECDF(mcmc = mcmc, what = what,
+              #               gspec = g,
+              #               burnin = burnin, thin = thin, chains = ch, 
+              #               labcex = 0.6)
+              #   }
+              # }
+              par(mfrow = nice_nrow_ncol(v$G), mar = c(4,4,1,1))
+              for(g in 1:v$G){
+                plot_ECDF(mcmc = mcmc, what = what,
+                          gspec = g,
+                          burnin = burnin, thin = thin, chains = chains, 
+                          labcex = 0.6)
               }
             }
           }
@@ -165,15 +168,13 @@ plot_ECDF_param <-
               }
             }else{
               # the size of the dimension depends on outcomes
-              for(ch in chains){
-                par(mfrow = c(length(nonempty[[ch]]), v$d1), mar = c(4,4,1,1))
-                for(g in nonempty[[ch]]){
-                  for(i in 1:v$d1){
-                    plot_ECDF(mcmc = mcmc, what = what,
-                              gspec = g, dimspec = i,
-                              burnin = burnin, thin = thin, chains = ch, 
-                              labcex = 0.6)
-                  }
+              par(mfrow = c(v$G, v$d1), mar = c(4,4,1,1))
+              for(g in 1:v$G){
+                for(i in 1:v$d1){
+                  plot_ECDF(mcmc = mcmc, what = what,
+                            gspec = g, dimspec = i,
+                            burnin = burnin, thin = thin, chains = chains, 
+                            labcex = 0.6)
                 }
               }
             }

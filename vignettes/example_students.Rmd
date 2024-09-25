@@ -148,7 +148,7 @@ for(y in Ys){
 
 # Group-specificity of other model parameters
 (varying <- default_varying())
-varying["tau_num"] <- FALSE
+varying["prec_num"] <- FALSE
 ```
 
 ## Sampling MCMC chains for numerical outcome only
@@ -168,8 +168,8 @@ mcmc0
 plot(mcmc0)
 plot(mcmc0, "beta_num", thin = 1, chains = 1)
 plot(mcmc0, "beta_num", which="clusters_kerneldensity", thin = 1, chains = 1)
-plot(mcmc0, "tau_num")
-plot(mcmc0, "tau_num", burnin=100)
+plot(mcmc0, "prec_num")
+plot(mcmc0, "prec_num", burnin=100)
 ```
 
 ```{r clusteringU, echo=TRUE}
@@ -250,7 +250,7 @@ plot(mcmc1)
 
 plot(mcmc1, "beta_num", thin = 1, chains = 1)
 plot(mcmc1, "beta_num", which="clusters_kerneldensity")
-plot(mcmc1, "tau_num", which="clusters_kerneldensity")
+plot(mcmc1, "prec_num", which="clusters_kerneldensity")
 
 plot(mcmc1, "beta_poi", thin = 1, chains = 1)
 plot(mcmc1, "beta_poi", which="clusters_kerneldensity")
@@ -379,7 +379,7 @@ plot(mcmc2, "ng")
 
 plot(mcmc2, "beta_num", thin = 1, chains = 1)
 plot(mcmc2, "beta_num", which="clusters_kerneldensity")
-plot(mcmc2, "tau_num", which="clusters_kerneldensity")
+plot(mcmc2, "prec_num", which="clusters_kerneldensity")
 
 plot(mcmc2, "beta_poi", thin = 1, chains = 1)
 plot(mcmc2, "beta_poi", which="clusters_kerneldensity")

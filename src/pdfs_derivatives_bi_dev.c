@@ -14,7 +14,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
                 double* X,                // IN [N*(#regr)]    regressors
                 double* pbeta_num_fix,     // pointer to beta_num_fix
                 double* pbeta_num,         // pointer to beta_num
-                double* ptau_num,          // pointer to tau_num
+                double* pprec_num,         // pointer to prec_num
                 double* pbeta_poi_fix,     // pointer to beta_poi_fix
                 double* pbeta_poi,         // pointer to beta_poi
                 double* pbeta_bin_fix,     // pointer to beta_bin_fix
@@ -94,7 +94,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
         t += nran[shift_nY];
       }else{
         // Do not forget on log tau!!!
-        *value += 0.5 * log(ptau_num[y]);
+        *value += 0.5 * log(pprec_num[y]);
         
         // Update predictor
         eta = 0.0; 
@@ -124,7 +124,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
         
         auxY = Y[coord + *N * shift_nY] - eta;
         //auxY = ptau[y] * auxY * auxY;
-        *value -= 0.5 * ptau_num[y] * auxY * auxY; // subtracting the square
+        *value -= 0.5 * pprec_num[y] * auxY * auxY; // subtracting the square
         //if(*print){printf("\nlogpYi Num: i = %d, j = %d, y = %d, eta = %f, auxY = %f, value = %f", *i, j, y, eta, auxY, *value);}
         
       }
@@ -416,7 +416,7 @@ void logpbi_dev(double* Y,              // IN [totnY*N]
                 double* X,              // IN [N*(#regr)]    regressors
                 double* pbeta_num_fix,     // pointer to beta_num_fix
                 double* pbeta_num,         // pointer to beta_num
-                double* ptau_num,          // pointer to tau_num
+                double* pprec_num,         // pointer to prec_num
                 double* pbeta_poi_fix,     // pointer to beta_poi_fix
                 double* pbeta_poi,         // pointer to beta_poi
                 double* pbeta_bin_fix,     // pointer to beta_bin_fix
@@ -462,7 +462,7 @@ void logpbi_dev(double* Y,              // IN [totnY*N]
   
   //printf("\nlogpbi: n = %d,  ij[%d] = %d", *n, *i, *ij);
   logpYi_dev(Y, isYna, X,  
-             pbeta_num_fix, pbeta_num, ptau_num, 
+             pbeta_num_fix, pbeta_num, pprec_num, 
              pbeta_poi_fix, pbeta_poi, 
              pbeta_bin_fix, pbeta_bin, 
              pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -489,7 +489,7 @@ void d_d2_logpbi_dev(double* Y,             // IN [totnY*N]
                      double* X,             // IN [N*(#regr)]    regressors
                      double* pbeta_num_fix,     // pointer to beta_num_fix
                      double* pbeta_num,         // pointer to beta_num
-                     double* ptau_num,          // pointer to tau_num
+                     double* pprec_num,         // pointer to prec_num
                      double* pbeta_poi_fix,     // pointer to beta_poi_fix
                      double* pbeta_poi,         // pointer to beta_poi
                      double* pbeta_bin_fix,     // pointer to beta_bin_fix
@@ -613,12 +613,12 @@ void d_d2_logpbi_dev(double* Y,             // IN [totnY*N]
         for(l1 = 0; l1 < nran[shift_nY]; l1++){
           // gradient update
           auxZ = X[coord + *N * FormulaR[t2]];
-          grad[t2] += ptau_num[y] * auxY * auxZ;
+          grad[t2] += pprec_num[y] * auxY * auxZ;
           // log tau not needed (constant differentiated to zero)
           // hessian update
           for(l2 = l1; l2 < nran[shift_nY]; l2++){
             col = (tstart+l2)*(tstart+l2+1)/2;
-            hess[t2 + col] += ptau_num[y] * auxZ * X[coord + *N * FormulaR[l2 + cumnran[shift_nY]]];
+            hess[t2 + col] += pprec_num[y] * auxZ * X[coord + *N * FormulaR[l2 + cumnran[shift_nY]]];
             //printf("\nd_d2_logpbi: j = %d, t = %d, col = %d, hess[%d] = %f", j, t, col, t+col, hess[t+col]);
           }
           t2++;

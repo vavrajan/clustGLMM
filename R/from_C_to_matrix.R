@@ -20,10 +20,10 @@ function(values,
   sumd1 <- ifelse(missing(yspecd1), v$d1*length(Ys), sum(yspecd1))
   #sumd1 <- v$d1*length(Ys)
   
-  if(length(values) == 0){
-    RET <- as.data.frame(matrix(NA, nrow = v$iter, ncol = 0, byrow = T))
+  if(missing(values) | (length(values) == 0)){
+    RET <- as.data.frame(matrix(NA, nrow = v$iter, ncol = 0, byrow = TRUE))
   }else{
-    RET <- as.data.frame(matrix(values, nrow = v$iter, ncol = v$dimswithG, byrow = T))
+    RET <- as.data.frame(matrix(values, nrow = v$iter, ncol = v$dimswithG, byrow = TRUE))
   
     # what remains is to set colnames properly
     

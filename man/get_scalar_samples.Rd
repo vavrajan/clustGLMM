@@ -33,6 +33,9 @@ the length of burn-in period (default 0), i.e. number of initial samples to igno
   \item{thin}{
 thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
 }
+  \item{iterations}{
+a vector of iterations numbers to extract, overrides any \code{burnin} or \code{thin}. 
+}
   \item{chains}{
 a vector of chain numbers to be used.
 }

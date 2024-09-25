@@ -38,6 +38,9 @@ a set of breaks along which to cut regressor \code{x}, if missing \code{x} is di
   \item{add_lowess}{
 a boolean whether to add lowess curves for each group label.
 }
+  \item{main}{
+plot title to be printed above the plot.
+}
   \item{margin}{
 how far from each other should different groups be displayed.
 }

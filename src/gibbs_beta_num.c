@@ -21,14 +21,14 @@ void gibbs_beta_num(struct str_state* last,   // OUT+IN last known values of gen
                     double* Y,                // IN [*N * totnY]
                     double* X,                // [N*(#regr)]    ID + regressors
                     int* spec,            // [5]                class-specific parameters
-                                              // order:   [0] tau_num, 
+                                              // order:   [0] prec_num, 
                                               //          [1] c_ord,
                                               //          [2] InvSigma, 
                                               //          [3] InvQ, 
                                               //          [4] naY
                     int* dims,            // [33]:              what parameters are saved
                                               // order:   [0-1]   beta_num_fix, beta_num,
-                                              //          [2-4]   tau_num, sd_num, var_num,
+                                              //          [2-4]   prec_num, sd_num, var_num,
                                               //          [5-6]   beta_poi_fix, beta_poi,
                                               //          [7-8]   beta_bin_fix, beta_bin,
                                               //          [9-10]  beta_ord_fix, beta_ord,
@@ -131,7 +131,7 @@ void gibbs_beta_num(struct str_state* last,   // OUT+IN last known values of gen
       }
       
       // pointer to tau --> later add g*dims[2] if group-specific
-      ptau = (*last).tau_num + y;
+      ptau = (*last).prec_num + y;
       
       // XtX + D calculation
       for(p = 0; p < nfix[y]; p++){
@@ -146,7 +146,7 @@ void gibbs_beta_num(struct str_state* last,   // OUT+IN last known values of gen
           for(i = 0; i < *n; i++){
             g = (*last).U[i];
             if(spec[0]){
-              // tau_num is group-specific
+              // prec_num is group-specific
               tau = ptau[g*dims[2]];
             }else{
               tau = *ptau;
@@ -169,7 +169,7 @@ void gibbs_beta_num(struct str_state* last,   // OUT+IN last known values of gen
         for(i = 0; i < *n; i++){
           g = (*last).U[i];
           if(spec[0]){
-            // tau_num is group-specific
+            // prec_num is group-specific
             tau = ptau[g*dims[2]];
           }else{
             tau = *ptau;
@@ -263,9 +263,9 @@ void gibbs_beta_num(struct str_state* last,   // OUT+IN last known values of gen
         
         // Is tau class specific? 
         if(spec[0]){
-          tau = (*last).tau_num[y + g * dims[2]];
+          tau = (*last).prec_num[y + g * dims[2]];
         }else{
-          tau = (*last).tau_num[y];
+          tau = (*last).prec_num[y];
         }
         //printf("\ngibbs_beta_num: tau = %f", tau);
         //fflush(stdout);

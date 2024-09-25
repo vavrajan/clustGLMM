@@ -17,14 +17,14 @@ void logpYcat(struct str_state* last,  // IN last known values of generated para
               double* Y,                // IN [*N]
               double* X,                // IN [N*(#regr)]    regressors
               int* spec,            // [5]                class-specific parameters
-              // order:   [0] tau_num, 
+              // order:   [0] prec_num, 
               //          [1] c_ord,
               //          [2] InvSigma, 
               //          [3] InvQ, 
               //          [4] naY
               int* dims,            // [33]:              what parameters are saved
               // order:   [0-1]   beta_num_fix, beta_num,
-              //          [2-4]   tau_num, sd_num, var_num,
+              //          [2-4]   prec_num, sd_num, var_num,
               //          [5-6]   beta_poi_fix, beta_poi,
               //          [7-8]   beta_bin_fix, beta_bin,
               //          [9-10]  beta_ord_fix, beta_ord,
@@ -127,14 +127,14 @@ void logpbeta_cat(struct str_state* last,  // IN last known values of generated 
                   double* Y,                // IN [*N]
                   double* X,                // IN [N*(#regr)]    regressors
                   int* spec,            // [5]                class-specific parameters
-                  // order:   [0] tau_num, 
+                  // order:   [0] prec_num, 
                   //          [1] c_ord,
                   //          [2] InvSigma, 
                   //          [3] InvQ, 
                   //          [4] naY
                   int* dims,            // [33]:              what parameters are saved
                   // order:   [0-1]   beta_num_fix, beta_num,
-                  //          [2-4]   tau_num, sd_num, var_num,
+                  //          [2-4]   prec_num, sd_num, var_num,
                   //          [5-6]   beta_poi_fix, beta_poi,
                   //          [7-8]   beta_bin_fix, beta_bin,
                   //          [9-10]  beta_ord_fix, beta_ord,
@@ -195,14 +195,14 @@ void d_d2_logpbeta_cat(struct str_state* last,  // IN last known values of gener
                        double* Y,                // IN [*N]
                        double* X,                // IN [N*(#regr)]    regressors
                        int* spec,            // [5]                class-specific parameters
-                       // order:   [0] tau_num, 
+                       // order:   [0] prec_num, 
                        //          [1] c_ord,
                        //          [2] InvSigma, 
                        //          [3] InvQ, 
                        //          [4] naY
                        int* dims,            // [33]:              what parameters are saved
                        // order:   [0-1]   beta_num_fix, beta_num,
-                       //          [2-4]   tau_num, sd_num, var_num,
+                       //          [2-4]   prec_num, sd_num, var_num,
                        //          [5-6]   beta_poi_fix, beta_poi,
                        //          [7-8]   beta_bin_fix, beta_bin,
                        //          [9-10]  beta_ord_fix, beta_ord,

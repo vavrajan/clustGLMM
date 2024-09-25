@@ -21,7 +21,7 @@ If corresponding lists or vectors are not given to \code{\link{clustGLMM}} then 
 \value{
 The output of \code{default_varying} is a named vector \code{varying} that contains a boolean for each model parameter that may be considered cluster-specific. The defaults are
 \describe{
-  \item{\code{varying["tau_num"] = TRUE}}{group-specific precisions for numeric outcomes,}
+  \item{\code{varying["prec_num"] = TRUE}}{group-specific precisions for numeric outcomes,}
   \item{\code{varying["c_ord"] = TRUE}}{group-specific ordered intercepts for ordinal outcomes,}
   \item{\code{varying["InvSigma"] = FALSE}}{group-invariant combined precision matrix for all random effects,}
   \item{\code{varying["InvQ"] = FALSE}}{group-invariant precision matrix used in prior for \code{InvSigma},}
@@ -32,9 +32,9 @@ The output of \code{default_save} is a named vector \code{save} that contains a 
 \describe{
   \item{\code{save["beta_num_fix"] = TRUE}}{fixed effects for numeric outcomes,}
   \item{\code{save["beta_num"] = TRUE}}{group-specific effects for numeric outcomes,}
-  \item{\code{save["tau_num"] = TRUE}}{precisions for numeric outcomes,} 
-  \item{\code{save["sd_num"] = TRUE}}{standard deviations for numeric outcomes (transformed from \code{tau_num}),}
-  \item{\code{save["var_num"] = TRUE}}{variances for numeric outcomes (transformed from \code{tau_num}),}
+  \item{\code{save["prec_num"] = TRUE}}{precisions for numeric outcomes,} 
+  \item{\code{save["sd_num"] = TRUE}}{standard deviations for numeric outcomes (transformed from \code{prec_num}),}
+  \item{\code{save["var_num"] = TRUE}}{variances for numeric outcomes (transformed from \code{prec_num}),}
   \item{\code{save["beta_poi_fix"] = TRUE}}{fixed effects for count outcomes,}
   \item{\code{save["beta_poi"] = TRUE}}{group-specific effects for count outcomes,}
   \item{\code{save["beta_bin_fix"] = TRUE}}{fixed effects for binary outcomes,}
@@ -67,24 +67,24 @@ The output of \code{default_save} is a named vector \code{save} that contains a 
 
 The output of \code{default_param} is a named list \code{param} that contains values of the hyperparameters needed to set up the priors. The default values are:
 \describe{
-\item{\code{param[["nu_0"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvSigma} (dimension of this matrix is automatically added to this value),}
-\item{\code{param[["nu_1"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvQ} (dimension of this matrix is automatically added to this value),}
-\item{\code{param[["gamma_a"]] = 1}}{prior shape for precision parameter \code{tau_num} for numeric outcomes,}
-\item{\code{param[["gamma_b"]] = 10}}{prior rate for precision parameter \code{tau_num} for numeric outcomes,}
-\item{\code{param[["sd_beta_num_fix"]] = 1}}{standard deviation for fixed effects for numeric outcomes,}
-\item{\code{param[["sd_beta_num"]] = 1}}{standard deviation for group-specific effects for numeric outcomes,}
-\item{\code{param[["sd_beta_poi_fix"]] = 1}}{standard deviation for fixed effects for count outcomes,}
-\item{\code{param[["sd_beta_poi"]] = 1}}{standard deviation for group-specific effects for count outcomes,}
-\item{\code{param[["sd_beta_bin_fix"]] = 1}}{standard deviation for fixed effects for binary outcomes,}
-\item{\code{param[["sd_beta_bin"]] = 1}}{standard deviation for group-specific effects for binary outcomes,}
-\item{\code{param[["sd_beta_ord_fix"]] = 1}}{standard deviation for fixed effects for ordinal outcomes,}
-\item{\code{param[["sd_beta_ord"]] = 1}}{standard deviation for group-specific effects for ordinal outcomes,}
+\item{\code{param[["InvSigma_df"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvSigma} (dimension of this matrix is automatically added to this value),}
+\item{\code{param[["InvQ_df"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvQ} (dimension of this matrix is automatically added to this value),}
+\item{\code{param[["prec_num_shp"]] = 1}}{prior shape for precision parameter \code{prec_num} for numeric outcomes,}
+\item{\code{param[["prec_num_rte"]] = 10}}{prior rate for precision parameter \code{prec_num} for numeric outcomes,}
+\item{\code{param[["beta_num_fix_sd"]] = 1}}{standard deviation for fixed effects for numeric outcomes,}
+\item{\code{param[["beta_num_sd"]] = 1}}{standard deviation for group-specific effects for numeric outcomes,}
+\item{\code{param[["beta_poi_fix_sd"]] = 1}}{standard deviation for fixed effects for count outcomes,}
+\item{\code{param[["beta_poi_sd"]] = 1}}{standard deviation for group-specific effects for count outcomes,}
+\item{\code{param[["beta_bin_fix_sd"]] = 1}}{standard deviation for fixed effects for binary outcomes,}
+\item{\code{param[["beta_bin_sd"]] = 1}}{standard deviation for group-specific effects for binary outcomes,}
+\item{\code{param[["beta_ord_fix_sd"]] = 1}}{standard deviation for fixed effects for ordinal outcomes,}
+\item{\code{param[["beta_ord_sd"]] = 1}}{standard deviation for group-specific effects for ordinal outcomes,}
 \item{\code{param[["api_prior"]] = 1}}{prior parameter for Dirichlet distribution of \code{pi_ord} (same for all levels),}
-\item{\code{param[["sd_beta_cat_fix"]] = 1}}{standard deviation for fixed effects for general categorical outcomes,}
-\item{\code{param[["sd_beta_cat"]] = 1}}{standard deviation for group-specific effects for general categorical outcomes,}
-\item{\code{param[["init_sd_b"]] = 0.01}}{standard deviation for sampling initial values of random effects \code{b},}
-\item{\code{param[["ae"]] = 1}}{prior shape of \code{e0},}
-\item{\code{param[["be"]] = 100}}{prior rate of \code{e0},}
+\item{\code{param[["beta_cat_fix_sd"]] = 1}}{standard deviation for fixed effects for general categorical outcomes,}
+\item{\code{param[["beta_cat_sd"]] = 1}}{standard deviation for group-specific effects for general categorical outcomes,}
+\item{\code{param[["init_b_sd"]] = 0.01}}{standard deviation for sampling initial values of random effects \code{b},}
+\item{\code{param[["e0_shp"]] = 1}}{prior shape of \code{e0},}
+\item{\code{param[["e0_rte"]] = 100}}{prior rate of \code{e0},}
 \item{\code{param[["InvV"]] = 0.01}}{diagonal element of the prior inverse scale matrix for InvQ.}
 }
 By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is the more sparse results are expected.  

@@ -33,7 +33,7 @@ matrix of outcomes, regressors including id-variable \code{id}.
 an integer, number of mixture components (maximal number of clusters).
 }
   \item{varying}{
-a named vector of boolean values; declares which parameters should be group-specific (\code{TRUE}) with the following names: \code{"tau_num"}, \code{"c_ord"}, \code{"InvSigma"}, \code{"InvQ"}, \code{"naY"}.
+a named vector of boolean values; declares which parameters should be group-specific (\code{TRUE}) with the following names: \code{"prec_num"}, \code{"c_ord"}, \code{"InvSigma"}, \code{"InvQ"}, \code{"naY"}.
 }
   \item{save}{
 a named vector of boolean values; declares which model parameters should be returned (\code{TRUE}) and which should be dropped (\code{FALSE}). See also 'Details'.
@@ -85,7 +85,7 @@ List of initial values \code{inits} is convenient for continuing in sampling fro
 
 1. Units are randomly (uniformly) distributed to \code{G} clusters and \code{w} is initiated with \code{1/G} for all clusters.
 
-2. For each numeric outcome, a regression model with combined \code{fixed} and \code{group} formula is fit to set up initial values for fixed parameters \code{beta_num_fixed}. Then, the model is fitted again (if possible) for each cluster separately to determine the initial values for group-specific effects \code{beta_num}. Depending on the choice of group-specificity for \code{tau_num} the initial values are chosen as \code{1/MSe} of the corresponding model. 
+2. For each numeric outcome, a regression model with combined \code{fixed} and \code{group} formula is fit to set up initial values for fixed parameters \code{beta_num_fixed}. Then, the model is fitted again (if possible) for each cluster separately to determine the initial values for group-specific effects \code{beta_num}. Depending on the choice of group-specificity for \code{prec_num} the initial values are chosen as \code{1/MSe} of the corresponding model. 
 
 3. Effects for count outcomes are initialized in a similar way using \code{glm(, family = poisson(link = "log"))} instead. 
 
@@ -106,12 +106,20 @@ The algorithm also requires a set \code{tuning} of parameters that tune the samp
 }
 \value{
 The most important output:
-\item{draws}{generated samples saved either in large matrix (\code{howsave = "matrix"}) or a list indexed by chain number (\code{howsave = "matrix"}).}
+\item{draws}{generated samples saved either in large matrix (\code{howsave = "matrix"}) or a list indexed by chain (\code{chain}) and iteration (\code{m}) number (\code{howsave = "matrix"}).}
 \item{param_names}{individual parameter (column) names in structured list by general parameter name.}
 
 Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G}, \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
 
 Other newly defined quantities included in the output are:
+\item{modeGplus}{a vector of the most frequent number of non-empty clusters, one per each chain,}
+\item{sameclusters}{a boolean declaring whether the cluster labels in all sampled chains are the same (useful for plotting),}
+\item{clusters}{a list of ordered non-empty clusters for each sampled chain (\code{modeGplus} most frequently appearing cluster labels),}
+\item{clustering}{a matrix containing estimated cluster labels based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
+\item{certainty}{a matrix containing the probability of clustering into the assigned cluster in \code{clustering} based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
+\item{inits}{a structured list of parameter values used as initial values,}
+\item{last}{a structured list in the same format as \code{inits} to be used as initial values for additional sampling,}
+\item{InitType}{string describing whether the initial values were given or created,} 
 \item{call}{summary of what has been fitted,}
 \item{iter}{length of each sampled chain,}
 \item{n}{total number of units (unique IDs),}
@@ -121,7 +129,6 @@ Other newly defined quantities included in the output are:
 \item{Bins}{names of binary outcomes,}
 \item{Ords}{names of ordinal outcomes,}
 \item{Cats}{names of categorical outcomes,}
-\item{last}{a structured list in the same format as \code{inits} to be used as initial values for additional sampling,}
 \item{nfix}{a vector named by outcomes that declares the dimension size of fixed effects common to all clusters,}
 \item{ngrp}{a vector named by outcomes that declares the dimension size of group-specific effects,}
 \item{nran}{a vector named by outcomes that declares the dimension size of random effects specific to each unit,}

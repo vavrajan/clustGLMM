@@ -18,14 +18,14 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
             double* Y,                // IN [*N]
             double* X,                // IN [N*(#regr)]    regressors
             int* spec,            // [5]                class-specific parameters
-            // order:   [0] tau_num, 
+            // order:   [0] prec_num, 
             //          [1] c_ord,
             //          [2] InvSigma, 
             //          [3] InvQ, 
             //          [4] naY
             int* dims,            // [33]:              what parameters are saved
             // order:   [0-1]   beta_num_fix, beta_num,
-            //          [2-4]   tau_num, sd_num, var_num,
+            //          [2-4]   prec_num, sd_num, var_num,
             //          [5-6]   beta_poi_fix, beta_poi,
             //          [7-8]   beta_bin_fix, beta_bin,
             //          [9-10]  beta_ord_fix, beta_ord,
@@ -91,10 +91,10 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
   //fflush(stdout);
   
   if(spec[0]){
-    // tau_num is g-specific
-    ptau = (*last).tau_num + g*dims[2];
+    // prec_num is g-specific
+    ptau = (*last).prec_num + g*dims[2];
   }else{
-    ptau = (*last).tau_num;
+    ptau = (*last).prec_num;
   }
   
   if(spec[1]){
@@ -282,14 +282,14 @@ void logpbi(struct str_state* last,  // IN last known values of generated parame
             double* Y,                // IN [*N]
             double* X,                // IN [N*(#regr)]    regressors
             int* spec,            // [5]                class-specific parameters
-            // order:   [0] tau_num, 
+            // order:   [0] prec_num, 
             //          [1] c_ord,
             //          [2] InvSigma, 
             //          [3] InvQ, 
             //          [4] naY
             int* dims,            // [33]:              what parameters are saved
             // order:   [0-1]   beta_num_fix, beta_num,
-            //          [2-4]   tau_num, sd_num, var_num,
+            //          [2-4]   prec_num, sd_num, var_num,
             //          [5-6]   beta_poi_fix, beta_poi,
             //          [7-8]   beta_bin_fix, beta_bin,
             //          [9-10]  beta_ord_fix, beta_ord,
@@ -360,14 +360,14 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
                  double* Y,                // IN [*N]
                  double* X,                // IN [N*(#regr)]    regressors
                  int* spec,            // [5]                class-specific parameters
-                 // order:   [0] tau_num, 
+                 // order:   [0] prec_num, 
                  //          [1] c_ord,
                  //          [2] InvSigma, 
                  //          [3] InvQ, 
                  //          [4] naY
                  int* dims,            // [33]:              what parameters are saved
                  // order:   [0-1]   beta_num_fix, beta_num,
-                 //          [2-4]   tau_num, sd_num, var_num,
+                 //          [2-4]   prec_num, sd_num, var_num,
                  //          [5-6]   beta_poi_fix, beta_poi,
                  //          [7-8]   beta_bin_fix, beta_bin,
                  //          [9-10]  beta_ord_fix, beta_ord,
@@ -439,10 +439,10 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
   
   g = (*last).U[*i]; // group to which i-th subject belongs
   if(spec[0]){
-    // tau_num is g-specific
-    ptau = (*last).tau_num + g*dims[2];
+    // prec_num is g-specific
+    ptau = (*last).prec_num + g*dims[2];
   }else{
-    ptau = (*last).tau_num;
+    ptau = (*last).prec_num;
   }
   
   if(spec[1]){

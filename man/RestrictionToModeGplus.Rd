@@ -227,22 +227,22 @@ for(ch in 1:mcmc$nchains){
   for(g in 1:mcmc$modeGplus[[ch]]){
     plot_traceplots(mcmc = mcmc, what = "w", 
                     dimspec = g, 
-                    whatLAB = paste0("w[",g,"]"),
+                    whatLAB = paste0("w(",g,")"),
                     thin = thin, chains = ch, labcex = 0.6, 
                     restrictedtoGplus = TRUE)
     plot_kerneldensity(mcmc = mcmc, what = "w",
                        dimspec = g,  
-                       whatLAB = paste0("w[",g,"]"),
+                       whatLAB = paste0("w(",g,")"),
                        thin = thin, chains = ch, labcex = 0.6, 
                        restrictedtoGplus = TRUE)
     plot_ECDF(mcmc = mcmc, what = "w", 
               dimspec = g, 
-              whatLAB = paste0("w[",g,"]"),
+              whatLAB = paste0("w(",g,")"),
               thin = thin, chains = ch, labcex = 0.6, 
               restrictedtoGplus = TRUE)
     plot_ACF(mcmc = mcmc, what = "w", 
              dimspec = g, 
-             whatLAB = paste0("w[",g,"]"),
+             whatLAB = paste0("w(",g,")"),
              thin = thin, lag.max = 30, chains = ch, labcex = 0.6, 
              restrictedtoGplus = TRUE)
   }

@@ -11,11 +11,7 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
   if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
   
   if(missing(chains)){chains = 1:mcmc$nchains}
-  nonempty <- list()
-  for(ch in 1:mcmc$nchains){
-    TAB <- table(mcmc$last[[ch]]$U)
-    nonempty[[ch]] <- sort(as.numeric(names(TAB)[which(TAB>0)]))
-  }
+  nonempty <- mcmc$clusters
 
   if(v$dimswithG > 0){  
     if(v$sym){
@@ -133,14 +129,21 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
             }
           }else{
             # not y-specific, but still g-specific
-            for(ch in chains){
-              par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])), mar = c(4,4,1,1))
-              for(g in nonempty[[ch]]){
-                plot_traceplots(mcmc = mcmc, what = what,
-                                gspec = g,
-                                burnin = burnin, thin = thin, chains = ch, 
-                                labcex = 0.6)
-              }
+            # for(ch in chains){
+            #   par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])), mar = c(4,4,1,1))
+            #   for(g in nonempty[[ch]]){
+            #     plot_traceplots(mcmc = mcmc, what = what,
+            #                     gspec = g,
+            #                     burnin = burnin, thin = thin, chains = ch, 
+            #                     labcex = 0.6)
+            #   }
+            # }
+            par(mfrow = nice_nrow_ncol(v$G), mar = c(4,4,1,1))
+            for(g in 1:v$G){
+              plot_traceplots(mcmc = mcmc, what = what,
+                              gspec = g,
+                              burnin = burnin, thin = thin, chains = chains, 
+                              labcex = 0.6)
             }
           }
         }
@@ -164,16 +167,14 @@ function(mcmc, what, burnin = 0, thin = 1, chains){
               }
             }
           }else{
-            # the size of the dimension depends on outcomes
-            for(ch in chains){
-              par(mfrow = c(length(nonempty[[ch]]), v$d1), mar = c(4,4,1,1))
-              for(g in nonempty[[ch]]){
-                for(i in 1:v$d1){
-                  plot_traceplots(mcmc = mcmc, what = what,
-                                  gspec = g, dimspec = i,
-                                  burnin = burnin, thin = thin, chains = ch, 
-                                  labcex = 0.6)
-                }
+            # the size of the dimension does NOT depend on outcomes
+            par(mfrow = c(v$G, v$d1), mar = c(4,4,1,1))
+            for(g in 1:v$G){
+              for(i in 1:v$d1){
+                plot_traceplots(mcmc = mcmc, what = what,
+                                gspec = g, dimspec = i,
+                                burnin = burnin, thin = thin, chains = chains, 
+                                labcex = 0.6)
               }
             }
           }

@@ -4,7 +4,7 @@ function(mcmc,      # MCMC generated parameters
          id,     # name of the id variable in data
          data,   # outcomes, regressors and ids of subjects
          dynamic_prob = FALSE, # Should probabilities be calculated dynamically?
-         #dev = T,
+         #dev = TRUE,
          start = 1,
          end = mcmc$iter,
          thin = 1,
@@ -35,17 +35,17 @@ function(mcmc,      # MCMC generated parameters
   niter <- length(iterations)
   
   # For probability calculation we need the following parameters:
-  #   w, tau, beta, InvSigma
+  #   w, prec_num, beta, InvSigma
   # If those were not saved during the mcmc_MBC_GLMMs function,
   # then we cannot use this function to calculate it.
-  if(!(mcmc$save["w"] & mcmc$save["c_ord"] & mcmc$save["tau_num"] 
+  if(!(mcmc$save["w"] & mcmc$save["c_ord"] & mcmc$save["prec_num"] 
        & mcmc$save["beta_num_fix"] & mcmc$save["beta_num"] 
        & mcmc$save["beta_poi_fix"] & mcmc$save["beta_poi"] 
        & mcmc$save["beta_bin_fix"] & mcmc$save["beta_bin"] 
        & mcmc$save["beta_ord_fix"] & mcmc$save["beta_ord"] 
        & mcmc$save["beta_cat_fix"] & mcmc$save["beta_cat"] 
        & mcmc$save["InvSigma"])){
-    stop("Some of the parameters w, c_ord, tau_num, betas, InvSigma was not saved.
+    stop("Some of the parameters w, c_ord, prec_num, betas, InvSigma was not saved.
 Change the  settings and use mcmc_MBC_GLMMs() again.")
   }
   
@@ -202,7 +202,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     
   }
   
-  params <- c("beta_num_fix", "beta_num", "tau_num", 
+  params <- c("beta_num_fix", "beta_num", "prec_num", 
               "beta_poi_fix", "beta_poi", 
               "beta_bin_fix", "beta_bin", 
               "beta_ord_fix", "beta_ord", "c_ord", 
@@ -217,13 +217,13 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   settings <- mcmc$settings
   rownames(settings)[rownames(settings)=="loglik"] <- "deviance"
   rownames(settings)[rownames(settings)=="pUig"] <- "pUig_int"
-  settings["deviance", "save"] <- T
-  settings["pUig_int", "save"] <- T
+  settings["deviance", "save"] <- TRUE
+  settings["pUig_int", "save"] <- TRUE
   settings["pUig_int",  c("d1", "dims", "dimswithG")] = c(ifelse(dynamic_prob,N,n), 
-                                                          ifelse(dynamic_prob,N,n)*mcmc$G, 
+                                                          ifelse(dynamic_prob,N,n), 
                                                           ifelse(dynamic_prob,N,n)*mcmc$G)
-  addset <- matrix(c(1,0,mcmc$G,0,0,0,0,0,0,0,0,niter,
-              n, 0, 1, 0, 0, 1, 1, 
+  addset <- matrix(c(TRUE,FALSE,mcmc$G,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,niter,
+              n, 0, TRUE, FALSE, FALSE, NA, 1, 
               n, n),
               nrow = 1)
   rownames(addset) <- "dev_i"
@@ -323,7 +323,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
       cbeta_num <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_num", settings, 
                                   yspecd1 = mcmc$yspecd1$beta_num,
                                   family=mcmc$family)
-      ctau_num  <- from_list_to_C(mcmc$draws[[ch]], iterations, "tau_num", settings,
+      ctau_num  <- from_list_to_C(mcmc$draws[[ch]], iterations, "prec_num", settings,
                                   family=mcmc$family)
       cbeta_poi_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_poi_fix", settings, 
                                       yspecd1 = mcmc$yspecd1$beta_poi_fix,
@@ -362,7 +362,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     if(mcmc$howsave == "matrix"){
       cbeta_num_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_num_fix", settings)
       cbeta_num <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_num", settings)
-      ctau_num  <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "tau_num", settings)
+      ctau_num  <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "prec_num", settings)
       cbeta_poi_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_poi_fix", settings)
       cbeta_poi <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_poi", settings)
       cbeta_bin_fix <- from_matrix_to_C(mcmc$draws, chain = ch, iterations, "beta_bin_fix", settings)
@@ -506,6 +506,29 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     
   }  # end of for ch in 1:chains
   
-  return(output)
+  # create a final output object
+  res <- list()
+  res$draws <- output
+  res$iterations <- iterations
+  res$iter <- mcmc$iter
+  res$chains <- chains
+  res$nchains <- mcmc$nchains
+  res$n <- mcmc$n
+  res$numbered_unique_ids <- mcmc$numbered_unique_ids
+  res$Nums <- mcmc$Nums
+  res$Pois <- mcmc$Pois
+  res$Bins <- mcmc$Bins
+  res$Ords <- mcmc$Ords
+  res$Cats <- mcmc$Cats
+  res$family <- mcmc$family
+  res$formula <- mcmc$formula
+  res$G <- mcmc$G
+  res$totnran <- mcmc$totnran
+  res$settings <- settings[c("deviance", "dev_i", "pUig_int"), ]
+  res$yspecd1 <- list()
+  res$yspecd2 <- list()
+  class(res)
+  
+  return(res)
   
 }

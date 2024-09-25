@@ -8,13 +8,14 @@ summary.clustglmm <- function(object, ...){
   }
   
   fset = object$settings[object$settings$save & !object$settings$isspec & object$settings$dims>0, ]
-  fset = fset[setdiff(rownames(fset), c("loglik", "ng", "w", "U", "pUig", "Gplus", "e0")), ]
+  fset = fset[setdiff(rownames(fset), c("loglik", "U", "Gplus", "e0")), ]
   fnames <- c()
   for(p in rownames(fset)){
     fnames <- c(fnames, object$param_names[[p]])
   }
   gnames <- rownames(coda_summary[[1]]$statistics)[
     grep("\\(1\\)", rownames(coda_summary[[1]]$statistics))]
+  gnames <- gnames[!(grepl("^w", gnames) | grepl("^ng", gnames) | grepl("^pUig", gnames))]
   
   res <- list(call=object$call,
               G=object$G,

@@ -11,11 +11,7 @@ plot_clusters_kerneldensity_param <-
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
     if(missing(chains)){chains = 1:mcmc$nchains}
-    nonempty <- list()
-    for(ch in 1:mcmc$nchains){
-      TAB <- table(mcmc$last[[ch]]$U)
-      nonempty[[ch]] <- sort(as.numeric(names(TAB)[which(TAB>0)]))
-    }
+    nonempty <- mcmc$clusters
     
     if(v$dimswithG > 0){  
       if(v$sym){

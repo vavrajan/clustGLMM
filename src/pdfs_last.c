@@ -23,14 +23,14 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
               int* isYna_inv,           // IN [*N * totnY]
               double* X,                // IN [N*(#regr)]    regressors
               int* spec,            // [5]                class-specific parameters
-              // order:   [0] tau_num, 
+              // order:   [0] prec_num, 
               //          [1] c_ord,
               //          [2] InvSigma, 
               //          [3] InvQ, 
               //          [4] naY
               int* dims,            // [33]:              what parameters are saved
               // order:   [0-1]   beta_num_fix, beta_num,
-              //          [2-4]   tau_num, sd_num, var_num,
+              //          [2-4]   prec_num, sd_num, var_num,
               //          [5-6]   beta_poi_fix, beta_poi,
               //          [7-8]   beta_bin_fix, beta_bin,
               //          [9-10]  beta_ord_fix, beta_ord,
@@ -96,10 +96,10 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
   
   
   if(spec[0]){
-    // tau_num is g-specific
-    ptau = (*last).tau_num + *g*dims[2];
+    // prec_num is g-specific
+    ptau = (*last).prec_num + *g*dims[2];
   }else{
-    ptau = (*last).tau_num;
+    ptau = (*last).prec_num;
   }
   
   // group-specific beta coeficients

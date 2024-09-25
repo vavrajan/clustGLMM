@@ -33,7 +33,7 @@
 //                                  "gibbs_latent.c",
 //                                  "gibbs_pUik.c",
 //                                  "gibbs_pUik_nonb.c",
-//                                  "gibbs_tau.c"))
+//                                  "gibbs_prec.c"))
 //
 // To use declared functions in R use
 //
@@ -69,7 +69,7 @@
 #include "gibbs_pUig.h"
 
 #include "gibbs_beta_num.h"
-#include "gibbs_tau_num.h"
+#include "gibbs_prec_num.h"
 
 #include "metrgibbs_beta_poi.h"
 #include "metrgibbs_beta_bin.h"
@@ -100,14 +100,14 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     int* isYna,           // [N*sum(nY)]  0 = Y value present, 1 = Y value is NA
     double* X,            // [N*#regr]    regressors
     int* varying,         // [5]          class-specific parameters
-                            // order:   [0] tau_num, 
+                            // order:   [0] prec_num, 
                             //          [1] c_ord,
                             //          [2] InvSigma, 
                             //          [3] InvQ, 
                             //          [4] naY
     int* save,            // [33]:        what parameters are saved
                             // order:   [0-1]   beta_num_fix, beta_num,
-                            //          [2-4]   tau_num, sd_num, var_num,
+                            //          [2-4]   prec_num, sd_num, var_num,
                             //          [5-6]   beta_poi_fix, beta_poi,
                             //          [7-8]   beta_bin_fix, beta_bin,
                             //          [9-10]  beta_ord_fix, beta_ord,
@@ -143,7 +143,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     int* Kcat,            // [nY[Cats]]  the counts of categories of ordinal variables -1
     int* dims,            // [33]:              what parameters are saved
                             // order:   [0-1]   beta_num_fix, beta_num,
-                            //          [2-4]   tau_num, sd_num, var_num,
+                            //          [2-4]   prec_num, sd_num, var_num,
                             //          [5-6]   beta_poi_fix, beta_poi,
                             //          [7-8]   beta_bin_fix, beta_bin,
                             //          [9-10]  beta_ord_fix, beta_ord,
@@ -158,7 +158,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                             //          [32]    naY
     int* dimswithG,       // [33]:              what parameters are saved
                             // order:   [0-1]   beta_num_fix, beta_num,
-                            //          [2-4]   tau_num, sd_num, var_num,
+                            //          [2-4]   prec_num, sd_num, var_num,
                             //          [5-6]   beta_poi_fix, beta_poi,
                             //          [7-8]   beta_bin_fix, beta_bin,
                             //          [9-10]  beta_ord_fix, beta_ord,
@@ -176,7 +176,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     /** Some of them might be NULL (see save and calc) **/
     double* beta_num_fix, // [(B+M)*sum(nfix[Nums])]      Beta parameters for fixed effects of numerical variables
     double* beta_num,     // [(B+M)*sum(ngrp[Nums]) *G]   Beta parameters for group-specific fixed effects of numerical variables
-    double* tau_num,      // [(B+M)*nY[0]*(G)]            Precision parameter of numerical variables
+    double* prec_num,     // [(B+M)*nY[0]*(G)]            Precision parameter of numerical variables
     double* sd_num,       // [(B+M)*nY[0]*(G)]            Standard deviation of numerical variables
     double* var_num,      // [(B+M)*nY[0]*(G)]            Variance of numerical variables
     double* beta_poi_fix, // [(B+M)*sum(nfix[Pois])]      Beta parameters for fixed effects of count variables
@@ -574,7 +574,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   inits.e0            = pp;      pp++; //dim is always 1
   inits.U             = pp;      pp+=dimswithG[29];
   inits.pUig          = pp;      pp+=dimswithG[28];
-  inits.tau_num       = pp;      pp+=dimswithG[2];
+  inits.prec_num      = pp;      pp+=dimswithG[2];
   inits.beta_num_fix  = pp;      pp+=dimswithG[0];
   inits.beta_num      = pp;      pp+=dimswithG[1];
   inits.beta_poi_fix  = pp;      pp+=dimswithG[5];
@@ -909,7 +909,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   last.e0           = pp;      pp++; // dim is always 1 double
   last.U            = pp;      pp+=dimswithG[29];
   last.pUig         = pp;      pp+=dimswithG[28];
-  last.tau_num      = pp;      pp+=dimswithG[2];
+  last.prec_num     = pp;      pp+=dimswithG[2];
   last.beta_num_fix = pp;      pp+=dimswithG[0];
   last.beta_num     = pp;      pp+=dimswithG[1];
   last.beta_poi_fix = pp;      pp+=dimswithG[5];
@@ -946,7 +946,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     last.pUig[i] = inits.pUig[i];
   }
   for(i = 0; i < dimswithG[2]; i++){
-    last.tau_num[i] = inits.tau_num[i];
+    last.prec_num[i] = inits.prec_num[i];
   }
   for(i = 0; i < dimswithG[0]; i++){
     last.beta_num_fix[i] = inits.beta_num_fix[i];
@@ -1397,27 +1397,27 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     }
     
     
-    //// tau_num update (and sd and var)
-    gibbs_tau_num(&last, &param, Y, varying, dims, 
-                  predictor_num, 
-                  G, N, n, nY, ngrp, cumngrp, n_i, i_j, ngg, nUg, listUi);
+    //// prec_num update (and sd and var)
+    gibbs_prec_num(&last, &param, Y, varying, dims, 
+                   predictor_num, 
+                   G, N, n, nY, ngrp, cumngrp, n_i, i_j, ngg, nUg, listUi);
     if(save[2]){
       for(j = 0; j < dimswithG[2]; j++){
-        tau_num[m*dimswithG[2] + j] = last.tau_num[j];
+        prec_num[m*dimswithG[2] + j] = last.prec_num[j];
       }
     }
     if(save[3]){
       for(j = 0; j < dimswithG[3]; j++){
-        sd_num[m*dimswithG[3] + j] = 1/sqrt(last.tau_num[j]);
+        sd_num[m*dimswithG[3] + j] = 1/sqrt(last.prec_num[j]);
       }
     }
     if(save[4]){
       for(j = 0; j < dimswithG[4]; j++){
-        var_num[m*dimswithG[4] + j] = 1/last.tau_num[j];
+        var_num[m*dimswithG[4] + j] = 1/last.prec_num[j];
       }
     }
     if(print){
-      Rprintf("\nC: tau_num sampled");
+      Rprintf("\nC: prec_num sampled");
       //fflush(stdout);
     }
     
@@ -1692,8 +1692,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     
     // saving w
     if(save[25]){
-      for(g = 0; g < dims[25]; g++)
-        w[m*dims[25] + g] = last.w[g];
+      for(g = 0; g < dimswithG[25]; g++)
+        w[m*dimswithG[25] + g] = last.w[g];
     }
     if(print){
       Rprintf("\nC: w sampled");

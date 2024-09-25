@@ -1,6 +1,6 @@
 default_save <- function(){
   save <- c(T, T,        # beta_num_fix, beta_num,
-            T, T, T,     # tau_num, sd_num, var_num
+            T, T, T,     # prec_num, sd_num, var_num
             T, T,        # beta_poi_fix, beta_poi
             T, T,        # beta_bin_fix, beta_bin
             T, T,        # beta_ord_fix, beta_ord
@@ -15,7 +15,7 @@ default_save <- function(){
             F            # naY
   )
   names(save) <- c("beta_num_fix", "beta_num",
-                   "tau_num", "sd_num", "var_num",
+                   "prec_num", "sd_num", "var_num",
                    "beta_poi_fix", "beta_poi",
                    "beta_bin_fix", "beta_bin",
                    "beta_ord_fix", "beta_ord",

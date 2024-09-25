@@ -1,5 +1,7 @@
 get_scalar_samples <-
-function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, chains,
+function(mcmc, what, gspec, dimspec, yspec, 
+         burnin = 0, thin = 1, iterations, 
+         chains,
          restrictedtoGplus = FALSE){
   if(thin < 1){
     stop("Thinning parameter has to be integer and thin >= 1.")
@@ -61,7 +63,9 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, chains,
     
     
   }else{
-    states = seq(burnin+1, mcmc$iter, by = thin)
+    if(missing(iterations)){
+      iterations = seq(burnin+1, mcmc$iter, by = thin)
+    }
     # we work with the original data containing even spurious clusters  
     if(mcmc$howsave == "list"){
       
@@ -72,48 +76,48 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, chains,
           if(v$isy){
             # group-specific and y-specific
             if(v$D == 0){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states, yspec], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][iterations, yspec], chain = ch))
             }
             if(v$D == 1){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][iterations,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][[yspec]][iterations,dimspec[1],dimspec[2]], chain = ch))
             }
           }else{
             # group-specific but not y-specific
             if(v$D == 0){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][iterations], chain = ch))
             }
             if(v$D == 1){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][iterations,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[gspec]][iterations,dimspec[1],dimspec[2]], chain = ch))
             }
           } # end of else of if is g-specific
         }else{
           if(v$isy){
             # not group-specific but y-specific
             if(v$D == 0){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states, yspec], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][iterations, yspec], chain = ch))
             }
             if(v$D == 1){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][iterations,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][[yspec]][iterations,dimspec[1],dimspec[2]], chain = ch))
             }
           }else{
             # neither group-specific nor y-specific
             if(v$D == 0){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][iterations], chain = ch))
             }
             if(v$D == 1){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states,dimspec[1]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][iterations,dimspec[1]], chain = ch))
             }
             if(v$D == 2){
-              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][states,dimspec[1],dimspec[2]], chain = ch))
+              scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[[ch]][[what]][iterations,dimspec[1],dimspec[2]], chain = ch))
             }
           }
         } 
@@ -152,7 +156,10 @@ function(mcmc, what, gspec, dimspec, yspec, burnin = 0, thin = 1, chains,
       scalar_samples <- data.frame()
       
       for(ch in chains){
-        scalar_samples <- rbind(scalar_samples, data.frame(y=mcmc$draws[states + (ch-1)*mcmc$iter, colname], chain = ch))
+        chdraws <- mcmc$draws[mcmc$draws$chain == ch,]
+        scalar_samples <- rbind(scalar_samples, 
+                                data.frame(y=chdraws[is.element(chdraws$m, iterations), colname], 
+                                           chain = ch))
       }
       
     } # end of if howsave="matrix"

@@ -116,7 +116,7 @@ burnin <- 100
 thin <- 1
 plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
-plot(mcmc, "tau_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc, "prec_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
 
 plot(mcmc, "beta_bin", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc, "beta_bin", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)

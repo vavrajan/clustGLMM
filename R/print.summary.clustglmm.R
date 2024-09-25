@@ -14,7 +14,7 @@ print.summary.clustglmm <- function(x, chains=c(1), type="statistics", ...){
   #   print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
   # }
   # 
-  wnames <- paste0("w[",1:x$G,"]")
+  wnames <- paste0("w(",1:x$G,")")
   
   cat("\n## Summary of the sampled parameters:\n")
   for(ch in chains){
@@ -29,8 +29,8 @@ print.summary.clustglmm <- function(x, chains=c(1), type="statistics", ...){
     cat("\nCluster-invariant parameters:\n")
     print(s[x$fnames,,drop=FALSE])
     if(all(is.element(wnames, rownames(s)))){
-      cat("\nCluster weights:\n")
-      print(s[wnames,,drop=FALSE])
+      cat("\nClustering-related parameters:\n")
+      print(s[c("Gplus", "e0", wnames),,drop=FALSE])
     }
     for(g in x$clusters[[ch]]){
       gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), x$gnames)

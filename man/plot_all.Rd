@@ -259,7 +259,7 @@ plot_traceplots_param(mcmc, "corSigma")
 # plot_traceplots_param(mcmc, "Sigma", thin = 10)
 # plot_traceplots_param(mcmc, "InvSigma", thin = 10)
 # plot_traceplots_param(mcmc, "detInvSigma", thin = 10)
-# plot_traceplots_param(mcmc, "tau_num", thin = 10)
+# plot_traceplots_param(mcmc, "prec_num", thin = 10)
 # plot_traceplots_param(mcmc, "beta_num_fix", thin = 10)
 # plot_traceplots_param(mcmc, "beta_num", thin = 10)
 # plot_traceplots_param(mcmc, "beta_poi_fix", thin = 10)
@@ -275,7 +275,7 @@ plot_traceplots_param(mcmc, "corSigma")
 # plot_traceplots_param(mcmc, "naY", thin = 10)
 
 plot_kerneldensity_param(mcmc, "beta_num")
-plot_ECDF_param(mcmc, "tau_num")
+plot_ECDF_param(mcmc, "prec_num")
 plot_ACF_param(mcmc, "w")
 
 ## Comparing different cluster-specific parameters
@@ -284,6 +284,7 @@ ch <- 1
 TAB <- table(mcmc$last[[ch]]$U)
 nonempty <- as.numeric(names(TAB)[which(TAB>0)]) 
 # non-empty clusters decided based on last sampled values
+# by default, mcmc$clusters (based on all iterations) is taken
 
 neff <- mcmc$ngrp[[mcmc$Nums[1]]]
 par(mfrow = c(length(mcmc$Nums), neff), mar = c(4, 4, 1, 1))

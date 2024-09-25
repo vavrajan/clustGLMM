@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 options(width = 110)
 ```
 
-```{r libraries, warning=FALSE}
+```{r libraries, warning=FALSE, message=FALSE}
 library("clustGLMM")
 library("colorspace")
 library("mvtnorm")
@@ -42,12 +42,14 @@ xyplot(Reaction ~ Days | Subject, sleepstudy, type = c("g","p","r"),
        xlab = "Days of sleep deprivation",
        ylab = "Average reaction time (ms)", aspect = "xy")
 ```
-We can plot them all together.  
+Notice that the response `Reaction` is in hundreds. For practical reasons we change the units to deci-seconds. We can plot all subjects together.  
 ```{r beech_data_num_vs_days, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
 # Numeric variables vs Days
+sleepstudy[,"Reaction_s"] <- sleepstudy$Reaction #/ 1000
+# sleepstudy[,"Days"] <- sleepstudy$Days / 10
 sleepstudy$group <- 0
 par(mfrow=c(1,1), mar=c(4,4,0.5,0.5))
-plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="group", id="Subject")
+plot_num_vs_x_grouped(sleepstudy, y="Reaction_s", x="Days", group="group", id="Subject")
 ```
 Now that we suspect each subject from having his own trend we may be interested in identification of those vulnerable/resistent to sleep deprivation. Yes, we could do it arbitrarily by comparing individual slopes, but is there some clustering method for longitudinal data? It could be done with `library(clustGLMM)` as one of the simplest examples. 
 
@@ -57,7 +59,7 @@ Since `clustGLMM` is designed primarily for multiple responses of possibly diffe
 ```{r preparation_for_clustGLMM, echo=TRUE}
 # outcomes and their families
 family <- c("num") 
-names(family) <- Ys <- c("Reaction")
+names(family) <- Ys <- c("Reaction_s")
 
 # ID variable
 id <- "Subject"
@@ -66,7 +68,7 @@ id <- "Subject"
 The most important thing is to set up the model formula, which is decomposed to 4 sections:
 
 * `fixed` - regression coefficients to be invariant across latent groups (every cluster will have the same value of this coefficient).
-* `group` - regression coefficients to be specific for each latent group. Important! If there is some overlap between regressors used in `fixed` and `group`, then by default these parameters are considered to be group-specific. Therefore, with the setting below, `(Intercept)` will be group-specific!
+* `group` - regression coefficients to be specific for each latent group. Important! If there is some overlap between regressors used in `fixed` and `group`, then by default these parameters are considered to be group-specific. 
 * `random` - apriori centered effects to be specific for each individual given by `id`. 
 * `offset` - a name of the column to serve as an offset (irrelevant for this example), by default set to empty string denoting no offset assumed. 
 
@@ -75,25 +77,47 @@ The most important thing is to set up the model formula, which is decomposed to 
 formula <- list()
 for(y in Ys){       # this creates the same formula for all outcomes (but in general they do not have to be the same!)
   formula[[y]] <- list()
-  formula[[y]]$fixed <- as.formula("~ 1")             # in the end empty
-  formula[[y]]$group <- as.formula(paste0("~ Days"))  # group-specific intercept + slope
-  formula[[y]]$random <- as.formula("~ 1 + Days")     # subject-specific intercept + slope
-  formula[[y]]$offset <- ""                           # no offset, could be omitted
+  formula[[y]]$fixed <- ~ 1          # intercept common to all groups
+  formula[[y]]$group <- ~ -1 + Days  # group-specific slope
+  formula[[y]]$random <- ~ 1         # subject-specific intercept 
+  formula[[y]]$offset <- ""          # no offset, could be omitted
 }
 ```
 
+Many input parameters for function `clustGLMM` are set up by `default_...` functions:
 
-When calling function `clustGLMM` you have to decide on 
+* `varying` - booleans declaring other model parameters to be group-specific,
+* `save` - booleans declaring which model parameters should be saved,
+* `param` - hyperparameter values for the prior distribution,
+* `tuning` - set of parameters that can adjust the sampling algorithm.
+
+When any of these four is not given, then defaults are used. Defaults can be obtained via `default_...()` functions. You can change the values manually and supply them to the call of function `clustGLMM`: 
+```{r change_default_settings_for_clustGLMM, echo=TRUE}
+(varying <- default_varying())
+varying["prec_num"] <- FALSE
+param <- default_param()
+param["beta_num_sd"] <- 100
+param["beta_num_fix_sd"] <- 100
+param["InvV"] <- 0.001
+# param["prec_num_rte"] <- 10
+(save <- default_save())
+save["b"] <- save["U"] <- TRUE
+tuning <- default_tuning()
+```
+Notice that the prior standard deviation for regression coefficients is 1 by default. This is the reason for change of the units. We recommend to transfer numeric variables into reasonable units prior analysis, since the prior scale hyperparameter is set to be the same for all of them. 
+
+
+When calling function `clustGLMM` you also have to decide on 
 
 * `G` - the number of latent components, 
 * `iter` - number of iterations (length of chain),
 * `nchains` - number of chains to be sampled (not in parallel!),
 * `howsave` - either `matrix` (default) or `list`, depends on how you prefer to save the outputs: in one huge matrix with systematically named columns or in nicely structured list?
-* ... other parameters will be discussed later.
 
 ```{r mcmc_first_call, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
 set.seed(12345)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
+                  varying = varying, save = save, param = param,
                   G = 2, iter = 1000, nchains = 3, howsave = "matrix")
 ```
 
@@ -103,73 +127,7 @@ mcmc
 plot(mcmc)
 ```
 
-Maybe, if we will not allow subjects to have their specific slope and provide only two options for the slope then we can actually detect two latent groups. We need to change the `random` formula: 
-
-```{r formula_only_random_intercept, echo=TRUE}
-formula[["Reaction"]]$random <- as.formula("~ 1")
-```
-
-```{r mcmc_second_call, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
-set.seed(12345)
-mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
-                  G = 2, iter = 1000, nchains = 3, howsave = "matrix")
-```
-Now we get very contraditory results. Chain 1 splits the groups into 3 + 15, chain 2 into 13 + 5 and chain 3 merges them into one big cluster. Also when you have a look into the summaries we obtain very unexpected values for intercepts and slopes. 
-```{r mcmc_second_call_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
-ch <- 1
-burnin <- 200
-thin <- 1
-
-sum_mcmc <- summary(mcmc, burnin=burnin, thin=thin)
-print(sum_mcmc, chains=ch)
-plot(mcmc, chains=1:3)
-plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
-plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
-```
-
-The reason is simple, our prior distribution was too informative. It has heavily shrunk the estimates towards zero, which is undesirable in this case. Therefore, we need to play more with other model settings:
-
-* `varying` - booleans declaring other model parameters to be group-specific,
-* `save` - booleans declaring which model parameters should be saved,
-* `param` - hyperparameter values for the prior distribution,
-* `tuning` - set of parameters that can adjust the sampling algorithm.
-
-When any of these four is not given, then defaults are used. Defaults can be obtained via `default_...()` functions. You can change the values manually and supply them to the call of function `clustGLMM`: 
-
-```{r change_default_settings_for_clustGLMM, echo=TRUE}
-varying <- default_varying()
-varying["tau_num"] <- FALSE
-param <- default_param()
-param["sd_beta_num"] <- 100
-save <- default_save()
-save["b"] <- save["U"] <- TRUE
-tuning <- default_tuning()
-
-# also it appears that the intercept can be common to both clusters
-formula[["Reaction"]]$fixed <- as.formula("~ 1")
-formula[["Reaction"]]$group <- as.formula("~ -1 + Days")
-param["sd_beta_num_fix"] <- 100
-```
-
-Here we have changed the precision parameter for numeric outcomes to not be group-specific as it was before. Then, we have changed the standard deviation for the group-specific regression coefficients for numerical outcomes from 1 to be 100, this should make the prior sufficiently flat. We would also like to save the random effects and allocation indicators which is not done by default as it can be demanding on memory for larger datasets. We keep the tuning parameters the same, they do not have to be given to the function. 
-
-```{r mcmc_init, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
-set.seed(12345)
-mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
-                  G = 2, varying = varying, param = param, save = save,
-                  iter = 1000, nchains = 3, howsave = "matrix")
-```
-
-Within the first 1000 iterations the allocation towars clusters is very fluid: 
-
-```{r mcmc_init_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
-plot(mcmc, chains=1:3)
-sum_mcmc <- summary(mcmc)
-print(sum_mcmc, chains=1)
-plot(mcmc, "beta_num", chains=1)
-```
-
-What if 1000 iterations was not enough to converge to the stationary distribution? You can always take the last sampled values and use them to continue in sampling:
+Within the first 1000 iterations the allocation towards clusters is very fluid. What if 1000 iterations was not enough to converge to the stationary distribution? You can always take the last sampled values and use them to continue in sampling:
 
 ```{r mcmc, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
 inits <- mcmc$last
@@ -194,8 +152,13 @@ plot(mcmc, "beta_num_fix", burnin=burnin, thin=thin, chains=1:3)
 plot(mcmc, "beta_num", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc, "beta_num_fix", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
-plot(mcmc, "tau_num", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+plot(mcmc, "prec_num", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 plot(mcmc, "sdSigma", which="kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+
+par(mfrow = nice_nrow_ncol(mcmc$n))
+for(i in 1:mcmc$n){
+  plot_traceplots(mcmc, what="b", dims=c(i,1), burnin=burnin, thin=thin, chains=1:3)
+}
 ```
 
 Clustering based on sampled indicators is already included in the output. The following function adds the resulting clustering (with certainty) for each chain separately to the dataset. The plotting functions require the grouping variable to be included in it...
@@ -249,32 +212,21 @@ probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
 ```
 
 ```{r add_probs_to_mcmc, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
-colnames(probs)
-for(i in 1:mcmc$n){
-  for(g in 1:mcmc$G){
-    mcmc$draws[, paste0("pUig_int(",g,")[",i,"]")] <- probs[, paste0("pUig_int[",i,",",g,"]")]
-  }
-}
+colnames(probs$draws)
+mcmc$draws[, colnames(probs$draws)[-c(1,2)]] <- probs$draws[, colnames(probs$draws)[-c(1,2)]]
 mcmc$settings["pUig_int", ] <- mcmc$settings["U", ]
 mcmc$settings["pUig_int", c("isspec", "dimswithG")] <- c(1, mcmc$G * mcmc$n)
+mcmc$settings["deviance", ] <- mcmc$settings["loglik", ]
+mcmc$settings["dev_i", ] <- mcmc$settings["U", ]
 
 plot(mcmc, "pUig_int", "clusters_kerneldensity", burnin=burnin, thin=thin, chains=1)
 ```
-```{r add_deviance_to_mcmc, echo=TRUE}
-for(i in 1:mcmc$n){
-  mcmc$draws[, paste0("dev[",i,"]")] <- probs[, paste0("dev_i[",i,"]")]
-}
-mcmc$draws[, "deviance"] <- probs[, "deviance"]
-mcmc$settings["deviance", ] <- mcmc$settings["loglik", ]
-mcmc$settings["dev", ] <- mcmc$settings["U", ]
-```
-
 ```{r plot_deviance, echo=TRUE, fig.align='center', fig.width=10, fig.height=5}
 plot(mcmc, "deviance", "traceplots", burnin=burnin, thin=thin, chains=1:3)
 ```
 
-```{r plot_dev_by_i, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
-plot(mcmc, "dev", "kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+```{r plot_dev_i, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+plot(mcmc, "dev_i", "kerneldensity", burnin=burnin, thin=thin, chains=1:3)
 ```
 
 Finally, we can use `predict` function to replicate the linear predictor (excluding random effects) and plot the posterior mean curves for the estimated two groups. We can also see who was clustered into which cluster:
@@ -311,4 +263,50 @@ for(y in mcmc$Nums){
     }
   }
 }
+```
+
+
+
+## Alternative estimation with `lcmm`
+
+```{r lcmm, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+library(lcmm)
+sleepstudy$id <- as.numeric(sleepstudy$Subject)
+fitlcmm <- lcmm(Reaction~Days, random=~1, subject='id', mixture=~1+Days, 
+                ng=2, idiag=TRUE,
+                B=1:7,
+                data=sleepstudy, link="linear")
+summary(fitlcmm)
+fitlcmm$pprob
+fitlcmm$predRE
+plot(fitlcmm)
+datai <- sleepstudy[sleepstudy$id==1, ]
+predL <- predictL(fitlcmm,var.time="Days",newdata=datai)
+plot(predL, bty="l")
+# But how to interpret it wrt original data?
+predY <- predictY(fitlcmm,var.time="Days",newdata=datai)
+plot(predY, bty="l")
+
+# 
+sleepstudy$grouplcmm <- fitlcmm$pprob[sleepstudy$id, "class"]
+plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="grouplcmm", id="Subject", add_lowess = FALSE)
+lines(x=predY$times[,"Days"], y=predY$pred[,"Ypred_class1"], col = COL[1], lwd=3)
+lines(x=predY$times[,"Days"], y=predY$pred[,"Ypred_class2"], col = COL[2], lwd=2)
+```
+
+
+## Alternative estimation with `flexmix`
+
+```{r flexmix, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+library(flexmix)
+fitflexmix <- flexmix(Reaction ~ Days | Subject, data = sleepstudy, k = 2)
+fitflexmix
+summary(fitflexmix)
+plot(fitflexmix)
+predflexmix <- predict(fitflexmix)
+sleepstudy$groupflexmix <- fitflexmix@cluster
+
+plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="groupflexmix", id="Subject", add_lowess = FALSE)
+lines(predflexmix$Comp.1 ~ sleepstudy$Days, col = COL[1], lwd=3)
+lines(predflexmix$Comp.2 ~ sleepstudy$Days, col = COL[2], lwd=3)
 ```

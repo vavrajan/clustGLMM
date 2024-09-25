@@ -38,6 +38,8 @@ function(mcmc, cols){
   ### 3) Columns of mcmc$draws that are cluster-specific parameters
   if(missing(cols)){
     cols <- colnames(mcmc$draws)[grep("\\(\\d+\\)", colnames(mcmc$draws))]
+    # but not clustering related variables (weights, sizes, probabilities)
+    cols <- cols[!(grepl("^w", cols) | grepl("^ng", cols) | grepl("^pUig", cols))]
   }else{
     # use only selected cols for k-means clustering
   }
@@ -47,18 +49,18 @@ function(mcmc, cols){
   ### 4) Creating submatrices of sampled cluster-specific parameters
   clusterspec <- list()
   for(ch in 1:mcmc$nchains){
-    suball <- mcmc$draws[mcmc$draws$chain==ch, c("chain", "Gplus", paste0("ng[", 1:mcmc$G, "]"), cols)]
+    suball <- mcmc$draws[mcmc$draws$chain==ch, c("chain", "Gplus", paste0("ng(", 1:mcmc$G, ")"), cols)]
     suball <- suball[inds[[ch]], ]
-    clusterspec[[ch]] <- matrix(0, nrow = 0, ncol = 1 + length(cols)/mcmc$G*modeGplus[[ch]])
+    clusterspec[[ch]] <- matrix(0, nrow = iters[[ch]], ncol = 1 + length(cols)/mcmc$G*modeGplus[[ch]])
     for(m in 1:iters[[ch]]){
-      whichG <- which(suball[m, paste0("ng[", 1:mcmc$G, "]")] > 0)
+      whichG <- which(suball[m, paste0("ng(", 1:mcmc$G, ")")] > 0)
       print(whichG)
       expr <- paste(paste0("\\(", whichG, "\\)"), collapse = "|")
-      subcols <- grep(expr, colnames(suball))
-      clusterspec[[ch]] <- rbind(clusterspec[[ch]], c(inds[[ch]][m], suball[m,subcols]))
+      subcols <- cols[grep(expr, cols)]
+      clusterspec[[ch]][m,] <- c(inds[[ch]][m], suball[m,subcols])
     }
     expr <- paste(paste0("\\(", 1:modeGplus[[ch]], "\\)"), collapse = "|")
-    subcols <- colnames(suball)[grep(expr, colnames(suball))]
+    subcols <- cols[grep(expr, cols)]
     cnames <- c("m", subcols)
     colnames(clusterspec[[ch]]) <- cnames
   }
@@ -131,36 +133,36 @@ created for each chain separately")
   for(ch in 1:mcmc$nchains){
     ## w
     if(mcmc$save["w"]){
-      suball <- mcmc$draws[mcmc$draws$chain==ch, c(paste0("w[", 1:mcmc$G, "]"),
-                                                   paste0("ng[",1:mcmc$G, "]"))]
+      suball <- mcmc$draws[mcmc$draws$chain==ch, c(paste0("w(", 1:mcmc$G, ")"),
+                                                   paste0("ng(",1:mcmc$G, ")"))]
       suball <- suball[inds[[ch]], ]
-      wGplus[[ch]] <- matrix(0, nrow = 0, ncol = modeGplus[[ch]])
-      ngGplus[[ch]] <- matrix(0, nrow = 0, ncol = modeGplus[[ch]])
+      wGplus[[ch]] <- matrix(0, nrow = iters[[ch]], ncol = modeGplus[[ch]])
+      ngGplus[[ch]] <- matrix(0, nrow = iters[[ch]], ncol = modeGplus[[ch]])
       for(m in 1:iters[[ch]]){
-        whichG <- which(suball[m, paste0("ng[", 1:mcmc$G, "]")] > 0)
-        wcols <- paste0("w[", whichG, "]")
-        ngcols <- paste0("ng[", whichG, "]")
-        wGplus[[ch]] <- rbind(wGplus[[ch]], suball[m,wcols])
-        ngGplus[[ch]] <- rbind(ngGplus[[ch]], suball[m,ngcols])
+        whichG <- which(suball[m, paste0("ng(", 1:mcmc$G, ")")] > 0)
+        wcols <- paste0("w(", whichG, ")")
+        ngcols <- paste0("ng(", whichG, ")")
+        wGplus[[ch]][m,] <- suball[m,wcols]
+        ngGplus[[ch]][m,] <- suball[m,ngcols]
       }
-      colnames(wGplus[[ch]]) <- paste0("w[", 1:modeGplus[[ch]], "]")
-      colnames(ngGplus[[ch]]) <- paste0("ng[", 1:modeGplus[[ch]], "]")
+      colnames(wGplus[[ch]]) <- paste0("w(", 1:modeGplus[[ch]], ")")
+      colnames(ngGplus[[ch]]) <- paste0("ng(", 1:modeGplus[[ch]], ")")
     
       for(m in 1:iters[[ch]]){
         if(rowuniques[[ch]][m] == modeGplus[[ch]]){
           # it is a permutation --> permute accordingly
           auxrow <- unlist(wGplus[[ch]][m,])
           for(g in 1:modeGplus[[ch]]){
-            gname <- paste0("w[",g,"]")
-            pname <- paste0("w[",indmat[[ch]][m,g],"]")
+            gname <- paste0("w(",g,")")
+            pname <- paste0("w(",indmat[[ch]][m,g],")")
             wGplus[[ch]][m,pname] <- auxrow[gname]
           }
           
           # it is a permutation --> permute accordingly
           auxrow <- unlist(ngGplus[[ch]][m,])
           for(g in 1:modeGplus[[ch]]){
-            gname <- paste0("ng[",g,"]")
-            pname <- paste0("ng[",indmat[[ch]][m,g],"]")
+            gname <- paste0("ng(",g,")")
+            pname <- paste0("ng(",indmat[[ch]][m,g],")")
             ngGplus[[ch]][m,pname] <- auxrow[gname]
           }
         }else{
@@ -174,11 +176,11 @@ created for each chain separately")
     if(mcmc$save["U"]){
       suball <- mcmc$draws[mcmc$draws$chain==ch, 
                            c(paste0("U[", 1:mcmc$settings["U","dims"], "]"),
-                             paste0("ng[",1:mcmc$G, "]"))]
+                             paste0("ng(",1:mcmc$G, ")"))]
       suball <- suball[inds[[ch]], ]
       UGplus[[ch]] <- matrix(0, nrow = iters[[ch]], ncol = mcmc$settings["U","dims"])
       for(m in 1:iters[[ch]]){
-        whichG <- which(suball[m, paste0("ng[", 1:mcmc$G, "]")] > 0)
+        whichG <- which(suball[m, paste0("ng(", 1:mcmc$G, ")")] > 0)
         if(rowuniques[[ch]][m] == modeGplus[[ch]]){
           for(i in 1:mcmc$settings["U","dims"]){
             u <- suball[m,paste0("U[",i,"]")] 
@@ -196,23 +198,23 @@ created for each chain separately")
       pUigGplus[[ch]] <- matrix(0, nrow = iters[[ch]], ncol = 0)
       for(i in 1:mcmc$settings["U","dims"]){
         suball <- mcmc$draws[mcmc$draws$chain==ch, 
-                             c(paste0("pUig[",i,",", 1:mcmc$G, "]"),
-                               paste0("ng[",1:mcmc$G, "]"))]
+                             c(paste0("pUig(",1:mcmc$G,")[",i,"]"),
+                               paste0("ng(",1:mcmc$G,")"))]
         suball <- suball[inds[[ch]], ]
-        pU <- matrix(0, nrow = 0, ncol = modeGplus[[ch]])
+        pU <- matrix(0, nrow = iters[[ch]], ncol = modeGplus[[ch]])
         for(m in 1:iters[[ch]]){
-          whichG <- which(suball[m, paste0("ng[", 1:mcmc$G, "]")] > 0)
-          pUigcols <- paste0("pUig[",i,",", whichG, "]")
-          pU <- rbind(pU, suball[m,pUigcols])
+          whichG <- which(suball[m, paste0("ng(",1:mcmc$G,")")] > 0)
+          pUigcols <- paste0("pUig(",whichG,")[",i,"]")
+          pU[m,] <- suball[m,pUigcols]
         }
-        colnames(pU) <- paste0("pUig[",i,",", 1:modeGplus[[ch]], "]")
+        colnames(pU) <- paste0("pUig(",1:modeGplus[[ch]],")[",i,"]")
         for(m in 1:iters[[ch]]){
           if(rowuniques[[ch]][m] == modeGplus[[ch]]){
             # it is a permutation --> permute accordingly
             auxrow <- unlist(pU[m,])
             for(g in 1:modeGplus[[ch]]){
-              gname <- paste0("pUig[",i,",",g,"]")
-              pname <- paste0("pUig[",i,",",indmat[[ch]][m,g],"]")
+              gname <- paste0("pUig(",g,")[",i,"]")
+              pname <- paste0("pUig(",indmat[[ch]][m,g],")[",i,"]")
               pU[m,pname] <- auxrow[gname]
             }
           }else{

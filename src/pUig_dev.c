@@ -71,7 +71,7 @@ void pUig_dev(
     int* isYna,           // [N*sum(nY)]  0 = Y value present, 1 = Y value is NA
     double* X,            // [N*#regr]    regressors
     int* varying,            // [5]                class-specific parameters
-    // order:   [0] tau_num, 
+    // order:   [0] prec_num, 
     //          [1] c_ord,
     //          [2] InvSigma, 
     //          [3] InvQ, 
@@ -96,7 +96,7 @@ void pUig_dev(
     int* Kcat,            // [nY[Cats]]  the counts of categories of ordinal variables -1
     int* dims,            // [17]:      the length of subarray that corresponds to one state (disected by various parameters)
     // order:   [0-1]   beta_num_fix, beta_num, 
-    //          [2]     tau_num, 
+    //          [2]     prec_num, 
     //          [3-4]   beta_poi_fix, beta_poi, 
     //          [5-6]   beta_bin_fix, beta_bin, 
     //          [7-8]   beta_ord_fix, beta_ord, 
@@ -109,7 +109,7 @@ void pUig_dev(
     //          [16]    dev_i
     int* dimswithG,       // [17]       the length of subarray that corresponds to one state 
     // order:   [0-1]   beta_num_fix, beta_num, 
-    //          [2]     tau_num, 
+    //          [2]     prec_num, 
     //          [3-4]   beta_poi_fix, beta_poi, 
     //          [5-6]   beta_bin_fix, beta_bin, 
     //          [7-8]   beta_ord_fix, beta_ord, 
@@ -128,7 +128,7 @@ void pUig_dev(
     /** Some of them might be NULL (see whatsave and calc) **/
     double* beta_num_fix, // [(B+M)*sum(nfix[Nums])]   Beta parameters for fixed effects of numerical variables
     double* beta_num,     // [(B+M)*sum(ngrp[Nums])*G] Beta parameters for group-specific effects of numerical variables
-    double* tau_num,      // [(B+M)*nY[0]*(G)]         Precision parameter of numerical variables
+    double* prec_num,     // [(B+M)*nY[0]*(G)]         Precision parameter of numerical variables
     double* beta_poi_fix, // [(B+M)*sum(nfix[Pois])]   Beta parameters for fixed effects of Poisson variables
     double* beta_poi,     // [(B+M)*sum(ngrp[Pois])*G] Beta parameters for group-specific effects of Poisson variables
     double* beta_bin_fix, // [(B+M)*sum(nfix[Bins])]   Beta parameters for fixed effects of binary variables
@@ -287,7 +287,7 @@ void pUig_dev(
   int newperc = 0;
   
   double* pw;                             // pointer to w
-  double* ptau_num, *pptau_num;            // pointer to tau
+  double* pprec_num, *ppprec_num;            // pointer to prec_num
   double* pbeta_num_fix;                  // pointer to beta_num_fix
   double* pbeta_num, *ppbeta_num;          // pointer to beta_num
   double* pbeta_poi_fix;                  // pointer to beta_poi_fix
@@ -376,11 +376,11 @@ void pUig_dev(
     
     // pointer actualisation
     // w
-    pw = w + m*dims[13];
+    pw = w + m*dimswithG[13];
     // beta_num
     pbeta_num_fix = beta_num_fix + m*dims[0];
     ppbeta_num = beta_num + m*dimswithG[1];
-    pptau_num = tau_num + m*dimswithG[2];
+    ppprec_num = prec_num + m*dimswithG[2];
     // beta_poi
     pbeta_poi_fix = beta_poi_fix + m*dims[3];
     ppbeta_poi = beta_poi + m*dimswithG[4];
@@ -462,11 +462,11 @@ void pUig_dev(
           //// Step 0 - pointer actualisation
           // beta_num
           pbeta_num = ppbeta_num + g*dims[1];
-          // tau_num
+          // prec_num
           if(varying[0]){
-            ptau_num = pptau_num + g*dims[2];
+            pprec_num = ppprec_num + g*dims[2];
           }else{
-            ptau_num = pptau_num;
+            pprec_num = ppprec_num;
           }
           // beta_poi
           pbeta_poi = ppbeta_poi + g*dims[4];
@@ -525,7 +525,7 @@ void pUig_dev(
           nrep = 0;
           while((!converged) & (nrep < *maxnrep)){
             newton_raphson_bi_dev(Y, isYna, X,
-                                  pbeta_num_fix, pbeta_num, ptau_num, 
+                                  pbeta_num_fix, pbeta_num, pprec_num, 
                                   pbeta_poi_fix, pbeta_poi, 
                                   pbeta_bin_fix, pbeta_bin, 
                                   pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -597,7 +597,7 @@ void pUig_dev(
             
             // c) evaluate log( p(yi | bi) * p(bi) ) at this shifted bi
             logpbi_dev(Y, isYna, X,  
-                       pbeta_num_fix, pbeta_num, ptau_num, 
+                       pbeta_num_fix, pbeta_num, pprec_num, 
                        pbeta_poi_fix, pbeta_poi, 
                        pbeta_bin_fix, pbeta_bin, 
                        pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -616,7 +616,7 @@ void pUig_dev(
               //fflush(stdout);
               print = 1;
               logpbi_dev(Y, isYna, X,  
-                         pbeta_num_fix, pbeta_num, ptau_num, 
+                         pbeta_num_fix, pbeta_num, pprec_num, 
                          pbeta_poi_fix, pbeta_poi, 
                          pbeta_bin_fix, pbeta_bin, 
                          pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -676,7 +676,7 @@ void pUig_dev(
         }
         
         for(g = 0; g < *G; g++){
-          pUig_int[m*dimswithG[14] + *G * idnew + g] = exp(lp[g]) / sump;
+          pUig_int[m*dimswithG[14] + nnew * g + idnew] = exp(lp[g]) / sump;
         }
         
         

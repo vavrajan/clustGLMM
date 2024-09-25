@@ -20,7 +20,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
                            double* X,                 // IN [N*(#regr)]    regressors
                            double* pbeta_num_fix,     // pointer to beta_num_fix
                            double* pbeta_num,         // pointer to beta_num
-                           double* ptau_num,          // pointer to tau_num
+                           double* pprec_num,         // pointer to prec_num
                            double* pbeta_poi_fix,     // pointer to beta_poi_fix
                            double* pbeta_poi,         // pointer to beta_poi
                            double* pbeta_bin_fix,     // pointer to beta_bin_fix
@@ -111,7 +111,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
   while(bad_start){
     
     logpbi_dev(Y, isYna, X,  
-               pbeta_num_fix, pbeta_num, ptau_num, 
+               pbeta_num_fix, pbeta_num, pprec_num, 
                pbeta_poi_fix, pbeta_poi, 
                pbeta_bin_fix, pbeta_bin, 
                pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -159,7 +159,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
         prev_max[k] = theta_max[k] = 0.0;
       }
       logpbi_dev(Y, isYna, X,  
-                 pbeta_num_fix, pbeta_num, ptau_num, 
+                 pbeta_num_fix, pbeta_num, pprec_num, 
                  pbeta_poi_fix, pbeta_poi, 
                  pbeta_bin_fix, pbeta_bin, 
                  pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -196,7 +196,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
     // which is the gradient of fun at current value of theta
     // Compute the symmetric (-)hessian matrix on the left side
     d_d2_logpbi_dev(Y, isYna, X,  
-                    pbeta_num_fix, pbeta_num, ptau_num, 
+                    pbeta_num_fix, pbeta_num, pprec_num, 
                     pbeta_poi_fix, pbeta_poi, 
                     pbeta_bin_fix, pbeta_bin, 
                     pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -244,7 +244,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
       
       // Evaluate new loglik value
       logpbi_dev(Y, isYna, X,  
-                 pbeta_num_fix, pbeta_num, ptau_num, 
+                 pbeta_num_fix, pbeta_num, pprec_num, 
                  pbeta_poi_fix, pbeta_poi, 
                  pbeta_bin_fix, pbeta_bin, 
                  pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -321,7 +321,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
       //}
       // repeat it to show what exactly went wrong
       logpbi_dev(Y, isYna, X,  
-                 pbeta_num_fix, pbeta_num, ptau_num, 
+                 pbeta_num_fix, pbeta_num, pprec_num, 
                  pbeta_poi_fix, pbeta_poi, 
                  pbeta_bin_fix, pbeta_bin, 
                  pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -348,7 +348,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
       }
       
       logpbi_dev(Y, isYna, X,  
-                 pbeta_num_fix, pbeta_num, ptau_num, 
+                 pbeta_num_fix, pbeta_num, pprec_num, 
                  pbeta_poi_fix, pbeta_poi, 
                  pbeta_bin_fix, pbeta_bin, 
                  pbeta_ord_fix, pbeta_ord, pc_ord, 
@@ -393,7 +393,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
   }
   // Update the hess matrix to be at theta_max
   d_d2_logpbi_dev(Y, isYna, X,  
-                  pbeta_num_fix, pbeta_num, ptau_num, 
+                  pbeta_num_fix, pbeta_num, pprec_num, 
                   pbeta_poi_fix, pbeta_poi, 
                   pbeta_bin_fix, pbeta_bin, 
                   pbeta_ord_fix, pbeta_ord, pc_ord, 

@@ -139,7 +139,7 @@ burnin <- 10
 thin <- 1
 plot(mcmc_year, "beta_num", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc_year, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
-plot(mcmc_year, "tau_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_year, "prec_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
 
 plot(mcmc_year, "beta_ord", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc_year, "beta_ord", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
@@ -319,7 +319,7 @@ burnin <- 10
 thin <- 1
 plot(mcmc_age, "beta_num", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc_age, "beta_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
-plot(mcmc_age, "tau_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
+plot(mcmc_age, "prec_num", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)
 
 plot(mcmc_age, "beta_bin", burnin=burnin, thin=thin, chains=ch)
 plot(mcmc_age, "beta_bin", which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=ch)

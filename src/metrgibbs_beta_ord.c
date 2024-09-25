@@ -26,14 +26,14 @@ void metrgibbs_beta_ord(struct str_state* last,   // OUT+IN last known values of
                         double* Y,                // IN [*N * (1 + totnY)]
                         double* X,                // [N*(1 + #regr)]    ID + regressors
                         int* spec,                // [5]                class-specific parameters
-                        // order:   [0] tau_num, 
+                        // order:   [0] prec_num, 
                         //          [1] c_ord,
                         //          [2] InvSigma, 
                         //          [3] InvQ, 
                         //          [4] naY
                         int* dims,                // [33]:              what parameters are saved
                         // order:   [0-1]   beta_num_fix, beta_num,
-                        //          [2-4]   tau_num, sd_num, var_num,
+                        //          [2-4]   prec_num, sd_num, var_num,
                         //          [5-6]   beta_poi_fix, beta_poi,
                         //          [7-8]   beta_bin_fix, beta_bin,
                         //          [9-10]  beta_ord_fix, beta_ord,

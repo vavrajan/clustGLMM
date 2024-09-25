@@ -48,7 +48,7 @@ struct str_state {
   double* e0;           // [1]                        Precision parameter for prior of w
   double* U;            // [n]                        To which class does i-th subject belong to
   double* pUig;         // [n * G]                    Probability of i-th subject belong to each class
-  double* tau_num;      // [nY[0](* G)]               Precision parameter of numerical variables
+  double* prec_num;     // [nY[0](* G)]               Precision parameter of numerical variables
   double* beta_num_fix; // [sum(nfix[Nums])]          Beta parameters for fixed effects of Nums
   double* beta_num;     // [sum(ngrp[Nums]) *G]       Beta parameters for group-specific effects of Nums
   double* beta_poi_fix; // [sum(nfix[Pois])]          Beta parameters for fixed effects of Pois
