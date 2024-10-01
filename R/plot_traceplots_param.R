@@ -17,7 +17,7 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
   if(v$dimswithG > 0){  
     if(v$sym){
       if(v$diag){
-        if(v$isspec){
+        if(v$gspec){
           # symmetric matrix with diagonal is group-specific
           for(g in nonempty[[ch]]){
             if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
@@ -67,7 +67,7 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
           }
         }
       }else{
-        if(v$isspec){
+        if(v$gspec){
           # symmetric matrix withOUT diagonal is group-specific
           for(g in nonempty[[ch]]){
             if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
@@ -128,7 +128,7 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
       }
     }else{
       # parameter is not a symmetric matrix
-      if(v$isspec){
+      if(v$gspec){
         # group-specific parameter
         if(v$D == 0){
           # zero-dimensional parameter

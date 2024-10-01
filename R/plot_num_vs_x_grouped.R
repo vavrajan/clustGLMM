@@ -32,8 +32,13 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
   for(i in units){
     datai <- data[data[[id]] == i, ]
     datai <- datai[order(datai[,x]),] # order by x value
-    lines(datai[,x], datai[,y], col = COL[as.character(datai[1,group])], 
-          lty = 1, lwd = 1)
+    if(dim(datai)[1] > 1){
+      lines(datai[,x], datai[,y], col = COL[as.character(datai[1,group])], 
+            lty = 1, lwd = 1)
+    }else{
+      points(datai[,x], datai[,y], col = COL[as.character(datai[1,group])], 
+             pch = 16, cex = 0.8)
+    }
   }
   
   # add lowess curves for each group

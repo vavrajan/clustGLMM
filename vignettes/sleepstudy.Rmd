@@ -43,7 +43,7 @@ xyplot(Reaction ~ Days | Subject, sleepstudy, type = c("g","p","r"),
        ylab = "Average reaction time (ms)", aspect = "xy")
 ```
 Notice that the response `Reaction` is in hundreds. For practical reasons we change the units to deci-seconds. We can plot all subjects together.  
-```{r beech_data_num_vs_days, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
+```{r reaction_vs_days, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
 # Numeric variables vs Days
 sleepstudy[,"Reaction_s"] <- sleepstudy$Reaction #/ 1000
 # sleepstudy[,"Days"] <- sleepstudy$Days / 10

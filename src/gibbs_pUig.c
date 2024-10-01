@@ -139,17 +139,19 @@ void gibbs_pUig(struct str_state* last,  // IN last known values of generated pa
       }
       
       // Contribution of p(b_i | ...)
-      if(spec[2]){
-        // InvSigma is g-specific
-        aBa((*last).b + *totnran * i, (*last).InvSigma + g*dims[16], &x, totnran);
-        logp[g] -= 0.5 * x;
-        logp[g] += 0.5 * log((*last).detInvSigma[g]);
-      }else{
-        // else does not matter to be included in pUig calculation 
-        // but it matters for loglik evaluation
-        aBa((*last).b + *totnran * i, (*last).InvSigma, &x, totnran);
-        logp[g] -= 0.5 * x;
-        logp[g] += 0.5 * log((*last).detInvSigma[0]);
+      if(*totnran > 0){
+        if(spec[2]){
+          // InvSigma is g-specific
+          aBa((*last).b + *totnran * i, (*last).InvSigma + g*dims[16], &x, totnran);
+          logp[g] -= 0.5 * x;
+          logp[g] += 0.5 * log((*last).detInvSigma[g]);
+        }else{
+          // else does not matter to be included in pUig calculation 
+          // but it matters for loglik evaluation
+          aBa((*last).b + *totnran * i, (*last).InvSigma, &x, totnran);
+          logp[g] -= 0.5 * x;
+          logp[g] += 0.5 * log((*last).detInvSigma[0]);
+        }
       }
       
       if(isfinite(logp[g]) == 0){

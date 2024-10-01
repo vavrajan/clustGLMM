@@ -63,7 +63,7 @@ function(
                  "w")
   
   if(!all(save[important])){
-    warning("Some of the parameters: prec_num, betas, c_ord, InvSigma will not be saved.
+    warning("Some of the parameters: prec_num, betas, c_ord, InvSigma, w will not be saved.
 Therefore, you will not be able to calculate unconditional classification probabilities of new subjects.
 Change the save settings if you want to calculate these probabilities afterwards.")
   }
@@ -75,7 +75,6 @@ Change the save settings if you want to calculate these probabilities afterwards
   if(missing(param)){
     param <- default_param()
   } # end of if missing(param)
-  
   
   if(missing(tuning)){
     tuning <- default_tuning()
@@ -283,6 +282,18 @@ Change the save settings if you want to calculate these probabilities afterwards
   totnran <- sum(nran)+ifelse(tuning$integer$kspec_bi_cat, sum(nran[Cats]*Kcat)-sum(nran[Cats]), 0)
   totnfix <- sum(nfix)-sum(nfix[Cats])+sum(nfix[Cats]*Kcat)
   totngrp <- G * (sum(ngrp)-sum(ngrp[Cats])+sum(ngrp[Cats]*Kcat))
+  
+  if(totnran == 0){
+    warning("There are no random effects specific for each subject.
+            InvSigma, InvQ, b and other related parameters will not exist.")
+    save[c("InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
+           "InvQ", "Q", "detInvQ",
+           "b")] <- FALSE
+    if(N>n){
+      stop("Some subjects have more than one observation. Therefore,
+           the assumption of independence is violated. ")
+    }
+  }
   
   # if(N != dim(X)[1]){stop("Y and X have different number of rows.")}
   
@@ -548,31 +559,35 @@ Change the save settings if you want to calculate these probabilities afterwards
       # InvSigma, InvQ parameters
       # E InvSigma = E W(Q,nu_0) = nu_0 * Q
       # InvQ approx Inv(InvSigma/nu_0)
-      if(varying["InvQ"]){
-        # so must be InvSigma
-        inits[[ch]]$InvQ <- inits[[ch]]$InvSigma <- list()
-        for(g in 1:G){
-          inits[[ch]]$InvSigma[[g]] <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
-          inits[[ch]]$InvQ[[g]] <- chol2inv(chol(inits[[ch]]$InvSigma[[g]]/param$InvSigma_df))  
-        } # end of for(k in 1:K)
-      }else{
-        if(varying["InvSigma"]){
-          inits[[ch]]$InvSigma <- list()
-          meanInvSigma <- matrix(0, ncol = totnran, nrow = totnran)
+      if(totnran > 0){
+        if(varying["InvQ"]){
+          # so must be InvSigma
+          inits[[ch]]$InvQ <- inits[[ch]]$InvSigma <- list()
           for(g in 1:G){
             inits[[ch]]$InvSigma[[g]] <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
-            meanInvSigma <- meanInvSigma + inits[[ch]]$InvSigma[[g]]/G
-          } 
-          inits[[ch]]$InvQ <- chol2inv(chol(meanInvSigma/param$InvSigma_df))
+            inits[[ch]]$InvQ[[g]] <- chol2inv(chol(inits[[ch]]$InvSigma[[g]]/param$InvSigma_df))  
+          } # end of for(k in 1:K)
         }else{
-          inits[[ch]]$InvSigma <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
-          inits[[ch]]$InvQ <- chol2inv(chol(inits[[ch]]$InvSigma/param$InvSigma_df))
-        } # end of if(varying["InvSigma"])
-      } # end of else if(varying["InvQ"])
+          if(varying["InvSigma"]){
+            inits[[ch]]$InvSigma <- list()
+            meanInvSigma <- matrix(0, ncol = totnran, nrow = totnran)
+            for(g in 1:G){
+              inits[[ch]]$InvSigma[[g]] <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
+              meanInvSigma <- meanInvSigma + inits[[ch]]$InvSigma[[g]]/G
+            } 
+            inits[[ch]]$InvQ <- chol2inv(chol(meanInvSigma/param$InvSigma_df))
+          }else{
+            inits[[ch]]$InvSigma <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
+            inits[[ch]]$InvQ <- chol2inv(chol(inits[[ch]]$InvSigma/param$InvSigma_df))
+          } # end of if(varying["InvSigma"])
+        } # end of else if(varying["InvQ"])
       
-      # random effects b
-      inits[[ch]]$b <- matrix(rnorm(n*totnran, mean = 0, sd = param$init_b_sd), 
-                              nrow = n, ncol = totnran)
+        # random effects b
+        inits[[ch]]$b <- matrix(rnorm(n*totnran, mean = 0, sd = param$init_b_sd), 
+                                nrow = n, ncol = totnran)
+      }else{
+        inits[[ch]]$InvQ <- inits[[ch]]$InvSigma <- inits[[ch]]$b <- NULL
+      }
       #colnames(inits[[ch]]$b) <- rannames
       
       
@@ -584,13 +599,26 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   ### Preparations for transfer from C to List output
   # creating settings matrix for all (calculable) parameters
-  params <- names(save)
+  params <- c("beta_num_fix", "beta_num",
+              "prec_num", "sd_num", "var_num",
+              "beta_poi_fix", "beta_poi",
+              "beta_bin_fix", "beta_bin",
+              "beta_ord_fix", "beta_ord",
+              "c_ord", "a_ord", "pi_ord",
+              "beta_cat_fix", "beta_cat",
+              "InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
+              "InvQ", "Q", "detInvQ",
+              "b",
+              "w", "ng",
+              "loglik", "pUig", "U",
+              "Gplus", "e0",
+              "naY")
   ydepparams <- c(paste0("beta_", c("num", "poi", "bin", "ord", "cat"), "_fix"),
                   paste0("beta_", c("num", "poi", "bin", "ord", "cat")),
                   paste0(c("c", "a", "pi"), "_ord"))
   
-  settings <- data.frame(save = save,
-                         isspec = sapply(params, function(p){ifelse(is.na(varying[p]), FALSE, varying[p])}),
+  settings <- data.frame(save = save[params],
+                         gspec = sapply(params, function(p){ifelse(is.na(varying[p]), FALSE, varying[p])}),
                          G = G,
                          isy = FALSE,
                          ydepd1 = FALSE,
@@ -611,23 +639,23 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   rownames(settings) <- params
   settings[ydepparams, "ydepd1"] <- TRUE
-  settings[paste0("beta_", c("num", "poi", "bin", "ord", "cat")), "isspec"] <- TRUE
+  settings[paste0("beta_", c("num", "poi", "bin", "ord", "cat")), "gspec"] <- TRUE
   #settings
   
   ## Individual changes
   # cluster allocation related parameters
-  settings["w", c("isspec")] = c(TRUE)
-  settings["ng", c("isspec")] <- c(TRUE)
+  settings["w", c("gspec")] = c(TRUE)
+  settings["ng", c("gspec")] <- c(TRUE)
   settings["U", c("d1", "D")] = c(n, 1)
-  settings["pUig", c("isspec", "BYROW")] = c(TRUE, FALSE)
+  settings["pUig", c("gspec", "BYROW")] = c(TRUE, FALSE)
   settings["pUig", c("d1", "D")] = c(n, 1)
   #settings["pUig", c("d1", "d2", "BYROW", "D")] = c(n, G, TRUE, 2)
   
   # ydepparams have to be done separately
   # due to d1 varying on y
   settings["prec_num", c("isy", "ynums")] <- c(TRUE, TRUE)
-  settings["sd_num", c("isy", "ynums", "isspec")] <- c(TRUE, TRUE, varying["prec_num"])
-  settings["var_num", c("isy", "ynums", "isspec")] <- c(TRUE, TRUE, varying["prec_num"])
+  settings["sd_num", c("isy", "ynums", "gspec")] <- c(TRUE, TRUE, varying["prec_num"])
+  settings["var_num", c("isy", "ynums", "gspec")] <- c(TRUE, TRUE, varying["prec_num"])
   settings["beta_num_fix", c("isy", "ynums")] <- c(TRUE,TRUE)
   settings["beta_num", c("isy", "ynums")] <- c(TRUE,TRUE)
   
@@ -640,8 +668,8 @@ Change the save settings if you want to calculate these probabilities afterwards
   settings["beta_ord_fix", c("isy", "yords")] <- c(TRUE,TRUE)
   settings["beta_ord", c("isy", "yords")] <- c(TRUE,TRUE)
   settings["c_ord", c("isy", "yords")] <- c(TRUE,TRUE)
-  settings["a_ord", c("isspec", "isy", "yords")] <- c(varying["c_ord"],TRUE,TRUE)
-  settings["pi_ord", c("isspec", "isy", "yords")] <- c(varying["c_ord"],TRUE,TRUE)
+  settings["a_ord", c("gspec", "isy", "yords")] <- c(varying["c_ord"],TRUE,TRUE)
+  settings["pi_ord", c("gspec", "isy", "yords")] <- c(varying["c_ord"],TRUE,TRUE)
   
   settings[c("beta_num_fix", "beta_num",
              "beta_poi_fix", "beta_poi", "beta_bin_fix", "beta_bin",
@@ -672,21 +700,21 @@ Change the save settings if you want to calculate these probabilities afterwards
   # Sigma parameters
   settings["InvSigma", c("sym", "diag")] <- c(TRUE,TRUE)
   settings["InvSigma", c("d1", "d2", "D")] <- c(totnran,totnran,2)
-  settings["Sigma", c("isspec", "sym", "diag")] <- c(varying["InvSigma"],TRUE,TRUE)
+  settings["Sigma", c("gspec", "sym", "diag")] <- c(varying["InvSigma"],TRUE,TRUE)
   settings["Sigma", c("d1", "d2", "D")] <- c(totnran,totnran,2)
-  settings["sdSigma", c("isspec")] <- c(varying["InvSigma"])
+  settings["sdSigma", c("gspec")] <- c(varying["InvSigma"])
   settings["sdSigma", c("d1", "D")] <- c(totnran, 1)
-  settings["corSigma", c("isspec", "sym", "diag")] <- c(varying["InvSigma"],TRUE,FALSE)
+  settings["corSigma", c("gspec", "sym", "diag")] <- c(varying["InvSigma"],TRUE,FALSE)
   settings["corSigma", c("d1", "d2", "D")] <- c(totnran,totnran,2)
   settings["corSigma", c("diagval")] <- c(1.0)
-  settings["detInvSigma", c("isspec")] <- c(varying["InvSigma"])
+  settings["detInvSigma", c("gspec")] <- c(varying["InvSigma"])
   
   # Q parameters
   settings["InvQ", c("sym", "diag")] <- c(TRUE,TRUE)
   settings["InvQ", c("d1", "d2", "D")] <- c(totnran,totnran,2)
-  settings["Q", c("isspec", "sym", "diag")] <- c(varying["InvQ"],TRUE,TRUE)
+  settings["Q", c("gspec", "sym", "diag")] <- c(varying["InvQ"],TRUE,TRUE)
   settings["Q", c("d1", "d2", "D")] <- c(totnran,totnran,2)
-  settings["detInvQ", c("isspec")] <- c(varying["InvQ"])
+  settings["detInvQ", c("gspec")] <- c(varying["InvQ"])
   
   # random effects b
   settings["b", c("BYROW")] <- c(TRUE)
@@ -753,33 +781,18 @@ Change the save settings if you want to calculate these probabilities afterwards
       sum(nfix[Ords]), sum(ngrp[Ords]), #"beta_ord_fix", "beta_ord",
       sum(Kord), sum(Kord), sum(Kord+1), #"a_ord", "c_ord", "pi_ord",
       sum(nfix[Cats]*Kcat), sum(ngrp[Cats]*Kcat), #"beta_cat_fix", "beta_cat",
-      totnran*(totnran+1)/2, totnran*(totnran+1)/2, totnran, totnran*(totnran-1)/2, 1,
+      totnran*(totnran+1)/2, totnran*(totnran+1)/2, totnran, totnran*(totnran-1)/2, as.numeric(totnran>0),
       #"InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
-      totnran*(totnran+1)/2, totnran*(totnran+1)/2, 1, #"InvQ", "Q", "detInvQ",
+      totnran*(totnran+1)/2, totnran*(totnran+1)/2, as.numeric(totnran>0), #"InvQ", "Q", "detInvQ",
       n*totnran, #"b",
       1, 1, #"w", "ng",
       1, n, n, #"loglik", "pUig", "U",
       1, 1,  #"Gplus", "e0"
       sum(cisYna)
     )
-  cdimswithG <- cdims * ((settings$isspec==0)*1 + (settings$isspec==1)*G)
+  cdimswithG <- cdims * ((settings$gspec==0)*1 + (settings$gspec==1)*G)
   
-  names(cdims) <- names(cdimswithG) <- c(
-    c("beta_num_fix", "beta_num",
-      "prec_num", "sd_num", "var_num",
-      "beta_poi_fix", "beta_poi",
-      "beta_bin_fix", "beta_bin",
-      "beta_ord_fix", "beta_ord",
-      "c_ord", "a_ord", "pi_ord",
-      "beta_cat_fix", "beta_cat",
-      "InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
-      "InvQ", "Q", "detInvQ",
-      "b",
-      "w", "ng",
-      "loglik", "pUig", "U",
-      "Gplus", "e0",
-      "naY")
-  )
+  names(cdims) <- names(cdimswithG) <- params
   settings$dims <- cdims[params]
   settings$dimswithG <- cdimswithG[params]
   
@@ -869,34 +882,12 @@ Change the save settings if you want to calculate these probabilities afterwards
   index <- 1
   for(p in params){
     if(settings[p,"save"] & settings[p,"dims"] > 0){
-      # if(settings[p,"ydepd1"] & settings[p,"ydepd2"]){
       aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
                              p = p,
                              settings = settings,
                              yspecd1 = yspecd1[[p]],
                              yspecd2 = yspecd2[[p]],
                              family = sorted_family)
-      # }
-      # if(settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-      #   aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
-      #                          p = p,
-      #                          settings = settings,
-      #                          yspecd1 = yspecd1[[p]],
-      #                          family = sorted_family)
-      # }
-      # if(!settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-      #   aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
-      #                          p = p,
-      #                          settings = settings,
-      #                          yspecd2 = yspecd2[[p]],
-      #                          family = sorted_family)
-      # }
-      # if(!settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-      #   aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
-      #                          p = p,
-      #                          settings = settings,
-      #                          family = sorted_family)
-      # }
       mcmc$param_names[[p]] <- colnames(aux)
       cnames[(index+1):(index+settings[p,"dimswithG"])] <- colnames(aux)
       index <- index + settings[p,"dimswithG"]
@@ -1015,25 +1006,27 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     # first [[1]], then regressor 1, then rows for different k values
     
-    if(varying["InvSigma"]){
-      InvSigma2 <- list()
-      for(g in 1:G){
-        InvSigma2[[g]] <- initsch$InvSigma[[g]][upper.tri(initsch$InvSigma[[g]], diag = TRUE)]
+    if(totnran > 0){
+      if(varying["InvSigma"]){
+        InvSigma2 <- list()
+        for(g in 1:G){
+          InvSigma2[[g]] <- initsch$InvSigma[[g]][upper.tri(initsch$InvSigma[[g]], diag = TRUE)]
+        }
+        cinits$InvSigma <- unlist(InvSigma2)
+      }else{
+        cinits$InvSigma <- initsch$InvSigma[upper.tri(initsch$InvSigma, diag = TRUE)]
       }
-      cinits$InvSigma <- unlist(InvSigma2)
-    }else{
-      cinits$InvSigma <- initsch$InvSigma[upper.tri(initsch$InvSigma, diag = TRUE)]
-    }
-    if(varying["InvQ"]){
-      InvQ2 <- list()
-      for(g in 1:G){
-        InvQ2[[g]] <- initsch$InvQ[[g]][upper.tri(initsch$InvQ[[g]], diag = TRUE)]
+      if(varying["InvQ"]){
+        InvQ2 <- list()
+        for(g in 1:G){
+          InvQ2[[g]] <- initsch$InvQ[[g]][upper.tri(initsch$InvQ[[g]], diag = TRUE)]
+        }
+        cinits$InvQ <- unlist(InvQ2)
+      }else{
+        cinits$InvQ <- initsch$InvQ[upper.tri(initsch$InvQ, diag = TRUE)]
       }
-      cinits$InvQ <- unlist(InvQ2)
-    }else{
-      cinits$InvQ <- initsch$InvQ[upper.tri(initsch$InvQ, diag = TRUE)]
+      cinits$b <- c(t(initsch$b))
     }
-    cinits$b <- c(t(initsch$b))
     cinits$naY <- rep(0.0, cdimswithG["naY"]) # does not matter what --> it is updated as first
     
     cinits <- unlist(cinits) # will be delivered as a vector
@@ -1316,47 +1309,52 @@ Change the save settings if you want to calculate these probabilities afterwards
           }
         }
       }
-      # InvSigma
-      if(varying["InvSigma"]){
-        last[[ch]]$InvSigma <- list()
-        for(g in 1:G){
+      
+      # random-effects related parameters (only if random effects are present)
+      if(totnran > 0){
+        # InvSigma
+        if(varying["InvSigma"]){
+          last[[ch]]$InvSigma <- list()
+          for(g in 1:G){
+            pommatrix <- matrix(0, totnran, totnran)
+            pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
+            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+            pommatrix <- t(pommatrix)
+            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+            last[[ch]]$InvSigma[[g]] <- pommatrix
+          }
+        }else{
           pommatrix <- matrix(0, totnran, totnran)
           pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
           pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
           pommatrix <- t(pommatrix)
           pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-          last[[ch]]$InvSigma[[g]] <- pommatrix
+          last[[ch]]$InvSigma <- pommatrix
         }
-      }else{
-        pommatrix <- matrix(0, totnran, totnran)
-        pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
-        pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-        pommatrix <- t(pommatrix)
-        pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-        last[[ch]]$InvSigma <- pommatrix
-      }
-      # InvQ
-      if(varying["InvQ"]){
-        last[[ch]]$InvQ <- list()
-        for(g in 1:G){
+        # InvQ
+        if(varying["InvQ"]){
+          last[[ch]]$InvQ <- list()
+          for(g in 1:G){
+            pommatrix <- matrix(0, totnran, totnran)
+            pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
+            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+            pommatrix <- t(pommatrix)
+            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+            last[[ch]]$InvQ[[g]] <- pommatrix
+          }
+        }else{
           pommatrix <- matrix(0, totnran, totnran)
           pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
           pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
           pommatrix <- t(pommatrix)
           pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-          last[[ch]]$InvQ[[g]] <- pommatrix
+          last[[ch]]$InvQ <- pommatrix
         }
-      }else{
-        pommatrix <- matrix(0, totnran, totnran)
-        pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
-        pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-        pommatrix <- t(pommatrix)
-        pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-        last[[ch]]$InvQ <- pommatrix
+        # b
+        last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdimswithG["b"])],
+                               n, totnran, byrow = TRUE)
       }
-      # b
-      last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdimswithG["b"])],
-                             n, totnran, byrow = TRUE)
+      
       if(cdims["naY"]>0){
         if(varying["naY"]){
           last[[ch]]$naY <- list()
@@ -1386,34 +1384,12 @@ Change the save settings if you want to calculate these probabilities afterwards
             cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G]
           }
         if(settings[p, "save"] & settings[p,"dims"] > 0){
-          #if(settings[p,"ydepd1"] & settings[p,"ydepd2"]){
           chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
                                        p = p,
                                        settings = settings,
                                        yspecd1 = yspecd1[[p]],
                                        yspecd2 = yspecd2[[p]],
                                        family = sorted_family)
-          # }
-          # if(settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-          #   chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
-          #                                p = p,
-          #                                settings = settings,
-          #                                yspecd1 = yspecd1[[p]],
-          #                                family = sorted_family)
-          # }
-          # if(!settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-          #   chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
-          #                                p = p,
-          #                                settings = settings,
-          #                                yspecd2 = yspecd2[[p]],
-          #                                family = sorted_family)
-          # }
-          # if(!settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-          #   chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
-          #                                p = p,
-          #                                settings = settings,
-          #                                family = sorted_family)
-          # }
         }
       }
 
@@ -1429,34 +1405,12 @@ Change the save settings if you want to calculate these probabilities afterwards
           cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G]
         }
         if(settings[p,"save"] & settings[p,"dims"] > 0){
-          #if(settings[p,"ydepd1"] & settings[p,"ydepd2"]){
           aux = from_C_to_matrix(values = cmcmc[[p]],
                                  p = p,
                                  settings = settings,
                                  yspecd1 = yspecd1[[p]],
                                  yspecd2 = yspecd2[[p]],
                                  family = sorted_family)
-          #}
-          # if(settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-          #   aux = from_C_to_matrix(values = cmcmc[[p]],
-          #                          p = p,
-          #                          settings = settings,
-          #                          yspecd1 = yspecd1[[p]],
-          #                          family = sorted_family)
-          # }
-          # if(!settings[p,"ydepd1"] & settings[p,"ydepd2"]){
-          #   aux = from_C_to_matrix(values = cmcmc[[p]],
-          #                          p = p,
-          #                          settings = settings,
-          #                          yspecd2 = yspecd2[[p]],
-          #                          family = sorted_family)
-          # }
-          # if(!settings[p,"ydepd1"] & !settings[p,"ydepd2"]){
-          #   aux = from_C_to_matrix(values = cmcmc[[p]],
-          #                          p = p,
-          #                          settings = settings,
-          #                          family = sorted_family)
-          # }
           mcmc$draws[[ch]][, colnames(aux)] <- aux
         }
       }
@@ -1469,16 +1423,11 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   ## U-based clustering
   # the most common Gplus value
-  # if(howsave == "matrix"){
-  #   modeGplus <- as.numeric(tapply(mcmc$draws$Gplus, mcmc$draws$chain, 
-  #                                  function(x){names(table(x))[which.max(table(x))]}))
-  # }else{
   modeGplus <- as.numeric(lapply(mcmc$draws, 
                                  function(x){
                                    tab <- table(x$Gplus)
                                    names(tab)[which.max(tab)]}))
-  # }
-  
+
   fun <- function(U){
     tab = table(U)
     if(clusteringU_modeGplus){
@@ -1556,11 +1505,16 @@ Change the save settings if you want to calculate these probabilities afterwards
   for(y in Ys){
     mcmc$call <- paste0(mcmc$call, y, " ~ ", formula[[y]]$random[2], "\n")
   }
-  mcmc$call <- paste0(mcmc$call, "\nThe structure of covariance matrix Sigma for random effects: \n")
-  for(y in Ys){
-    for(l in 1:length(lrannames[[y]])){
-      mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
+  if(totnran > 0){
+    mcmc$call <- paste0(mcmc$call, "\nThe structure of covariance matrix Sigma for random effects: \n")
+    for(y in Ys){
+      for(l in 1:length(lrannames[[y]])){
+        mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
+      }
     }
+  }else{
+    mcmc$call <- paste0(mcmc$call, "\nThere are no random effects at all. 
+All rows in the data are assumed to be independent as well as outcomes among themselves.")
   }
   mcmc$call <- paste0(mcmc$call, "\nGroup-specific effects for outcomes (in order of appearance): \n")
   for(y in Ys){
@@ -1570,7 +1524,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       mcmc$call <- paste0(mcmc$call, y, " ~ 0 \n")
     }
   }
-  gparams <- rownames(settings)[as.logical(settings$isspec)]
+  gparams <- rownames(settings)[as.logical(settings$gspec)]
   gparams <- gparams[!grepl("beta", gparams) & !is.element(gparams, c("w", "ng", "pUig"))]
   mcmc$call <- paste0(mcmc$call, "\nOther group-specific parameters: ", 
                       paste0(gparams, collapse = ", "), "\n")

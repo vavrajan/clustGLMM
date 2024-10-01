@@ -38,14 +38,20 @@ function(mcmc,      # MCMC generated parameters
   #   w, prec_num, beta, InvSigma
   # If those were not saved during the mcmc_MBC_GLMMs function,
   # then we cannot use this function to calculate it.
-  if(!(mcmc$save["w"] & mcmc$save["c_ord"] & mcmc$save["prec_num"] 
+  if(
+     !(mcmc$save["w"] & mcmc$save["c_ord"] & mcmc$save["prec_num"] 
        & mcmc$save["beta_num_fix"] & mcmc$save["beta_num"] 
        & mcmc$save["beta_poi_fix"] & mcmc$save["beta_poi"] 
        & mcmc$save["beta_bin_fix"] & mcmc$save["beta_bin"] 
        & mcmc$save["beta_ord_fix"] & mcmc$save["beta_ord"] 
-       & mcmc$save["beta_cat_fix"] & mcmc$save["beta_cat"] 
-       & mcmc$save["InvSigma"])){
-    stop("Some of the parameters w, c_ord, prec_num, betas, InvSigma was not saved.
+       & mcmc$save["beta_cat_fix"] & mcmc$save["beta_cat"])
+     ){
+    stop("Some of the parameters w, c_ord, prec_num, betas was not saved.
+Change the  settings and use mcmc_MBC_GLMMs() again.")
+  }
+  
+  if((!mcmc$save["InvSigma"]) & (mcmc$settings["InvSigma", "dims"] > 0)){
+    stop("Parameter InvSigma was not saved and its dimension is > 0 (it exists).
 Change the  settings and use mcmc_MBC_GLMMs() again.")
   }
   
@@ -319,49 +325,8 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
                                             yspecd1=mcmc$yspecd1[[p]],
                                             family=mcmc$family)
       }
-      
-      # cbeta_num_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_num_fix", settings, 
-      #                                 yspecd1 = mcmc$yspecd1$beta_num_fix,
-      #                                 family=mcmc$family)
-      # cbeta_num <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_num", settings, 
-      #                             yspecd1 = mcmc$yspecd1$beta_num,
-      #                             family=mcmc$family)
-      # ctau_num  <- from_list_to_C(mcmc$draws[[ch]], iterations, "prec_num", settings,
-      #                             family=mcmc$family)
-      # cbeta_poi_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_poi_fix", settings, 
-      #                                 yspecd1 = mcmc$yspecd1$beta_poi_fix,
-      #                                 family=mcmc$family)
-      # cbeta_poi <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_poi", settings,
-      #                             yspecd1 = mcmc$yspecd1$beta_poi,
-      #                             family=mcmc$family)
-      # cbeta_bin_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_bin_fix", settings, 
-      #                                 yspecd1 = mcmc$yspecd1$beta_bin_fix,
-      #                                 family=mcmc$family)
-      # cbeta_bin <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_bin", settings, 
-      #                             yspecd1 = mcmc$yspecd1$beta_bin,
-      #                             family=mcmc$family)
-      # cbeta_ord_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_ord_fix", settings,
-      #                                 yspecd1 = mcmc$yspecd1$beta_ord_fix,
-      #                                 family=mcmc$family)
-      # cbeta_ord <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_ord", settings, 
-      #                             yspecd1 = mcmc$yspecd1$beta_ord,
-      #                             family=mcmc$family)
-      # cc_ord    <- from_list_to_C(mcmc$draws[[ch]], iterations, "c_ord", settings, 
-      #                             yspecd1 = mcmc$yspecd1$c_ord,
-      #                             family=mcmc$family)
-      # cbeta_cat_fix <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_cat_fix", settings, 
-      #                                 yspecd1 = mcmc$yspecd1$beta_cat_fix, 
-      #                                 yspecd2 = mcmc$yspecd2$beta_cat_fix,
-      #                                 family=mcmc$family)
-      # cbeta_cat <- from_list_to_C(mcmc$draws[[ch]], iterations, "beta_cat", settings,
-      #                             yspecd1 = mcmc$yspecd1$beta_cat, 
-      #                             yspecd2 = mcmc$yspecd2$beta_cat,
-      #                             family=mcmc$family)
-      # cInvSigma <- from_list_to_C(mcmc$draws[[ch]], iterations, "InvSigma", settings,
-      #                             family=mcmc$family)
-      # cw        <- from_list_to_C(mcmc$draws[[ch]], iterations, "w", settings,
-      #                             family=mcmc$family)
     }
+    
     if(mcmc$howsave == "matrix"){
       output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams)
       output[[ch]][,1] <- iterations
@@ -371,20 +336,6 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
       for(p in params[1:14]){
         cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations, p, settings)
       }
-      # cbeta_num_fix <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_num_fix", settings)
-      # cbeta_num <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_num", settings)
-      # ctau_num  <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "prec_num", settings)
-      # cbeta_poi_fix <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_poi_fix", settings)
-      # cbeta_poi <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_poi", settings)
-      # cbeta_bin_fix <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_bin_fix", settings)
-      # cbeta_bin <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_bin", settings)
-      # cbeta_ord_fix <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_ord_fix", settings)
-      # cbeta_ord <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_ord", settings)
-      # cc_ord    <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "c_ord", settings)
-      # cbeta_cat_fix <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_cat_fix", settings)
-      # cbeta_cat <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "beta_cat", settings)
-      # cInvSigma <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "InvSigma", settings)
-      # cw        <- from_matrix_to_C(mcmc$draws[[ch]], iterations, "w", settings)
     }
     
     #dyn.load("Cfun/pUig_dev.dll")

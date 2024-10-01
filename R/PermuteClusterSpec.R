@@ -173,7 +173,7 @@ function(mcmc, perm){
       # }
       
       # cluster-specific parameters
-      for(p in rownames(mcmc$settings)[as.logical(mcmc$settings$isspec)]){
+      for(p in rownames(mcmc$settings)[as.logical(mcmc$settings$gspec)]){
         aux <- list()
         if(mcmc$settings[p,"ydepd1"]){
           for(g in 1:mcmc$G){
@@ -213,7 +213,7 @@ function(mcmc, perm){
     # mcmc$last[[ch]]$pUig <- auxpUig
     
     # cluster-specific parameters
-    params <- rownames(mcmc$settings)[as.logical(mcmc$settings$isspec)]
+    params <- rownames(mcmc$settings)[as.logical(mcmc$settings$gspec)]
     for(p in intersect(params, names(mcmc$last[[ch]]))){
       aux <- list()
       if(mcmc$settings[p,"ydepd1"]){

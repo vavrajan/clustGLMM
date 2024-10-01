@@ -17,7 +17,7 @@ plot_ACF_param <-
     if(v$dimswithG > 0){  
       if(v$sym){
         if(v$diag){
-          if(v$isspec){
+          if(v$gspec){
             # symmetric matrix with diagonal is group-specific
             for(g in 1:v$G){
               if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
@@ -67,7 +67,7 @@ plot_ACF_param <-
             }
           }
         }else{
-          if(v$isspec){
+          if(v$gspec){
             # symmetric matrix withOUT diagonal is group-specific
             for(g in 1:v$G){
               if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
@@ -127,7 +127,7 @@ plot_ACF_param <-
         }
       }else{
         # parameter is not a symmetric matrix
-        if(v$isspec){
+        if(v$gspec){
           # group-specific parameter
           if(v$D == 0){
             # zero-dimensional parameter

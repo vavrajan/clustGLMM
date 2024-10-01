@@ -7,7 +7,7 @@ function(values,
          family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
-  # save, isspec, G, isy, ynums, yords, ybins, iter, 
+  # save, gspec, G, isy, ynums, yords, ybins, iter, 
   # d1, d2, BYROW, sym, diag, diagval, D
   v <- c(settings[p, ])
   niter <- length(values) / v$dimswithG
@@ -30,7 +30,7 @@ function(values,
   
     # what remains is to set colnames properly
     
-    if(v$isspec){
+    if(v$gspec){
       if(v$isy){
         
         if(v$D==0){
@@ -262,7 +262,7 @@ function(values,
           colnames(RET) <- cnames
         } # end of D==2
       } # end of else of isy
-    } # end of else of isspec
+    } # end of else of gspec
   } # end of non-empty values 
   return(RET)
 }

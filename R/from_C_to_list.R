@@ -7,7 +7,7 @@ function(values,
          family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
-  # save, isspec, G, isy, ynums, yords, ybins, iter, 
+  # save, gspec, G, isy, ynums, yords, ybins, iter, 
   # d1, d2, BYROW, sym, diag, diagval, D
   v <- c(settings[p, ])
   niter <- length(values) / v$dimswithG
@@ -21,7 +21,7 @@ function(values,
   sumd1 <- ifelse(v$ydepd1, sum(yspecd1), v$d1*length(Ys))
   #sumd1 <- v$d1*length(Ys)
   
-  if(v$isspec){
+  if(v$gspec){
     RET <- list()
     if(v$isy){
       
@@ -327,7 +327,7 @@ function(values,
         }
       } # end of D==2
     } # end of else of isy
-  } # end of else of isspec
+  } # end of else of gspec
   
   return(RET)
 }

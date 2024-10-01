@@ -1,0 +1,96 @@
+---
+title: "Example no random effects"
+author: "Jan Vávra"
+date: "2024-10-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 110)
+```
+
+```{r libraries, warning=FALSE, message=FALSE}
+library("clustGLMM")
+library("colorspace")
+library("mvtnorm")
+library("splines")
+library("MASS")
+library("coda")
+```
+
+## Data mtcars
+```{r data_mtcars, warning=FALSE, message=FALSE}
+data(mtcars)
+head(mtcars)
+summary(mtcars)
+pairs(mtcars)
+```
+
+```{r mpg_vs_wt, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
+mtcars$group <- 0
+mtcars$id <- 1:dim(mtcars)[1]
+par(mfrow=c(1,1), mar=c(4,4,0.5,0.5))
+plot_num_vs_x_grouped(mtcars, y="mpg", x="wt", group="group", id="id")
+```
+
+```{r preparation_for_clustGLMM, echo=TRUE}
+# outcomes and their families
+family <- c("num") 
+names(family) <- Ys <- c("mpg")
+
+# ID variable
+id <- "id"
+
+# Regression model set up
+formula <- list()
+for(y in Ys){       # this creates the same formula for all outcomes (but in general they do not have to be the same!)
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- ~ 1   # nothing
+  formula[[y]]$group <- ~ wt  # group-specific slope
+  formula[[y]]$random <- ~ 0  # no random effects
+  formula[[y]]$offset <- ""   # no offset, could be omitted
+}
+```
+
+
+```{r mcmc_first_call, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE}
+set.seed(12345)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = mtcars,
+                  G = 3, iter = 1000, nchains = 3, howsave = "matrix")
+```
+
+```{r mcmc_first_call_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
+mcmc
+plot(mcmc)
+```
+
+```{r mcmc, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
+inits <- mcmc$last
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = mtcars,
+                  G = 3, 
+                  inits = inits,
+                  iter = 10000, nchains = 3, howsave = "matrix")
+
+plot(mcmc, chains=1:3)
+```
+
+
+
+
+
+```{r clustering_probabilities, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+probs <- clustering_probabilities_and_deviance(mcmc, id, mtcars,
+                                               dynamic_prob = FALSE,
+                                               start = 1,
+                                               end = mcmc$iter,
+                                               thin = 1,
+                                               chains = 1:mcmc$nchains,
+                                               tolerance = 1e-7, 
+                                               maxiter = 100,
+                                               maxnrep = 20, 
+                                               NGQ = 1)
+plot(probs, "pUig_int", which="clusters_kerneldensity", chains = 1)
+plot(probs, "dev_i", which="kerneldensity", chains = 1)
+plot(probs, "deviance", which="kerneldensity", chains = 1)
+```

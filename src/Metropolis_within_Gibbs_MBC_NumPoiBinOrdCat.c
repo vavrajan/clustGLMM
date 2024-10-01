@@ -561,14 +561,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   //// ---------------------- ////
   struct str_state inits;    // pointer to structure where initial values are stored
   double* pp = vecinits;     // pointer for elements of vecinits
-  double* chol;
-  chol = (double *)R_alloc(dims[16], sizeof(double));
-  //double chol[dims[16]];
-  double* space_for_det;
-  space_for_det = (double *)R_alloc(*G, sizeof(double));
-  //double space_for_det[*G]; // place for inits of detInvSigma
   double space_for_naY = 0.0;
-  int g;              // index for class g = 1, ..., G
   
   inits.w             = pp;      pp+=dimswithG[25];
   inits.e0            = pp;      pp++; //dim is always 1
@@ -597,23 +590,34 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   }else{
     inits.naY    = &space_for_naY;
   }
+  
   // determinant calculation
+  int g;              // index for class g = 1, ..., G
+  double* chol;
+  chol = (double *)R_alloc(dims[16]+1, sizeof(double));
+  //double chol[dims[16]];
+  double* space_for_det;
+  space_for_det = (double *)R_alloc(*G, sizeof(double));
+  //double space_for_det[*G]; // place for inits of detInvSigma
   inits.detInvSigma = space_for_det;
-  if(varying[2]){
-    for(g = 0; g < *G; g++){
-      justcholesky(inits.InvSigma + g*dims[16], chol, &totnran);
-      detchol(chol, inits.detInvSigma + g, &totnran); 
+  
+  if(totnran > 0){
+    if(varying[2]){
+      for(g = 0; g < *G; g++){
+        justcholesky(inits.InvSigma + g*dims[16], chol, &totnran);
+        detchol(chol, inits.detInvSigma + g, &totnran); 
+      }
+    }else{
+      //for(i = 0; i < totnran; i++){
+      //  printf("\n");
+      //  for(j = i; j < totnran; j++){
+      //    printf("[%d,%d] = %f", i,j,inits.InvSigma[i+j*(j+1)/2]);
+      //  }
+      //}
+      justcholesky(inits.InvSigma, chol, &totnran);
+      detchol(chol, inits.detInvSigma, &totnran);
     }
-  }else{
-    //for(i = 0; i < totnran; i++){
-    //  printf("\n");
-    //  for(j = i; j < totnran; j++){
-    //    printf("[%d,%d] = %f", i,j,inits.InvSigma[i+j*(j+1)/2]);
-    //  }
-    //}
-    justcholesky(inits.InvSigma, chol, &totnran);
-    detchol(chol, inits.detInvSigma, &totnran);
-  }
+  }// else otherwise there is no InvSigma -> remain just pointers to nothingness
   
   //Rprintf("\nC: Initial values read");
   //fflush(stdout);
@@ -893,7 +897,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   
   struct str_state last;              // parameter of last state - will be graduallly updated 
   double* ldetInvSigma;
-  ldetInvSigma = (double *)R_alloc(dimswithG[20], sizeof(double));
+  ldetInvSigma = (double *)R_alloc(dimswithG[20]+1, sizeof(double));
   //double ldetInvSigma[dimswithG[20]]; // space for last detInvSigma 
   
   pp = veclast;
@@ -1261,12 +1265,12 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   //// Random effects b_i proposal distributions
   int dim_prop_chol_bi = *n * totnran * (totnran + 1) / 2;
   double* prop_bi;
-  prop_bi = (double *)R_alloc(dims[24], sizeof(double));
+  prop_bi = (double *)R_alloc(dims[24]+1, sizeof(double));
   //prop_bi = (double*)malloc(dims[24] * sizeof(double));
   //double prop_bi[dims[24]+1]; // maximal bi's within Newton-Raphson
   //double prop_chol_bi[dim_prop_chol_bi+1]; 
   double* prop_chol_bi;
-  prop_chol_bi = (double *)R_alloc(dim_prop_chol_bi, sizeof(double));
+  prop_chol_bi = (double *)R_alloc(dim_prop_chol_bi+1, sizeof(double));
   //prop_chol_bi = (double*)malloc(dim_prop_chol_bi * sizeof(double));
   
   
@@ -1610,58 +1614,64 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     }
     
     //// InvSigma
-    gibbs_InvSigma(&last, &param, varying, save, dims, dimswithG, 
-                   G, n, &totnran, &m, nUg, 
-                   Sigma, detInvSigma, sdSigma, corSigma);
-    if(save[16]){
-      for(j = 0; j < dimswithG[16]; j++){
-        InvSigma[m*dimswithG[16] + j] = last.InvSigma[j];
+    if(dimswithG[16] > 0){
+      gibbs_InvSigma(&last, &param, varying, save, dims, dimswithG, 
+                     G, n, &totnran, &m, nUg, 
+                     Sigma, detInvSigma, sdSigma, corSigma);
+      if(save[16]){
+        for(j = 0; j < dimswithG[16]; j++){
+          InvSigma[m*dimswithG[16] + j] = last.InvSigma[j];
+        }
       }
-    }
-    if(print){
-      Rprintf("\nC: InvSigma sampled");
-      //fflush(stdout);
+      if(print){
+        Rprintf("\nC: InvSigma sampled");
+        //fflush(stdout);
+      }
     }
     
     //// InvQ
-    gibbs_InvQ(&last, &param, varying, save, dims, dimswithG, 
-               G, &totnran, &m, Q, detInvQ);
-    if(save[21]){
-      for(j = 0; j < dimswithG[21]; j++){
-        InvQ[m*dimswithG[21] + j] = last.InvQ[j];
+    if(dimswithG[21] > 0){
+      gibbs_InvQ(&last, &param, varying, save, dims, dimswithG, 
+                 G, &totnran, &m, Q, detInvQ);
+      if(save[21]){
+        for(j = 0; j < dimswithG[21]; j++){
+          InvQ[m*dimswithG[21] + j] = last.InvQ[j];
+        }
       }
-    }
-    if(print){
-      Rprintf("\nC: InvQ sampled");
-      //fflush(stdout);
+      if(print){
+        Rprintf("\nC: InvQ sampled");
+        //fflush(stdout);
+      }
     }
     
     //// Random effects b
-    metrgibbs_bi(&last, &param, Id, Y, X, varying, dims, 
-                 predictor_num, predictor_poi, predictor_bin, predictor_ord, predictor_cat,
-                 N, n, nY, G, Kord, Kcat,
-                 nfix, cumnfix, FormulaF,
-                 ngrp, cumngrp, FormulaG,
-                 nran, cumnran, &totnran, FormulaR,
-                 noff, cumnoff, FormulaO,
-                 n_i, i_j, nUg, listUi, 
-                 // Proposal distribution parameters
-                 prop_bi, prop_chol_bi,
-                 //loglik_last_bi, 
-                 // Tuning parameters
-                 lag_proposal_bi, 
-                 &tuning
-    );
-    
-    // Saving sampled bi
-    if(save[24]){
-      for(j = 0; j < dimswithG[24]; j++){
-        b[m*dimswithG[24] + j] = last.b[j];
+    if(dimswithG[24] > 0){
+      metrgibbs_bi(&last, &param, Id, Y, X, varying, dims, 
+                   predictor_num, predictor_poi, predictor_bin, predictor_ord, predictor_cat,
+                   N, n, nY, G, Kord, Kcat,
+                   nfix, cumnfix, FormulaF,
+                   ngrp, cumngrp, FormulaG,
+                   nran, cumnran, &totnran, FormulaR,
+                   noff, cumnoff, FormulaO,
+                   n_i, i_j, nUg, listUi, 
+                   // Proposal distribution parameters
+                   prop_bi, prop_chol_bi,
+                   //loglik_last_bi, 
+                   // Tuning parameters
+                   lag_proposal_bi, 
+                   &tuning
+      );
+      
+      // Saving sampled bi
+      if(save[24]){
+        for(j = 0; j < dimswithG[24]; j++){
+          b[m*dimswithG[24] + j] = last.b[j];
+        }
       }
-    }
-    if(print){
-      Rprintf("\nC: b sampled");
-      //fflush(stdout);
+      if(print){
+        Rprintf("\nC: b sampled");
+        //fflush(stdout);
+      }
     }
     
     //// probability w

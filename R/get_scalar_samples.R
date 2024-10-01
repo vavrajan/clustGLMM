@@ -17,7 +17,7 @@ function(mcmc, what, gspec, dimspec, yspec,
     if(what == "w"){all <- mcmc$wGplus}
     if(what == "pUig"){all <- mcmc$pUigGplus}
     if(what == "U"){all <- mcmc$UGplus}
-    if(is.element(what, rownames(mcmc$settings)[as.logical(mcmc$settings$isspec)])){all <- mcmc$clusterspec}
+    if(is.element(what, rownames(mcmc$settings)[as.logical(mcmc$settings$gspec)])){all <- mcmc$clusterspec}
     
     if(is.null(all)){
       stop("Selected what parameter does not belong to the group of parameters that required restriction to non-spurious clusters.")
@@ -81,7 +81,7 @@ function(mcmc, what, gspec, dimspec, yspec,
       ### Draws are save in a structured list
       out <- data.frame(chain = ch, m = iterations)
       if(mcmc$howsave == "list"){
-        if(v$isspec){
+        if(v$gspec){
           if(v$isy){
             # group-specific and y-specific
             if(v$D == 0){

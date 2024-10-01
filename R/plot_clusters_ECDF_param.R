@@ -17,7 +17,7 @@ plot_clusters_ECDF_param <-
     if(v$dimswithG > 0){  
       if(v$sym){
         if(v$diag){
-          if(v$isspec){
+          if(v$gspec){
             # symmetric matrix with diagonal is group-specific
             for(ch in chains){
               if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
@@ -37,7 +37,7 @@ plot_clusters_ECDF_param <-
             warning(paste0("Parameter ", what, " is not group-specific."))
           }
         }else{
-          if(v$isspec){
+          if(v$gspec){
             # symmetric matrix withOUT diagonal is group-specific
             for(ch in chains){
               if(setparmfrow){par(mfrow = c(v$d1-1, v$d2-1))}
@@ -64,7 +64,7 @@ plot_clusters_ECDF_param <-
         }
       }else{
         # parameter is not a symmetric matrix
-        if(v$isspec){
+        if(v$gspec){
           # group-specific parameter
           if(v$D == 0){
             # zero-dimensional parameter

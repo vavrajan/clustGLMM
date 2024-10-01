@@ -94,6 +94,7 @@ void aBa(double* a,    // IN  [p]
       *res += 2.0 * a[i] * a[j] * B[i + col];
     }
   }
+  // returns 0.0 if *p=0
   return;
 }
 

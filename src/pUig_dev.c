@@ -242,7 +242,7 @@ void pUig_dev(
   int whichroot;
   int auxl;
   double* z;
-  z = (double*)R_alloc(nrootcombs * *totnran, sizeof(double));
+  z = (double*)R_alloc(nrootcombs * *totnran + 1, sizeof(double));
   //double z[nrootcombs * *totnran];
   //double zw[*totnran];
   //double normz;
@@ -274,6 +274,8 @@ void pUig_dev(
     }
   }
   
+  // if totnran == 0, then z does not exist and lognormw=0 is of size 1 
+  
   //fflush(stdout);
   
   //// Declarations ////
@@ -301,13 +303,14 @@ void pUig_dev(
   double* pbeta_cat, *ppbeta_cat;          // pointer to beta_cat
   double* pInvSigma, *ppInvSigma;          // pointer to InvSigma
   
+  // the following does not exist when totnran=0
   double* chol;
-  chol = (double*)R_alloc(dimswithG[12], sizeof(double));
+  chol = (double*)R_alloc(dimswithG[12] + 1, sizeof(double));
   //double chol[dimswithG[12]];         // for Cholesky decomposition of InvSigma
   double* pchol;                      // pointer for chol decomposition
   double logdetcholInvSigma;         // log of determinant of cholesky decomposition of InvSigma
   double* shifted_bi;
-  shifted_bi = (double*)R_alloc(*totnran, sizeof(double));
+  shifted_bi = (double*)R_alloc(*totnran + 1, sizeof(double));
   //double shifted_bi[*totnran];        // bi_hat + shift given by scaled combination of roots
   
   int from;
@@ -323,12 +326,13 @@ void pUig_dev(
   //fflush(stdout);
   
   
+  // the following does not exist when totnran=0
   //double bi_hat[*totnran * nnew * *G];    // bi maximizing the log (p(yi | bi) * p(bi))
   //double chol_at_bi_hat[dims[12]];    // cholesky dec of d2 at bi maximizing the log (p(yi | bi) * p(bi))
   double* bi_hat;
-  bi_hat = (double*)R_alloc(*totnran * nnew * *G, sizeof(double));
+  bi_hat = (double*)R_alloc(*totnran * nnew * *G + 1, sizeof(double));
   double* chol_at_bi_hat;
-  chol_at_bi_hat = (double*)R_alloc(dims[12], sizeof(double));
+  chol_at_bi_hat = (double*)R_alloc(dims[12] + 1, sizeof(double));
   
   
   for(l = 0; l < *totnran * nnew * *G; l++){
@@ -404,8 +408,7 @@ void pUig_dev(
     
     if(varying[2]){
       for(g = 0; g < *G; g++){
-        justcholesky(ppInvSigma + g*dims[12], 
-                     pchol, totnran);
+        justcholesky(ppInvSigma + g*dims[12], pchol, totnran);
         pchol += dims[12];
       }
     }else{
@@ -506,6 +509,7 @@ void pUig_dev(
           for(l = 0; l < *totnran; l++){
             logdetcholInvSigma += log(pchol[l*(l+3)/2]); // product of elements on the diagonal
           }
+          // remains zero if totnran=0
           lp[g] += logdetcholInvSigma;
           if(isfinite(lp[g]) == 0){
             //printf("\nlp is infinite after addition of logdetcholInvSigma: i = %d, g = %d, lp = %f",
@@ -521,38 +525,40 @@ void pUig_dev(
           //for(l = 0; l < *totnran*(*totnran + 1)/2; l++){
           //  printf("[%d] = %f, ", l, pInvSigma[l]);
           //}
-          converged = 0;
-          nrep = 0;
-          while((!converged) & (nrep < *maxnrep)){
-            newton_raphson_bi_dev(Y, isYna, X,
-                                  pbeta_num_fix, pbeta_num, pprec_num, 
-                                  pbeta_poi_fix, pbeta_poi, 
-                                  pbeta_bin_fix, pbeta_bin, 
-                                  pbeta_ord_fix, pbeta_ord, pc_ord, 
-                                  pbeta_cat_fix, pbeta_cat, 
-                                  pInvSigma,
-                                  N, n, nY, &i, Kord, Kcat, 
-                                  nfix, cumnfix, FormulaF,
-                                  ngrp, cumngrp, FormulaG,
-                                  nran, cumnran, totnran, FormulaR,
-                                  noff, cumnoff, FormulaO,
-                                  &ij, i_j, kspec_bi_cat, 
-                                  bi_hat + *totnran * idnew * *G + g * *totnran,         // OUT [dims[.]] theta maximizing the function
-                                  chol_at_bi_hat, // OUT [dims[.] * (dims[.]+1) / 2]
-                                  // Tuning parameters
-                                  tolerance, maxiter, maxnrep,
-                                  &aux_iter, &converged, &max_value          // OUT [1] the value of maximized log-likelihood
-            );
-            if(!converged){
-              nrep++;
-              for(l = 0; l<*totnran; l++){
-                bi_hat[l + *totnran * idnew * *G + g * *totnran] = rnorm(0.0, 3.0);
+          if(*totnran > 0){
+            converged = 0;
+            nrep = 0;
+            while((!converged) & (nrep < *maxnrep)){
+              newton_raphson_bi_dev(Y, isYna, X,
+                                    pbeta_num_fix, pbeta_num, pprec_num, 
+                                    pbeta_poi_fix, pbeta_poi, 
+                                    pbeta_bin_fix, pbeta_bin, 
+                                    pbeta_ord_fix, pbeta_ord, pc_ord, 
+                                    pbeta_cat_fix, pbeta_cat, 
+                                    pInvSigma,
+                                    N, n, nY, &i, Kord, Kcat, 
+                                    nfix, cumnfix, FormulaF,
+                                    ngrp, cumngrp, FormulaG,
+                                    nran, cumnran, totnran, FormulaR,
+                                    noff, cumnoff, FormulaO,
+                                    &ij, i_j, kspec_bi_cat, 
+                                    bi_hat + *totnran * idnew * *G + g * *totnran,         // OUT [dims[.]] theta maximizing the function
+                                    chol_at_bi_hat, // OUT [dims[.] * (dims[.]+1) / 2]
+                                    // Tuning parameters
+                                    tolerance, maxiter, maxnrep,
+                                    &aux_iter, &converged, &max_value          // OUT [1] the value of maximized log-likelihood
+              );
+              if(!converged){
+                nrep++;
+                for(l = 0; l<*totnran; l++){
+                  bi_hat[l + *totnran * idnew * *G + g * *totnran] = rnorm(0.0, 3.0);
+                }
               }
             }
-          }
-          if(isfinite(max_value) == 0){
-            //printf("\n maxvalue from newton raphson is infinite!");
-            //fflush(stdout);
+            if(isfinite(max_value) == 0){
+              //printf("\n maxvalue from newton raphson is infinite!");
+              //fflush(stdout);
+            }
           }
           
           
@@ -560,6 +566,7 @@ void pUig_dev(
           for(l = 0; l < *totnran; l++){
             lp[g] -= log(chol_at_bi_hat[l*(l+3)/2]); // product of elements on the diagonal
           }
+          // nothing is done when totnran=0
           if(isfinite(lp[g]) == 0){
             //printf("\nlp is infinite after addition of log(chol_at_bi_hat): i = %d, g = %d, lp = %f",
             //       i, g, lp[g]);
@@ -586,14 +593,21 @@ void pUig_dev(
             //for(k = 0; k < *totnran; k++){
             //  printf("[%d] = %f, ", k, z[*totnran * l  + k]);
             //}
-            backsolve2(chol_at_bi_hat, z + *totnran * l , totnran, shifted_bi);
-            // add the optimal bi_hat
-            //printf("\nshifted_bi:");
-            for(k = 0; k < *totnran; k++){
-              //printf("[%d] = %f, ", k, shifted_bi[k]);
-              shifted_bi[k] += bi_hat[*totnran * idnew * *G + g * *totnran + k];
-              //printf("[%d] = %f\n", k, shifted_bi[k]);
+            if(*totnran > 0){
+              backsolve2(chol_at_bi_hat, z + *totnran * l , totnran, shifted_bi);
+              // add the optimal bi_hat
+              //printf("\nshifted_bi:");
+              for(k = 0; k < *totnran; k++){
+                //printf("[%d] = %f, ", k, shifted_bi[k]);
+                shifted_bi[k] += bi_hat[*totnran * idnew * *G + g * *totnran + k];
+                //printf("[%d] = %f\n", k, shifted_bi[k]);
+              }
+            }else{
+              // shifted_bi does not exist
+              shifted_bi[0] = 0.0;
             }
+              
+
             
             // c) evaluate log( p(yi | bi) * p(bi) ) at this shifted bi
             logpbi_dev(Y, isYna, X,  
@@ -645,7 +659,7 @@ void pUig_dev(
           }
           
           //// Step 6 - add log of approx_sum  to the log-likelihood
-          if(*NGQ == 1){
+          if((*NGQ == 1) | (totnran == 0)){
             lp[g] += approx;
           }else{
             lp[g] += log(approx_sum);
