@@ -1428,7 +1428,7 @@ Change the save settings if you want to calculate these probabilities afterwards
                                    tab <- table(x$Gplus)
                                    names(tab)[which.max(tab)]}))
 
-  fun <- function(U){
+  fun <- function(U, ch){
     tab = table(U)
     if(clusteringU_modeGplus){
       tab <- tab[as.character(clusters[[ch]])]
@@ -1450,7 +1450,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     # Only the top modeGplus in frequency are considered
     clusters[[ch]] <- sort(as.numeric(names(TAB)[1:modeGplus[ch]]))
     
-    ccU <- apply(Usamples[[ch]], 2, fun)
+    ccU <- apply(Usamples[[ch]], 2, fun, ch=ch)
     clusteringU[,ch] <- ccU[1, ]
     certaintyU[,ch] <- ccU[2, ]
   }

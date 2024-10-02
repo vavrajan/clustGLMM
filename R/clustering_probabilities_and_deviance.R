@@ -475,6 +475,69 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   res$draws <- output
   res$chains <- chains
   res$settings <- settings[c("deviance", "dev_i", "pUig_int"), ]
+  
+  # perform clustering based on approximated values
+  clusters <- list()
+  modeGplus <- numeric(mcmc$nchains)
+  clustering <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
+  certainty <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
+  for(ch in chains){
+    probs <- from_C_to_matrix(cmcmc[["pUig_int"]], "pUig_int", settings, family=mcmc$family)
+    psum <- apply(probs, 2, mean, na.rm=TRUE)
+    probmean <- matrix(psum, ncol = mcmc$G, nrow = n, byrow = FALSE)
+    
+    clustering[,ch] <- apply(probmean, 1, which.max)
+    certainty[,ch] <- apply(probmean, 1, max)
+    clusters[[ch]] <- sort(unique(clustering[,ch]))
+    modeGplus[ch] <- length(clusters[[ch]])
+  }
+  rownames(clustering) <- rownames(certainty) <- unique_ids
+  # TODO remain unclustered with label 0
+  # TODO dynamic_prob = TRUE adjustments
+  
+  # res$modeGplus <- modeGplus # keep it the same or make it the number of non-empty clusters after classification?
+  res$clusters <- clusters
+  res$clustering <- clustering
+  res$certainty <- certainty
+  
+  sameclusters <- TRUE
+  for(ch in chains[-1]){
+    sameclusters <- (sameclusters & setequal(mcmc$clusters[[chains[1]]], mcmc$clusters[[ch]]))
+  }
+  res$sameclusters <- sameclusters
+  
+  # call
+  res$call <- c("###----------------------------------------------------------------------------------###\n")
+  res$call <- paste0(res$call, "### Approximation of posterior distribution of clustering probabilities and deviance ###\n")
+  res$call <- paste0(res$call, "###----------------------------------------------------------------------------------###\n")
+  res$call <- paste0(res$call, "N = sample size: ", N, "\n")
+  res$call <- paste0(res$call, "n = number of units: ", n, "\n")
+  res$call <- paste0(res$call, "observations per unit (minimum): ", min(nsubj), " \n")
+  res$call <- paste0(res$call, "observations per unit (median): ", median(nsubj), " \n")
+  res$call <- paste0(res$call, "observations per unit (maximum): ", max(nsubj), " \n")
+  res$call <- paste0(res$call, "G = maximal number of clusters: ", mcmc$G, "\n")
+  
+  saved_params <- rownames(res$settings)[res$settings$save]
+  res$call <- paste0(res$call, "\nList of saved parameters in $draws: ", 
+                      paste0(saved_params, collapse = ", "), "\n")
+  res$call <- paste0(res$call, "\nMCMC approximation: \n")
+  res$call <- paste0(res$call, "start = first iteration number used: ", start, "\n")
+  res$call <- paste0(res$call, "end = last iteration number used: ", end, "\n")
+  res$call <- paste0(res$call, "thin = thinning applied to iterations between start and end: ", thin, "\n")
+  res$call <- paste0(res$call, "niter = number of iterations used for approximation: ", niter, "\n")
+  res$call <- paste0(res$call, "chains = chains used: ", paste(chains, collapse=", "), "\n")
+  res$call <- paste0(res$call, "dynamic_prob = ", as.character(dynamic_prob), " = ", 
+                     ifelse(dynamic_prob, 
+                            "dynamically calculated probabilities", 
+                            "probabilities calculated from all available observations"), 
+                     "\n")
+  if(mcmc$totnran > 0){
+    res$call <- paste0(res$call, "Integral wrt random effects approximated with NGQ=", NGQ, "\n")
+  }
+
+
+  
+  
   class(res) <- "clustglmm"
   
   return(res)

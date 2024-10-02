@@ -7,15 +7,26 @@ summary.clustglmm <- function(object, ...){
     coda_summary[[ch]] <- summary(coda[[ch]])
   }
   
-  fset = object$settings[object$settings$save & !object$settings$gspec & object$settings$dims>0, ]
-  fset = fset[setdiff(rownames(fset), c("loglik", "U", "Gplus", "e0")), ]
-  fnames <- c()
-  for(p in rownames(fset)){
-    fnames <- c(fnames, object$param_names[[p]])
+  output <- ifelse(length(intersect(rownames(object$settings), c("deviance", "dev_i", "pUig_int"))) > 0,
+                   "probs", "mcmc")
+
+  if(output == "probs"){
+    fnames <- c("deviance")
+    gnames <- cnames <- c()
+  }else{
+    fset = object$settings[object$settings$save & !object$settings$gspec & object$settings$dims>0, ]
+    fset = fset[setdiff(rownames(fset), c("loglik", "U", "Gplus", "e0")), ]
+    fnames <- c()
+    for(p in rownames(fset)){
+      fnames <- c(fnames, object$param_names[[p]])
+    }
+    
+    gnames <- rownames(coda_summary[[1]]$statistics)[
+      grep("\\(1\\)", rownames(coda_summary[[1]]$statistics))]
+    gnames <- gnames[!(grepl("^w", gnames) | grepl("^ng", gnames) | grepl("^pUig", gnames))]
+    
+    cnames <- c("Gplus", "e0", paste0("w(",1:x$G,")"))
   }
-  gnames <- rownames(coda_summary[[1]]$statistics)[
-    grep("\\(1\\)", rownames(coda_summary[[1]]$statistics))]
-  gnames <- gnames[!(grepl("^w", gnames) | grepl("^ng", gnames) | grepl("^pUig", gnames))]
   
   res <- list(call=object$call,
               G=object$G,
@@ -24,8 +35,10 @@ summary.clustglmm <- function(object, ...){
               certainty=object$certainty,
               clusters=object$clusters,
               coda_summary=coda_summary,
+              output=output,
               fnames=fnames,
-              gnames=gnames)
+              gnames=gnames,
+              cnames=cnames)
   
   class(res) <- "summary.clustglmm"
   return(res)

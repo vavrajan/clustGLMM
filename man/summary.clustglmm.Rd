@@ -40,8 +40,10 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
   \item{certainty}{matrix of certainties (the highest clustering probability among G other) for each unit based on sampled indicators,}
   \item{clusters}{labels of non-empty clusters for each chain separately,}
   \item{coda_summary}{output of \code{coda} summary for each chain separately,}
+  \item{output}{the type of output that is summarized: \code{mcmc} samples from \code{clustGLMM}, \code{probs} approximation of clustering probabilities and deviance,}
   \item{fnames}{vector of parameter names invariant to clustering,}
-  \item{gnames}{cluster-specific parameter names only for cluster 1.}
+  \item{gnames}{cluster-specific parameter names only for cluster 1,}
+  \item{cnames}{clustering related parameter names.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
