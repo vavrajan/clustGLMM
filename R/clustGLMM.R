@@ -628,6 +628,7 @@ Change the save settings if you want to calculate these probabilities afterwards
                          ybins = FALSE,
                          yords = FALSE,
                          ycats = FALSE,
+                         d2spec = FALSE,
                          iter = rep(iter, length(params)),
                          d1 = 0,
                          d2 = 0, 
@@ -679,7 +680,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   settings["beta_cat", c("isy", "ydepd2", "ycats", "BYROW")] <- c(TRUE,TRUE,TRUE,TRUE)
   settings[c("beta_cat_fix", "beta_cat"), "D"] <- 2
   
-  yspecd1 <- yspecd2 <- list()
+  yspecd1 <- yspecd2 <- d2spec <- list()
   # for(p in params){
   #   yspecd1[[p]] <- yspecd2[[p]] <- list()
   # }
@@ -1577,6 +1578,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$tuning <- tuning
   mcmc$yspecd1 <- yspecd1
   mcmc$yspecd2 <- yspecd2
+  mcmc$d2spec <- d2spec
   mcmc$isYna <- cisYna
   
   class(mcmc) <- "clustglmm"

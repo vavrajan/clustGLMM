@@ -4,6 +4,7 @@ function(values,
          settings,
          yspecd1=NULL,
          yspecd2=NULL,
+         d2spec=NULL,
          family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
@@ -140,15 +141,15 @@ function(values,
               # matrix is general rectangular --> all is stored
               if(v$BYROW){
                 for(row in 1:v$d1){
-                  cnames <- c(cnames, paste0(p,"(",k,")[",row,",",1:v$d2,"]"))
+                  d2 <- ifelse(v$d2spec, d2spec[row], v$d2)
+                  cnames <- c(cnames, paste0(p,"(",k,")[",row,",",1:d2,"]"))
                 }
               }else{
                 for(col in 1:v$d2){
                   cnames <- c(cnames, paste0(p,"(",k,")[",1:v$d1,",",col,"]"))
                 }
               }
-              dd = v$d1 * v$d2
-              colnames(RET)[(k-1)*v$dims + 1:dd] <- cnames
+              colnames(RET)[(k-1)*v$dims + 1:v$dims] <- cnames
             } # end of else of sym
           } # end of for k
         } # end of D==2
@@ -251,7 +252,8 @@ function(values,
             # matrix is general rectangular --> all is stored
             if(v$BYROW){
               for(row in 1:v$d1){
-                cnames <- c(cnames, paste0(p,"[",row,",",1:v$d2,"]"))
+                d2 <- ifelse(v$d2spec, d2spec[row], v$d2)
+                cnames <- c(cnames, paste0(p,"[",row,",",1:d2,"]"))
               }
             }else{
               for(col in 1:v$d2){

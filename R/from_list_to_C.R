@@ -3,8 +3,9 @@ function(draws,
          iterations,
          p,
          settings,
-         yspecd1,
-         yspecd2,
+         yspecd1=NULL,
+         yspecd2=NULL,
+         d2spec=NULL,
          family)
 {
   v <- c(settings[p, ])
@@ -122,7 +123,13 @@ function(draws,
               }else{
                 # matrix is general rectangular --> all is stored
                 if(v$BYROW){
-                  RET <- c(RET, t(draws[[p]][[k]][di,,]))
+                  if(v$d2spec){
+                    for(i in 1:v$d1){
+                      RET <- c(RET, draws[[p]][[k]][di,i,1:d2spec[i]])
+                    }
+                  }else{
+                    RET <- c(RET, t(draws[[p]][[k]][di,,]))
+                  }
                 }else{
                   RET <- c(RET, draws[[p]][[k]][di,,])
                 }
@@ -217,7 +224,13 @@ function(draws,
             }else{
               # matrix is general rectangular --> all is stored
               if(v$BYROW){
-                RET <- c(RET, t(draws[[p]][di,,]))
+                if(v$d2spec){
+                  for(i in 1:v$d1){
+                    RET <- c(RET, draws[[p]][di,i,1:d2spec[i]])
+                  }
+                }else{
+                  RET <- c(RET, t(draws[[p]][di,,]))
+                }
               }else{
                 RET <- c(RET, draws[[p]][di,,])
               }

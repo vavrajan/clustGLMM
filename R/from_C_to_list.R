@@ -4,6 +4,7 @@ function(values,
          settings,
          yspecd1=NULL,
          yspecd2=NULL,
+         d2spec=NULL,
          family)        # parameter to be listed
 {
   # data frame settings consists of needed parameters:
@@ -36,7 +37,7 @@ function(values,
           # }
           
           ## better --> no need for [[y]] --> can be stored in matrix with columns names Ys
-          RET[[k]] <- matrix(0, nrow = niter, ncol = length(Ys))
+          RET[[k]] <- matrix(NA, nrow = niter, ncol = length(Ys))
           colnames(RET[[k]]) <- Ys
           for(y in 1:length(Ys)){
             RET[[k]][, Ys[y]] = values[seq(from = (k-1)*length(Ys)+y, 
@@ -54,9 +55,9 @@ function(values,
           for(y in 1:length(Ys)){
             d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
             #d1 = v$d1
-            RET[[k]][[Ys[y]]] <- matrix(0, nrow = niter, ncol = d1)
-            for(i in 1:niter){
-              RET[[k]][[Ys[y]]][i, ] <- values[(i-1)*v$G*sumd1 + (k-1)*sumd1 + dimy + 1:d1]
+            RET[[k]][[Ys[y]]] <- matrix(NA, nrow = niter, ncol = d1)
+            for(m in 1:niter){
+              RET[[k]][[Ys[y]]][m, ] <- values[(m-1)*v$G*sumd1 + (k-1)*sumd1 + dimy + 1:d1]
             }
             dimy = dimy + d1
           }
@@ -79,8 +80,8 @@ function(values,
           for(y in 1:length(Ys)){
             d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
             d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
-            RET[[k]][[Ys[y]]] <- array(0, dim = c(niter, d1, d2))
-            for(i in 1:niter){
+            RET[[k]][[Ys[y]]] <- array(NA, dim = c(niter, d1, d2))
+            for(m in 1:niter){
               if(v$sym){
                 # matrix is symmetrical and only upper-right triangle is stored
                 # d1 = d2
@@ -88,8 +89,8 @@ function(values,
                   dd = d1*(d1+1)/2 # number of elements 
                   for(row in 1:d1){
                     for(col in row:d1){
-                      RET[[k]][[Ys[y]]][i, row, col] <- RET[[k]][[Ys[y]]][i, col, row] <-
-                        values[(i-1)*v$G*dimtot + (k-1)*dimtot + dimy + row + (col-1)*col/2]
+                      RET[[k]][[Ys[y]]][m, row, col] <- RET[[k]][[Ys[y]]][m, col, row] <-
+                        values[(m-1)*v$G*dimtot + (k-1)*dimtot + dimy + row + (col-1)*col/2]
                     }
                   }
                 }else{
@@ -97,19 +98,19 @@ function(values,
                   # non-diagonal elements
                   for(row in 1:(d1-1)){
                     for(col in (row+1):d1){
-                      RET[[k]][[Ys[y]]][i, row, col] <- RET[[k]][[Ys[y]]][i, col, row] <-
-                        values[(i-1)*v$G*dimtot + (k-1)*dimtot + dimy + row + (col-2)*(col-1)/2]
+                      RET[[k]][[Ys[y]]][m, row, col] <- RET[[k]][[Ys[y]]][m, col, row] <-
+                        values[(m-1)*v$G*dimtot + (k-1)*dimtot + dimy + row + (col-2)*(col-1)/2]
                     }
                   }
                   # diagonal elements
                   for(row in 1:d1){
-                    RET[[k]][[Ys[y]]][i, row, row] <- v$diagval
+                    RET[[k]][[Ys[y]]][m, row, row] <- v$diagval
                   }
                 } # end of else of diag
               }else{
                 # matrix is general rectangular --> all is stored
                 dd = d1*d2
-                RET[[k]][[Ys[y]]][i,,] <- matrix(values[(i-1)*v$G*dimtot + (k-1)*dimtot + dimy + 1:dd],
+                RET[[k]][[Ys[y]]][m,,] <- matrix(values[(m-1)*v$G*dimtot + (k-1)*dimtot + dimy + 1:dd],
                                                  nrow = d1,
                                                  ncol = d2,
                                                  byrow = v$BYROW)
@@ -124,7 +125,7 @@ function(values,
       # is class-specific, however not y-specific
       
       if(v$D==0){
-        RET <- matrix(0, nrow = niter, ncol = v$G)
+        RET <- matrix(NA, nrow = niter, ncol = v$G)
         for(k in 1:v$G){
           # no need to do [[k]] --> can be stored in matrix
           # column corresponds to k
@@ -137,17 +138,17 @@ function(values,
       
       if(v$D==1){
         for(k in 1:v$G){
-          RET[[k]] <- matrix(0, nrow = niter, ncol = v$d1)
-          for(i in 1:niter){
-            RET[[k]][i, ] <- values[(i-1)*v$G*v$d1 + (k-1)*v$d1 + 1:v$d1]          
+          RET[[k]] <- matrix(NA, nrow = niter, ncol = v$d1)
+          for(m in 1:niter){
+            RET[[k]][m, ] <- values[(m-1)*v$G*v$d1 + (k-1)*v$d1 + 1:v$d1]          
           }
         }
       } # end of D==1
       
       if(v$D==2){
         for(k in 1:v$G){
-          RET[[k]] <- array(0, dim = c(niter, v$d1, v$d2))
-          for(i in 1:niter){
+          RET[[k]] <- array(NA, dim = c(niter, v$d1, v$d2))
+          for(m in 1:niter){
             if(v$sym){
               # matrix is symmetrical and only upper-right triangle is stored
               # d1 = d2
@@ -155,8 +156,8 @@ function(values,
                 dd = v$d1*(v$d1+1)/2 # number of elements 
                 for(row in 1:v$d1){
                   for(col in row:v$d1){
-                    RET[[k]][i, row, col] <- RET[[k]][i, col, row] <-
-                      values[(i-1)*v$G*dd + (k-1)*dd + row + (col-1)*col/2]
+                    RET[[k]][m, row, col] <- RET[[k]][m, col, row] <-
+                      values[(m-1)*v$G*dd + (k-1)*dd + row + (col-1)*col/2]
                   }
                 }
               }else{
@@ -164,21 +165,29 @@ function(values,
                 # non-diagonal elements
                 for(row in 1:(v$d1-1)){
                   for(col in (row+1):v$d1){
-                    RET[[k]][i, row, col] <- RET[[k]][i, col, row] <-
-                      values[(i-1)*v$G*dd + (k-1)*dd + row + (col-2)*(col-1)/2]
+                    RET[[k]][m, row, col] <- RET[[k]][m, col, row] <-
+                      values[(m-1)*v$G*dd + (k-1)*dd + row + (col-2)*(col-1)/2]
                   }
                 }
                 # diagonal elements
                 for(row in 1:v$d1){
-                  RET[[k]][i, row, row] <- v$diagval
+                  RET[[k]][m, row, row] <- v$diagval
                 }
               } # end of else of diag
             }else{
               # matrix is general rectangular --> all is stored
-              RET[[k]][i,,] <- matrix(values[(i-1)*v$G*v$d1*v$d2 + (k-1)*v$d1*v$d2 + 1:(v$d1*v$d2)],
-                                      nrow = v$d1,
-                                      ncol = v$d2,
-                                      byrow = v$BYROW)
+              if(v$d2spec){
+                cumsumni <- 0
+                for(i in 1:v$d1){
+                  RET[[k]][m,i,1:specd2[i]] <- values[(m-1)*v$dimswithG + (k-1)*v$dims + cumsumni + 1:specd2[i]]
+                  cumsumni <- cumsumni + specd2[i]
+                }
+              }else{
+                RET[[k]][m,,] <- matrix(values[(m-1)*v$G*v$d1*v$d2 + (k-1)*v$d1*v$d2 + 1:(v$d1*v$d2)],
+                                        nrow = v$d1,
+                                        ncol = v$d2,
+                                        byrow = v$BYROW)
+              }
             } # end of else of sym
           }
         }
@@ -215,9 +224,9 @@ function(values,
         dimy = 0
         for(y in 1:length(Ys)){
           d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
-          RET[[Ys[y]]] <- matrix(0, nrow = niter, ncol = d1)
-          for(i in 1:niter){
-            RET[[Ys[y]]][i, ] <- values[(i-1)*dimtot + dimy + 1:d1]
+          RET[[Ys[y]]] <- matrix(NA, nrow = niter, ncol = d1)
+          for(m in 1:niter){
+            RET[[Ys[y]]][m, ] <- values[(m-1)*dimtot + dimy + 1:d1]
           }
           dimy = dimy + d1
         }
@@ -238,8 +247,8 @@ function(values,
         for(y in 1:length(Ys)){
           d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
           d2 = ifelse(v$ydepd2, yspecd2[Ys[y]], v$d2)
-          RET[[Ys[y]]] <- array(0, dim = c(niter, d1, d2))
-          for(i in 1:niter){
+          RET[[Ys[y]]] <- array(NA, dim = c(niter, d1, d2))
+          for(m in 1:niter){
             if(v$sym){
               # matrix is symmetrical and only upper-right triangle is stored
               # d1 = d2
@@ -247,8 +256,8 @@ function(values,
                 dd = d1*(d1+1)/2 # number of elements 
                 for(row in 1:d1){
                   for(col in row:d1){
-                    RET[[Ys[y]]][i, row, col] <- RET[[Ys[y]]][i, col, row] <-
-                      values[(i-1)*dimtot + dimy + row + (col-1)*col/2]
+                    RET[[Ys[y]]][m, row, col] <- RET[[Ys[y]]][m, col, row] <-
+                      values[(m-1)*dimtot + dimy + row + (col-1)*col/2]
                   }
                 }
               }else{
@@ -256,19 +265,19 @@ function(values,
                 # non-diagonal elements
                 for(row in 1:(d1-1)){
                   for(col in (row+1):d1){
-                    RET[[Ys[y]]][i, row, col] <- RET[[Ys[y]]][i, col, row] <-
-                      values[(i-1)*dimtot  + dimy + row + (col-2)*(col-1)/2]
+                    RET[[Ys[y]]][m, row, col] <- RET[[Ys[y]]][m, col, row] <-
+                      values[(m-1)*dimtot  + dimy + row + (col-2)*(col-1)/2]
                   }
                 }
                 # diagonal elements
                 for(row in 1:d1){
-                  RET[[Ys[y]]][i, row, row] <- v$diagval
+                  RET[[Ys[y]]][m, row, row] <- v$diagval
                 }
               } # end of else of diag
             }else{
               # matrix is general rectangular --> all is stored
               dd = d1 * d2
-              RET[[Ys[y]]][i,,] <- matrix(values[(i-1)*dimtot + dimy + 1:dd],
+              RET[[Ys[y]]][m,,] <- matrix(values[(m-1)*dimtot + dimy + 1:dd],
                                           nrow = d1,
                                           ncol = d2,
                                           byrow = v$BYROW)
@@ -290,8 +299,8 @@ function(values,
       } # end of D==1
       
       if(v$D==2){
-        RET <- array(0, dim = c(niter, v$d1, v$d2))
-        for(i in 1:niter){
+        RET <- array(NA, dim = c(niter, v$d1, v$d2))
+        for(m in 1:niter){
           if(v$sym){
             # matrix is symmetrical and only upper-right triangle is stored
             # d1 = d2
@@ -299,8 +308,8 @@ function(values,
               dd = v$d1*(v$d1+1)/2 # number of elements 
               for(row in 1:v$d1){
                 for(col in row:v$d1){
-                  RET[i, row, col] <- RET[i, col, row] <-
-                    values[(i-1)*dd + row + (col-1)*col/2]
+                  RET[m, row, col] <- RET[m, col, row] <-
+                    values[(m-1)*dd + row + (col-1)*col/2]
                 }
               }
             }else{
@@ -308,21 +317,29 @@ function(values,
               # non-diagonal elements
               for(row in 1:(v$d1-1)){
                 for(col in (row+1):v$d1){
-                  RET[i, row, col] <- RET[i, col, row] <-
-                    values[(i-1)*dd + row + (col-2)*(col-1)/2]
+                  RET[m, row, col] <- RET[m, col, row] <-
+                    values[(m-1)*dd + row + (col-2)*(col-1)/2]
                 }
               }
               # diagonal elements
               for(row in 1:v$d1){
-                RET[i, row, row] <- v$diagval
+                RET[m, row, row] <- v$diagval
               }
             } # end of else of diag
           }else{
             # matrix is general rectangular --> all is stored
-            RET[i,,] <- matrix(values[(i-1)*v$d1*v$d2 + 1:(v$d1*v$d2)],
-                               nrow = v$d1,
-                               ncol = v$d2,
-                               byrow = v$BYROW)
+            if(v$d2spec){
+              cumsumni <- 0
+              for(i in 1:v$d1){
+                RET[m,i,1:specd2[i]] <- values[(m-1)*v$dims + cumsumni + 1:specd2[i]]
+                cumsumni <- cumsumni + specd2[i]
+              }
+            }else{
+              RET[m,,] <- matrix(values[(m-1)*v$d1*v$d2 + 1:(v$d1*v$d2)],
+                                 nrow = v$d1,
+                                 ncol = v$d2,
+                                 byrow = v$BYROW)
+            }
           } # end of else of sym
         }
       } # end of D==2

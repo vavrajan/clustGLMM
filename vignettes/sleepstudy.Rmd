@@ -44,6 +44,8 @@ xyplot(Reaction ~ Days | Subject, sleepstudy, type = c("g","p","r"),
 ```
 Notice that the response `Reaction` is in hundreds. For practical reasons we change the units to deci-seconds. We can plot all subjects together.  
 ```{r reaction_vs_days, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
+# subset
+sleepstudy <- sleepstudy[-c(1,19,20,178,179,180),]
 # Numeric variables vs Days
 sleepstudy[,"Reaction_s"] <- sleepstudy$Reaction #/ 1000
 # sleepstudy[,"Days"] <- sleepstudy$Days / 10
@@ -204,23 +206,43 @@ probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
                                                start = 1,
                                                end = mcmc$iter,
                                                thin = 1,
-                                               chains = 1:mcmc$nchains,
+                                               chains = mcmc$chains,
                                                tolerance = 1e-7, 
                                                maxiter = 100,
                                                maxnrep = 20, 
                                                NGQ = 1)
 ```
 
+
+
 ```{r plot_probs, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
 colnames(probs$draws[[1]])
 plot(probs, burnin=burnin, thin=thin, chains=1)
 ```
+
 ```{r plot_deviance, echo=TRUE, fig.align='center', fig.width=10, fig.height=5}
 plot(probs, "deviance", "traceplots", burnin=burnin, thin=thin, chains=1:3)
 ```
 
 ```{r plot_dev_i, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
 plot(probs, "dev_i", "kerneldensity", burnin=burnin, thin=thin, chains=1:3)
+```
+
+```{r clustering_probabilities_dynamically, echo=TRUE, results=FALSE}
+probs <- clustering_probabilities_and_deviance(mcmc, id, sleepstudy,
+                                               dynamic_prob = TRUE,
+                                               start = 1,
+                                               end = mcmc$iter,
+                                               thin = 1,
+                                               chains = 1,
+                                               tolerance = 1e-7, 
+                                               maxiter = 100,
+                                               maxnrep = 20, 
+                                               NGQ = 1)
+```
+
+```{r plot_probs_dynamic, echo=TRUE, fig.align='center', fig.width=10, fig.height=18}
+plot(probs, which="clusters_kerneldensity", burnin=burnin, thin=thin, chains=1)
 ```
 
 Finally, we can use `predict` function to replicate the linear predictor (excluding random effects) and plot the posterior mean curves for the estimated two groups. We can also see who was clustered into which cluster:
@@ -294,8 +316,8 @@ lines(x=predY$times[,"Days"], y=predY$pred[,"Ypred_class2"], col = COL[2], lwd=2
 
 ```{r flexmix, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
 library(flexmix)
-fitflexmix <- flexmix(Reaction ~ Days | Subject, data = sleepstudy, k = 2)
-fitflexmix
+fitflexmix <- flexmix(Reaction ~ Days | Subject, data = sleepstudy, k = 2, 
+                      model = FLXMRglmfix(formula = Reaction ~ 0 + Days, fixed = ~1))
 summary(fitflexmix)
 plot(fitflexmix)
 predflexmix <- predict(fitflexmix)
@@ -303,6 +325,6 @@ sleepstudy$groupflexmix <- fitflexmix@cluster
 
 par(mar=c(4,4,1,1))
 plot_num_vs_x_grouped(sleepstudy, y="Reaction", x="Days", group="groupflexmix", id="Subject", add_lowess = FALSE)
-lines(predflexmix$Comp.1 ~ sleepstudy$Days, col = COL[1], lwd=3)
-lines(predflexmix$Comp.2 ~ sleepstudy$Days, col = COL[2], lwd=3)
+lines(unlist(predflexmix$Comp.1[1,]) ~ sleepstudy$Days, col = COL[1], lwd=3)
+lines(unlist(predflexmix$Comp.2[1,]) ~ sleepstudy$Days, col = COL[2], lwd=3)
 ```

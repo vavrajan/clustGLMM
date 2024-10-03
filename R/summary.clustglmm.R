@@ -25,7 +25,7 @@ summary.clustglmm <- function(object, ...){
       grep("\\(1\\)", rownames(coda_summary[[1]]$statistics))]
     gnames <- gnames[!(grepl("^w", gnames) | grepl("^ng", gnames) | grepl("^pUig", gnames))]
     
-    cnames <- c("Gplus", "e0", paste0("w(",1:x$G,")"))
+    cnames <- c("Gplus", "e0", paste0("w(",1:object$G,")"))
   }
   
   res <- list(call=object$call,

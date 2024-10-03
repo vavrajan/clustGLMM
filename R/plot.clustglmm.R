@@ -6,7 +6,7 @@ plot.clustglmm <- function(x, what="ng", which="traceplots", ...){
   }
   if(missing(which)){
     if(what == "pUig_int"){
-      which="cluster_kerneldensity"
+      which="clusters_kerneldensity"
     }
   }
   switch(which,

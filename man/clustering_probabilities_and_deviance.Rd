@@ -39,6 +39,13 @@ a thinning that should be used between \code{start} and \code{end}; e.g. if \cod
   \item{chains}{
 chain number(s) for which the approximation should be computed. 
 }
+  \item{howsave}{
+a string declaring how the sampled chains should be returned as \code{draws}. One of:
+\describe{
+\item{\code{list}}{\code{draws} is a list indexed by chain numbers, parameters will be saved in a structured list in which it is easy to orient,}
+\item{\code{matrix}}{\code{draws} is a large matrix, where one row corresponds to one iteration of one specific chain and columns are all model parameters,}
+\item{\code{cmcmc}}{\code{draws} is a list indexed by chain numbers and contains the condensed output of inner C function (not recommended!).}
+}}
   \item{tolerance}{
 tolerance when computing norm of the shift within Newton-Raphson.
 }

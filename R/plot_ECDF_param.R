@@ -236,12 +236,18 @@ plot_ECDF_param <-
                 for(g in nonempty[[ch]]){
                   if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
                   for(i in 1:v$d1){
+                    d2 <- ifelse(v$d2spec, mcmc$d2spec[[what]][i], v$d2)
                     for(j in 1:v$d2){
                       plot_ECDF(mcmc = mcmc, what = what,
                                 gspec = g, dimspec = c(i,j),
                                 burnin = burnin, thin = thin, 
                                 iterations = iterations, chains = ch, 
                                 labcex = 0.6)
+                    }
+                    if(d2 < v$d2){
+                      for(j in 1:(v$d2-d2)){
+                        plot(0,0, type="n", bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
+                      }
                     }
                   }
                 }
@@ -330,12 +336,18 @@ plot_ECDF_param <-
               # none dimension is y-specific
               if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
               for(i in 1:v$d1){
-                for(j in 1:v$d2){
+                d2 <- ifelse(v$d2spec, mcmc$d2spec[[what]][i], v$d2)
+                for(j in 1:d2){
                   plot_ECDF(mcmc = mcmc, what = what,
                             dimspec = c(i,j),
                             burnin = burnin, thin = thin, 
                             iterations = iterations, chains = chains, 
                             labcex = 0.6)
+                }
+                if(d2 < v$d2){
+                  for(j in 1:(v$d2-d2)){
+                    plot(0,0, type="n", bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
+                  }
                 }
               }
             }
@@ -343,6 +355,6 @@ plot_ECDF_param <-
         }
       }
     }else{
-      warning("There is nothing to create ECDF from.")
+      warning("There is nothing to be plotted, parameter dimension is 0.")
     }
   }

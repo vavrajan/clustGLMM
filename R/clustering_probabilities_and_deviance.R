@@ -8,7 +8,8 @@ function(mcmc,      # MCMC generated parameters
          start = 1,
          end = mcmc$iter,
          thin = 1,
-         chains = 1:mcmc$nchains,
+         chains = mcmc$chains,
+         howsave = mcmc$howsave,
          tolerance = mcmc$tuning$double$tolerance, # tolerance when computing norm of the shift within Newton-Raphson
          maxiter = mcmc$tuning$integer$maxiter, # maximum iterations allowed during Newton-Raphson update of proposal distribution
          maxnrep = mcmc$tuning$integer$maxnrep,
@@ -218,18 +219,24 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   ydepparams <- c(paste0("beta_", c("num", "poi", "bin", "ord", "cat"), "_fix"),
                   paste0("beta_", c("num", "poi", "bin", "ord", "cat")),
                   "c_ord")
-  
+  d2spec <- list()
   
   settings <- mcmc$settings
   rownames(settings)[rownames(settings)=="loglik"] <- "deviance"
   rownames(settings)[rownames(settings)=="pUig"] <- "pUig_int"
   settings["deviance", "save"] <- TRUE
   settings["pUig_int", "save"] <- TRUE
-  settings["pUig_int",  c("d1", "dims", "dimswithG")] = c(ifelse(dynamic_prob,N,n), 
-                                                          ifelse(dynamic_prob,N,n), 
-                                                          ifelse(dynamic_prob,N,n)*mcmc$G)
+  if(dynamic_prob){
+    settings["pUig_int", c("d2spec", "BYROW")] <- c(TRUE, TRUE)
+    settings["pUig_int", c("d1", "d2", "D", "dims", "dimswithG")] = c(n, max_n_i, 2, N, N*mcmc$G)
+    d2spec[["pUig_int"]] <- nsubj
+  }else{
+    settings["pUig_int",  c("d1", "dims", "dimswithG")] = c(n, n, n*mcmc$G)
+    
+  }
   settings_devi <- settings["U", ]
   settings_devi[,"save"] <- TRUE
+  settings_devi[,c("d1", "dims", "dimswithG")] <- c(n, n, n)
   rownames(settings_devi) <- "dev_i"
   settings <- rbind(settings, settings_devi)
   
@@ -288,17 +295,18 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   
   # all the following three are going to be saved
   nparams <- sum(settings[c("deviance", "dev_i", "pUig_int"), "dimswithG"])
-  output <- list()
+  output <- cmcmc <- list()
   
-  if(mcmc$howsave == "matrix"){
+  if(howsave == "matrix"){
     param_names <- list()
     cnames <- character(1+nparams)
     cnames[1] = "m"
     index = 1
     for(p in c("deviance", "dev_i", "pUig_int")){
       if(settings[p, "save"]){
-        aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
-                               p = p, settings = settings, family = mcmc$family)
+        aux = from_C_to_matrix(values = rep(NA, settings[p,"dimswithG"]),
+                               p = p, settings = settings, 
+                               d2spec = d2spec[[p]], family = mcmc$family)
         param_names[[p]] <- colnames(aux)
         cnames[(index+1):(index+settings[p,"dimswithG"])] = colnames(aux)
         index = index + settings[p,"dimswithG"]
@@ -315,8 +323,6 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     #if(dev){cdeviance <- double(niter*cdimswithK["deviance"])}else{cdeviance <- as.double(0)}
     
     if(mcmc$howsave == "list"){
-      output[[ch]] <- list()
-      
       for(p in params[1:14]){
         cparamvalues[[p]] <- from_list_to_C(mcmc$draws[[ch]], 
                                             iterations,
@@ -328,13 +334,14 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     }
     
     if(mcmc$howsave == "matrix"){
-      output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams)
-      output[[ch]][,1] <- iterations
-      colnames(output[[ch]]) <- cnames
-      output[[ch]] <- as.data.frame(output[[ch]])
-      
       for(p in params[1:14]){
         cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations, p, settings)
+      }
+    }
+    
+    if(mcmc$howsave == "cmcmc"){
+      for(p in params[1:14]){
+        cparamvalues[[p]] <- mcmc$draws[[ch]][[p]]
       }
     }
     
@@ -388,7 +395,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     # print(maxnrep)
     
     #system.time(
-    cmcmc <-
+    cmcmc[[ch]] <-
       .C(C_pUig_dev,
          Id        = as.integer(cId),
          Y         = as.double(cY),
@@ -444,25 +451,39 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
          maxiter      = as.integer(maxiter),
          maxnrep      = as.integer(maxnrep)
       )
-
-    if(mcmc$howsave == "list"){
-      # results will be returned in structured list - the same way as original R function
+    
+    if(howsave != "matrix"){
+      # results will be returned as it was returned by C function
       chain <- list()
       for(p in c("deviance", "dev_i", "pUig_int")){
         if(settings[p, "save"]){
-          chain[[p]] <- from_C_to_list(cmcmc[[p]], p, settings, family=mcmc$family)
+          
+          if(howsave == "cmcmc"){
+            chain[[p]] <- cmcmc[[ch]][[p]]
+          }
+          
+          if(howsave == "list"){
+            chain[[p]] <- from_C_to_list(cmcmc[[ch]][[p]], p, settings, 
+                                         d2spec = d2spec[[p]], family=mcmc$family)
+          }
         }
       }
       chain[["m"]] <- iterations
-
+      
       output[[ch]] <- chain
     }
 
-    if(mcmc$howsave == "matrix"){
+    if(howsave == "matrix"){
       # results will be returned in matrix - the same way as original R function
+      output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams)
+      output[[ch]][,1] <- iterations
+      colnames(output[[ch]]) <- cnames
+      output[[ch]] <- as.data.frame(output[[ch]])
+      
       for(p in c("deviance", "dev_i", "pUig_int")){
         if(settings[p, "save"]){
-          aux = from_C_to_matrix(cmcmc[[p]], p, settings, family=mcmc$family)
+          aux = from_C_to_matrix(cmcmc[[ch]][[p]], p, settings, 
+                                 d2spec = d2spec[[p]], family=mcmc$family)
           output[[ch]][, colnames(aux)] <- aux
         }
       }
@@ -475,6 +496,11 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   res$draws <- output
   res$chains <- chains
   res$settings <- settings[c("deviance", "dev_i", "pUig_int"), ]
+  res$n <- n
+  res$N <- N
+  res$numbered_unique_ids <- numbered_unique_ids
+  res$d2spec <- d2spec
+  res$howsave <- howsave
   
   # perform clustering based on approximated values
   clusters <- list()
@@ -482,7 +508,15 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   clustering <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
   certainty <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
   for(ch in chains){
-    probs <- from_C_to_matrix(cmcmc[["pUig_int"]], "pUig_int", settings, family=mcmc$family)
+    probs <- from_C_to_matrix(cmcmc[[ch]][["pUig_int"]], "pUig_int", settings, 
+                              d2spec=d2spec[["pUig_int"]], family=mcmc$family)
+    if(dynamic_prob){
+      # keep only the clustering probabilities for all available observations
+      pnames <- paste0("pUig_int(", rep(1:mcmc$G, each=n), 
+                       ")[", rep(1:n, mcmc$G), ",", 
+                       rep(nsubj, mcmc$G), "]")
+      probs <- probs[,pnames]
+    }
     psum <- apply(probs, 2, mean, na.rm=TRUE)
     probmean <- matrix(psum, ncol = mcmc$G, nrow = n, byrow = FALSE)
     
@@ -493,7 +527,6 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   }
   rownames(clustering) <- rownames(certainty) <- unique_ids
   # TODO remain unclustered with label 0
-  # TODO dynamic_prob = TRUE adjustments
   
   # res$modeGplus <- modeGplus # keep it the same or make it the number of non-empty clusters after classification?
   res$clusters <- clusters

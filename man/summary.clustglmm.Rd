@@ -9,7 +9,7 @@ A method for computing and printing the summary statistics of class \code{clustg
 }
 \usage{
 summary(object, ...)
-print(x, chains=c(1), type="statistics", ...)
+print(x, chains=c(1), ...)
 }
 \arguments{
   \item{object}{
@@ -21,15 +21,12 @@ an object of class \code{"summary.clustglmm"}, an output of \code{summary.clustG
   \item{chains}{
 a vector of chain numbers to print summary results of.
 }
-  \item{type}{
-either \code{"statistics"} or \code{"quantiles"}.
-}
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
 }
 }
 \details{
-  \code{print.summary} prints \code{call} and a brief summary of clustering for selected \code{chains}. Then, again for each selected chain prints the summary statistics as in \code{library(coda)}. You can choose one of the tables (\code{"statistics"} or \code{"quantiles"}) by \code{type}. 
+  \code{print.summary} prints a summary for each selected chain in \code{chains}. First, a brief summary of clustering is provided. The raw output of \code{clustGLMM} is based on sampled allocation indicators, output of \code{clustering_probabilities_and_deviance} provides summary of clustering based on approximated clustering probabilities. Then, the summary statistics for the key model parameters are provided in several blocks in \code{library(coda)} style. The output of \code{summary} contains both tables (\code{"statistics"} or \code{"quantiles"}) but only a combination of these two is printed (all quantiles and Mean). 
 }
 \value{
   \code{summary} returns a list of:
@@ -52,7 +49,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{print.summary.clustglmm}}, \code{\link{summary.mcmc}}
+\code{\link{clustGLMM}}, \code{\link{clustering_probabilities_and_deviance}}, \code{\link{print.summary.clustglmm}}, \code{\link{summary.mcmc}}
 }
 \examples{
 

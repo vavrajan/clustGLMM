@@ -1,4 +1,4 @@
-print.summary.clustglmm <- function(x, chains=c(1), type="statistics", ...){
+print.summary.clustglmm <- function(x, chains=c(1L), ...){
   # cat("Call:\n")
   # cat(x$call)
   # cat("\n## Clustering based on sampled indicators:\n")
@@ -17,7 +17,9 @@ print.summary.clustglmm <- function(x, chains=c(1), type="statistics", ...){
   
   cat("\n## Summary of the sampled parameters:\n")
   for(ch in chains){
-    s <- x$coda_summary[[ch]][[type]]
+    ss <- x$coda_summary[[ch]]$statistics
+    sq <- x$coda_summary[[ch]]$quantiles
+    s <- cbind(sq[,c("2.5%", "25%", "50%")], ss[,"Mean",drop=F], sq[,c("75%", "97.5%")])
     cat("-----------------------------------------------------------------------\n")
     cat(paste0("Chain ", ch, "\n"))
     cat("-----------------------------------------------------------------------\n")
