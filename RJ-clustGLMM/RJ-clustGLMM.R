@@ -50,7 +50,10 @@ plot_num_vs_x_grouped(students, "income", x="age", g="g", legend_placement="topl
 plot_num_vs_x_grouped(students, "log_ntrips", x="age", g="g", legend_placement="topleft")
 plot_cat_vs_x_grouped(students, "satisfaction", x="age", g="g")
 
+<<<<<<< HEAD
 
 ## ----students-prepare-for-clustGLMM-------------------------------------------
 id <- "i"
 
+=======
+>>>>>>> d764c73aa2ce109fbf9929fb0d394f6ef480b4f6
