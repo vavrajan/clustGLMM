@@ -42,6 +42,11 @@ summary(as.factor(table(data$i))) # summary of total observation counts
 summary(data[,c("age", "income", "ntrips", "satisfaction")])
 ```
 
+```{r save_dataset}
+students <- data[,c("i", "j", "g", "age", "income", "ntrips", "satisfaction", "b_num", "b_poi", "b_ord")]
+save(students, file="C:/Users/jvavra/OneDrive - WU Wien/Documents/PhD/clustGLMM/RJ-clustGLMM/data/students.RData")
+```
+
 ## Plotting longitudinal data
 
 ### Numerical outcome - student income vs. age
