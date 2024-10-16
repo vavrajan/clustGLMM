@@ -48,7 +48,9 @@ author:
 bibliography: RJ-clustGLMM.bib
 type: package
 output: 
-  rjtools::rjournal_article:
+  rjtools::rjournal_pdf_article:
+    toc: no
+  rjtools::rjournal_web_article:
     self_contained: yes
     toc: no
 ---
@@ -75,22 +77,23 @@ Our paper [@Vavra-etal2024]. Our package \pkg{clustGLMM}.
 
 We compare to \CRANpkg{lcmm} [@Proust-Lima-etal2017], \CRANpkg{mixAK}, \CRANpkg{flexmix}, \CRANpkg{MCMCglmm}. We take an inspiration from \CRANpkg{brms}.
 
-# Background
+# Methodology
 
 Briefly explain the model, the use of model-based clustering and sparse finite mixtures and MCMC algorithm.
 
-## Model
+## GLMMs
 different distribution families
 
 joint modelling of random effects
 
+## Model-based clustering of GLMMs
++ mention sparse finite mixtures
+`Gplus` definition and prior for weights
+
 ## Priors
 list of the used prior distributions + link with the parameters of `clustGLMM` function?
 
-## Sparse finite mixtures
-`Gplus` definition and prior for weights
-
-# Implementation
+# Inference
 
 ## Scaling the numerical outcomes and regressors
 explain how the input data are scaled and how does it reference to model parameters
@@ -98,8 +101,21 @@ explain how the input data are scaled and how does it reference to model paramet
 ## MCMC estimation
 Gibbs + Metropolis-within-Gibbs steps
 
+algorithm
+
 ## clustering probabilities and deviance ?
 integral approximation
+
+## Post-processing
+
+# Implementation
+describe in words how it is implemented
+
+main functions
+
+what is the workflow - how do I structure data, change prior, initialize, how to set group-specificity, how to process MCMC samples, clustering
+
++ functions in a table
 
 # Application
 code+outputs
@@ -108,7 +124,7 @@ code+outputs
 exemplary use of \pkg{clustGLMM} - step by step explanation and command introduction
 
 ```{r load-students}
-data("students")
+data("students", package="clustGLMM")
 ```
 
 ```{r head-students}
@@ -141,9 +157,11 @@ plot_num_vs_x_grouped(students, "log_ntrips", x="age", g="g", legend_placement="
 plot_cat_vs_x_grouped(students, "satisfaction", x="age", g="g")
 ```
 
-### `clustGLMM`
+### clustGLMM
+
 how to prepare the call of `clustGLMM`
-```{r students-prepare-for-clustGLMM}
+
+```{r students-prepare-for-clustGLMM, echo = TRUE}
 id <- "i"
 ```
 
