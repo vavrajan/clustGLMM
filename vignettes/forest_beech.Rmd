@@ -127,7 +127,7 @@ mcmc_year <- clustGLMM(formula = formula_year, id = id, family = family, data = 
 #perm <- list()
 #perm[[1]] <- c(1, 2, 3) 
 #perm[[2]] <- c(1, 2, 3) 
-#mcmc <- PermuteClusterSpec(mcmc, perm)
+#mcmc <- permute_cluster_labels(mcmc, perm)
 ```
 
 ```{r mcmc_year_summary, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
@@ -307,7 +307,7 @@ mcmc_age <- clustGLMM(formula = formula_age, id = id, family = family_age, data 
 #perm <- list()
 #perm[[1]] <- c(1, 2, 3) 
 #perm[[2]] <- c(1, 2, 3) 
-#mcmc <- PermuteClusterSpec(mcmc, perm)
+#mcmc <- permute_cluster_labels(mcmc, perm)
 ```
 
 ```{r mcmc_age_summary, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}

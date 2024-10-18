@@ -2,8 +2,7 @@ plot_ACF <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains,
-         COL, move.width = 0.3, labcex = 1, whatLAB,
-         restrictedtoGplus = FALSE){
+         COL, move.width = 0.3, labcex = 1, whatLAB){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(opar)
   if(missing(chains)){chains = mcmc$chains}
@@ -15,8 +14,7 @@ function(mcmc, scalar_samples,
     scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what,
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
                                          burnin = burnin, thin = thin, 
-                                         iterations = iterations, chains = chains,
-                                         restrictedtoGplus = restrictedtoGplus)
+                                         iterations = iterations, chains = chains)
   }
   subiter <- max(unlist(lapply(scalar_samples, function(x){dim(x)[1]})), na.rm=TRUE)
   if(lag.max >= subiter){lag.max <- subiter-1}
@@ -29,11 +27,6 @@ function(mcmc, scalar_samples,
     }
     
     if(!missing(gspec)){
-      if(restrictedtoGplus){
-        if(gspec > min(unlist(mcmc$modeGplus)[as.character(chains)])){
-          stop("You have asked for g such that may not be included in one of the chains")
-        }
-      }
       whatLAB <- paste0(whatLAB, "(", gspec, ")")
     }
     

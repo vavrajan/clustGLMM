@@ -27,19 +27,19 @@ All of these for one specific parameter can be plotted by \code{plot_all}. These
 \usage{
 plot_ACF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains, 
-         COL, move.width = 0.3, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
+         COL, move.width = 0.3, labcex = 1, whatLAB)
 plot_ECDF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
           burnin = 0, thin = 1, iterations, chains, 
-          COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
+          COL, labcex = 1, whatLAB)
 plot_kerneldensity(mcmc, scalar_samples, what, gspec, dimspec, yspec, 
                    burnin = 0, thin = 1, iterations, chains, 
-                   dolegend = FALSE, COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
+                   dolegend = FALSE, COL, labcex = 1, whatLAB)
 plot_traceplots(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                 burnin = 0, thin = 1, iterations, chains, 
-                COL, labcex = 1, whatLAB, restrictedtoGplus = FALSE)
+                COL, labcex = 1, whatLAB)
 plot_all(mcmc, scalar_samples, what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max, iterations, chains, trueval, setparmfrow = TRUE, 
-         COL, move.width = 0.3, whatLAB, restrictedtoGplus = FALSE)
+         COL, move.width = 0.3, whatLAB)
 plot_ACF_param(mcmc, what, burnin = 0, thin = 1, lag.max = 30, iterations, chains, setparmfrow = TRUE)
 plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
 plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
@@ -47,8 +47,7 @@ plot_traceplots_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setp
 plot_clusters(mcmc, what, dimspec, yspec, whichg,
               burnin = 0, thin = 1, setparmfrow = TRUE, 
               iterations, chains, doKern = TRUE, doECDF = TRUE,
-              COL, labcex = 0.8, whatLAB, wherelegend = "topright",
-              restrictedtoGplus = FALSE)
+              COL, labcex = 0.8, whatLAB, wherelegend = "topright")
 plot_clusters_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
 plot_clusters_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
 }
@@ -107,9 +106,6 @@ the label for the parameter; default corresponds to the label for that parameter
   \item{dolegend}{
 a boolean declaring whether legend should be added to the plot.  
 }
-\item{restrictedtoGplus}{
-a boolean declaring whether the values should be taken from post-processed data by \code{\link{RestrictionToModeGplus}}.
-}
   \item{whichg}{
 a set of cluster numbers to be compared in \code{plot_clusters}.  
 }
@@ -152,7 +148,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{get_scalar_samples}}, \code{\link{nice_nrow_ncol}}, \code{\link{RestrictionToModeGplus}}.
+\code{\link{clustGLMM}}, \code{\link{get_scalar_samples}}, \code{\link{nice_nrow_ncol}}, \code{\link{post_processing}}.
 }
 \examples{
 

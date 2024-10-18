@@ -2,23 +2,21 @@ plot_traceplots <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, iterations, chains,
-         COL, labcex = 1, whatLAB,
-         restrictedtoGplus = FALSE){
+         COL, labcex = 1, whatLAB){
   opar <- par(mar = c(3.5,3.5,0.8,0.8))
   on.exit(par(opar))
-  if (missing(chains)){chains = mcmc$chains}
+  if(missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
-  if (!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}
+  if(!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   #if (missing(yspec)){yspec <- ""}
-  if (missing(scalar_samples)){
+  if(missing(scalar_samples)){
     scalar_samples <- get_scalar_samples(mcmc = mcmc, what = what, 
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
                                          burnin = burnin, thin = thin, 
-                                         iterations = iterations, chains = chains,
-                                         restrictedtoGplus = restrictedtoGplus)
+                                         iterations = iterations, chains = chains)
   }
-  if (missing(whatLAB)){
+  if(missing(whatLAB)){
     whatLAB <- what
     
     if(!missing(yspec)){
@@ -26,11 +24,6 @@ function(mcmc, scalar_samples,
     }
     
     if(!missing(gspec)){
-      if(restrictedtoGplus){
-        if(gspec > min(unlist(mcmc$modeGplus)[as.character(chains)])){
-          stop("You have asked for g such that may not be included in one of the chains")
-        }
-      }
       whatLAB <- paste0(whatLAB, "(", gspec, ")")
     }
     

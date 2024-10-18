@@ -505,8 +505,8 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   # perform clustering based on approximated values
   clusters <- list()
   modeGplus <- numeric(mcmc$nchains)
-  clustering <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
-  certainty <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
+  clustering <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
+  certainty <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
   for(ch in chains){
     probs <- from_C_to_matrix(cmcmc[[ch]][["pUig_int"]], "pUig_int", settings, 
                               d2spec=d2spec[["pUig_int"]], family=mcmc$family)

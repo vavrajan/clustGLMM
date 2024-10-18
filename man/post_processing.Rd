@@ -1,15 +1,15 @@
-\name{RestrictionToModeGplus}
-\alias{RestrictionToModeGplus}
-\alias{PermuteClusterSpec}
+\name{post_processing}
+\alias{post_processing}
+\alias{permute_cluster_labels}
 \title{
 Post-process the clustGLMM sampled chains
 }
 \description{
-Sampling MCMC chains via \code{\link{clustGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. Many clusters are eventually empty and only some cluster labels survive. Given random initialization, different chains may end up with different labels of non-empty clusters including their total count. The function \code{RestrictionToModeGplus} performs the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016).
+Sampling MCMC chains via \code{\link{clustGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. Many clusters are eventually empty and only some cluster labels survive. Given random initialization, different chains may end up with different labels of non-empty clusters including their total count. The function \code{post_processing} performs the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016).
 }
 \usage{
-RestrictionToModeGplus(mcmc, cols)
-PermuteClusterSpec(mcmc, perm)
+post_processing(mcmc, cols)
+permute_cluster_labels(mcmc, perm)
 }
 \arguments{
   \item{mcmc}{
@@ -23,7 +23,7 @@ a list of permutation of cluster labels, one permutation for each chain.
 }
 }
 \details{
-\code{RestrictionToModeGplus} follows the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016) to identify the number of underlying cluster and to resolve possible issues with label-switching. All post-processing is done separately for each chain, keep in mind that the results among chains may differ due to different initial conditions. 
+\code{post_processing} follows the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016) to identify the number of underlying cluster and to resolve possible issues with label-switching. All post-processing is done separately for each chain, keep in mind that the results among chains may differ due to different initial conditions. 
 The procedure can be divided into several steps:
 
 0) The procedure works with \code{mcmc$draws} only under \code{howsave = "matrix"}, so if \code{howsave = "list"} then \code{mcmc} is converted to the \code{"matrix"} format.  
@@ -46,7 +46,7 @@ The procedure can be divided into several steps:
 
 These values are added to \code{mcmc}. If you wish to create plots with these values using the predefined plotting functions \code{\link{plot_all}} use \code{restrictedtoGplus = TRUE}.
 
-\code{PermuteClusterSpec} simply takes the list of permutations \code{perm} and reshuffles the cluster labels as requested. Useful when you want to align the meaning of cluster labels across different chains. For example, an element of the \code{perm} list should be a vector \code{c(2, 3, 4, 1)}, if
+\code{permute_cluster_labels} simply takes the list of permutations \code{perm} and reshuffles the cluster labels as requested. Useful when you want to align the meaning of cluster labels across different chains. For example, an element of the \code{perm} list should be a vector \code{c(2, 3, 4, 1)}, if
 
 cluster 2 is to become cluster 1,
 
@@ -59,7 +59,7 @@ cluster 1 is to become cluster 4.
 \value{
 Both functions return back list of the same structure as \code{mcmc}. 
 
-\code{RestrictionToModeGplus} return \code{mcmc} without any changes, but includes additional elements: 
+\code{post_processing} return \code{mcmc} without any changes, but includes additional elements: 
 \item{modeGplus}{a list of the most frequent \code{Gplus} value for each chain.}
 \item{iters}{a list of the number of samples with \code{Gplus} equal to the \code{modeGplus} for each chain, basically new \code{iter} value for each of the chains.}
 \item{inds}{a list of indices of samples with \code{Gplus} equal to the \code{modeGplus} for each chain. Its length is \code{iters}.}
@@ -72,7 +72,7 @@ The following are cluster-relevant model parameters that do not fall into the se
 \item{UGplus}{a list of subsetted (by \code{inds}) and permuted samples of the cluster allocation indicators \code{U} for each chain.}
 \item{pUigGplus}{a list of subsetted (by \code{inds}) and permuted samples of the full-conditional clustering probabilities \code{pUig} for each chain.}
 
-\code{PermuteClusterSpec} returns \code{mcmc} without any additional elements, but only alters already existing elements. In particular, permutes all cluster-specific parameters as required. 
+\code{permute_cluster_labels} returns \code{mcmc} without any additional elements, but only alters already existing elements. In particular, permutes all cluster-specific parameters as required. 
 }
 \references{
 Frühwirth-Schnatter, S. (2011) Dealing with Label Switching under Model Uncertainty, John Wiley & Sons, chap 10, pp 213–239
@@ -85,7 +85,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{plot_all}}, \code{\link{nice_nrow_ncol}}, \code{\link{RestrictionToModeGplus}}.
+\code{\link{clustGLMM}}, \code{\link{plot_all}}, \code{\link{nice_nrow_ncol}}, \code{\link{post_processing}}.
 }
 \examples{
 ###-----------------------------------------------------------------------------
@@ -152,9 +152,9 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 ###     Post-processing the sampled chains
 ###-----------------------------------------------------------------------------
 
-### First run the function RestrictionToModeGplus
+### First run the function post_processing
 # takes some time with iter large....
-mcmc <- RestrictionToModeGplus(mcmc)
+mcmc <- post_processing(mcmc)
 
 # the most frequent Gplus value in each chain
 mcmc$modeGplus
@@ -207,7 +207,7 @@ perm[[1]] <- 1:mcmc$modeGplus[[1]] # change if needed
 perm[[2]] <- rev(1:mcmc$modeGplus[[2]]) # change if needed
 
 # function to permute meaning of cluster labels in mcmc according to perm
-mcmc <- PermuteClusterSpec(mcmc, perm)
+mcmc <- permute_cluster_labels(mcmc, perm)
 
 
 

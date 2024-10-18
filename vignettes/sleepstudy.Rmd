@@ -195,7 +195,7 @@ perm <- list()
 perm[[1]] <- c(1, 2) # preserve the meaning from the first chain
 perm[[2]] <- c(2, 1) # reverse the meaning to resemble the first chain
 perm[[3]] <- c(1, 2) # keep this one the same
-mcmc <- PermuteClusterSpec(mcmc, perm)
+mcmc <- permute_cluster_labels(mcmc, perm)
 mcmc$clustering
 ```
 

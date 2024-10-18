@@ -103,7 +103,7 @@ perm <- list()
 perm[[1]] <- c(1, 2) 
 perm[[2]] <- c(2, 1) 
 perm[[3]] <- c(1, 2) 
-mcmc <- PermuteClusterSpec(mcmc, perm)
+mcmc <- permute_cluster_labels(mcmc, perm)
 ```
 
 

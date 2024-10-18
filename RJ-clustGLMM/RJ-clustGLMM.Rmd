@@ -5,6 +5,7 @@ abstract: >
   An abstract of less than 150 words.
 preamble: |
   % Any extra LaTeX you need in the preamble
+  \DeclareMathOperator{\diag}{\mathsf{diag}}
 draft: true
 author:
   - name: Jan Vávra
@@ -43,17 +44,18 @@ author:
     address:
     - Sokolovská 49/83
     - 186 75 Praha 8
-# per R journal requirement, the bib filename should be the same as the output 
-# tex file. Don't forget to rename the bib file and change this example value.
 bibliography: RJ-clustGLMM.bib
 type: package
 output: 
-  rjtools::rjournal_pdf_article:
-    toc: no
   rjtools::rjournal_web_article:
     self_contained: yes
     toc: no
 ---
+<!--
+  rjtools::rjournal_pdf_article:
+    toc: no
+---
+-->
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = 'figure-latex/')
@@ -79,7 +81,7 @@ We compare to \CRANpkg{lcmm} [@Proust-Lima-etal2017], \CRANpkg{mixAK}, \CRANpkg{
 
 # Methodology
 
-Briefly explain the model, the use of model-based clustering and sparse finite mixtures and MCMC algorithm.
+
 
 ## GLMMs
 different distribution families
@@ -96,7 +98,70 @@ list of the used prior distributions + link with the parameters of `clustGLMM` f
 # Inference
 
 ## Scaling the numerical outcomes and regressors
-explain how the input data are scaled and how does it reference to model parameters
+
+Ideally, for a numeric outcome $Y$ we would like to estimate the model given by:
+$$
+Y_{ij} = \beta_0^{(g)} + \mathbf{F}_{ij}^\top \mathbf{\beta} + \mathbf{X}_{ij}^\top \mathbf{\beta}^{(g)} + b_{i,0}+ \mathbf{Z}_{ij}^\top \mathbf{b}_{i} + \varepsilon_{ij}
+$$
+However, depending on scales of outcome and regressors $\beta$ and $b$ parameters could be of various scales as well. Then, it is not reasonable to assume the same fixed prior for $\beta$ as they may be on different scales. Therefore, we standardize each numeric outcome and column in model matrix. Intercept $\beta_0^{(g)}$ **has to be group-specific** in this case (see the formula for transformation back). We fit the following model treating means $m^\bullet$ and scales $S^\bullet$ as known constants:
+
+$$
+\dfrac{Y_{ij} - m^Y}{S^Y} = \widetilde{\beta}_0^{(g)} + \sum\limits_{k\neq 0}\dfrac{F_{ijk} - m^F_k}{S^{F}_k}\widetilde{\beta}_k + \sum\limits_{k\neq 0}\dfrac{X_{ijk} - m^X_k}{S^{X}_k}\widetilde{\beta}_k^{(g)} + \widetilde{b}_{i,0} + \sum\limits_{k\neq 0}\dfrac{Z_{ijk} - m^Z_k}{S^{Z}_k}\widetilde{b}_{i,k} + \widetilde{\varepsilon}_{ij}
+$$
+In this setting coefficients $\beta$ and random effects $b$ are tied to columns of unified scale.  
+Then, to obtain the original interpretation of model parameters we have to:
+\begin{align}
+\widetilde{\beta}_k 
+&\;\rightsquigarrow\; 
+\beta_k = \dfrac{S^Y}{S^F_k} \widetilde{\beta}_k 
+\\
+\widetilde{\beta}_k^{(g)} 
+&\;\rightsquigarrow\; 
+\beta_k^{(g)} = \dfrac{S^Y}{S^X_k} \widetilde{\beta}_k^{(g)}
+\\
+\widetilde{\beta}_0^{(g)} 
+&\;\rightsquigarrow\; 
+\beta_0^{(g)} = m^Y + S^Y \widetilde{\beta}_0^{(g)} 
+- \sum\limits_{k\neq 0} m^F_k \beta_k 
+- \sum\limits_{k\neq 0} m^X_k \beta_k^{(g)} 
+\\
+\widetilde{b}_{i,k} 
+&\;\rightsquigarrow\; 
+b_{i,k} = \dfrac{S^Y}{S^Z_k} \widetilde{b}_{i,k}
+\\
+\widetilde{b}_{i,0} 
+&\;\rightsquigarrow\; 
+b_{i,0} = S^Y \widetilde{b}_{i,0} 
+- \sum\limits_{k\neq 0} m^Z_k b_{i,k}
+\\
+\widetilde{\tau}^{(g)}
+&\;\rightsquigarrow\; 
+\tau^{(g)} = \dfrac{\widetilde{\tau}^{(g)}}{\left(S^Y\right)^2}
+\\
+L_r &\;=\;
+\begin{pmatrix}
+  1 & -\dfrac{m^Z_1}{S^Z_1} & -\dfrac{m^Z_{\ldots}}{S^Z_{\ldots}} \\
+  0 & \dfrac{1}{S^Z_1} & 0 \\
+  0 & 0 & \dfrac{1}{S^Z_{\ldots}}
+\end{pmatrix}
+\\
+L &\;=\; \diag
+\left\{S^Y
+  L_{\mathsf{Num}}, L_{\mathsf{Poi}}, L_{\mathsf{Bin}}, L_{\mathsf{Ord}}, L_{\mathsf{Cat}} 
+\right\}
+\\
+\widetilde{\Sigma}^{(g)}
+&\;\rightsquigarrow\; 
+\Sigma^{(g)} = 
+L \widetilde{\Sigma}^{(g)} L^\top
+\end{align}
+
+*Should we scale regressors also for other than numeric outcomes?*
+
+*What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? e.g. splines with intercept*
+
+*What if random intercept is not included among random effects?*
+
 
 ## MCMC estimation
 Gibbs + Metropolis-within-Gibbs steps

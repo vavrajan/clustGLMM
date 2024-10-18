@@ -280,8 +280,8 @@ Change the save settings if you want to calculate these probabilities afterwards
     offnames <- c(offnames, loffnames[[y]])
   }
   totnran <- sum(nran)+ifelse(tuning$integer$kspec_bi_cat, sum(nran[Cats]*Kcat)-sum(nran[Cats]), 0)
-  totnfix <- sum(nfix)-sum(nfix[Cats])+sum(nfix[Cats]*Kcat)
-  totngrp <- G * (sum(ngrp)-sum(ngrp[Cats])+sum(ngrp[Cats]*Kcat))
+  # totnfix <- sum(nfix)-sum(nfix[Cats])+sum(nfix[Cats]*Kcat)
+  # totngrp <- G * (sum(ngrp)-sum(ngrp[Cats])+sum(ngrp[Cats]*Kcat))
   
   if(totnran == 0){
     warning("There are no random effects specific for each subject.
@@ -1423,12 +1423,6 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   
   ## U-based clustering
-  # the most common Gplus value
-  modeGplus <- as.numeric(lapply(mcmc$draws, 
-                                 function(x){
-                                   tab <- table(x$Gplus)
-                                   names(tab)[which.max(tab)]}))
-
   fun <- function(U, ch){
     tab = table(U)
     if(clusteringU_modeGplus){
@@ -1437,11 +1431,15 @@ Change the save settings if you want to calculate these probabilities afterwards
     c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
   }
     
-    
   clusters <- list()
-  clusteringU <- matrix(-1, nrow = as.numeric(n), ncol = nchains)
-  certaintyU <- matrix(-1, nrow = as.numeric(n), ncol = nchains)
+  modeGplus <- numeric(mcmc$nchains)
+  clusteringU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
+  certaintyU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
   for(ch in 1:nchains){
+    # find modeGplus - the most common Gplus value
+    tab <- table(mcmc$draws[[ch]]$Gplus)
+    modeGplus[ch] <- as.numeric(names(tab)[which.max(tab)])
+    # U samples
     Usamples[[ch]] <- from_C_to_matrix(values = Usamples[[ch]],
                                        p = "U",
                                        settings = settings,
@@ -1464,10 +1462,8 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$clusters <- clusters
   # Are the clusters for all chains the same?
   sameclusters <- TRUE
-  for(ch in 2:nchains){
-    if(ch <= nchains){
-      sameclusters <- (sameclusters & setequal(mcmc$clusters[[1]], mcmc$clusters[[ch]]))
-    }
+  for(ch in seq_len(nchains)[-1]){
+    sameclusters <- (sameclusters & setequal(mcmc$clusters[[1]], mcmc$clusters[[ch]]))
   }
   mcmc$sameclusters <- sameclusters
   
@@ -1580,6 +1576,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$yspecd2 <- yspecd2
   mcmc$d2spec <- d2spec
   mcmc$isYna <- cisYna
+  # mcmc$post_processed <- FALSE
   
   class(mcmc) <- "clustglmm"
   return(mcmc)

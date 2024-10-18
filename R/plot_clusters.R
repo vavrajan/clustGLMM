@@ -3,28 +3,29 @@ function(mcmc,
          what, dimspec, yspec, whichg,
          burnin = 0, thin = 1, iterations, chains, 
          setparmfrow = TRUE, doKern = TRUE, doECDF = TRUE,
-         COL, labcex = 0.8, whatLAB, wherelegend = "topright",
-         restrictedtoGplus = FALSE){
+         COL, labcex = 0.8, whatLAB, wherelegend = "topright"){
   if(setparmfrow){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
     par(mfrow = c(1,sum(c(doKern, doECDF))))
   }
   if(is.element(what,names(mcmc$varying))){
-    if (!mcmc$varying[what]){stop("This parameter wasn't considered as cluster-specific.")}
+    if(!mcmc$varying[what]){stop("This parameter wasn't considered as cluster-specific.")}
   }
-  if(missing(chains)){
-    if(restrictedtoGplus){
-      chains <- c(1)
-    }else{
-      chains <- mcmc$chains
-    }
-  }else{
-    if(restrictedtoGplus & length(chains) > 1){
-      warning("It is recommended to use one chain only when restrictedtoGplus=T, only first element of chains will be used.")
-      chains <- chains[1]
-    }
-  }
+  if(missing(chains)){chains <- mcmc$chains}
+  # if(missing(chains)){
+  #   if(mcmc$post_processed){
+  #     chains <- mcmc$chains[1]
+  #   }else{
+  #     chains <- mcmc$chains
+  #   }
+  # }else{
+  #   if(mcmc$post_processed & length(chains) > 1){
+  #     warning("It is recommended to use one chain only when working with post-processed samples, 
+  #             only first element of chains will be used.")
+  #     chains <- chains[1]
+  #   }
+  # }
     
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
   if(!missing(yspec)){
@@ -32,11 +33,18 @@ function(mcmc,
       stop("Unexisting response variable specified.")
     }
   }
-  G <- ifelse(restrictedtoGplus,
-              mcmc$modeGplus[chains],
-              mcmc$G)
   if(missing(whichg)){
-    whichg <- 1:G
+    sameclusters <- TRUE
+    for(ch in chains[-1]){
+      sameclusters <- sameclusters & setequal(mcmc$clusters[[chains[1]]], 
+                                              mcmc$clusters[[ch]])
+    }
+    if(sameclusters){
+      whichg <- mcmc$clusters[[chains[1]]]
+    }else{
+      stop("You are trying to plot multiple chains which differ in mcmc$clusters, default for whichg.
+           Either select whichg manually or use one chain only.")
+    }
   }
   
   scalar_samples <- data.frame()
@@ -45,8 +53,7 @@ function(mcmc,
       aux <- get_scalar_samples(mcmc = mcmc, what = what,
                                 gspec = g, dimspec = dimspec, yspec = yspec,
                                 burnin = burnin, thin = thin, 
-                                iterations = iterations, chains = ch,
-                                restrictedtoGplus = restrictedtoGplus)
+                                iterations = iterations, chains = ch)
       if(g == whichg[1]){
         colnames(aux[[ch]])[which(colnames(aux[[ch]])=="y")] <- paste0("y(",g,")")
         ssch = aux[[ch]]

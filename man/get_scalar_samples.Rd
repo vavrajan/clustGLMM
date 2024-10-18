@@ -9,8 +9,7 @@ This function takes an output of \code{clustGLMM} and finds all values related t
 \usage{
 get_scalar_samples(mcmc, what, gspec, dimspec, yspec, 
                    burnin = 0, thin = 1, 
-                   iterations, chains,
-                   restrictedtoGplus = FALSE)
+                   iterations, chains)
 }
 \arguments{
   \item{mcmc}{
@@ -39,9 +38,6 @@ a vector of iterations numbers to extract, overrides any given \code{burnin} or 
 }
   \item{chains}{
 a vector of chain numbers to be used.
-}
-  \item{restrictedtoGplus}{
-a boolean declaring whether the values should be taken from post-processed data by \code{RestrictionToModeGplus}.
 }
 }
 \details{

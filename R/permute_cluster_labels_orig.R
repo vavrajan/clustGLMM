@@ -1,64 +1,64 @@
-PermuteClusterSpec <-
+permute_cluster_labels <-
 function(mcmc, perm){
   # perm contains list of permutations - each for one chain
   # perm[[ch]][1] contains which old cluster should be the new first one (for chain ch)
   # ... and so on
   
-  ## permute only the restricted parameters according to given list of permutations
-  for(ch in 1:mcmc$nchains){
-    # permute w
-    if((!is.null(mcmc$wGplus)) & (length(mcmc$wGplus) > 0)){
-      auxwGplus <- matrix(-1, nrow = dim(mcmc$wGplus[[ch]])[1], ncol = 0)
-      for(g in 1:mcmc$modeGplus[[ch]]){
-        auxwGplus <- cbind(auxwGplus, mcmc$wGplus[[ch]][,perm[[ch]][g]])
-      }
-      colnames(auxwGplus) <- colnames(mcmc$wGplus[[ch]])
-      mcmc$wGplus[[ch]] <- auxwGplus
-    }
-
-    # permute ng
-    if((!is.null(mcmc$ngGplus)) & (length(mcmc$ngGplus) > 0)){
-      auxngGplus <- matrix(-1, nrow = dim(mcmc$ngGplus[[ch]])[1], ncol = 0)
-      for(g in 1:mcmc$modeGplus[[ch]]){
-        auxngGplus <- cbind(auxngGplus, mcmc$ngGplus[[ch]][,perm[[ch]][g]])
-      }
-      colnames(auxngGplus) <- colnames(mcmc$ngGplus[[ch]])
-      mcmc$ngGplus[[ch]] <- auxngGplus
-    }
-
-    # permute U
-    if((!is.null(mcmc$UGplus)) & (length(mcmc$UGplus) > 0)){
-      mcmc$UGplus[[ch]] <- apply(mcmc$UGplus[[ch]], c(1,2), function(g){which(perm[[ch]] == g)})
-    }
-    
-    # permute pUig
-    if((!is.null(mcmc$pUigGplus)) & (length(mcmc$pUigGplus) > 0)){
-      auxpU <- matrix(-1, nrow = dim(mcmc$pUigGplus[[ch]])[1], ncol = 0)
-      for(i in 1:mcmc$settings["U","dims"]){
-        auxpUig <- matrix(-1, nrow = dim(mcmc$pUigGplus[[ch]])[1], ncol = 0)
-        auxpUi <- mcmc$pUigGplus[[ch]][,paste0("pUig[",i,",",1:mcmc$modeGplus[[ch]], "]")]
-        for(g in 1:mcmc$modeGplus[[ch]]){
-          auxpUig <- cbind(auxpUig, auxpUi[,perm[[ch]][g]])
-        }
-        colnames(auxpUig) <- colnames(auxpUi)
-        auxpU <- cbind(auxpU, auxpUig)
-      }
-      mcmc$pUigGplus[[ch]] <- auxpU
-    }
-    
-    # permute clusterspec
-    if((!is.null(mcmc$clusterspec)) & (length(mcmc$clusterspec) > 0)){
-      aux <- mcmc$clusterspec[[ch]]
-      cnames <- colnames(aux)[grep("\\(1\\)", colnames(aux))]
-      for(g in 1:mcmc$modeGplus[[ch]]){
-        pnames <- gsub("\\(1\\)", paste0("\\(",perm[[ch]][g],"\\)"), cnames)
-        gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
-        aux[,gnames] <- mcmc$clusterspec[[ch]][,pnames]
-      } 
-      mcmc$clusterspec[[ch]] <- aux
-    }
-    
-  } # end of for ch in 1:nchains
+  # ## permute only the restricted parameters according to given list of permutations
+  # for(ch in 1:mcmc$nchains){
+  #   # permute w
+  #   if((!is.null(mcmc$wGplus)) & (length(mcmc$wGplus) > 0)){
+  #     auxwGplus <- matrix(-1, nrow = dim(mcmc$wGplus[[ch]])[1], ncol = 0)
+  #     for(g in 1:mcmc$modeGplus[[ch]]){
+  #       auxwGplus <- cbind(auxwGplus, mcmc$wGplus[[ch]][,perm[[ch]][g]])
+  #     }
+  #     colnames(auxwGplus) <- colnames(mcmc$wGplus[[ch]])
+  #     mcmc$wGplus[[ch]] <- auxwGplus
+  #   }
+  # 
+  #   # permute ng
+  #   if((!is.null(mcmc$ngGplus)) & (length(mcmc$ngGplus) > 0)){
+  #     auxngGplus <- matrix(-1, nrow = dim(mcmc$ngGplus[[ch]])[1], ncol = 0)
+  #     for(g in 1:mcmc$modeGplus[[ch]]){
+  #       auxngGplus <- cbind(auxngGplus, mcmc$ngGplus[[ch]][,perm[[ch]][g]])
+  #     }
+  #     colnames(auxngGplus) <- colnames(mcmc$ngGplus[[ch]])
+  #     mcmc$ngGplus[[ch]] <- auxngGplus
+  #   }
+  # 
+  #   # permute U
+  #   if((!is.null(mcmc$UGplus)) & (length(mcmc$UGplus) > 0)){
+  #     mcmc$UGplus[[ch]] <- apply(mcmc$UGplus[[ch]], c(1,2), function(g){which(perm[[ch]] == g)})
+  #   }
+  #   
+  #   # permute pUig
+  #   if((!is.null(mcmc$pUigGplus)) & (length(mcmc$pUigGplus) > 0)){
+  #     auxpU <- matrix(-1, nrow = dim(mcmc$pUigGplus[[ch]])[1], ncol = 0)
+  #     for(i in 1:mcmc$settings["U","dims"]){
+  #       auxpUig <- matrix(-1, nrow = dim(mcmc$pUigGplus[[ch]])[1], ncol = 0)
+  #       auxpUi <- mcmc$pUigGplus[[ch]][,paste0("pUig[",i,",",1:mcmc$modeGplus[[ch]], "]")]
+  #       for(g in 1:mcmc$modeGplus[[ch]]){
+  #         auxpUig <- cbind(auxpUig, auxpUi[,perm[[ch]][g]])
+  #       }
+  #       colnames(auxpUig) <- colnames(auxpUi)
+  #       auxpU <- cbind(auxpU, auxpUig)
+  #     }
+  #     mcmc$pUigGplus[[ch]] <- auxpU
+  #   }
+  #   
+  #   # permute clusterspec
+  #   if((!is.null(mcmc$clusterspec)) & (length(mcmc$clusterspec) > 0)){
+  #     aux <- mcmc$clusterspec[[ch]]
+  #     cnames <- colnames(aux)[grep("\\(1\\)", colnames(aux))]
+  #     for(g in 1:mcmc$modeGplus[[ch]]){
+  #       pnames <- gsub("\\(1\\)", paste0("\\(",perm[[ch]][g],"\\)"), cnames)
+  #       gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
+  #       aux[,gnames] <- mcmc$clusterspec[[ch]][,pnames]
+  #     } 
+  #     mcmc$clusterspec[[ch]] <- aux
+  #   }
+  #   
+  # } # end of for ch in 1:nchains
   
   
   ## permute everything in the original data  
