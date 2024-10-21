@@ -40,11 +40,11 @@ function(mcmc, cols){
   clusterspec <- whichG <- list()
   for(ch in mcmc$chains){
     suball <- mcmc$draws[[ch]][inds[[ch]], 
-                               c("m", "Gplus", paste0("ng(", 1:mcmc$G, ")"), cols)]
-    clusterspec[[ch]] <- matrix(NA, nrow = iters[ch], ncol = 1 + length(cols)/mcmc$G*mcmc$modeGplus[ch])
+                               c("m", "Gplus", paste0("ng(", 1:mcmc$G[ch], ")"), cols)]
+    clusterspec[[ch]] <- matrix(NA, nrow = iters[ch], ncol = 1 + length(cols)/mcmc$G[ch]*mcmc$modeGplus[ch])
     whichG[[ch]] <- matrix(NA, nrow = iters[ch], ncol = mcmc$modeGplus[ch])
     for(m in 1:iters[ch]){
-      whichG[[ch]][m,] <- which(suball[m, paste0("ng(", 1:mcmc$G, ")")] > 0)
+      whichG[[ch]][m,] <- which(suball[m, paste0("ng(", 1:mcmc$G[ch], ")")] > 0)
       #print(whichG)
       expr <- paste(paste0("\\(", whichG[[ch]][m,], "\\)"), collapse = "|")
       subcols <- cols[grep(expr, cols)]
@@ -62,7 +62,7 @@ created for each chain separately")
   ### 4) Prepare for k-means clustering
   forkmeans <- list()
   for(ch in mcmc$chains){
-    forkmeans[[ch]] <- matrix(NA, nrow = 0, ncol = length(cols)/mcmc$G)
+    forkmeans[[ch]] <- matrix(NA, nrow = 0, ncol = length(cols)/mcmc$G[ch])
     for(g in 1:mcmc$modeGplus[ch]){
       forkmeans[[ch]] <- rbind(forkmeans[[ch]], clusterspec[[ch]][,grep(paste0("\\(", g, "\\)"), 
                                                                         colnames(clusterspec[[ch]]))])
@@ -164,10 +164,10 @@ created for each chain separately")
     }
     
     # Add w and ng
-    if(is.element("w", rownames(mcmc$settings[mcmc$settings$save,]))){
+    if(is.element("w", rownames(mcmc$settings[[ch]][mcmc$settings[[ch]]$save,]))){
       # if "ng" would not be saved, then it would already complain above
-      suball <- mcmc$draws[[ch]][inds[[ch]], c(paste0("w(", 1:mcmc$G, ")"),
-                                               paste0("ng(", 1:mcmc$G, ")"))]
+      suball <- mcmc$draws[[ch]][inds[[ch]], c(paste0("w(", 1:mcmc$G[ch], ")"),
+                                               paste0("ng(", 1:mcmc$G[ch], ")"))]
       for(p in c("w", "ng")){
         pGplus <- matrix(NA, nrow = iters[ch], ncol = modeGplus[ch])
         colnames(pGplus) <- paste0(p,"(", 1:modeGplus[ch], ")")
@@ -189,7 +189,7 @@ created for each chain separately")
     } # end of adding w and ng
     
     # Add U
-    if(is.element("U", rownames(mcmc$settings[mcmc$settings$save,]))){
+    if(is.element("U", rownames(mcmc$settings[[ch]][mcmc$settings[[ch]]$save,]))){
       suball <- mcmc$draws[[ch]][inds[[ch]], paste0("U[", 1:mcmc$n, "]")]
       UGplus <- matrix(NA, nrow = iters[ch], ncol = mcmc$n)
       colnames(UGplus) <- paste0("U[", 1:mcmc$n, "]")
@@ -209,12 +209,12 @@ created for each chain separately")
     
     # Add pUig, pUig_int
     for(p in c("pUig", "pUig_int")){
-      if(is.element(p, rownames(mcmc$settings[mcmc$settings$save,]))){
+      if(is.element(p, rownames(mcmc$settings[[ch]][mcmc$settings[[ch]]$save,]))){
         pGplus <- matrix(NA, nrow = iters[ch], ncol = 0)
         for(i in 1:mcmc$n){
           suball <- mcmc$draws[[ch]][inds[[ch]], 
-                                     c(paste0(p,"(",1:mcmc$G,")[",i,"]"),
-                                       paste0("ng(",1:mcmc$G,")"))]
+                                     c(paste0(p,"(",1:mcmc$G[ch],")[",i,"]"),
+                                       paste0("ng(",1:mcmc$G[ch],")"))]
           pU <- matrix(NA, nrow = iters[ch], ncol = modeGplus[ch])
           colnames(pU) <- paste0(p,"(",1:modeGplus[ch],")[",i,"]")
           for(m in 1:iters[ch]){
@@ -239,9 +239,7 @@ created for each chain separately")
   
   fun <- function(U, ch){
     tab = table(U)
-    if(clusteringU_modeGplus){
-      tab <- tab[as.character(clusters[[ch]])]
-    }
+    tab <- tab[as.character(clusters[[ch]])]
     c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
   }
   
@@ -253,7 +251,7 @@ created for each chain separately")
   for(ch in mcmc$chains){
     clusters[[ch]] <- 1:modeGplus[ch]
     # U samples
-    if(mcmc$settings["U","save"]){
+    if(mcmc$settings[[ch]]["U","save"]){
       Us <- draws[[ch]][,paste0("U[",1:mcmc$n,"]")]
       ccU <- apply(Us, 2, fun, ch=ch)
       clustering[,ch] <- ccU[1, ]

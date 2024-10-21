@@ -6,7 +6,7 @@ function(
   id,        # column name of IDs declaring which observations come from the same unit
   family,    # named vector of family types 
   data,      # a data.frame object containing outcomes, regressors and id
-  G,         # total number of latent Groups=clusters
+  G,         # total number of latent Groups=clusters (can be different for all chains)
   varying,   # which parameters should be class-specific
                 # order: prec_num, c_ord, InvSigma, InvQ, naY
   save,      # what parameters should be saved, in order:
@@ -34,12 +34,23 @@ function(
   nchains = 1 # number of chains
 ){
   # TODO make these function parameters
-  clusteringU_modeGplus = TRUE
   
   # require("MASS")
   # require("nnet")
   
   ### Missing values from input
+  if(missing(G)){
+    G <- rep(2, nchains)
+  }else{
+    if(length(G) == 1){
+      G <- rep(G, nchains)
+    }else{
+      if(length(G) != nchains){
+        stop("You have given several G values but a different number of chains. 
+             Declare precisely with how many clusters G should each chain be estimated.")
+      }
+    }
+  }
   if (missing(varying)){
     varying <- default_varying()
   }
@@ -314,16 +325,16 @@ Change the save settings if you want to calculate these probabilities afterwards
       inits[[ch]] <- list()
       
       # parameters connected to classification
-      inits[[ch]]$w <- rep(1/G, G)
-      inits[[ch]]$U <- sample(1:G, n, replace = TRUE, prob = inits[[ch]]$w)
+      inits[[ch]]$w <- rep(1/G[ch], G[ch])
+      inits[[ch]]$U <- sample(1:G[ch], n, replace = TRUE, prob = inits[[ch]]$w)
       inits[[ch]]$e0 <- param$e0_shp / param$e0_rte
       #inits[[ch]]$U <- as.numeric(as.character(data$g[data$j==1]))
       Ng <- selection <- list()
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         Ng[[g]] <- unique_ids[inits[[ch]]$U == g]
         selection[[g]] <- is.element(data[,id], Ng[[g]])
       }
-      inits[[ch]]$pUig <- matrix(rep(inits[[ch]]$w, n), ncol = G, nrow = n, byrow = TRUE)
+      inits[[ch]]$pUig <- matrix(rep(inits[[ch]]$w, n), ncol = G[ch], nrow = n, byrow = TRUE)
       
       # parameters connected to numerical variables --> use linear regression
       inits[[ch]]$beta_num <- inits[[ch]]$beta_num_fix <- inits[[ch]]$prec_num <- list()
@@ -346,7 +357,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
         
         inits[[ch]]$beta_num[[y]] <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           inds <- selection[[g]] & !is.na(ydata[,y])
           pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]]], 1, sum)
           boldX <- as.matrix(finX[inds, Xvars])
@@ -367,7 +378,7 @@ Change the save settings if you want to calculate these probabilities afterwards
             inits[[ch]]$prec_num[[y]][[g]] <- 1/MSe
           }
           inits[[ch]]$beta_num[[y]][[g]] <- coefs[gcols[[y]]]
-        } # end of for g in 1:G
+        } # end of for g in 1:G[ch]
       } # end of for y in Nums
       
       # parameters connected to binary variables --> use logistic regression
@@ -388,7 +399,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_poi_fix[[y]] <- coefs[fcols[[y]]]
         
         inits[[ch]]$beta_poi[[y]] <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           auxdata <- as.data.frame(ydata[selection[[g]], ])
           auxglm <- tryCatch(glm(aux_form, data = auxdata,
                                  family = poisson(link = "log")),
@@ -426,7 +437,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_bin_fix[[y]] <- coefs[fcols[[y]]]
         
         inits[[ch]]$beta_bin[[y]] <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           auxdata <- as.data.frame(ydata[selection[[g]],])
           auxglm <- tryCatch(glm(aux_form, data = auxdata,
                                  family = binomial(link = "logit")),
@@ -475,7 +486,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
         
         inits[[ch]]$beta_ord[[y]] <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           if(length(unique(ydata[selection[[g]],y])) == Kord[y]+1){
             auxdata <- as.data.frame(auxdata0[selection[[g]],])
           }else{
@@ -510,7 +521,7 @@ Change the save settings if you want to calculate these probabilities afterwards
             inits[[ch]]$a_ord[[y]][[g]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
             inits[[ch]]$pi_ord[[y]][[g]] <- exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))))
           }
-        } # end for g in 1:G
+        } # end for g in 1:G[ch]
       } # end for y in Ords
       
       # parameters connected to ordinal variables --> use multinomial logistic regression
@@ -534,7 +545,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_cat_fix[[y]] <- t(sumauxmult0$coefficients[,fcols[[y]]])
         
         inits[[ch]]$beta_cat[[y]] <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           if(length(unique(ydata[selection[[g]],y])) == Kcat[y]+1){
             auxdata <- as.data.frame(auxdata0[selection[[g]],])
           }else{
@@ -563,7 +574,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         if(varying["InvQ"]){
           # so must be InvSigma
           inits[[ch]]$InvQ <- inits[[ch]]$InvSigma <- list()
-          for(g in 1:G){
+          for(g in 1:G[ch]){
             inits[[ch]]$InvSigma[[g]] <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
             inits[[ch]]$InvQ[[g]] <- chol2inv(chol(inits[[ch]]$InvSigma[[g]]/param$InvSigma_df))  
           } # end of for(k in 1:K)
@@ -571,9 +582,9 @@ Change the save settings if you want to calculate these probabilities afterwards
           if(varying["InvSigma"]){
             inits[[ch]]$InvSigma <- list()
             meanInvSigma <- matrix(0, ncol = totnran, nrow = totnran)
-            for(g in 1:G){
+            for(g in 1:G[ch]){
               inits[[ch]]$InvSigma[[g]] <- diag(totnran) / rgamma(totnran, 1/param$init_b_sd^2)
-              meanInvSigma <- meanInvSigma + inits[[ch]]$InvSigma[[g]]/G
+              meanInvSigma <- meanInvSigma + inits[[ch]]$InvSigma[[g]]/G[ch]
             } 
             inits[[ch]]$InvQ <- chol2inv(chol(meanInvSigma/param$InvSigma_df))
           }else{
@@ -619,7 +630,6 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   settings <- data.frame(save = save[params],
                          gspec = sapply(params, function(p){ifelse(is.na(varying[p]), FALSE, varying[p])}),
-                         G = G,
                          isy = FALSE,
                          ydepd1 = FALSE,
                          ydepd2 = FALSE,
@@ -650,7 +660,6 @@ Change the save settings if you want to calculate these probabilities afterwards
   settings["U", c("d1", "D")] = c(n, 1)
   settings["pUig", c("gspec", "BYROW")] = c(TRUE, FALSE)
   settings["pUig", c("d1", "D")] = c(n, 1)
-  #settings["pUig", c("d1", "d2", "BYROW", "D")] = c(n, G, TRUE, 2)
   
   # ydepparams have to be done separately
   # due to d1 varying on y
@@ -791,11 +800,14 @@ Change the save settings if you want to calculate these probabilities afterwards
       1, 1,  #"Gplus", "e0"
       sum(cisYna)
     )
-  cdimswithG <- cdims * ((settings$gspec==0)*1 + (settings$gspec==1)*G)
-  
-  names(cdims) <- names(cdimswithG) <- params
+  names(cdims) <- params 
   settings$dims <- cdims[params]
-  settings$dimswithG <- cdimswithG[params]
+  
+  dimswithG <- matrix(0, nrow = length(params), ncol = nchains)
+  rownames(dimswithG) <- params
+  for(ch in 1:nchains){
+    dimswithG[,ch] <- cdims * ((settings$gspec==0)*1 + (settings$gspec==1)*G[ch])
+  }
   
   # cparam - created in specific order (user is not required to have the same order)
   cparam <- list(InvSigma_df = param$InvSigma_df, # for I-W prior of Sigma
@@ -850,59 +862,50 @@ Change the save settings if you want to calculate these probabilities afterwards
     tolerance = tuning$double$tolerance
   )
   
-  # arrays/fields where those variables will (might) be stored
-  cstore <- list()
-  for(p in params){
-    if(p=="U" | p=="Gplus" | p=="ng"){
-      # integer variables
-      if(settings[p,"save"]){
-        cstore[[p]] <- integer(settings[p,"iter"] * settings[p,"dimswithG"])
-      }else{
-        cstore[[p]] <- as.integer(0)  
-      }
-    }else{
-      # double variables
-      if(settings[p,"save"]){
-        cstore[[p]] <- double(settings[p,"iter"] * settings[p,"dimswithG"])
-      }else{
-        cstore[[p]] <- as.double(0)  
-      }
-    }
-  }
-  
   # list of last generated states
   last <- list()
   Usamples <- list()
   
   message("Settings ready, about to start for ch in 1:nchains.\n")
   
-  nparams <- sum(settings[settings$save, "dimswithG"])
+  nparams <- numeric(nchains)
+  cnames <- list()
   mcmc$param_names <- list()
-  cnames <- character(1+nparams)
-  cnames[1] <- c("m")
-  index <- 1
-  for(p in params){
-    if(settings[p,"save"] & settings[p,"dims"] > 0){
-      aux = from_C_to_matrix(values = rep(0, settings[p,"dimswithG"]),
-                             p = p,
-                             settings = settings,
-                             yspecd1 = yspecd1[[p]],
-                             yspecd2 = yspecd2[[p]],
-                             family = sorted_family)
-      mcmc$param_names[[p]] <- colnames(aux)
-      cnames[(index+1):(index+settings[p,"dimswithG"])] <- colnames(aux)
-      index <- index + settings[p,"dimswithG"]
-    }else{
-      mcmc$param_names[[p]] <- c()
+  lsettings <- list()
+  
+  for(ch in 1:nchains){
+    lsettings[[ch]] <- settings 
+    lsettings[[ch]]$G <- G[ch]
+    lsettings[[ch]]$dimswithG <- dimswithG[params,ch]
+    
+    nparams[ch] <- sum(dimswithG[,ch])
+    cnames[[ch]] <- character(1+nparams[ch])
+    cnames[[ch]][1] <- c("m")
+    index <- 1
+    mcmc$param_names[[ch]] <- list()
+    for(p in params){
+      if(lsettings[[ch]][p,"save"] & lsettings[[ch]][p,"dims"] > 0){
+        aux = from_C_to_matrix(values = rep(0, dimswithG[p,ch]),
+                               p = p,
+                               settings = lsettings[[ch]],
+                               yspecd1 = yspecd1[[p]],
+                               yspecd2 = yspecd2[[p]],
+                               family = sorted_family)
+        mcmc$param_names[[ch]][[p]] <- colnames(aux)
+        cnames[[ch]][(index+1):(index+dimswithG[p,ch])] <- colnames(aux)
+        index <- index + dimswithG[p,ch]
+      }else{
+        mcmc$param_names[[ch]][[p]] <- c()
+      }
     }
   }
 
   mcmc$draws <- list()
   for(ch in 1:nchains){
     if(howsave == "matrix"){
-      mcmc$draws[[ch]] <- matrix(NA, nrow = iter, ncol = 1+nparams)
+      mcmc$draws[[ch]] <- matrix(NA, nrow = iter, ncol = 1+nparams[ch])
       mcmc$draws[[ch]][,1] = 1:iter
-      colnames(mcmc$draws[[ch]]) <- cnames
+      colnames(mcmc$draws[[ch]]) <- cnames[[ch]]
       mcmc$draws[[ch]] = as.data.frame(mcmc$draws[[ch]])
     }else{
       mcmc$draws[[ch]] <- list()
@@ -913,6 +916,27 @@ Change the save settings if you want to calculate these probabilities afterwards
   ### Now prepare inits for each chain
   # and generate chains
   for(ch in 1:nchains){
+    # cstore
+    cstore <- list()
+    for(p in params){
+      if(p=="U" | p=="Gplus" | p=="ng"){
+        # integer variables
+        if(lsettings[[ch]][p,"save"]){
+          cstore[[p]] <- integer(lsettings[[ch]][p,"iter"] * dimswithG[p,ch])
+        }else{
+          cstore[[p]] <- as.integer(0)  
+        }
+      }else{
+        # double variables
+        if(lsettings[[ch]][p,"save"]){
+          cstore[[p]] <- double(lsettings[[ch]][p,"iter"] * dimswithG[p,ch])
+        }else{
+          cstore[[p]] <- as.double(0)  
+        }
+      }
+    }
+    
+    ## initial values for chain ch
     initsch <- inits[[ch]]
     # cinits
     cinits <- list()
@@ -923,7 +947,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$prec_num <- numeric()
     if(varying["prec_num"]){
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Nums){
           cinits$prec_num <- c(cinits$prec_num, initsch$prec_num[[y]][[g]])
         }
@@ -934,7 +958,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$beta_num_fix <- unlist(initsch$beta_num_fix)
     cinits$beta_num <- numeric()
-    for(g in 1:G){
+    for(g in 1:G[ch]){
       for(y in Nums){
         cinits$beta_num <- c(cinits$beta_num, initsch$beta_num[[y]][[g]])
       }
@@ -942,7 +966,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$beta_poi_fix <- unlist(initsch$beta_poi_fix)
     cinits$beta_poi <- numeric()
-    for(g in 1:G){
+    for(g in 1:G[ch]){
       for(y in Pois){
         cinits$beta_poi <- c(cinits$beta_poi, initsch$beta_poi[[y]][[g]])
       }
@@ -950,7 +974,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$beta_bin_fix <- unlist(initsch$beta_bin_fix)
     cinits$beta_bin <- numeric()
-    for(g in 1:G){
+    for(g in 1:G[ch]){
       for(y in Bins){
         cinits$beta_bin <- c(cinits$beta_bin, initsch$beta_bin[[y]][[g]])
       }
@@ -958,7 +982,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$beta_ord_fix <- unlist(initsch$beta_ord_fix)
     cinits$beta_ord <- numeric()
-    for(g in 1:G){
+    for(g in 1:G[ch]){
       for(y in Ords){
         cinits$beta_ord <- c(cinits$beta_ord, initsch$beta_ord[[y]][[g]])
       }
@@ -966,7 +990,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$c_ord <- numeric()
     if(varying["c_ord"]){
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Ords){
           cinits$c_ord <- c(cinits$c_ord, initsch$c_ord[[y]][[g]])
         }
@@ -977,7 +1001,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$a_ord <- numeric()
     if(varying["c_ord"]){
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Ords){
           cinits$a_ord <- c(cinits$a_ord, initsch$a_ord[[y]][[g]])
         }
@@ -988,7 +1012,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$pi_ord <- numeric()
     if(varying["c_ord"]){
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Ords){
           cinits$pi_ord <- c(cinits$pi_ord, initsch$pi_ord[[y]][[g]])
         }
@@ -999,7 +1023,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     cinits$beta_cat_fix <- unlist(initsch$beta_cat_fix)
     cinits$beta_cat <- numeric()
-    for(g in 1:G){
+    for(g in 1:G[ch]){
       for(y in Cats){
         cinits$beta_cat <- c(cinits$beta_cat, initsch$beta_cat[[y]][[g]])
       }
@@ -1010,7 +1034,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     if(totnran > 0){
       if(varying["InvSigma"]){
         InvSigma2 <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           InvSigma2[[g]] <- initsch$InvSigma[[g]][upper.tri(initsch$InvSigma[[g]], diag = TRUE)]
         }
         cinits$InvSigma <- unlist(InvSigma2)
@@ -1019,7 +1043,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       }
       if(varying["InvQ"]){
         InvQ2 <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           InvQ2[[g]] <- initsch$InvQ[[g]][upper.tri(initsch$InvQ[[g]], diag = TRUE)]
         }
         cinits$InvQ <- unlist(InvQ2)
@@ -1028,11 +1052,11 @@ Change the save settings if you want to calculate these probabilities afterwards
       }
       cinits$b <- c(t(initsch$b))
     }
-    cinits$naY <- rep(0.0, cdimswithG["naY"]) # does not matter what --> it is updated as first
+    cinits$naY <- rep(0.0, dimswithG["naY",ch]) # does not matter what --> it is updated as first
     
     cinits <- unlist(cinits) # will be delivered as a vector
     #which(is.na(cinits))
-    #cinits_U <- initsch$U - 1 # need values 0, ..., G-1
+    #cinits_U <- initsch$U - 1 # need values 0, ..., G[ch]-1
     
     message(paste0("Inits for chain ", ch, " are ready.\n"))
     message("Triggering C function.\n")
@@ -1057,7 +1081,7 @@ Change the save settings if you want to calculate these probabilities afterwards
          veclast   = double(length(cinits)), # passed as vector of double values (except U)
          # parameters describing dimensions
          chain     = as.integer(ch), # number of the chain
-         G         = as.integer(G), # number of classes
+         G         = as.integer(G[ch]), # number of clusters for the current chain
          iter      = as.integer(iter), # total number of generated states
          N         = as.integer(N), # total number of observations
          n         = as.integer(n), # total number of subjects (different ids in the dataset)
@@ -1073,7 +1097,7 @@ Change the save settings if you want to calculate these probabilities afterwards
          Kord      = as.integer(Kord), # the counts of categories of ordinal variables (-1)
          Kcat      = as.integer(Kcat), # the counts of categories of categorical variables (-1)
          dims      = as.integer(cdims), # the length of subarray that corresponds to one state (disected by various parameters)
-         dimswithG = as.integer(cdimswithG), # the length of subarray that corresponds to one state 
+         dimswithG = as.integer(dimswithG[,ch]), # the length of subarray that corresponds to one state 
          # (disected by various parameters, also multiplication by K incorporated when such parameters is class-specific)
          # arrays to store generated states
          beta_num_fix= cstore$beta_num_fix,
@@ -1122,16 +1146,16 @@ Change the save settings if you want to calculate these probabilities afterwards
     #  "beta_num","beta_bin","beta_ord","c_ord","a_ord","beta_cat"
     #  "InvSigma","InvQ","b"
     if(howsave != "cmcmc"){
-      last[[ch]]$w <- cmcmc$veclast[1:(lastcopied <- cdimswithG["w"])]
+      last[[ch]]$w <- cmcmc$veclast[1:(lastcopied <- dimswithG["w",ch])]
       last[[ch]]$e0 <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
       last[[ch]]$U <- 1+cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n)]
-      last[[ch]]$pUig <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n*G)],
-                                n, G, byrow = settings["pUig", "BYROW"])
+      last[[ch]]$pUig <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n*G[ch])],
+                                n, G[ch], byrow = lsettings[[ch]]["pUig", "BYROW"])
 
      # prec_num
       if(varying["prec_num"]){
         last[[ch]]$prec_num <- list()
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           for(y in Nums){
             last[[ch]]$prec_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
           }
@@ -1155,7 +1179,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Nums){
         last[[ch]]$beta_num[[y]] <- list()
       }
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Nums){
           if(ngrp[y]>0){
             last[[ch]]$beta_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
@@ -1178,7 +1202,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Pois){
         last[[ch]]$beta_poi[[y]] <- list()
       }
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Pois){
           if(ngrp[y]>0){
             last[[ch]]$beta_poi[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
@@ -1201,7 +1225,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Bins){
         last[[ch]]$beta_bin[[y]] <- list()
       }
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Bins){
           if(ngrp[y]>0){
             last[[ch]]$beta_bin[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
@@ -1224,7 +1248,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Ords){
         last[[ch]]$beta_ord[[y]] <- list()
       }
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Ords){
           if(ngrp[y]>0){
             last[[ch]]$beta_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
@@ -1240,7 +1264,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         for(y in Ords){
           last[[ch]]$c_ord[[y]] <- list()
         }
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           for(y in Ords){
             last[[ch]]$c_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
           }
@@ -1257,7 +1281,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         for(y in Ords){
           last[[ch]]$a_ord[[y]] <- list()
         }
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           for(y in Ords){
             last[[ch]]$a_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
           }
@@ -1274,7 +1298,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         for(y in Ords){
           last[[ch]]$pi_ord[[y]] <- list()
         }
-        for(g in 1:G){
+        for(g in 1:G[ch]){
           for(y in Ords){
             last[[ch]]$pi_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y]+1)]
           }
@@ -1300,7 +1324,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Cats){
         last[[ch]]$beta_cat[[y]] <- list()
       }
-      for(g in 1:G){
+      for(g in 1:G[ch]){
         for(y in Cats){
           if(ngrp[y]>0){
             last[[ch]]$beta_cat[[y]][[g]] <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y]*Kcat[y])],
@@ -1316,7 +1340,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         # InvSigma
         if(varying["InvSigma"]){
           last[[ch]]$InvSigma <- list()
-          for(g in 1:G){
+          for(g in 1:G[ch]){
             pommatrix <- matrix(0, totnran, totnran)
             pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
             pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
@@ -1335,7 +1359,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         # InvQ
         if(varying["InvQ"]){
           last[[ch]]$InvQ <- list()
-          for(g in 1:G){
+          for(g in 1:G[ch]){
             pommatrix <- matrix(0, totnran, totnran)
             pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
             pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
@@ -1352,14 +1376,14 @@ Change the save settings if you want to calculate these probabilities afterwards
           last[[ch]]$InvQ <- pommatrix
         }
         # b
-        last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdimswithG["b"])],
+        last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + dimswithG["b",ch])],
                                n, totnran, byrow = TRUE)
       }
       
       if(cdims["naY"]>0){
         if(varying["naY"]){
           last[[ch]]$naY <- list()
-          for(g in 1:G){
+          for(g in 1:G[ch]){
             last[[ch]]$naY[[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["naY"])]
           }
         }else{
@@ -1382,12 +1406,12 @@ Change the save settings if you want to calculate these probabilities afterwards
       chain$m <- 1:iter
       for(p in params){
         if(p == "U"){
-            cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G]
+            cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G[ch]]
           }
-        if(settings[p, "save"] & settings[p,"dims"] > 0){
+        if(lsettings[[ch]][p, "save"] & lsettings[[ch]][p,"dims"] > 0){
           chain[[p]] <- from_C_to_list(values = cmcmc[[p]],
                                        p = p,
-                                       settings = settings,
+                                       settings = lsettings[[ch]],
                                        yspecd1 = yspecd1[[p]],
                                        yspecd2 = yspecd2[[p]],
                                        family = sorted_family)
@@ -1403,12 +1427,12 @@ Change the save settings if you want to calculate these probabilities afterwards
       # each chain will be saved in different list
       for(p in params){
         if(p == "U"){
-          cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G]
+          cmcmc[[p]] = Usamples[[ch]] = 1 + cmcmc[[p]] # to make cluster allocations in [1, ..., G[ch]]
         }
-        if(settings[p,"save"] & settings[p,"dims"] > 0){
+        if(lsettings[[ch]][p,"save"] & lsettings[[ch]][p,"dims"] > 0){
           aux = from_C_to_matrix(values = cmcmc[[p]],
                                  p = p,
-                                 settings = settings,
+                                 settings = lsettings[[ch]],
                                  yspecd1 = yspecd1[[p]],
                                  yspecd2 = yspecd2[[p]],
                                  family = sorted_family)
@@ -1425,9 +1449,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   ## U-based clustering
   fun <- function(U, ch){
     tab = table(U)
-    if(clusteringU_modeGplus){
-      tab <- tab[as.character(clusters[[ch]])]
-    }
+    tab <- tab[as.character(clusters[[ch]])]
     c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
   }
     
@@ -1442,7 +1464,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     # U samples
     Usamples[[ch]] <- from_C_to_matrix(values = Usamples[[ch]],
                                        p = "U",
-                                       settings = settings,
+                                       settings = lsettings[[ch]],
                                        family = sorted_family)
     TAB <- table(unlist(Usamples[[ch]]))
     TAB <- TAB[order(TAB, decreasing = TRUE)]
@@ -1483,7 +1505,10 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "observations per unit (minimum): ", min(nsubj), " \n")
   mcmc$call <- paste0(mcmc$call, "observations per unit (median): ", median(nsubj), " \n")
   mcmc$call <- paste0(mcmc$call, "observations per unit (maximum): ", max(nsubj), " \n")
-  mcmc$call <- paste0(mcmc$call, "G = maximal number of clusters: ", G, "\n")
+  charG <- ifelse(length(unique(G)) == 1, 
+                  G[1],
+                  paste0(G, collapse = ", "))
+  mcmc$call <- paste0(mcmc$call, "G = maximal number of clusters: ", charG, "\n")
   mcmc$call <- paste0(mcmc$call, "\nOverview of outcomes: \n")
   if(length(Nums) > 0){mcmc$call <- paste0(mcmc$call, "num: ", paste0(Nums, collapse = ", "), "\n")}
   if(length(Pois) > 0){mcmc$call <- paste0(mcmc$call, "poi: ", paste0(Pois, collapse = ", "), "\n")}
@@ -1570,7 +1595,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$nY <- nY
   mcmc$Kord <- Kord
   mcmc$Kcat <- Kcat
-  mcmc$settings <- settings
+  mcmc$settings <- lsettings
   mcmc$tuning <- tuning
   mcmc$yspecd1 <- yspecd1
   mcmc$yspecd2 <- yspecd2

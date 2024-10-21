@@ -83,7 +83,7 @@ function(mcmc,
       }
     }
   }
-  if (missing(COL)){COL <- rainbow_hcl(G, c = 80, l =70)}
+  if(missing(COL)){COL <- rainbow_hcl(mcmc$G[chains[1]], c = 80, l =70)}
   
   
   # Density

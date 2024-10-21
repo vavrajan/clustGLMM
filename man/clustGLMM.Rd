@@ -30,7 +30,8 @@ a vector of distributional families named by the outcome name in \code{data}; se
 matrix of outcomes, regressors including id-variable \code{id}. 
 }
   \item{G}{
-an integer, number of mixture components (maximal number of clusters).
+an integer, number of mixture components (maximal number of clusters). 
+Can be a vector of integers for each chain (of length \code{nchains}).
 }
   \item{varying}{
 a named vector of boolean values; declares which parameters should be group-specific (\code{TRUE}) with the following names: \code{"prec_num"}, \code{"c_ord"}, \code{"InvSigma"}, \code{"InvQ"}, \code{"naY"}.
@@ -109,7 +110,7 @@ The most important output:
 \item{draws}{a list indexed by chain with generated samples saved either in large matrix (\code{howsave = "matrix"}) or a carefully structured list (\code{howsave = "list"}).}
 \item{param_names}{individual parameter (column) names in structured list by general parameter name.}
 
-Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G}, \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
+Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
 
 Other newly defined quantities included in the output are:
 \item{modeGplus}{a vector of the most frequent number of non-empty clusters, one per each chain,}
@@ -145,7 +146,7 @@ Other newly defined quantities included in the output are:
 \item{nY}{number of outcomes per type,}
 \item{Kord}{number of categories for each ordinal outcome,}
 \item{Kcat}{number of categories for each general categorical outcome,}
-\item{settings}{a matrix where each row belongs to one model parameter and describes its properties such as: 1. is it saved?, 2. is it group-specific?, 3. is any dimension size dependent on outcome?, 4. on which type of outcome it depends?, 5. is it point, vector or matrix? 5. what are the dimension sizes?, 6. is the matrix symmetric?, 7. does the matrix contain diagonal?, 8. what is the total size of the parameter (including group-specificity)?; very useful matrix for organizing the samples and writing automated plotting functions, }
+\item{settings}{a list (for each chain) of matrices where each row belongs to one model parameter and describes its properties such as: 1. is it saved?, 2. is it group-specific?, 3. is any dimension size dependent on outcome?, 4. on which type of outcome it depends?, 5. is it point, vector or matrix? 5. what are the dimension sizes?, 6. is the matrix symmetric?, 7. does the matrix contain diagonal?, 8. what is the total size of the parameter (including group-specificity)?; very useful matrix for organizing the samples and writing automated plotting functions, }
 \item{yspecd1}{a list of model parameters, which have their first dimension size dependent on outcomes and how large it is, e,g, fixed-effects \code{beta_num_fix} are vectors that can be of different size among outcomes under different formulae,}
 \item{yspecd2}{a list of matrix-valued model parameters, which have their second dimension size dependent on outcomes and how large it is, e.g. fixed-effects \code{beta_cat_fix} for categorical outcome \code{y in Cats} are matrices (\code{Kcat[y]} * \code{nfix[y]}) with both dimensions dependent on the outcome \code{y},}
 \item{isYna}{a vector of booleans that determine which outcome values are not observed, outcomes are ordered by \code{Ys = c(Nums, Pois, Bins, Ords, Cats)}.}

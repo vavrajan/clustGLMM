@@ -17,7 +17,7 @@ function(mcmc, what, gspec, dimspec, yspec,
     }
     
     ind_iterations <- is.element(mcmc$draws[[ch]]$m, iterations)    
-    v <- mcmc$settings[what,]
+    v <- mcmc$settings[[ch]][what,]
     
     ### Draws are save in a structured list
     out <- data.frame(chain = ch, m = iterations)

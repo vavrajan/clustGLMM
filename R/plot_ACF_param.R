@@ -2,7 +2,8 @@ plot_ACF_param <-
   function(mcmc, what, burnin = 0, thin = 1, iterations, lag.max = 30, chains, setparmfrow = TRUE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
-    v <- c(mcmc$settings[what, ])
+    v <- c(mcmc$settings[[chains[1]]][what, ])
+    # assuming all settings are the same for all chains... (G and dimswithG not used here)
     Ys <- c()
     if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
     if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
@@ -15,7 +16,7 @@ plot_ACF_param <-
     if(is.element(what, c("w", "ng"))){
       nonempty <- list()
       for(ch in chains){
-        nonempty[[ch]] <- 1:mcmc$G # plot all clusters, not only non-empty
+        nonempty[[ch]] <- 1:mcmc$G[ch] # plot all clusters, not only non-empty
       }
     }else{
       nonempty <- mcmc$clusters
@@ -40,7 +41,7 @@ plot_ACF_param <-
     }
     par(mar = c(4,4,1,1))
     
-    if(v$dimswithG > 0){  
+    if(v$dims > 0){  
       if(v$sym){
         if(v$diag){
           if(v$gspec){

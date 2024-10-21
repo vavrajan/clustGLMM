@@ -37,7 +37,7 @@ function(mcmc,      # MCMC generated parameters
   
   # For probability calculation we need the following parameters:
   #   w, prec_num, beta, InvSigma
-  # If those were not saved during the mcmc_MBC_GLMMs function,
+  # If those were not saved during the clustGLMM function,
   # then we cannot use this function to calculate it.
   if(
      !(mcmc$save["w"] & mcmc$save["c_ord"] & mcmc$save["prec_num"] 
@@ -48,12 +48,12 @@ function(mcmc,      # MCMC generated parameters
        & mcmc$save["beta_cat_fix"] & mcmc$save["beta_cat"])
      ){
     stop("Some of the parameters w, c_ord, prec_num, betas was not saved.
-Change the  settings and use mcmc_MBC_GLMMs() again.")
+Change the  settings and use clustGLMM() again.")
   }
   
-  if((!mcmc$save["InvSigma"]) & (mcmc$settings["InvSigma", "dims"] > 0)){
+  if((!mcmc$save["InvSigma"]) & (mcmc$settings[[chains[1]]]["InvSigma", "dims"] > 0)){
     stop("Parameter InvSigma was not saved and its dimension is > 0 (it exists).
-Change the  settings and use mcmc_MBC_GLMMs() again.")
+Change the  settings and use clustGLMM() again.")
   }
   
   # Calculation will be done by C function, to speed up calculation
@@ -220,29 +220,10 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
                   paste0("beta_", c("num", "poi", "bin", "ord", "cat")),
                   "c_ord")
   d2spec <- list()
-  
-  settings <- mcmc$settings
-  rownames(settings)[rownames(settings)=="loglik"] <- "deviance"
-  rownames(settings)[rownames(settings)=="pUig"] <- "pUig_int"
-  settings["deviance", "save"] <- TRUE
-  settings["pUig_int", "save"] <- TRUE
   if(dynamic_prob){
-    settings["pUig_int", c("d2spec", "BYROW")] <- c(TRUE, TRUE)
-    settings["pUig_int", c("d1", "d2", "D", "dims", "dimswithG")] = c(n, max_n_i, 2, N, N*mcmc$G)
     d2spec[["pUig_int"]] <- nsubj
-  }else{
-    settings["pUig_int",  c("d1", "dims", "dimswithG")] = c(n, n, n*mcmc$G)
-    
   }
-  settings_devi <- settings["U", ]
-  settings_devi[,"save"] <- TRUE
-  settings_devi[,c("d1", "dims", "dimswithG")] <- c(n, n, n)
-  rownames(settings_devi) <- "dev_i"
-  settings <- rbind(settings, settings_devi)
-  
-  settings <- settings[params,]
-  settings$iter <- niter
-  
+  # otherwise empty
   
   ### Preparation of parameters for Gibbs sampler in C
   ## Data
@@ -292,34 +273,57 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   cnoff <- as.numeric(mcmc$noff) # number of OFFSET regressors with variables y
   
   # head(finX)
-  
   # all the following three are going to be saved
-  nparams <- sum(settings[c("deviance", "dev_i", "pUig_int"), "dimswithG"])
-  output <- cmcmc <- list()
-  
-  if(howsave == "matrix"){
-    param_names <- list()
-    cnames <- character(1+nparams)
-    cnames[1] = "m"
+  nparams <- numeric(length(chains))
+  output <- cmcmc <- cnames <- param_names <- list()
+  lsettings <- list()
+  for(ch in chains){
+    settings <- mcmc$settings[[ch]]
+    rownames(settings)[rownames(settings)=="loglik"] <- "deviance"
+    rownames(settings)[rownames(settings)=="pUig"] <- "pUig_int"
+    settings["deviance", "save"] <- TRUE
+    settings["pUig_int", "save"] <- TRUE
+    if(dynamic_prob){
+      settings["pUig_int", c("d2spec", "BYROW")] <- c(TRUE, TRUE)
+      settings["pUig_int", c("d1", "d2", "D", "dims", "dimswithG")] = c(n, max_n_i, 2, N, N*mcmc$G[ch])
+    }else{
+      settings["pUig_int",  c("d1", "dims", "dimswithG")] = c(n, n, n*mcmc$G[ch])
+    }
+    settings_devi <- settings["U", ]
+    settings_devi[,"save"] <- TRUE
+    settings_devi[,c("d1", "dims", "dimswithG")] <- c(n, n, n)
+    rownames(settings_devi) <- "dev_i"
+    settings <- rbind(settings, settings_devi)
+    
+    settings <- settings[params,]
+    settings$iter <- niter
+    lsettings[[ch]] <- settings
+    
+    nparams[ch] <- sum(lsettings[[ch]][c("deviance", "dev_i", "pUig_int"), "dimswithG"])
+    param_names[[ch]] <- list()
+    cnames[[ch]] <- character(1+nparams[ch])
+    cnames[[ch]][1] = "m"
     index = 1
     for(p in c("deviance", "dev_i", "pUig_int")){
       if(settings[p, "save"]){
         aux = from_C_to_matrix(values = rep(NA, settings[p,"dimswithG"]),
                                p = p, settings = settings, 
                                d2spec = d2spec[[p]], family = mcmc$family)
-        param_names[[p]] <- colnames(aux)
-        cnames[(index+1):(index+settings[p,"dimswithG"])] = colnames(aux)
+        param_names[[ch]][[p]] <- colnames(aux)
+        cnames[[ch]][(index+1):(index+settings[p,"dimswithG"])] = colnames(aux)
         index = index + settings[p,"dimswithG"]
       }
     }
   }
   
+  
+  
   for(ch in chains){
     cparamvalues <- list()
     # arrays/fields where those variables are and will be stored
-    cparamvalues[["pUig_int"]] <- double(niter*settings["pUig_int", "dimswithG"])
-    cparamvalues[["deviance"]] <- double(niter*settings["deviance", "dimswithG"])
-    cparamvalues[["dev_i"]] <- double(niter*settings["dev_i", "dimswithG"])
+    cparamvalues[["pUig_int"]] <- double(niter*lsettings[[ch]]["pUig_int", "dimswithG"])
+    cparamvalues[["deviance"]] <- double(niter*lsettings[[ch]]["deviance", "dimswithG"])
+    cparamvalues[["dev_i"]] <- double(niter*lsettings[[ch]]["dev_i", "dimswithG"])
     #if(dev){cdeviance <- double(niter*cdimswithK["deviance"])}else{cdeviance <- as.double(0)}
     
     if(mcmc$howsave == "list"){
@@ -327,15 +331,16 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
         cparamvalues[[p]] <- from_list_to_C(mcmc$draws[[ch]], 
                                             iterations,
                                             p, 
-                                            settings, 
+                                            lsettings[[ch]], 
                                             yspecd1=mcmc$yspecd1[[p]],
+                                            yspecd2=mcmc$yspecd2[[p]],
                                             family=mcmc$family)
       }
     }
     
     if(mcmc$howsave == "matrix"){
       for(p in params[1:14]){
-        cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations, p, settings)
+        cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations, p, lsettings[[ch]])
       }
     }
     
@@ -366,8 +371,8 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
     # print(mcmc$totnran)
     # print(mcmc$Kord)
     # print(mcmc$Kcat)
-    # print(settings$dims)
-    # print(settings$dimswithG)
+    # print(lsettings[[ch]]$dims)
+    # print(lsettings[[ch]]$dimswithG)
     # print(mcmc$tuning$integer$kspec_bi_cat)
     # print(cbeta_num_fix)
     # print(cbeta_num)
@@ -420,8 +425,8 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
          totnran   = as.integer(mcmc$totnran),
          Kord      = as.integer(mcmc$Kord), # the counts of categories of ordinal variables (-1)
          Kcat      = as.integer(mcmc$Kcat), # the counts of categories of categorical variables (-1)
-         dims      = as.integer(settings$dims), # the length of subarray that corresponds to one state (disected by various parameters)
-         dimswithG = as.integer(settings$dimswithG), # the length of subarray that corresponds to one state
+         dims      = as.integer(lsettings[[ch]]$dims), # the length of subarray that corresponds to one state (disected by various parameters)
+         dimswithG = as.integer(lsettings[[ch]]$dimswithG), # the length of subarray that corresponds to one state
          kspec_bi_cat = as.integer(mcmc$tuning$integer$kspec_bi_cat),
          #predictor = double(N*sum(nY)),
          # the function should count totnran, totnfix and cumsum versions of nfix and nran
@@ -456,14 +461,14 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
       # results will be returned as it was returned by C function
       chain <- list()
       for(p in c("deviance", "dev_i", "pUig_int")){
-        if(settings[p, "save"]){
+        if(lsettings[[ch]][p, "save"]){
           
           if(howsave == "cmcmc"){
             chain[[p]] <- cmcmc[[ch]][[p]]
           }
           
           if(howsave == "list"){
-            chain[[p]] <- from_C_to_list(cmcmc[[ch]][[p]], p, settings, 
+            chain[[p]] <- from_C_to_list(cmcmc[[ch]][[p]], p, lsettings[[ch]], 
                                          d2spec = d2spec[[p]], family=mcmc$family)
           }
         }
@@ -475,19 +480,21 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
 
     if(howsave == "matrix"){
       # results will be returned in matrix - the same way as original R function
-      output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams)
+      output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams[ch])
       output[[ch]][,1] <- iterations
-      colnames(output[[ch]]) <- cnames
+      colnames(output[[ch]]) <- cnames[[ch]]
       output[[ch]] <- as.data.frame(output[[ch]])
       
       for(p in c("deviance", "dev_i", "pUig_int")){
-        if(settings[p, "save"]){
-          aux = from_C_to_matrix(cmcmc[[ch]][[p]], p, settings, 
+        if(lsettings[[ch]][p, "save"]){
+          aux = from_C_to_matrix(cmcmc[[ch]][[p]], p, lsettings[[ch]], 
                                  d2spec = d2spec[[p]], family=mcmc$family)
           output[[ch]][, colnames(aux)] <- aux
         }
       }
     }
+    
+    lsettings[[ch]] <- lsettings[[ch]][c("deviance", "dev_i", "pUig_int"), ]
     
   }  # end of for ch in 1:chains
   
@@ -495,7 +502,8 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   res <- mcmc
   res$draws <- output
   res$chains <- chains
-  res$settings <- settings[c("deviance", "dev_i", "pUig_int"), ]
+  res$settings <- lsettings
+  res$param_names <- param_names
   res$n <- n
   res$N <- N
   res$numbered_unique_ids <- numbered_unique_ids
@@ -508,7 +516,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   clustering <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
   certainty <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
   for(ch in chains){
-    probs <- from_C_to_matrix(cmcmc[[ch]][["pUig_int"]], "pUig_int", settings, 
+    probs <- from_C_to_matrix(cmcmc[[ch]][["pUig_int"]], "pUig_int", lsettings[[ch]], 
                               d2spec=d2spec[["pUig_int"]], family=mcmc$family)
     if(dynamic_prob){
       # keep only the clustering probabilities for all available observations
@@ -550,7 +558,7 @@ Change the  settings and use mcmc_MBC_GLMMs() again.")
   res$call <- paste0(res$call, "observations per unit (maximum): ", max(nsubj), " \n")
   res$call <- paste0(res$call, "G = maximal number of clusters: ", mcmc$G, "\n")
   
-  saved_params <- rownames(res$settings)[res$settings$save]
+  saved_params <- rownames(res$settings[[chains[1]]])[res$settings[[chains[1]]]$save]
   res$call <- paste0(res$call, "\nList of saved parameters in $draws: ", 
                       paste0(saved_params, collapse = ", "), "\n")
   res$call <- paste0(res$call, "\nMCMC approximation: \n")

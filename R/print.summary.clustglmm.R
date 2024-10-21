@@ -7,7 +7,7 @@ print.summary.clustglmm <- function(x, chains=c(1L), ...){
   #   cat(paste0("Chain ", ch, "\n"))
   #   cat("-----------------------------------------------------------------------\n")
   #   cat(paste0("The most-frequent number of non-empty clusters: ", x$modeGplus[ch], "\n"))
-  #   cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G, x$clusters[[ch]]), collapse = ", "), "\n"))
+  #   cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G[ch], x$clusters[[ch]]), collapse = ", "), "\n"))
   #   cat(paste0("Non-empty clusters: ", paste0(x$clusters[[ch]], collapse = ", "), "\n"))
   #   print(summary(factor(x$clustering[,ch])))
   #   cat(paste0("Average certainty of clustering into a cluster: \n"))
@@ -35,7 +35,7 @@ print.summary.clustglmm <- function(x, chains=c(1L), ...){
                "\n"))
     cat("-----------------------------------------------------------------------\n")
     cat(paste0("The most-frequent number of non-empty clusters: ", x$modeGplus[ch], "\n"))
-    cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G, x$clusters[[ch]]), collapse = ", "), "\n"))
+    cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G[ch], x$clusters[[ch]]), collapse = ", "), "\n"))
     cat(paste0("Non-empty clusters: ", paste0(x$clusters[[ch]], collapse = ", "), "\n"))
     print(summary(factor(x$clustering[,ch])))
     cat(paste0("Average certainty of clustering into a cluster: \n"))
@@ -44,20 +44,20 @@ print.summary.clustglmm <- function(x, chains=c(1L), ...){
     cat("\nSummary of the key parameter estimates\n")
     cat("-----------------------------------------------------------------------\n")
     
-    if(length(x$fnames) > 0){
+    if(length(x$fnames[[ch]]) > 0){
       cat("\nCluster-invariant parameters:\n")
-      print(s[x$fnames,,drop=FALSE])
+      print(s[x$fnames[[ch]],,drop=FALSE])
     }
     
-    cint <- intersect(x$cnames, rownames(s))
+    cint <- intersect(x$cnames[[ch]], rownames(s))
     if(length(cint) > 0){
       cat("\nClustering-related parameters:\n")
       print(s[cint,,drop=FALSE])
     }
     
-    if(length(x$gnames) > 0){
+    if(length(x$gnames[[ch]]) > 0){
       for(g in x$clusters[[ch]]){
-        gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), x$gnames)
+        gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), x$gnames[[ch]])
         cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
         print(s[gnames,,drop=FALSE])
       }

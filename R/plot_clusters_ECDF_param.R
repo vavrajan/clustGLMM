@@ -2,7 +2,8 @@ plot_clusters_ECDF_param <-
   function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
-    v <- c(mcmc$settings[what, ])
+    v <- c(mcmc$settings[[chains[1]]][what, ])
+    # assuming all settings are the same for all chains... (G and dimswithG not used here)
     Ys <- c()
     if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
     if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
@@ -14,7 +15,7 @@ plot_clusters_ECDF_param <-
     nonempty <- mcmc$clusters
     par(mar = c(4,4,1,1))
     
-    if(v$dimswithG > 0){  
+    if(v$dims > 0){  
       if(v$sym){
         if(v$diag){
           if(v$gspec){
