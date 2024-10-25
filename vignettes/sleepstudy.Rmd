@@ -120,7 +120,7 @@ When calling function `clustGLMM` you also have to decide on
 set.seed(12345)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
                   varying = varying, save = save, param = param,
-                  G = 2, iter = 1000, nchains = 3, howsave = "matrix")
+                  G = 1:3, iter = 1000, nchains = 3, howsave = "matrix")
 ```
 
 Default print method summarizes the call and informs you about the clustering based on sampled cluster allocation indicators `U`. Clearly, in all three chains the two groups eventually merged into just one group as it apparently was not beneficial to discriminate between different two types of slopes. Note that due to random initialization of allocation to groups the number of the survived group differs across the chains.
@@ -134,7 +134,7 @@ Within the first 1000 iterations the allocation towards clusters is very fluid. 
 ```{r mcmc, message=FALSE, results=FALSE, warning=FALSE, echo=TRUE, fig.align='center', fig.width=10, fig.height=6}
 inits <- mcmc$last
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = sleepstudy,
-                  G = 2, varying = varying, param = param, save = save,
+                  G = 1:3, varying = varying, param = param, save = save,
                   inits = inits,
                   iter = 10000, nchains = 3, howsave = "matrix")
 
@@ -144,7 +144,7 @@ plot(mcmc, chains=1:3)
 You can always restrict the summary analysis to the chain with burnin and thinning of your choice:
 
 ```{r mcmc_summary, message=FALSE, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=6}
-ch <- 1
+ch <- 2
 burnin <- 0
 thin <- 1
 

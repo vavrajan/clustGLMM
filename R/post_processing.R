@@ -86,7 +86,7 @@ created for each chain separately")
     forkmeans[[ch]] <- scale(as.matrix(forkmeans[[ch]]))
     km <- kmeans(forkmeans[[ch]], centers = modeGplus[ch])
     # create index matrix
-    indmat[[ch]] <- matrix(km$cluster, ncol = modeGplus[ch], byrow = F)
+    indmat[[ch]] <- matrix(km$cluster, ncol = modeGplus[ch], byrow = FALSE)
     #head(indmat[[ch]])
     # number of not permutations = number of rows where is something repeated
     rowuniques[[ch]] <- apply(indmat[[ch]], 1, function(x){length(unique(x))})
@@ -278,18 +278,447 @@ created for each chain separately")
   res$certainty <- certainty
   res$sameclusters <- sameclusters
   res$draws <- draws
-  # inits, last?
-  # settings?
-  # iter?
-  # G?
-  # different chain ... different G possible?
+  res$G <- mcmc$modeGplus
+  
+  lsettings <- list()
+  for(ch in mcmc$chains){
+    s <- mcmc$settings[[ch]]
+    s$iter <- iters[ch]
+    s$G <- mcmc$modeGplus[ch]
+    s$dimswithG <- s$dims * (!(s$gspec)*1 + (s$gspec)*mcmc$modeGplus[ch])
+    lsettings[[ch]] <- s
+  }
+  res$settings <- lsettings
+  
+  param_names <- list()
+  for(ch in mcmc$chains){
+    param_names[[ch]] <- list()
+    for(p in params){
+      if(lsettings[[ch]][p,"save"] & lsettings[[ch]][p,"dims"] > 0){
+        aux = from_C_to_matrix(values = rep(0, lsettings[[ch]][p,"dimswithG"]),
+                               p = p,
+                               settings = lsettings[[ch]],
+                               yspecd1 = mcmc$yspecd1[[p]],
+                               yspecd2 = mcmc$yspecd2[[p]],
+                               family = mcmc$family)
+        param_names[[ch]][[p]] <- colnames(aux)
+      }else{
+        param_names[[ch]][[p]] <- c()
+      }
+    }
+  }
+  res$param_names <- param_names
+  
+  # TODO
+  # inits, last? 
+  # iter? the same --> will be always the maximum value
   # res$post_processed <- TRUE
+  last <- list()
+  for(ch in mcmc$chains){
+    last[[ch]] <- list()
+    m <- iters[ch]
+    while((rowuniques[[ch]][m] != modeGplus[ch]) & m > 0){
+      m <- m-1
+    }
+    if(m == 0){
+      # there is no iteration satisfying that condition --> do not change anything
+    }else{
+      # m is the last iteration with modeGplus clusters that resulted in a permutation
+      values <- unlist(draws[[ch]][m, ])
+      # w
+      if(lsettings[[ch]]$save["w"]){
+        wvalues <- values[paste0("w(",1:mcmc$modeGplus[ch],")")]
+      }else{
+        wvalues <- table(clustering[,ch])
+      }
+      last[[ch]]$w <- wvalues / sum(wvalues)
+      # e0
+      if(lsettings[[ch]]$save["e0"]){
+        e0values <- values["e0"]
+      }else{
+        e0values <- mcmc$param$e0_shp / mcmc$param$e0_rte
+      }
+      last[[ch]]$e0 <- e0values
+      # U
+      if(lsettings[[ch]]$save["U"]){
+        Uvalues <- values[paste0("U[",1:mcmc$n,"]")]
+      }else{
+        Uvalues <- clustering[,ch]
+      }
+      last[[ch]]$U <- Uvalues
+      # pUig
+      if(lsettings[[ch]]$save["pUig"]){
+        pvalues <- values[param_names[[ch]]$pUig]
+      }else{
+        pvalues <- rep(inits[[ch]]$w, each=n)
+      }
+      last[[ch]]$pUig <- matrix(pvalues, n, mcmc$modeGplus[ch], byrow = FALSE)
+      
+      # prec_num
+      last[[ch]]$prec_num <- list()
+      if(lsettings[[ch]]$save["prec_num"]){
+        if(varying["prec_num"]){
+          for(y in mcmc$Nums){
+            last[[ch]]$prec_num[[y]] <- list()
+          }
+          for(g in 1:mcmc$modeGplus[ch]){
+            for(y in mcmc$Nums){
+              last[[ch]]$prec_num[[y]][[g]] <- values[paste0("prec_num_",y,"(",g,")")]
+            }
+          }
+        }else{
+          for(y in mcmc$Nums){
+            last[[ch]]$prec_num[[y]] <- values[paste0("prec_num_",y)]
+          }
+        }
+      }else{
+        if(varying["prec_num"]){
+          for(y in mcmc$Nums){
+            last[[ch]]$prec_num[[y]] <- list()
+          }
+          for(g in 1:mcmc$modeGplus[ch]){
+            for(y in mcmc$Nums){
+              last[[ch]]$prec_num[[y]][[indmat[[ch]][m,g]]] <- 
+                mcmc$last[[ch]]$prec_num[[y]][[whichG[[ch]][m,g]]]
+            }
+          }
+        }else{
+          last[[ch]]$prec_num <- mcmc$last[[ch]]$prec_num
+        }
+      }
+      
+      # beta_num_fix
+      last[[ch]]$beta_num_fix <- list()
+      if(lsettings[[ch]]$save["beta_num_fix"]){
+        for(y in mcmc$Nums){
+          if(mcmc$nfix[y]>0){
+            last[[ch]]$beta_num_fix[[y]] <- values[paste0("beta_num_fix_",y,"[",1:mcmc$fix[y],"]")]
+          }else{
+            last[[ch]]$beta_num_fix[[y]] <- numeric()
+          }
+        }
+      }else{
+        last[[ch]]$beta_num_fix <- mcmc$last[[ch]]$beta_num_fix
+      }
+      
+      # beta_num
+      last[[ch]]$beta_num <- list()
+      for(y in mcmc$Nums){
+        last[[ch]]$beta_num[[y]] <- list()
+      }
+      if(lsettings[[ch]]$save["beta_num"]){
+        for(g in 1:mcmc$modeGplus[ch]){
+          for(y in mcmc$Nums){
+            if(mcmc$ngrp[y]>0){
+              last[[ch]]$beta_num[[y]][[g]] <- values[paste0("beta_num_",y,"(",g,")[",1:mcmc$ngrp[y],"]")]
+            }else{
+              last[[ch]]$beta_num[[y]][[g]] <- numeric()
+            }
+          }
+        }
+      }else{
+        for(y in mcmc$Nums){
+          for(g in 1:modeGplus[ch]){
+            last[[ch]]$beta_num[[y]][[indmat[[ch]][m,g]]] <- 
+              mcmc$last[[ch]]$beta_num[[y]][[whichG[[ch]][m,g]]]
+          }
+        }
+      }
+      
+      # beta_poi_fix
+      last[[ch]]$beta_poi_fix <- list()
+      if(lsettings[[ch]]$save["beta_poi_fix"]){
+        for(y in mcmc$Pois){
+          if(mcmc$nfix[y]>0){
+            last[[ch]]$beta_poi_fix[[y]] <- values[paste0("beta_poi_fix_",y,"[",1:mcmc$fix[y],"]")]
+          }else{
+            last[[ch]]$beta_poi_fix[[y]] <- numeric()
+          }
+        }
+      }else{
+        last[[ch]]$beta_poi_fix <- mcmc$last[[ch]]$beta_poi_fix
+      }
+      
+      # beta_poi
+      last[[ch]]$beta_poi <- list()
+      for(y in mcmc$Pois){
+        last[[ch]]$beta_poi[[y]] <- list()
+      }
+      if(lsettings[[ch]]$save["beta_poi"]){
+        for(g in 1:mcmc$modeGplus[ch]){
+          for(y in mcmc$Pois){
+            if(mcmc$ngrp[y]>0){
+              last[[ch]]$beta_poi[[y]][[g]] <- values[paste0("beta_poi_",y,"(",g,")[",1:mcmc$ngrp[y],"]")]
+            }else{
+              last[[ch]]$beta_poi[[y]][[g]] <- numeric()
+            }
+          }
+        }
+      }else{
+        for(y in mcmc$Pois){
+          for(g in 1:modeGplus[ch]){
+            last[[ch]]$beta_poi[[y]][[indmat[[ch]][m,g]]] <- 
+              mcmc$last[[ch]]$beta_poi[[y]][[whichG[[ch]][m,g]]]
+          }
+        }
+      }
+      
+      # beta_bin_fix
+      last[[ch]]$beta_bin_fix <- list()
+      if(lsettings[[ch]]$save["beta_bin_fix"]){
+        for(y in mcmc$Bins){
+          if(mcmc$nfix[y]>0){
+            last[[ch]]$beta_bin_fix[[y]] <- values[paste0("beta_bin_fix_",y,"[",1:mcmc$fix[y],"]")]
+          }else{
+            last[[ch]]$beta_bin_fix[[y]] <- numeric()
+          }
+        }
+      }else{
+        last[[ch]]$beta_bin_fix <- mcmc$last[[ch]]$beta_bin_fix
+      }
+      
+      # beta_bin
+      last[[ch]]$beta_bin <- list()
+      for(y in mcmc$Bins){
+        last[[ch]]$beta_bin[[y]] <- list()
+      }
+      if(lsettings[[ch]]$save["beta_bin"]){
+        for(g in 1:mcmc$modeGplus[ch]){
+          for(y in mcmc$Bins){
+            if(mcmc$ngrp[y]>0){
+              last[[ch]]$beta_bin[[y]][[g]] <- values[paste0("beta_bin_",y,"(",g,")[",1:mcmc$ngrp[y],"]")]
+            }else{
+              last[[ch]]$beta_bin[[y]][[g]] <- numeric()
+            }
+          }
+        }
+      }else{
+        for(y in mcmc$Bins){
+          for(g in 1:modeGplus[ch]){
+            last[[ch]]$beta_bin[[y]][[indmat[[ch]][m,g]]] <- 
+              mcmc$last[[ch]]$beta_bin[[y]][[whichG[[ch]][m,g]]]
+          }
+        }
+      }
+      
+      # beta_ord_fix
+      last[[ch]]$beta_ord_fix <- list()
+      if(lsettings[[ch]]$save["beta_ord_fix"]){
+        for(y in mcmc$Ords){
+          if(mcmc$nfix[y]>0){
+            last[[ch]]$beta_ord_fix[[y]] <- values[paste0("beta_ord_fix_",y,"[",1:mcmc$fix[y],"]")]
+          }else{
+            last[[ch]]$beta_ord_fix[[y]] <- numeric()
+          }
+        }
+      }else{
+        last[[ch]]$beta_ord_fix <- mcmc$last[[ch]]$beta_ord_fix
+      }
+      
+      # beta_ord
+      last[[ch]]$beta_ord <- list()
+      for(y in mcmc$Ords){
+        last[[ch]]$beta_ord[[y]] <- list()
+      }
+      if(lsettings[[ch]]$save["beta_ord"]){
+        for(g in 1:mcmc$modeGplus[ch]){
+          for(y in mcmc$Ords){
+            if(mcmc$ngrp[y]>0){
+              last[[ch]]$beta_ord[[y]][[g]] <- values[paste0("beta_ord_",y,"(",g,")[",1:mcmc$ngrp[y],"]")]
+            }else{
+              last[[ch]]$beta_ord[[y]][[g]] <- numeric()
+            }
+          }
+        }
+      }else{
+        for(y in mcmc$Ords){
+          for(g in 1:modeGplus[ch]){
+            last[[ch]]$beta_ord[[y]][[indmat[[ch]][m,g]]] <- 
+              mcmc$last[[ch]]$beta_ord[[y]][[whichG[[ch]][m,g]]]
+          }
+        }
+      }
+      
+      # c_ord, a_ord, pi_ord
+      for(p in c("c_ord", "a_ord", "pi_ord")){
+        last[[ch]][[p]] <- list()
+        if(lsettings[[ch]]$save[p]){
+          if(mcmc$varying["c_ord"]){
+            for(y in mcmc$Ords){
+              last[[ch]][[p]][[y]] <- list()
+            }
+            for(g in 1:mcmc$modeGplus[ch]){
+              for(y in mcmc$Ords){
+                last[[ch]][[p]][[y]][[g]] <- values[paste0(p,"_",y,"(",g,")[",1:mcmc$Kord[y],"]")]
+              }
+            }
+          }else{
+            for(y in mcmc$Ords){
+              last[[ch]][[p]][[y]] <- values[paste0(p,"_",y,"[",1:mcmc$Kord[y],"]")]
+            }
+          }
+        }else{
+          if(mcmc$varying["c_ord"]){
+            for(y in mcmc$Ords){
+              last[[ch]][[p]][[y]] <- list()
+            }
+            for(g in 1:mcmc$modeGplus[ch]){
+              for(y in mcmc$Ords){
+                last[[ch]][[p]][[y]][[indmat[[ch]][m,g]]] <- 
+                  mcmc$last[[ch]][[p]][[y]][[whichG[[ch]][m,g]]]
+              }
+            }
+          }else{
+            last[[ch]][[p]] <- mcmc$last[[ch]][[p]]
+          }
+        }
+      }
+      
+      # beta_cat_fix
+      last[[ch]]$beta_cat_fix <- list()
+      if(lsettings[[ch]]$save["beta_cat_fix"]){
+        for(y in mcmc$Cats){
+          if(mcmc$nfix[y]>0){
+            last[[ch]]$beta_cat_fix[[y]] <- matrix(values[paste0("beta_cat_fix_",y,
+                                                                 "[",
+                                                                 rep(1:mcmc$fix[y], each=mcmc$Kcat[y]),
+                                                                 ",",
+                                                                 rep(1:mcmc$Kcat[y], mcmc$nfix[y]),
+                                                                 "]")],
+                                                   nrow = mcmc$nfix[y], byrow=TRUE)
+          }else{
+            last[[ch]]$beta_cat_fix[[y]] <- numeric()
+          }
+        }
+      }else{
+        last[[ch]]$beta_cat_fix <- mcmc$last[[ch]]$beta_cat_fix
+      }
+      
+      # beta_cat
+      last[[ch]]$beta_cat <- list()
+      for(y in mcmc$Cats){
+        last[[ch]]$beta_cat[[y]] <- list()
+      }
+      if(lsettings[[ch]]$save["beta_cat"]){
+        for(g in 1:mcmc$modeGplus[ch]){
+          for(y in mcmc$Cats){
+            if(mcmc$ngrp[y]>0){
+              last[[ch]]$beta_cat[[y]][[g]] <- matrix(values[paste0("beta_cat_",y,
+                                                                    "(",g,")[",
+                                                                    rep(1:mcmc$grp[y], each=mcmc$Kcat[y]),
+                                                                    ",",
+                                                                    rep(1:mcmc$Kcat[y], mcmc$ngrp[y]),
+                                                                    "]")],
+                                                      nrow = mcmc$ngrp[y], byrow=TRUE)
+            }else{
+              last[[ch]]$beta_cat[[y]][[g]] <- numeric()
+            }
+          }
+        }
+      }else{
+        for(y in mcmc$Cats){
+          for(g in 1:modeGplus[ch]){
+            last[[ch]]$beta_cat[[y]][[indmat[[ch]][m,g]]] <- 
+              mcmc$last[[ch]]$beta_cat[[y]][[whichG[[ch]][m,g]]]
+          }
+        }
+      }
+      
+      # random-effects related parameters (only if random effects are present)
+      if(mcmc$totnran > 0){
+        # InvSigma, InvQ
+        for(p in c("InvSigma", "InvQ")){
+          if(lsettings[[ch]]$save[p]){
+            if(mcmc$varying[p]){
+              last[[ch]][[p]] <- list()
+              for(g in 1:mcmc$modeGplus[ch]){
+                pommatrix <- matrix(0, mcmc$totnran, mcmc$totnran)
+                pomvec <- values[grepl(paste0("^",p,"(",g,")"),names(values))]
+                pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+                pommatrix <- t(pommatrix)
+                pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+                last[[ch]][[p]][[g]] <- pommatrix
+              }
+            }else{
+              pommatrix <- matrix(0, mcmc$totnran, mcmc$totnran)
+              pomvec <- values[grepl(paste0("^",p),names(values))]
+              pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+              pommatrix <- t(pommatrix)
+              pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
+              last[[ch]][[p]] <- pommatrix
+            }
+          }else{
+            if(mcmc$varying[p]){
+              for(g in 1:mcmc$modeGplus[ch]){
+                last[[ch]][[p]][[indmat[[ch]][m,g]]] <- 
+                  mcmc$last[[ch]][[p]][[whichG[[ch]][m,g]]]
+              }
+            }else{
+              last[[ch]][[p]] <- mcmc$last[[ch]][[p]]
+            }
+          }
+        }
+        # b
+        if(lsettings[[ch]]$save[p]){
+          last[[ch]]$b <- matrix(values[paste0("b[",
+                                               rep(1:mcmc$n, each=mcmc$totnran),
+                                               ",",
+                                               rep(1:mcmc$totnran, mcmc$n),
+                                               "]")], 
+                                 mcmc$n, mcmc$totnran, byrow=TRUE)
+        }else{
+          last[[ch]]$b <-mcmc$last[[ch]]$b
+        }
+      }
+      
+      # naY
+      if(lsettings[[ch]]$dims["naY"]>0){
+        if(lsettings[[ch]]$save["naY"]){
+          if(mcmc$varying["naY"]){
+            last[[ch]]$naY <- list()
+            for(g in 1:mcmc$modeGplus[ch]){
+              last[[ch]]$naY[[g]] <- values[paste0("naY(",g,")[",1:lsettings[[ch]]$dims["naY"],"]")]
+            }
+          }else{
+            last[[ch]]$naY <- values[paste0("naY[",1:lsettings[[ch]]$dims["naY"],"]")]
+          }
+        }else{
+          if(mcmc$varying["naY"]){
+            for(g in 1:mcmc$modeGplus[ch]){
+              last[[ch]]$naY[[indmat[[ch]][m,g]]] <- 
+                mcmc$last[[ch]]$naY[[whichG[[ch]][m,g]]]
+            }
+          }else{
+            last[[ch]]$naY <- mcmc$last[[ch]]$naY
+          }
+        }
+      }
+    } # end of else m==0
+  } # end for chain in mcmc$chains
+  res$last <- last
   
   # call
   res$call <- c("###------------------------------------------###\n")
   res$call <- paste0(res$call, "### Post-processed MCMC samples of clustGLMM ###\n")
   res$call <- paste0(res$call, "###------------------------------------------###\n")
-  # TODO what should be added to call?
+  for(ch in mcmc$chains){
+    res$call <- paste0(res$call, "-----------------------------------------------------------------------\n")
+    res$call <- paste0(res$call, "Chain ", ch, "\n")
+    res$call <- paste0(res$call, "-----------------------------------------------------------------------\n")
+    res$call <- paste0(res$call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
+    res$call <- paste0(res$call, "Instead of clusters: ", 
+                       paste0(mcmc$clusters[[ch]], collapse = ", "))
+    res$call <- paste0(res$call, "we now have clusters: ", 
+                       paste0(res$clusters[[ch]], collapse = ", "), ".\n")
+    res$call <- paste0(res$call, "Number of iterations with", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
+    res$call <- paste0(res$call, "Out of them, ", Mrho[ch], " (", 
+                       format(Mrho[ch] / iters[ch] * 100, digits=2), 
+                       "%) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")
+    res$call <- paste0(res$call, "Therefore, ", iters[ch] - Mrho[ch], " (", 
+                       format((iters[ch] - Mrho[ch]) / iters[ch] * 100, digits=2), 
+                       "%) iterations have been permuted and aligned. These are now eligible for the analysis.\n\n")
+  }
+  
   
   
   if(backtolist){

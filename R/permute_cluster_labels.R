@@ -85,6 +85,28 @@ permute_cluster_labels <-
         }
         mcmc$last[[ch]][[p]] <- aux
       }
+      
+      ## Permute mcmc$inits, the initial values (similarly as the last values)
+      mcmc$inits[[ch]]$U <- sapply(mcmc$inits[[ch]]$U, function(g){which(perm[[ch]] == g)})
+      
+      # cluster-specific parameters
+      params <- rownames(mcmc$settings[[ch]])[as.logical(mcmc$settings[[ch]]$gspec)]
+      for(p in intersect(params, names(mcmc$inits[[ch]]))){
+        aux <- list()
+        if(mcmc$settings[[ch]][p,"ydepd1"]){
+          for(y in names(mcmc$inits[[ch]][[p]])){
+            aux[[y]] <- list()
+            for(g in 1:mcmc$G[ch]){
+              aux[[y]][[g]] <- mcmc$inits[[ch]][[p]][[y]][[perm[[ch]][g]]]
+            } 
+          }
+        }else{
+          for(g in 1:mcmc$G[ch]){
+            aux[[g]] <- mcmc$inits[[ch]][[p]][[perm[[ch]][g]]]
+          } 
+        }
+        mcmc$inits[[ch]][[p]] <- aux
+      }
     
       ## Permute other outputs saved in mcmc
       # clustering, clusters

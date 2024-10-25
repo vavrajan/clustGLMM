@@ -31,10 +31,6 @@ function(mcmc,      # MCMC generated parameters
     rules <- hermite.he.quadrature.rules(n = NGQ, normalized=FALSE)[[NGQ]]
   }
   
-  # Iterations to be taken
-  iterations <- seq(start, end, by = thin)
-  niter <- length(iterations)
-  
   # For probability calculation we need the following parameters:
   #   w, prec_num, beta, InvSigma
   # If those were not saved during the clustGLMM function,
@@ -274,10 +270,19 @@ Change the  settings and use clustGLMM() again.")
   
   # head(finX)
   # all the following three are going to be saved
-  nparams <- numeric(length(chains))
+  # Iterations to be taken
+  iterations <- list()
+  niter <- numeric(mcmc$nchains)
+  nparams <- numeric(mcmc$nchains)
   output <- cmcmc <- cnames <- param_names <- list()
   lsettings <- list()
   for(ch in chains){
+    # iterations
+    ms <- mcmc$draws[[ch]]$m
+    ms <- ms[(ms >= start) & (ms < end)]
+    iterations[[ch]] <- ms[seq(1, length(ms), by=thin)]
+    niter[ch] <- length(iterations[[ch]])
+    # settings
     settings <- mcmc$settings[[ch]]
     rownames(settings)[rownames(settings)=="loglik"] <- "deviance"
     rownames(settings)[rownames(settings)=="pUig"] <- "pUig_int"
@@ -298,8 +303,9 @@ Change the  settings and use clustGLMM() again.")
     settings <- settings[params,]
     settings$iter <- niter
     lsettings[[ch]] <- settings
+    subsettings <- settings[c("deviance", "dev_i", "pUig_int"), ]
     
-    nparams[ch] <- sum(lsettings[[ch]][c("deviance", "dev_i", "pUig_int"), "dimswithG"])
+    nparams[ch] <- sum(subsettings$dimswithG * subsettings$save)
     param_names[[ch]] <- list()
     cnames[[ch]] <- character(1+nparams[ch])
     cnames[[ch]][1] = "m"
@@ -329,7 +335,7 @@ Change the  settings and use clustGLMM() again.")
     if(mcmc$howsave == "list"){
       for(p in params[1:14]){
         cparamvalues[[p]] <- from_list_to_C(mcmc$draws[[ch]], 
-                                            iterations,
+                                            iterations[[ch]],
                                             p, 
                                             lsettings[[ch]], 
                                             yspecd1=mcmc$yspecd1[[p]],
@@ -340,7 +346,7 @@ Change the  settings and use clustGLMM() again.")
     
     if(mcmc$howsave == "matrix"){
       for(p in params[1:14]){
-        cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations, p, lsettings[[ch]])
+        cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations[[ch]], p, lsettings[[ch]])
       }
     }
     
@@ -473,7 +479,7 @@ Change the  settings and use clustGLMM() again.")
           }
         }
       }
-      chain[["m"]] <- iterations
+      chain[["m"]] <- iterations[[ch]]
       
       output[[ch]] <- chain
     }
@@ -481,7 +487,7 @@ Change the  settings and use clustGLMM() again.")
     if(howsave == "matrix"){
       # results will be returned in matrix - the same way as original R function
       output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams[ch])
-      output[[ch]][,1] <- iterations
+      output[[ch]][,1] <- iterations[[ch]]
       colnames(output[[ch]]) <- cnames[[ch]]
       output[[ch]] <- as.data.frame(output[[ch]])
       

@@ -806,7 +806,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   dimswithG <- matrix(0, nrow = length(params), ncol = nchains)
   rownames(dimswithG) <- params
   for(ch in 1:nchains){
-    dimswithG[,ch] <- cdims * ((settings$gspec==0)*1 + (settings$gspec==1)*G[ch])
+    dimswithG[,ch] <- cdims * (!(settings$gspec)*1 + (settings$gspec)*G[ch])
   }
   
   # cparam - created in specific order (user is not required to have the same order)
@@ -878,7 +878,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     lsettings[[ch]]$G <- G[ch]
     lsettings[[ch]]$dimswithG <- dimswithG[params,ch]
     
-    nparams[ch] <- sum(dimswithG[,ch])
+    nparams[ch] <- sum(dimswithG[,ch] * lsettings[[ch]]$save)
     cnames[[ch]] <- character(1+nparams[ch])
     cnames[[ch]][1] <- c("m")
     index <- 1
@@ -1153,8 +1153,11 @@ Change the save settings if you want to calculate these probabilities afterwards
                                 n, G[ch], byrow = lsettings[[ch]]["pUig", "BYROW"])
 
      # prec_num
+      last[[ch]]$prec_num <- list()
       if(varying["prec_num"]){
-        last[[ch]]$prec_num <- list()
+        for(y in Nums){
+          last[[ch]]$prec_num[[y]] <- list()
+        }
         for(g in 1:G[ch]){
           for(y in Nums){
             last[[ch]]$prec_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
@@ -1419,7 +1422,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       }
 
       mcmc$draws[[ch]] <- chain
-      message(paste0("Saving the chain ", ch, " into lists is completed.\n"))
+      message(paste0("Saving chain ", ch, " into lists is completed.\n"))
     }
 
     if(howsave == "matrix"){
@@ -1440,7 +1443,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
       }
 
-      message(paste0("Saving the chain ", ch, " into one big matrix is completed.\n"))
+      message(paste0("Saving chain ", ch, " into one big matrix is completed.\n"))
     }
   } # end of chain
   message("All chains have been already sampled.\n")
@@ -1454,7 +1457,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   }
     
   clusters <- list()
-  modeGplus <- numeric(mcmc$nchains)
+  modeGplus <- numeric(nchains)
   clusteringU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
   certaintyU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
   for(ch in 1:nchains){

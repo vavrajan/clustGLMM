@@ -16,9 +16,9 @@ summary.clustglmm <- function(object, ...){
     }else{
       fset = settings[settings$save & !settings$gspec & settings$dims>0, ]
       fset = fset[setdiff(rownames(fset), c("loglik", "U", "Gplus", "e0")), ]
-      fnames[[ch]] <- c()
+      fnames[[ch]] <- character(0)
       for(p in rownames(fset)){
-        fnames[[ch]] <- c(fnames[[ch]], object$param_names[[p]])
+        fnames[[ch]] <- c(fnames[[ch]], object$param_names[[ch]][[p]])
       }
       
       gnames[[ch]] <- rownames(coda_summary[[1]]$statistics)[

@@ -2,6 +2,7 @@ plot_ACF_param <-
   function(mcmc, what, burnin = 0, thin = 1, iterations, lag.max = 30, chains, setparmfrow = TRUE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
+    if(missing(chains)){chains = mcmc$chains}
     v <- c(mcmc$settings[[chains[1]]][what, ])
     # assuming all settings are the same for all chains... (G and dimswithG not used here)
     Ys <- c()
@@ -11,8 +12,6 @@ plot_ACF_param <-
     if(v$yords){Ys <- c(Ys, mcmc$Ords)}
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
-    if(missing(chains)){chains = mcmc$chains}
-    sameclusters <- TRUE
     if(is.element(what, c("w", "ng"))){
       nonempty <- list()
       for(ch in chains){
@@ -20,10 +19,11 @@ plot_ACF_param <-
       }
     }else{
       nonempty <- mcmc$clusters
-      for(ch in chains[-1]){
-        sameclusters <- sameclusters & setequal(nonempty[[chains[1]]], 
-                                                nonempty[[ch]])
-      }
+    }
+    sameclusters <- TRUE
+    for(ch in chains[-1]){
+      sameclusters <- sameclusters & setequal(nonempty[[chains[1]]], 
+                                              nonempty[[ch]])
     }
     
     if(sameclusters){

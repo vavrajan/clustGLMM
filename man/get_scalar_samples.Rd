@@ -9,7 +9,8 @@ This function takes an output of \code{clustGLMM} and finds all values related t
 \usage{
 get_scalar_samples(mcmc, what, gspec, dimspec, yspec, 
                    burnin = 0, thin = 1, 
-                   iterations, chains)
+                   iterations, chains,
+                   restrictedtoGplus = FALSE)
 }
 \arguments{
   \item{mcmc}{

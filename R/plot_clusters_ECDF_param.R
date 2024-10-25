@@ -2,6 +2,7 @@ plot_clusters_ECDF_param <-
   function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
+    if(missing(chains)){chains = mcmc$chains}
     v <- c(mcmc$settings[[chains[1]]][what, ])
     # assuming all settings are the same for all chains... (G and dimswithG not used here)
     Ys <- c()
@@ -11,7 +12,6 @@ plot_clusters_ECDF_param <-
     if(v$yords){Ys <- c(Ys, mcmc$Ords)}
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
-    if(missing(chains)){chains = mcmc$chains}
     nonempty <- mcmc$clusters
     par(mar = c(4,4,1,1))
     
@@ -24,12 +24,12 @@ plot_clusters_ECDF_param <-
               if(setparmfrow){par(mfrow = c(v$d1, v$d2))}
               for(i in 1:v$d1){
                 for(j in 1:v$d2){
-                    plot_clusters(mcmc = mcmc, what = what, 
-                                  dimspec = c(i,j), whichg = nonempty[[ch]],
-                                  burnin = burnin, thin = thin, 
-                                  iterations = iterations, chains = ch, 
-                                  setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
-                                  labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
+                  plot_clusters(mcmc = mcmc, what = what, 
+                                dimspec = c(i,j), whichg = nonempty[[ch]],
+                                burnin = burnin, thin = thin, 
+                                iterations = iterations, chains = ch, 
+                                setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
+                                labcex = ifelse(v$d1 <= 3, 0.6, 0.5))
                 }
               }
             }
