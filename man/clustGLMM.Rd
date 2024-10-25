@@ -113,6 +113,7 @@ The most important output:
 Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
 
 Other newly defined quantities included in the output are:
+\item{iterations}{a list per each chain containing iterations available, \code{\link{post_processing}} can create NA values if k-means does not result in permutation, then these iterations are omitted,}
 \item{modeGplus}{a vector of the most frequent number of non-empty clusters, one per each chain,}
 \item{sameclusters}{a boolean declaring whether the cluster labels in all sampled chains are the same (useful for plotting),}
 \item{clusters}{a list of ordered non-empty clusters for each sampled chain (\code{modeGplus} most frequently appearing cluster labels),}

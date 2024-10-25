@@ -11,7 +11,13 @@ function(mcmc, what, gspec, dimspec, yspec,
   for(ch in chains){
     if(missing(iterations)){
       # iterations = seq(burnin+1, mcmc$iter, by = thin)
-      iterations <- mcmc$draws[[ch]]$m
+      # iterations <- mcmc$draws[[ch]]$m
+      if(missing(gspec)){
+        iterations <- mcmc$draws[[ch]]$m
+      }else{
+        # to avoid NA values created by post_processing()
+        iterations <- mcmc$iterations[[ch]]
+      }
       iterations <- iterations[iterations > burnin]
       iterations <- iterations[seq(1, length(iterations), by=thin)]
     }

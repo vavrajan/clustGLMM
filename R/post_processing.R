@@ -18,54 +18,60 @@ function(mcmc, cols){
     inds[[ch]] <- which(submcmc$Gplus == mcmc$modeGplus[ch])
     iters[ch] <- length(inds[[ch]])
   }
-  message("modeGplus")
+  message("modeGplus:")
   print(mcmc$modeGplus)
-  message("Frequency of the modeGplus value")
+  message("Frequency of the modeGplus value:")
   print(iters)
   
   ### 2) Columns of mcmc$draws that are cluster-specific parameters
-  allgcols <- colnames(mcmc$draws[[ch]])[grep("\\(\\d+\\)", colnames(mcmc$draws[[ch]]))]
-  # but not clustering related variables (weights, sizes, probabilities)
-  allgcols <- allgcols[!(grepl("^w", allgcols) | grepl("^ng", allgcols) | grepl("^pUig", allgcols) | grepl("^pUig_int", allgcols))]
-  
-  if(missing(cols)){
-    cols <- allgcols
-  }else{
-    # use only selected cols for k-means clustering
+  allgcols <- kmcols <- list()
+  for(ch in mcmc$chains){
+    allgcols[[ch]] <- colnames(mcmc$draws[[ch]])[grep("\\(\\d+\\)", colnames(mcmc$draws[[ch]]))]
+    # but not clustering related variables (weights, sizes, probabilities)
+    allgcols[[ch]] <- allgcols[[ch]][!(grepl("^w", allgcols[[ch]]) | 
+                                         grepl("^ng", allgcols[[ch]]) | 
+                                         grepl("^pUig", allgcols[[ch]]) | 
+                                         grepl("^pUig_int", allgcols[[ch]]))]
+    
+    if(missing(cols)){
+      kmcols[[ch]] <- allgcols[[ch]]
+    }else{
+      kmcols[[ch]] <- cols
+    }
   }
-  message("columns used for k-means")
-  print(cols)
+  message("columns used for k-means:")
+  print(kmcols)
   
   ### 3) Creating submatrices of sampled cluster-specific parameters
   clusterspec <- whichG <- list()
   for(ch in mcmc$chains){
     suball <- mcmc$draws[[ch]][inds[[ch]], 
-                               c("m", "Gplus", paste0("ng(", 1:mcmc$G[ch], ")"), cols)]
-    clusterspec[[ch]] <- matrix(NA, nrow = iters[ch], ncol = 1 + length(cols)/mcmc$G[ch]*mcmc$modeGplus[ch])
+                               c("m", "Gplus", paste0("ng(", 1:mcmc$G[ch], ")"), kmcols[[ch]])]
+    clusterspec[[ch]] <- matrix(NA, nrow = iters[ch], ncol = 1 + length(kmcols[[ch]])/mcmc$G[ch]*mcmc$modeGplus[ch])
     whichG[[ch]] <- matrix(NA, nrow = iters[ch], ncol = mcmc$modeGplus[ch])
     for(m in 1:iters[ch]){
       whichG[[ch]][m,] <- which(suball[m, paste0("ng(", 1:mcmc$G[ch], ")")] > 0)
       #print(whichG)
       expr <- paste(paste0("\\(", whichG[[ch]][m,], "\\)"), collapse = "|")
-      subcols <- cols[grep(expr, cols)]
+      subcols <- kmcols[[ch]][grep(expr, kmcols[[ch]])]
       clusterspec[[ch]][m,] <- unlist(suball[m,c("m",subcols)])
     }
     expr <- paste(paste0("\\(", 1:mcmc$modeGplus[ch], "\\)"), collapse = "|")
-    subcols <- cols[grep(expr, cols)]
+    subcols <- kmcols[[ch]][grep(expr, kmcols[[ch]])]
     cnames <- c("m", subcols)
     colnames(clusterspec[[ch]]) <- cnames
   }
   message("Subset of states of cluster-specific parameters with Gplus=modeGplus 
-created for each chain separately")
+created for each chain separately.")
   
   
   ### 4) Prepare for k-means clustering
   forkmeans <- list()
   for(ch in mcmc$chains){
-    forkmeans[[ch]] <- matrix(NA, nrow = 0, ncol = length(cols)/mcmc$G[ch])
+    forkmeans[[ch]] <- matrix(NA, nrow = 0, ncol = length(kmcols[[ch]])/mcmc$G[ch])
     for(g in 1:mcmc$modeGplus[ch]){
       forkmeans[[ch]] <- rbind(forkmeans[[ch]], clusterspec[[ch]][,grep(paste0("\\(", g, "\\)"), 
-                                                                        colnames(clusterspec[[ch]]))])
+                                                                        colnames(clusterspec[[ch]])),drop=FALSE])
     }
     cnames <- colnames(clusterspec[[ch]])[grep("\\(1\\)", 
                                                colnames(clusterspec[[ch]]))]
@@ -84,13 +90,13 @@ created for each chain separately")
     #dim(forkmeans[[ch]])
     #summary(forkmeans[[ch]])
     forkmeans[[ch]] <- scale(as.matrix(forkmeans[[ch]]))
-    km <- kmeans(forkmeans[[ch]], centers = modeGplus[ch])
+    km <- kmeans(forkmeans[[ch]], centers = mcmc$modeGplus[ch])
     # create index matrix
-    indmat[[ch]] <- matrix(km$cluster, ncol = modeGplus[ch], byrow = FALSE)
+    indmat[[ch]] <- matrix(km$cluster, ncol = mcmc$modeGplus[ch], byrow = FALSE)
     #head(indmat[[ch]])
     # number of not permutations = number of rows where is something repeated
     rowuniques[[ch]] <- apply(indmat[[ch]], 1, function(x){length(unique(x))})
-    Mrhos[ch] <- sum(rowuniques[[ch]] < modeGplus[ch])
+    Mrhos[ch] <- sum(rowuniques[[ch]] < mcmc$modeGplus[ch])
   }
   # mcmc$Mrhos <- Mrhos
   message("K-means performed")
@@ -98,15 +104,18 @@ created for each chain separately")
   print(paste0(Mrhos / iters * 100, " %"))
   
   ### 6) Update the clusterspec matrix according to suggested permutations
+  ispermutation <- list()
   for(ch in mcmc$chains){
+    ispermutation[[ch]] <- boolean(iters[ch])
     #head(clusterspec[[ch]])
     cnames <- colnames(clusterspec[[ch]])[grep("\\(1\\)", 
                                                colnames(clusterspec[[ch]]))]
     for(m in 1:iters[ch]){
-      if(rowuniques[[ch]][m] == modeGplus[ch]){
+      ispermutation[[ch]][m] <- (ispermutation[[ch]][m])
+      if(ispermutation[[ch]][m]){
         # it is a permutation --> permute accordingly
         auxrow <- unlist(clusterspec[[ch]][m,])
-        for(g in 1:modeGplus[ch]){
+        for(g in 1:mcmc$modeGplus[ch]){
           gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
           pnames <- gsub("\\(1\\)", paste0("\\(",indmat[[ch]][m,g],"\\)"), cnames)
           clusterspec[[ch]][m,pnames] <- auxrow[gnames]
@@ -123,7 +132,7 @@ created for each chain separately")
   draws <- list()
   for(ch in mcmc$chains){
     # Parameters that are not group-specific and do not help with clustering
-    nongcols <- setdiff(colnames(mcmc$draws[[ch]]), allgcols)
+    nongcols <- setdiff(colnames(mcmc$draws[[ch]]), allgcols[[ch]])
     nongcols <- nongcols[!(grepl("^w", nongcols) | 
                              grepl("^ng",nongcols) | 
                              grepl("^pUig", nongcols)| 
@@ -135,11 +144,11 @@ created for each chain separately")
     draws[[ch]] <- cbind(draws[[ch]], clusterspec[[ch]])
     
     # Add other group-specific columns than those given
-    othergcols <- setdiff(allgcols, cols)
+    othergcols <- setdiff(allgcols[[ch]], kmcols[[ch]])
     if(length(othergcols) > 0){
       suball <- mcmc$draws[[ch]][inds[[ch]], othergcols]
       cnames <- othergcols[grep("\\(1\\)", othergcols)]
-      oGplus <- matrix(NA, nrow = iters[ch], ncol = modeGplus[ch]*length(cnames))
+      oGplus <- matrix(NA, nrow = iters[ch], ncol = mcmc$modeGplus[ch]*length(cnames))
       allcnames <- c()
       for(g in 1:mcmc$modeGplus[ch]){
         allcnames <- c(allcnames, gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames))
@@ -147,11 +156,11 @@ created for each chain separately")
       colnames(oGplus) <- allcnames
       
       for(m in 1:iters[ch]){
-        if(rowuniques[[ch]][m] == modeGplus[ch]){
+        if(ispermutation[[ch]][m]){
           expr <- paste(paste0("\\(", whichG[[ch]][m,], "\\)"), collapse = "|")
           subcols <- othergcols[grep(expr, othergcols)]
-          auxrow <- unlist(suball[m,subcols])
-          for(g in 1:modeGplus[ch]){
+          auxrow <- unlist(suball[m,subcols,drop=FALSE])
+          for(g in 1:mcmc$modeGplus[ch]){
             gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
             pnames <- gsub("\\(1\\)", paste0("\\(",indmat[[ch]][m,g],"\\)"), cnames)
             oGplus[m,pnames] <- auxrow[gnames]
@@ -169,13 +178,13 @@ created for each chain separately")
       suball <- mcmc$draws[[ch]][inds[[ch]], c(paste0("w(", 1:mcmc$G[ch], ")"),
                                                paste0("ng(", 1:mcmc$G[ch], ")"))]
       for(p in c("w", "ng")){
-        pGplus <- matrix(NA, nrow = iters[ch], ncol = modeGplus[ch])
-        colnames(pGplus) <- paste0(p,"(", 1:modeGplus[ch], ")")
+        pGplus <- matrix(NA, nrow = iters[ch], ncol = mcmc$modeGplus[ch])
+        colnames(pGplus) <- paste0(p,"(", 1:mcmc$modeGplus[ch], ")")
         for(m in 1:iters[ch]){
-          if(rowuniques[[ch]][m] == modeGplus[ch]){
+          if(ispermutation[[ch]][m]){
             pcols <- paste0(p,"(", whichG[[ch]][m,], ")")
-            auxrow <- unlist(suball[m,pcols])
-            for(g in 1:modeGplus[ch]){
+            auxrow <- unlist(suball[m,pcols,drop=FALSE])
+            for(g in 1:mcmc$modeGplus[ch]){
               gname <- paste0(p,"(",g,")")
               pname <- paste0(p,"(",indmat[[ch]][m,g],")")
               pGplus[m,pname] <- auxrow[gname]
@@ -194,7 +203,7 @@ created for each chain separately")
       UGplus <- matrix(NA, nrow = iters[ch], ncol = mcmc$n)
       colnames(UGplus) <- paste0("U[", 1:mcmc$n, "]")
       for(m in 1:iters[ch]){
-        if(rowuniques[[ch]][m] == modeGplus[ch]){
+        if(ispermutation[[ch]][m]){
           for(i in 1:mcmc$n){
             u <- suball[m,paste0("U[",i,"]")] 
             whu <- which(whichG[[ch]][m,] == u) # order within non-zero clusters
@@ -215,13 +224,13 @@ created for each chain separately")
           suball <- mcmc$draws[[ch]][inds[[ch]], 
                                      c(paste0(p,"(",1:mcmc$G[ch],")[",i,"]"),
                                        paste0("ng(",1:mcmc$G[ch],")"))]
-          pU <- matrix(NA, nrow = iters[ch], ncol = modeGplus[ch])
-          colnames(pU) <- paste0(p,"(",1:modeGplus[ch],")[",i,"]")
+          pU <- matrix(NA, nrow = iters[ch], ncol = mcmc$modeGplus[ch])
+          colnames(pU) <- paste0(p,"(",1:mcmc$modeGplus[ch],")[",i,"]")
           for(m in 1:iters[ch]){
-            if(rowuniques[[ch]][m] == modeGplus[ch]){
+            if(ispermutation[[ch]][m]){
               pcols <- paste0(p,"(",whichG[[ch]][m,],")[",i,"]")
-              auxrow <- suball[m,pcols]
-              for(g in 1:modeGplus[ch]){
+              auxrow <- unlist(suball[m,pcols,drop=FALSE])
+              for(g in 1:mcmc$modeGplus[ch]){
                 gname <- paste0(p,"(",g,")[",i,"]")
                 pname <- paste0(p,"(",indmat[[ch]][m,g],")[",i,"]")
                 pU[m,pname] <- auxrow[gname]
@@ -232,6 +241,7 @@ created for each chain separately")
           }
           pGplus <- cbind(pGplus, pU)
         }
+        draws[[ch]] <- cbind(draws[[ch]], pGplus)
       }
     } # end adding pUig, pUig_int
   } # end of creating draws
@@ -245,11 +255,14 @@ created for each chain separately")
   
   ### 8) make the output of the same class as input
   # + make necessary changes
-  clusters <- list()
+  clusters <- iterations <- list()
   clustering <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
   certainty <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
   for(ch in mcmc$chains){
-    clusters[[ch]] <- 1:modeGplus[ch]
+    # iterations
+    iterations[[ch]] <- draws[[ch]]$m[ispermutation[[ch]]]
+    # clusters
+    clusters[[ch]] <- 1:mcmc$modeGplus[ch]
     # U samples
     if(mcmc$settings[[ch]]["U","save"]){
       Us <- draws[[ch]][,paste0("U[",1:mcmc$n,"]")]
@@ -273,6 +286,7 @@ created for each chain separately")
   
   ### Final output
   res <- mcmc
+  res$iterations <- iterations 
   res$clusters <- clusters
   res$clustering <- clustering
   res$certainty <- certainty
@@ -285,7 +299,7 @@ created for each chain separately")
     s <- mcmc$settings[[ch]]
     s$iter <- iters[ch]
     s$G <- mcmc$modeGplus[ch]
-    s$dimswithG <- s$dims * (!(s$gspec)*1 + (s$gspec)*mcmc$modeGplus[ch])
+    s$dimswithG <- s$dims * ((!s$gspec)*1 + (s$gspec)*mcmc$modeGplus[ch])
     lsettings[[ch]] <- s
   }
   res$settings <- lsettings
@@ -293,8 +307,8 @@ created for each chain separately")
   param_names <- list()
   for(ch in mcmc$chains){
     param_names[[ch]] <- list()
-    for(p in params){
-      if(lsettings[[ch]][p,"save"] & lsettings[[ch]][p,"dims"] > 0){
+    for(p in rownames(lsettings[[ch]])){
+      if(lsettings[[ch]][p,"save"] & (lsettings[[ch]][p,"dims"] > 0)){
         aux = from_C_to_matrix(values = rep(0, lsettings[[ch]][p,"dimswithG"]),
                                p = p,
                                settings = lsettings[[ch]],
@@ -317,7 +331,7 @@ created for each chain separately")
   for(ch in mcmc$chains){
     last[[ch]] <- list()
     m <- iters[ch]
-    while((rowuniques[[ch]][m] != modeGplus[ch]) & m > 0){
+    while((rowuniques[[ch]][m] != mcmc$modeGplus[ch]) & m > 0){
       m <- m-1
     }
     if(m == 0){
@@ -326,37 +340,37 @@ created for each chain separately")
       # m is the last iteration with modeGplus clusters that resulted in a permutation
       values <- unlist(draws[[ch]][m, ])
       # w
-      if(lsettings[[ch]]$save["w"]){
+      if(lsettings[[ch]]["w","save"]){
         wvalues <- values[paste0("w(",1:mcmc$modeGplus[ch],")")]
       }else{
         wvalues <- table(clustering[,ch])
       }
       last[[ch]]$w <- wvalues / sum(wvalues)
       # e0
-      if(lsettings[[ch]]$save["e0"]){
+      if(lsettings[[ch]]["e0","save"]){
         e0values <- values["e0"]
       }else{
         e0values <- mcmc$param$e0_shp / mcmc$param$e0_rte
       }
       last[[ch]]$e0 <- e0values
       # U
-      if(lsettings[[ch]]$save["U"]){
+      if(lsettings[[ch]]["U","save"]){
         Uvalues <- values[paste0("U[",1:mcmc$n,"]")]
       }else{
         Uvalues <- clustering[,ch]
       }
       last[[ch]]$U <- Uvalues
       # pUig
-      if(lsettings[[ch]]$save["pUig"]){
+      if(lsettings[[ch]]["pUig","save"]){
         pvalues <- values[param_names[[ch]]$pUig]
       }else{
-        pvalues <- rep(inits[[ch]]$w, each=n)
+        pvalues <- rep(last[[ch]]$w, each=n)
       }
       last[[ch]]$pUig <- matrix(pvalues, n, mcmc$modeGplus[ch], byrow = FALSE)
       
       # prec_num
       last[[ch]]$prec_num <- list()
-      if(lsettings[[ch]]$save["prec_num"]){
+      if(lsettings[[ch]]["prec_num","save"]){
         if(varying["prec_num"]){
           for(y in mcmc$Nums){
             last[[ch]]$prec_num[[y]] <- list()
@@ -389,10 +403,10 @@ created for each chain separately")
       
       # beta_num_fix
       last[[ch]]$beta_num_fix <- list()
-      if(lsettings[[ch]]$save["beta_num_fix"]){
+      if(lsettings[[ch]]["beta_num_fix","save"]){
         for(y in mcmc$Nums){
           if(mcmc$nfix[y]>0){
-            last[[ch]]$beta_num_fix[[y]] <- values[paste0("beta_num_fix_",y,"[",1:mcmc$fix[y],"]")]
+            last[[ch]]$beta_num_fix[[y]] <- values[paste0("beta_num_fix_",y,"[",1:mcmc$nfix[y],"]")]
           }else{
             last[[ch]]$beta_num_fix[[y]] <- numeric()
           }
@@ -406,7 +420,7 @@ created for each chain separately")
       for(y in mcmc$Nums){
         last[[ch]]$beta_num[[y]] <- list()
       }
-      if(lsettings[[ch]]$save["beta_num"]){
+      if(lsettings[[ch]]["beta_num","save"]){
         for(g in 1:mcmc$modeGplus[ch]){
           for(y in mcmc$Nums){
             if(mcmc$ngrp[y]>0){
@@ -418,7 +432,7 @@ created for each chain separately")
         }
       }else{
         for(y in mcmc$Nums){
-          for(g in 1:modeGplus[ch]){
+          for(g in 1:mcmc$modeGplus[ch]){
             last[[ch]]$beta_num[[y]][[indmat[[ch]][m,g]]] <- 
               mcmc$last[[ch]]$beta_num[[y]][[whichG[[ch]][m,g]]]
           }
@@ -427,10 +441,10 @@ created for each chain separately")
       
       # beta_poi_fix
       last[[ch]]$beta_poi_fix <- list()
-      if(lsettings[[ch]]$save["beta_poi_fix"]){
+      if(lsettings[[ch]]["beta_poi_fix","save"]){
         for(y in mcmc$Pois){
           if(mcmc$nfix[y]>0){
-            last[[ch]]$beta_poi_fix[[y]] <- values[paste0("beta_poi_fix_",y,"[",1:mcmc$fix[y],"]")]
+            last[[ch]]$beta_poi_fix[[y]] <- values[paste0("beta_poi_fix_",y,"[",1:mcmc$nfix[y],"]")]
           }else{
             last[[ch]]$beta_poi_fix[[y]] <- numeric()
           }
@@ -444,7 +458,7 @@ created for each chain separately")
       for(y in mcmc$Pois){
         last[[ch]]$beta_poi[[y]] <- list()
       }
-      if(lsettings[[ch]]$save["beta_poi"]){
+      if(lsettings[[ch]]["beta_poi","save"]){
         for(g in 1:mcmc$modeGplus[ch]){
           for(y in mcmc$Pois){
             if(mcmc$ngrp[y]>0){
@@ -456,7 +470,7 @@ created for each chain separately")
         }
       }else{
         for(y in mcmc$Pois){
-          for(g in 1:modeGplus[ch]){
+          for(g in 1:mcmc$modeGplus[ch]){
             last[[ch]]$beta_poi[[y]][[indmat[[ch]][m,g]]] <- 
               mcmc$last[[ch]]$beta_poi[[y]][[whichG[[ch]][m,g]]]
           }
@@ -465,10 +479,10 @@ created for each chain separately")
       
       # beta_bin_fix
       last[[ch]]$beta_bin_fix <- list()
-      if(lsettings[[ch]]$save["beta_bin_fix"]){
+      if(lsettings[[ch]]["beta_bin_fix","save"]){
         for(y in mcmc$Bins){
           if(mcmc$nfix[y]>0){
-            last[[ch]]$beta_bin_fix[[y]] <- values[paste0("beta_bin_fix_",y,"[",1:mcmc$fix[y],"]")]
+            last[[ch]]$beta_bin_fix[[y]] <- values[paste0("beta_bin_fix_",y,"[",1:mcmc$nfix[y],"]")]
           }else{
             last[[ch]]$beta_bin_fix[[y]] <- numeric()
           }
@@ -482,7 +496,7 @@ created for each chain separately")
       for(y in mcmc$Bins){
         last[[ch]]$beta_bin[[y]] <- list()
       }
-      if(lsettings[[ch]]$save["beta_bin"]){
+      if(lsettings[[ch]]["beta_bin","save"]){
         for(g in 1:mcmc$modeGplus[ch]){
           for(y in mcmc$Bins){
             if(mcmc$ngrp[y]>0){
@@ -494,7 +508,7 @@ created for each chain separately")
         }
       }else{
         for(y in mcmc$Bins){
-          for(g in 1:modeGplus[ch]){
+          for(g in 1:mcmc$modeGplus[ch]){
             last[[ch]]$beta_bin[[y]][[indmat[[ch]][m,g]]] <- 
               mcmc$last[[ch]]$beta_bin[[y]][[whichG[[ch]][m,g]]]
           }
@@ -503,10 +517,10 @@ created for each chain separately")
       
       # beta_ord_fix
       last[[ch]]$beta_ord_fix <- list()
-      if(lsettings[[ch]]$save["beta_ord_fix"]){
+      if(lsettings[[ch]]["beta_ord_fix","save"]){
         for(y in mcmc$Ords){
           if(mcmc$nfix[y]>0){
-            last[[ch]]$beta_ord_fix[[y]] <- values[paste0("beta_ord_fix_",y,"[",1:mcmc$fix[y],"]")]
+            last[[ch]]$beta_ord_fix[[y]] <- values[paste0("beta_ord_fix_",y,"[",1:mcmc$nfix[y],"]")]
           }else{
             last[[ch]]$beta_ord_fix[[y]] <- numeric()
           }
@@ -520,7 +534,7 @@ created for each chain separately")
       for(y in mcmc$Ords){
         last[[ch]]$beta_ord[[y]] <- list()
       }
-      if(lsettings[[ch]]$save["beta_ord"]){
+      if(lsettings[[ch]]["beta_ord","save"]){
         for(g in 1:mcmc$modeGplus[ch]){
           for(y in mcmc$Ords){
             if(mcmc$ngrp[y]>0){
@@ -532,7 +546,7 @@ created for each chain separately")
         }
       }else{
         for(y in mcmc$Ords){
-          for(g in 1:modeGplus[ch]){
+          for(g in 1:mcmc$modeGplus[ch]){
             last[[ch]]$beta_ord[[y]][[indmat[[ch]][m,g]]] <- 
               mcmc$last[[ch]]$beta_ord[[y]][[whichG[[ch]][m,g]]]
           }
@@ -542,7 +556,7 @@ created for each chain separately")
       # c_ord, a_ord, pi_ord
       for(p in c("c_ord", "a_ord", "pi_ord")){
         last[[ch]][[p]] <- list()
-        if(lsettings[[ch]]$save[p]){
+        if(lsettings[[ch]][p,"save"]){
           if(mcmc$varying["c_ord"]){
             for(y in mcmc$Ords){
               last[[ch]][[p]][[y]] <- list()
@@ -576,12 +590,12 @@ created for each chain separately")
       
       # beta_cat_fix
       last[[ch]]$beta_cat_fix <- list()
-      if(lsettings[[ch]]$save["beta_cat_fix"]){
+      if(lsettings[[ch]]["beta_cat_fix","save"]){
         for(y in mcmc$Cats){
           if(mcmc$nfix[y]>0){
             last[[ch]]$beta_cat_fix[[y]] <- matrix(values[paste0("beta_cat_fix_",y,
                                                                  "[",
-                                                                 rep(1:mcmc$fix[y], each=mcmc$Kcat[y]),
+                                                                 rep(1:mcmc$nfix[y], each=mcmc$Kcat[y]),
                                                                  ",",
                                                                  rep(1:mcmc$Kcat[y], mcmc$nfix[y]),
                                                                  "]")],
@@ -599,13 +613,13 @@ created for each chain separately")
       for(y in mcmc$Cats){
         last[[ch]]$beta_cat[[y]] <- list()
       }
-      if(lsettings[[ch]]$save["beta_cat"]){
+      if(lsettings[[ch]]["beta_cat","save"]){
         for(g in 1:mcmc$modeGplus[ch]){
           for(y in mcmc$Cats){
             if(mcmc$ngrp[y]>0){
               last[[ch]]$beta_cat[[y]][[g]] <- matrix(values[paste0("beta_cat_",y,
                                                                     "(",g,")[",
-                                                                    rep(1:mcmc$grp[y], each=mcmc$Kcat[y]),
+                                                                    rep(1:mcmc$ngrp[y], each=mcmc$Kcat[y]),
                                                                     ",",
                                                                     rep(1:mcmc$Kcat[y], mcmc$ngrp[y]),
                                                                     "]")],
@@ -617,7 +631,7 @@ created for each chain separately")
         }
       }else{
         for(y in mcmc$Cats){
-          for(g in 1:modeGplus[ch]){
+          for(g in 1:mcmc$modeGplus[ch]){
             last[[ch]]$beta_cat[[y]][[indmat[[ch]][m,g]]] <- 
               mcmc$last[[ch]]$beta_cat[[y]][[whichG[[ch]][m,g]]]
           }
@@ -628,7 +642,7 @@ created for each chain separately")
       if(mcmc$totnran > 0){
         # InvSigma, InvQ
         for(p in c("InvSigma", "InvQ")){
-          if(lsettings[[ch]]$save[p]){
+          if(lsettings[[ch]][p,"save"]){
             if(mcmc$varying[p]){
               last[[ch]][[p]] <- list()
               for(g in 1:mcmc$modeGplus[ch]){
@@ -659,7 +673,7 @@ created for each chain separately")
           }
         }
         # b
-        if(lsettings[[ch]]$save[p]){
+        if(lsettings[[ch]][p,"save"]){
           last[[ch]]$b <- matrix(values[paste0("b[",
                                                rep(1:mcmc$n, each=mcmc$totnran),
                                                ",",
@@ -672,15 +686,15 @@ created for each chain separately")
       }
       
       # naY
-      if(lsettings[[ch]]$dims["naY"]>0){
-        if(lsettings[[ch]]$save["naY"]){
+      if(lsettings[[ch]]["naY","dims"]>0){
+        if(lsettings[[ch]]["naY","save"]){
           if(mcmc$varying["naY"]){
             last[[ch]]$naY <- list()
             for(g in 1:mcmc$modeGplus[ch]){
-              last[[ch]]$naY[[g]] <- values[paste0("naY(",g,")[",1:lsettings[[ch]]$dims["naY"],"]")]
+              last[[ch]]$naY[[g]] <- values[paste0("naY(",g,")[",1:lsettings[[ch]]["naY","dims"],"]")]
             }
           }else{
-            last[[ch]]$naY <- values[paste0("naY[",1:lsettings[[ch]]$dims["naY"],"]")]
+            last[[ch]]$naY <- values[paste0("naY[",1:lsettings[[ch]]["naY","dims"],"]")]
           }
         }else{
           if(mcmc$varying["naY"]){
@@ -698,26 +712,27 @@ created for each chain separately")
   res$last <- last
   
   # call
-  res$call <- c("###------------------------------------------###\n")
-  res$call <- paste0(res$call, "### Post-processed MCMC samples of clustGLMM ###\n")
-  res$call <- paste0(res$call, "###------------------------------------------###\n")
+  call <- c("###------------------------------------------###\n")
+  call <- paste0(call, "### Post-processed MCMC samples of clustGLMM ###\n")
+  call <- paste0(call, "###------------------------------------------###\n")
   for(ch in mcmc$chains){
-    res$call <- paste0(res$call, "-----------------------------------------------------------------------\n")
-    res$call <- paste0(res$call, "Chain ", ch, "\n")
-    res$call <- paste0(res$call, "-----------------------------------------------------------------------\n")
-    res$call <- paste0(res$call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
-    res$call <- paste0(res$call, "Instead of clusters: ", 
-                       paste0(mcmc$clusters[[ch]], collapse = ", "))
-    res$call <- paste0(res$call, "we now have clusters: ", 
-                       paste0(res$clusters[[ch]], collapse = ", "), ".\n")
-    res$call <- paste0(res$call, "Number of iterations with", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
-    res$call <- paste0(res$call, "Out of them, ", Mrho[ch], " (", 
-                       format(Mrho[ch] / iters[ch] * 100, digits=2), 
-                       "%) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")
-    res$call <- paste0(res$call, "Therefore, ", iters[ch] - Mrho[ch], " (", 
-                       format((iters[ch] - Mrho[ch]) / iters[ch] * 100, digits=2), 
-                       "%) iterations have been permuted and aligned. These are now eligible for the analysis.\n\n")
+    call <- paste0(call, "-----------------------------------------------------------------------\n")
+    call <- paste0(call, "Chain ", ch, "\n")
+    call <- paste0(call, "-----------------------------------------------------------------------\n")
+    call <- paste0(call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
+    call <- paste0(call, "Instead of clusters: ", 
+                   paste0(mcmc$clusters[[ch]], collapse = ", "))
+    call <- paste0(call, "we now have clusters: ", 
+                   paste0(res$clusters[[ch]], collapse = ", "), ".\n")
+    call <- paste0(call, "Number of iterations with", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
+    call <- paste0(call, "Out of them, ", Mrhos[ch], " (", 
+                   format(Mrhos[ch] / iters[ch] * 100, digits=2), 
+                   "%) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")
+    call <- paste0(call, "Therefore, ", iters[ch] - Mrhos[ch], " (",
+                   format((iters[ch] - Mrhos[ch]) / iters[ch] * 100, digits=2), 
+                   "%) iterations have been permuted and aligned. These are now eligible for the analysis.\n\n")
   }
+  res$call <- call
   
   
   

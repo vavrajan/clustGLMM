@@ -271,7 +271,7 @@ Change the  settings and use clustGLMM() again.")
   # head(finX)
   # all the following three are going to be saved
   # Iterations to be taken
-  iterations <- list()
+  iters <- list()
   niter <- numeric(mcmc$nchains)
   nparams <- numeric(mcmc$nchains)
   output <- cmcmc <- cnames <- param_names <- list()
@@ -279,9 +279,11 @@ Change the  settings and use clustGLMM() again.")
   for(ch in chains){
     # iterations
     ms <- mcmc$draws[[ch]]$m
-    ms <- ms[(ms >= start) & (ms < end)]
-    iterations[[ch]] <- ms[seq(1, length(ms), by=thin)]
-    niter[ch] <- length(iterations[[ch]])
+    ms <- ms[(ms >= start) & (ms <= end)]
+    # only those that do not cover NA values created by post_processing()
+    iters[[ch]] <- intersect(ms[seq(1, length(ms), by=thin)],
+                             mcmc$iterations[[ch]])
+    niter[ch] <- length(iters[[ch]])
     # settings
     settings <- mcmc$settings[[ch]]
     rownames(settings)[rownames(settings)=="loglik"] <- "deviance"
@@ -301,7 +303,7 @@ Change the  settings and use clustGLMM() again.")
     settings <- rbind(settings, settings_devi)
     
     settings <- settings[params,]
-    settings$iter <- niter
+    settings$iter <- niter[ch]
     lsettings[[ch]] <- settings
     subsettings <- settings[c("deviance", "dev_i", "pUig_int"), ]
     
@@ -327,15 +329,15 @@ Change the  settings and use clustGLMM() again.")
   for(ch in chains){
     cparamvalues <- list()
     # arrays/fields where those variables are and will be stored
-    cparamvalues[["pUig_int"]] <- double(niter*lsettings[[ch]]["pUig_int", "dimswithG"])
-    cparamvalues[["deviance"]] <- double(niter*lsettings[[ch]]["deviance", "dimswithG"])
-    cparamvalues[["dev_i"]] <- double(niter*lsettings[[ch]]["dev_i", "dimswithG"])
+    cparamvalues[["pUig_int"]] <- double(niter[ch]*lsettings[[ch]]["pUig_int", "dimswithG"])
+    cparamvalues[["deviance"]] <- double(niter[ch]*lsettings[[ch]]["deviance", "dimswithG"])
+    cparamvalues[["dev_i"]] <- double(niter[ch]*lsettings[[ch]]["dev_i", "dimswithG"])
     #if(dev){cdeviance <- double(niter*cdimswithK["deviance"])}else{cdeviance <- as.double(0)}
     
     if(mcmc$howsave == "list"){
       for(p in params[1:14]){
         cparamvalues[[p]] <- from_list_to_C(mcmc$draws[[ch]], 
-                                            iterations[[ch]],
+                                            iters[[ch]],
                                             p, 
                                             lsettings[[ch]], 
                                             yspecd1=mcmc$yspecd1[[p]],
@@ -346,7 +348,7 @@ Change the  settings and use clustGLMM() again.")
     
     if(mcmc$howsave == "matrix"){
       for(p in params[1:14]){
-        cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iterations[[ch]], p, lsettings[[ch]])
+        cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iters[[ch]], p, lsettings[[ch]])
       }
     }
     
@@ -479,7 +481,7 @@ Change the  settings and use clustGLMM() again.")
           }
         }
       }
-      chain[["m"]] <- iterations[[ch]]
+      chain[["m"]] <- iters[[ch]]
       
       output[[ch]] <- chain
     }
@@ -487,7 +489,7 @@ Change the  settings and use clustGLMM() again.")
     if(howsave == "matrix"){
       # results will be returned in matrix - the same way as original R function
       output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams[ch])
-      output[[ch]][,1] <- iterations[[ch]]
+      output[[ch]][,1] <- iters[[ch]]
       colnames(output[[ch]]) <- cnames[[ch]]
       output[[ch]] <- as.data.frame(output[[ch]])
       
@@ -554,35 +556,35 @@ Change the  settings and use clustGLMM() again.")
   res$sameclusters <- sameclusters
   
   # call
-  res$call <- c("###----------------------------------------------------------------------------------###\n")
-  res$call <- paste0(res$call, "### Approximation of posterior distribution of clustering probabilities and deviance ###\n")
-  res$call <- paste0(res$call, "###----------------------------------------------------------------------------------###\n")
-  res$call <- paste0(res$call, "N = sample size: ", N, "\n")
-  res$call <- paste0(res$call, "n = number of units: ", n, "\n")
-  res$call <- paste0(res$call, "observations per unit (minimum): ", min(nsubj), " \n")
-  res$call <- paste0(res$call, "observations per unit (median): ", median(nsubj), " \n")
-  res$call <- paste0(res$call, "observations per unit (maximum): ", max(nsubj), " \n")
-  res$call <- paste0(res$call, "G = maximal number of clusters: ", mcmc$G, "\n")
+  call <- c("###----------------------------------------------------------------------------------###\n")
+  call <- paste0(call, "### Approximation of posterior distribution of clustering probabilities and deviance ###\n")
+  call <- paste0(call, "###----------------------------------------------------------------------------------###\n")
+  call <- paste0(call, "N = sample size: ", N, "\n")
+  call <- paste0(call, "n = number of units: ", n, "\n")
+  call <- paste0(call, "observations per unit (minimum): ", min(nsubj), " \n")
+  call <- paste0(call, "observations per unit (median): ", median(nsubj), " \n")
+  call <- paste0(call, "observations per unit (maximum): ", max(nsubj), " \n")
+  call <- paste0(call, "G = maximal number of clusters: ", mcmc$G, "\n")
   
   saved_params <- rownames(res$settings[[chains[1]]])[res$settings[[chains[1]]]$save]
-  res$call <- paste0(res$call, "\nList of saved parameters in $draws: ", 
-                      paste0(saved_params, collapse = ", "), "\n")
-  res$call <- paste0(res$call, "\nMCMC approximation: \n")
-  res$call <- paste0(res$call, "start = first iteration number used: ", start, "\n")
-  res$call <- paste0(res$call, "end = last iteration number used: ", end, "\n")
-  res$call <- paste0(res$call, "thin = thinning applied to iterations between start and end: ", thin, "\n")
-  res$call <- paste0(res$call, "niter = number of iterations used for approximation: ", niter, "\n")
-  res$call <- paste0(res$call, "chains = chains used: ", paste(chains, collapse=", "), "\n")
-  res$call <- paste0(res$call, "dynamic_prob = ", as.character(dynamic_prob), " = ", 
-                     ifelse(dynamic_prob, 
-                            "dynamically calculated probabilities", 
-                            "probabilities calculated from all available observations"), 
-                     "\n")
+  call <- paste0(call, "\nList of saved parameters in $draws: ", 
+                 paste0(saved_params, collapse = ", "), "\n")
+  call <- paste0(call, "\nMCMC approximation: \n")
+  call <- paste0(call, "start = first iteration number used: ", start, "\n")
+  call <- paste0(call, "end = last iteration number used: ", end, "\n")
+  call <- paste0(call, "thin = thinning applied to iterations between start and end: ", thin, "\n")
+  call <- paste0(call, "niter = number of iterations used for approximation: ", niter, "\n")
+  call <- paste0(call, "chains = chains used: ", paste(chains, collapse=", "), "\n")
+  call <- paste0(call, "dynamic_prob = ", as.character(dynamic_prob), " = ", 
+                 ifelse(dynamic_prob,
+                        "dynamically calculated probabilities", 
+                        "probabilities calculated from all available observations"), 
+                 "\n")
   if(mcmc$totnran > 0){
-    res$call <- paste0(res$call, "Integral wrt random effects approximated with NGQ=", NGQ, "\n")
+    call <- paste0(call, "Integral wrt random effects approximated with NGQ=", NGQ, "\n")
   }
 
-
+  res$call <- call
   
   
   class(res) <- "clustglmm"

@@ -23,7 +23,7 @@ function(
               # "w", "ng",
               # "loglik", "pUig", "U",
               # "Gplus", "e0"
-  howsave,   # how should be the output MCMC chains returned?
+  howsave = "matrix",   # how should be the output MCMC chains returned?
                 # matrix - in a matrix with special column names
                 # list - in lists of lists of parameters...
   param,     # list of hyperparameters for prior distributions
@@ -77,10 +77,6 @@ function(
     warning("Some of the parameters: prec_num, betas, c_ord, InvSigma, w will not be saved.
 Therefore, you will not be able to calculate unconditional classification probabilities of new subjects.
 Change the save settings if you want to calculate these probabilities afterwards.")
-  }
-  
-  if(missing(howsave)){
-    howsave = "matrix"
   }
   
   if(missing(param)){
@@ -806,7 +802,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   dimswithG <- matrix(0, nrow = length(params), ncol = nchains)
   rownames(dimswithG) <- params
   for(ch in 1:nchains){
-    dimswithG[,ch] <- cdims * (!(settings$gspec)*1 + (settings$gspec)*G[ch])
+    dimswithG[,ch] <- cdims * ((!settings$gspec)*1 + (settings$gspec)*G[ch])
   }
   
   # cparam - created in specific order (user is not required to have the same order)
@@ -1456,11 +1452,12 @@ Change the save settings if you want to calculate these probabilities afterwards
     c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
   }
     
-  clusters <- list()
+  clusters <- iterations <- list()
   modeGplus <- numeric(nchains)
   clusteringU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
   certaintyU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
   for(ch in 1:nchains){
+    iterations[[ch]] <- mcmc$draws[[ch]]$m
     # find modeGplus - the most common Gplus value
     tab <- table(mcmc$draws[[ch]]$Gplus)
     modeGplus[ch] <- as.numeric(names(tab)[which.max(tab)])
@@ -1566,6 +1563,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   
 
   mcmc$iter <- iter
+  mcmc$iterations <- iterations
   mcmc$chains <- 1:nchains
   mcmc$nchains <- nchains
   mcmc$n <- n

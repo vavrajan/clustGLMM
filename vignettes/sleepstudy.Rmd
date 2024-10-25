@@ -189,6 +189,12 @@ table(sleepstudy1[,paste0("clustering",2)])
 table(sleepstudy1[,paste0("clustering",3)])
 ```
 
+```{r post_processing, echo=TRUE}
+pmcmc <- post_processing(mcmc)
+plot(pmcmc, "ng", "traceplots", chains=1:3)
+plot(pmcmc, "beta_num", "clusters_kerneldensity", chains=1:3)
+```
+
 It could be unified by performing permutation of all saved parameters:
 ```{r permute_mcmc, echo=TRUE}
 perm <- list()

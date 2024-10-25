@@ -27,7 +27,7 @@ summary.clustglmm <- function(object, ...){
                                        grepl("^ng", gnames[[ch]]) | 
                                        grepl("^pUig", gnames[[ch]]))]
       
-      cnames[[ch]] <- c("Gplus", "e0", paste0("w(",1:object$G,")"))
+      cnames[[ch]] <- c("Gplus", "e0", paste0("w(",1:object$G[ch],")"))
     }
   }
   
