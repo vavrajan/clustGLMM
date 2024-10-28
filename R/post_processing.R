@@ -106,12 +106,12 @@ created for each chain separately.")
   ### 6) Update the clusterspec matrix according to suggested permutations
   ispermutation <- list()
   for(ch in mcmc$chains){
-    ispermutation[[ch]] <- boolean(iters[ch])
+    ispermutation[[ch]] <- integer(iters[ch])
     #head(clusterspec[[ch]])
     cnames <- colnames(clusterspec[[ch]])[grep("\\(1\\)", 
                                                colnames(clusterspec[[ch]]))]
     for(m in 1:iters[ch]){
-      ispermutation[[ch]][m] <- (ispermutation[[ch]][m])
+      ispermutation[[ch]][m] <- (rowuniques[[ch]][m] == mcmc$modeGplus[ch])
       if(ispermutation[[ch]][m]){
         # it is a permutation --> permute accordingly
         auxrow <- unlist(clusterspec[[ch]][m,])
@@ -161,7 +161,7 @@ created for each chain separately.")
           subcols <- othergcols[grep(expr, othergcols)]
           auxrow <- unlist(suball[m,subcols,drop=FALSE])
           for(g in 1:mcmc$modeGplus[ch]){
-            gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
+            gnames <- gsub("\\(1\\)", paste0("\\(",whichG[[ch]][m,g],"\\)"), cnames)
             pnames <- gsub("\\(1\\)", paste0("\\(",indmat[[ch]][m,g],"\\)"), cnames)
             oGplus[m,pnames] <- auxrow[gnames]
           }
@@ -185,7 +185,7 @@ created for each chain separately.")
             pcols <- paste0(p,"(", whichG[[ch]][m,], ")")
             auxrow <- unlist(suball[m,pcols,drop=FALSE])
             for(g in 1:mcmc$modeGplus[ch]){
-              gname <- paste0(p,"(",g,")")
+              gname <- paste0(p,"(",whichG[[ch]][m,g],")")
               pname <- paste0(p,"(",indmat[[ch]][m,g],")")
               pGplus[m,pname] <- auxrow[gname]
             }
@@ -231,7 +231,7 @@ created for each chain separately.")
               pcols <- paste0(p,"(",whichG[[ch]][m,],")[",i,"]")
               auxrow <- unlist(suball[m,pcols,drop=FALSE])
               for(g in 1:mcmc$modeGplus[ch]){
-                gname <- paste0(p,"(",g,")[",i,"]")
+                gname <- paste0(p,"(",whichG[[ch]][m,g],")[",i,"]")
                 pname <- paste0(p,"(",indmat[[ch]][m,g],")[",i,"]")
                 pU[m,pname] <- auxrow[gname]
               }
@@ -276,7 +276,7 @@ created for each chain separately.")
       #      problem is each m could be permuted differently
     }
   }
-  rownames(clustering) <- rownames(certainty) <- unique_ids
+  rownames(clustering) <- rownames(certainty) <- names(mcmc$numbered_unique_ids)
 
   sameclusters <- TRUE
   for(ch in mcmc$chains[-1]){
@@ -563,12 +563,16 @@ created for each chain separately.")
             }
             for(g in 1:mcmc$modeGplus[ch]){
               for(y in mcmc$Ords){
-                last[[ch]][[p]][[y]][[g]] <- values[paste0(p,"_",y,"(",g,")[",1:mcmc$Kord[y],"]")]
+                last[[ch]][[p]][[y]][[g]] <- values[paste0(p,"_",y,"(",g,")[",
+                                                           1:(mcmc$Kord[y]+1*(p=="pi_ord")),
+                                                           "]")]
               }
             }
           }else{
             for(y in mcmc$Ords){
-              last[[ch]][[p]][[y]] <- values[paste0(p,"_",y,"[",1:mcmc$Kord[y],"]")]
+              last[[ch]][[p]][[y]] <- values[paste0(p,"_",y,"[",
+                                                    1:(mcmc$Kord[y]+1*(p=="pi_ord")),
+                                                    "]")]
             }
           }
         }else{
@@ -688,13 +692,26 @@ created for each chain separately.")
       # naY
       if(lsettings[[ch]]["naY","dims"]>0){
         if(lsettings[[ch]]["naY","save"]){
+          last[[ch]]$naY <- list()
           if(mcmc$varying["naY"]){
-            last[[ch]]$naY <- list()
             for(g in 1:mcmc$modeGplus[ch]){
-              last[[ch]]$naY[[g]] <- values[paste0("naY(",g,")[",1:lsettings[[ch]]["naY","dims"],"]")]
+              last[[ch]]$naY[[g]] <- list()
+              for(y in mcmc$Ys){
+                if(mcmc$yspecd1$naY[y] > 0){
+                  last[[ch]]$naY[[g]][[y]] <- values[paste0("naY_",y,"(",g,")[",1:mcmc$yspecd1$naY[y],"]")]
+                }else{
+                  last[[ch]]$naY[[g]][[y]] <- numeric()
+                }
+              }
             }
           }else{
-            last[[ch]]$naY <- values[paste0("naY[",1:lsettings[[ch]]["naY","dims"],"]")]
+            for(y in mcmc$Ys){
+              if(mcmc$yspecd1$naY[y] > 0){
+                last[[ch]]$naY[[y]] <- values[paste0("naY_",y,"[",1:mcmc$yspecd1$naY[y],"]")]
+              }else{
+                last[[ch]]$naY[[y]] <- numeric()
+              }
+            }
           }
         }else{
           if(mcmc$varying["naY"]){
@@ -722,7 +739,7 @@ created for each chain separately.")
     call <- paste0(call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
     call <- paste0(call, "Instead of clusters: ", 
                    paste0(mcmc$clusters[[ch]], collapse = ", "))
-    call <- paste0(call, "we now have clusters: ", 
+    call <- paste0(call, "; we now have clusters: ", 
                    paste0(res$clusters[[ch]], collapse = ", "), ".\n")
     call <- paste0(call, "Number of iterations with", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
     call <- paste0(call, "Out of them, ", Mrhos[ch], " (", 

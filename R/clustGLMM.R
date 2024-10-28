@@ -753,6 +753,9 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   settings["naY", c("d1", "D")] <- 
     c(sum(cisYna), 1)
+  settings["naY", c("ydepd1", "isy", "ynums", "ypois", "ybins", "yords", "ycats")] <-
+    rep(TRUE, 7)
+  yspecd1$naY <- colSums(is.na(ydata[,Ys,drop=FALSE]))
   
   cX <- numeric()
   # take only needed columns
@@ -1380,13 +1383,26 @@ Change the save settings if you want to calculate these probabilities afterwards
       }
       
       if(cdims["naY"]>0){
+        last[[ch]]$naY <- list()
         if(varying["naY"]){
-          last[[ch]]$naY <- list()
           for(g in 1:G[ch]){
-            last[[ch]]$naY[[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["naY"])]
+            last[[ch]]$naY[[g]] <- list()
+            for(y in Ys){
+              if(yspecd1$naY[y]>0){
+                last[[ch]]$naY[[g]][[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + yspecd1$naY[y])]
+              }else{
+                last[[ch]]$naY[[g]][[y]] <- numeric()
+              }
+            }
           }
         }else{
-          last[[ch]]$naY <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["naY"])]
+          for(y in Ys){
+            if(yspecd1$naY[y]>0){
+              last[[ch]]$naY[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + yspecd1$naY[y])]
+            }else{
+              last[[ch]]$naY[[y]] <- numeric()
+            }
+          }
         }
       }
     }
