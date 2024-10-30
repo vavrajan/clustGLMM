@@ -4,7 +4,7 @@ summary.clustglmm <- function(object, ...){
   # computes necessary outputs for summary
   coda_summary <- fnames <- gnames <- cnames <- list()
   for(ch in object$chains){
-    coda_summary[[ch]] <- summary(coda[[ch]])
+    coda_summary[[ch]] <- summary(coda[[ch]], na.rm = TRUE)
   
     settings <- object$settings[[ch]]
     output <- ifelse(length(intersect(rownames(settings), c("deviance", "dev_i", "pUig_int"))) > 0,

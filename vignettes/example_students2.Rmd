@@ -1,0 +1,537 @@
+---
+title: "Example of male students"
+author: "Jan Vávra"
+date: "2024-05-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 110)
+```
+
+```{r libraries, warning=FALSE}
+library("clustGLMM")
+library("colorspace")
+library("mvtnorm")
+library("splines")
+library("MASS")
+library("coda")
+```
+
+## Creating example dataset
+
+Our example dataset consists of young male people observed repeatedly in their age span of 18-40 years. Each person has its id variable `i` and `j` denotes the number of observation for that particular person. The total number of observations $n_i$ per person differs and the times of examination are uniformly spread along the age years of 18-40. 
+
+We observe three outcomes:
+
+* `income` the average income over last year (in artificial units),
+* `ntrips` number of trips in the last year
+* `satisfaction` the level of satisfaction (0=dissatisfied < 1=neither-nor < 2=satisfied)
+
+```{r dataset}
+source("generate_student_example_data.R")
+set.seed(31415)
+# n <- 2000
+n <- 500
+llist <- generate_student_example_data(n)
+data <- llist$data
+data$nogroup <- rep(0, dim(data)[1])
+head(data[,c("i", "j", "g", "age", "income", "ntrips", "satisfaction")], 15)
+summary(as.factor(table(data$i))) # summary of total observation counts
+summary(data[,c("age", "income", "ntrips", "satisfaction")])
+```
+
+```{r save_dataset, eval=FALSE}
+students <- data[,c("i", "j", "g", "age", "income", "ntrips", "satisfaction", "b_num", "b_poi", "b_ord")]
+save(students, file="C:/Users/jvavra/OneDrive - WU Wien/Documents/PhD/clustGLMM/data/students.RData")
+```
+
+## Plotting longitudinal data
+
+### Numerical outcome - student income vs. age
+In general there seems to be an increasing trend.
+```{r income, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+par(mar=c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, "income", x="age", g="nogroup", legend_placement="topleft")
+```
+
+However, on closer look (having the true clustering variable `g` at disposal) there could be seen 2 to 3 groups of different evolution. One group clearly has slower income increase than the other.
+
+Interpretation:
+
+* group 1 (red): people who did not study at university start to earn money earlier;
+* group 2+3 (green, blue): university degree helps these people to start their career with steeper increase of income. Hard-working ones (blue) have slightly higher income. 
+```{r grouped_income, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+par(mar=c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, "income", x="age", g="g", legend_placement="topleft")
+```
+
+### Count outcome - number of trips income vs. age
+When young, people have plenty of time for going on trips. Then, as the university is studied and career is built, fewer trips are taken. Once you have a family more trips are taken.
+```{r ntrips, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+par(mar=c(4,4,1,0.5))
+data$log_ntrips <- log(data$ntrips+1)
+plot_num_vs_x_grouped(data, "ntrips", x="age", g="nogroup", legend_placement="topleft")
+plot_num_vs_x_grouped(data, "log_ntrips", x="age", g="nogroup", legend_placement="topleft")
+```
+
+However, on closer look (having the true clustering variable `g` at disposal) there could be seen 3 groups of different evolution.
+
+Interpretation:
+
+* group 1 (red): families earlier, but not many trips due to low income;
+* group 2 (green): not many trips during studies, then high increase to enjoy, then less trips when starting a family, as the kids are older more trips;
+* group 3 (blue): hard-workers, not many trips taken despite having high income, if some trip taken then probably long and expensive. 
+```{r grouped_ntrips, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+par(mar=c(4,4,1,0.5))
+COL <- rainbow_hcl(3, c = 80, l = 50)
+plot_num_vs_x_grouped(data, "ntrips", x="age", g="g", legend_placement="topleft", add_lowess=FALSE)
+for(g in 1:3){
+  subdata <- data[data$g == g,]
+  lines(lowess(exp(subdata$pred_poi) ~ subdata$age, f = 1/3), col = COL[g], lwd = 3)
+}
+plot_num_vs_x_grouped(data, "log_ntrips", x="age", g="g", legend_placement="topleft", add_lowess=FALSE)
+for(g in 1:3){
+  subdata <- data[data$g == g,]
+  lines(lowess(subdata$pred_poi ~ subdata$age, f = 1/3), col = COL[g], lwd = 3)
+}
+```
+
+### Ordinal outcome - level of satisfaction vs. age
+Men were also asked about their own (dis)satisfaction level: 0=dissatisfied < 1=neither-nor < 2=satisfied. 
+
+Interpretation:
+
+* group 1 (red): no clear evolution in time,
+* group 2 (green): dissatisfied during studies but once finished they enjoy life (with high income),
+* group 3 (blue): hard-workers who spent too much time working and not relaxing. 
+```{r satisfaction, echo=TRUE, fig.align='center', fig.width=10, fig.height=8}
+tapply(data$satisfaction, data$g, summary)
+par(mfrow = c(1,2), mar=c(4,4,1,0.5))
+plot_cat_vs_x_grouped(data, "satisfaction", x="age", g="nogroup")
+plot_cat_vs_x_grouped(data, "satisfaction", x="age", g="g")
+```
+
+The question is whether we are able to discover these latent groups from the available data: `i`, `age`, `income`, `ntrips`, `satisfaction`. 
+
+## Preparation for the estimation
+```{r formula, echo=TRUE}
+# splines
+degree <- 2
+knots <- c(18, 20, 25, 30, 35, 40)
+inner <- knots[-c(1, length(knots))]
+bound <- knots[c(1, length(knots))]
+splB <- bs(data$age, knots = inner, Boundary.knots = bound, 
+           degree = degree, intercept = FALSE)
+spldim <- dim(splB)[2]
+bsnames <- paste0("bs",1:spldim)
+data[,bsnames] <- splB
+
+# outcomes and regressors to be used
+family <- c("num", "poi", "ord") # is also equivalent to
+family <- c("gaussian", "poisson", "cumulative")
+names(family) <- Ys <- c("income", "ntrips", "satisfaction")
+
+id <- "i"
+formula <- list()
+for(y in Ys){
+  # formula2 = group-specific spline curves
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- as.formula("~ 1")
+  formula[[y]]$group <- as.formula(paste0("~ ", paste(bsnames, collapse = " + ")))
+  formula[[y]]$random <- as.formula("~ 1")
+  formula[[y]]$offset <- ""
+}
+
+# Group-specificity of other model parameters
+(varying <- default_varying())
+varying["prec_num"] <- FALSE
+```
+
+## Spline trends, all three outcomes, standardize = TRUE
+```{r mcmc1, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+set.seed(1234567)
+mcmc1 <- clustGLMM(formula = formula, id = id, family = family, data = data,
+                   G = 3, varying = varying, iter = 100, nchains = 2,
+                   standardize = TRUE)
+
+mcmc1 <- clustGLMM(formula = formula, id = id, family = family, data = data,
+                   G = 3, varying = varying, iter = 1000, nchains = 2,
+                   inits = mcmc1$last,
+                   standardize = TRUE)
+
+
+# preserve the interpretation of cluster labels by permuting cluster-specific parameters
+perm <- list()
+perm[[1]] <- c(1, 2, 3)
+perm[[2]] <- c(1, 2, 3) 
+mcmc1 <- permute_cluster_labels(mcmc1, perm)
+
+mcmc1
+
+plot(mcmc1, "ng")
+
+plot(mcmc1, "beta_num", thin = 1, chains = 1)
+plot(mcmc1, "beta_num", which="clusters_kerneldensity")
+plot(mcmc1, "prec_num", which="clusters_kerneldensity")
+
+plot(mcmc1, "beta_poi", thin = 1, chains = 1)
+plot(mcmc1, "beta_poi", which="clusters_kerneldensity")
+
+plot(mcmc1, "beta_ord", thin = 1, chains = 1)
+plot(mcmc1, "beta_ord", which="clusters_kerneldensity")
+plot(mcmc1, "c_ord", which="clusters_kerneldensity")
+```
+
+```{r clusteringU_mcmc1, echo=TRUE}
+data <- clusteringU(mcmc1, data, id = id, threshold = 0.5)
+data1 <- data[data$j==1, ]
+# Confusion matrix for the first sampled chain
+table(data1$clustering1, data1$g)
+```
+
+```{r codamcmc1, echo=TRUE}
+# transform the outputs into coda format
+codamcmc1 <- as_coda(mcmc1)
+sumcodamcmc1 <- summary(codamcmc1)
+# coda summaries
+sumcodamcmc1$statistics[grep("beta_num", rownames(sumcodamcmc1$statistics)), ]
+sumcodamcmc1$quantiles[grep("beta_num", rownames(sumcodamcmc1$quantiles)), ]
+sumcodamcmc1$statistics[grep("beta_poi", rownames(sumcodamcmc1$statistics)), ]
+sumcodamcmc1$statistics[grep("beta_ord", rownames(sumcodamcmc1$statistics)), ]
+sumcodamcmc1$statistics[grep("c_ord", rownames(sumcodamcmc1$statistics)), ]
+# or just use
+summary(mcmc1)
+```
+
+```{r codamcmc1_income, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+# par(mar=c(4,4,1,0.5))
+age_grid <- seq(18, 40, by = 0.1)
+# plot_num_vs_x_grouped(data, "income", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+# for(g in 1:3){
+#   rows <- grep(paste0("beta_num_income\\(",g,"\\)"), rownames(sumcodamcmc1$statistics))
+#   beta_num <- sumcodamcmc1$statistics[rows, "Mean"]
+#   lines(x = age_grid,
+#         y = beta_num[1] + bs(age_grid, knots = inner, Boundary.knots = bound, 
+#                              degree = degree, intercept = FALSE) %*% as.matrix(beta_num[-1]),
+#         col = COL[g], lwd = 3)
+# }
+ch <- 1
+burnin <- 0
+thin <- 1
+COL <- rainbow_hcl(mcmc1$modeGplus[ch], c = 80, l = 50)
+
+par(mfrow=nice_nrow_ncol(length(mcmc1$Nums)), mar=c(4,4,1,0.5))
+for(y in mcmc1$Nums){
+  par(mar=c(4,4,1,0.5))
+  plot_num_vs_x_grouped(data, y=y, x="age", g=paste0("clustering",ch), id=id, 
+                        legend_placement="topright", add_lowess = FALSE)
+  
+  newdata <- data.frame(age = age_grid)
+  newdata[,bsnames]<- bs(newdata$age, knots = inner, Boundary.knots = bound,
+                         degree = degree, intercept = FALSE)
+  pred <- predict(mcmc1, newdata, y=y, type="lp", what="fg", method="samples",
+                  burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc1$modeGplus[ch]){
+    g <- mcmc1$clusters[[ch]][ig]
+    lines(x = age_grid,
+          y = pred$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred$lwr)){
+      lines(x = age_grid,
+            y = pred$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred$upr)){
+      lines(x = age_grid,
+            y = pred$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r codamcmc1_ntrips, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mar=c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, "ntrips", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+for(g in 1:3){
+  rows <- grep(paste0("beta_poi_ntrips\\(",g,"\\)"), rownames(sumcodamcmc1$statistics))
+  beta_poi <- sumcodamcmc1$statistics[rows, "Mean"]
+  lines(x = age_grid,
+        y = exp(beta_poi[1] + bs(age_grid, knots = inner, Boundary.knots = bound,
+                                 degree = degree, intercept = FALSE) %*% as.matrix(beta_poi[-1])),
+        col = COL[g], lwd = 3)
+}
+```
+
+```{r codamcmc1_ntrips_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mar=c(4,4,1,0.5))
+plot(0, 0, type="n", xlim = range(data$age), ylim = c(-0.1, 3), xlab = "age", ylab = "ntrips_splines")
+for(g in 1:3){
+  rows <- grep(paste0("beta_poi_ntrips\\(",g,"\\)"), rownames(sumcodamcmc1$statistics))
+  beta_poi <- sumcodamcmc1$statistics[rows, "Mean"]
+  lines(x = age_grid,
+        y = beta_poi[1] + bs(age_grid, knots = inner, Boundary.knots = bound,
+                             degree = degree, intercept = FALSE) %*% as.matrix(beta_poi[-1]),
+        col = COL[g], lwd = 3)
+}
+```
+
+```{r codamcmc1_satisfaction, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mar=c(4,4,1,0.5))
+plot(0, 0, type="n", xlim = range(data$age), ylim = c(-4, 4), xlab = "age", ylab = "satisfaction")
+for(g in 1:3){
+  rows <- grep(paste0("beta_ord_satisfaction\\(",g,"\\)"), rownames(sumcodamcmc1$statistics))
+  beta_ord <- sumcodamcmc1$statistics[rows, "Mean"]
+  rows <- grep(paste0("c_ord_satisfaction\\(",g,"\\)"), rownames(sumcodamcmc1$statistics))
+  c_ord <- sumcodamcmc1$statistics[rows, "Mean"]
+  for(l in 1:2){
+    lines(x = age_grid,
+          y = -c_ord[l] + bs(age_grid, knots = inner, Boundary.knots = bound,
+                             degree = degree, intercept = FALSE) %*% as.matrix(beta_ord),
+          col = COL[g], lwd = 3)
+  }
+}
+```
+```{r mcmc1_satisfaction_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc1$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc1$Ords){
+  newdata <- data.frame(age = age_grid)
+  newdata[, bsnames] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                           degree = degree, intercept = FALSE)
+  maxk <- mcmc1$Kord[y]
+  pred_age <- list()
+  for(k in 1:maxk){
+    pred_age[[k]] <- predict(mcmc1, newdata, y=y, type="lp", 
+                             what="fg", method="samples", k=k,
+                             burnin=burnin, thin=thin, chain=ch)
+  }
+  plot(x=0, y=0, type="n",
+       xlim=range(age_grid), ylim=range(unlist(pred_age)),
+       xlab="age", ylab="linear predictor - ordered intercept",
+       main=y)
+  for(k in 1:maxk){
+    for(ig in 1:mcmc1$modeGplus[ch]){
+      g <- mcmc1$clusters[[ch]][ig]
+      lines(x = age_grid,
+            y = pred_age[[k]]$fit[,paste0("(",g,")")],
+            col = COL[ig], lwd = 3)
+      if(!is.null(pred_age[[k]]$lwr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$lwr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+      if(!is.null(pred_age[[k]]$upr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$upr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+    }
+  }
+}
+```
+
+```{r mcmc1_satisfaction_vs_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc1$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc1$Ords){
+  plot_cat_vs_x_grouped(data, y=y, x="age", paste0("clustering",ch), main=y)
+}
+```
+
+
+
+
+
+
+## Spline trends, all three outcomes, standardize = FALSE
+```{r mcmc2, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+set.seed(1234567)
+mcmc2 <- clustGLMM(formula = formula, id = id, family = family, data = data,
+                   G = 3, varying = varying, iter = 100, nchains = 2,
+                   standardize = FALSE)
+
+mcmc2 <- clustGLMM(formula = formula, id = id, family = family, data = data,
+                   G = 3, varying = varying, iter = 1000, nchains = 2,
+                   inits = mcmc2$last,
+                   standardize = FALSE)
+
+# preserve the interpretation of cluster labels by permuting cluster-specific parameters
+perm <- list()
+perm[[1]] <- c(1, 2, 3) 
+perm[[2]] <- c(1, 2, 3) 
+mcmc2 <- permute_cluster_labels(mcmc2, perm)
+
+mcmc2
+
+plot(mcmc2, "ng")
+
+plot(mcmc2, "beta_num", thin = 1, chains = 1)
+plot(mcmc2, "beta_num", which="clusters_kerneldensity")
+plot(mcmc2, "prec_num", which="clusters_kerneldensity")
+
+plot(mcmc2, "beta_poi", thin = 1, chains = 1)
+plot(mcmc2, "beta_poi", which="clusters_kerneldensity")
+
+plot(mcmc2, "beta_ord", thin = 1, chains = 1)
+plot(mcmc2, "beta_ord", which="clusters_kerneldensity")
+plot(mcmc2, "c_ord", which="clusters_kerneldensity")
+```
+
+```{r clusteringU_mcmc2, echo=TRUE}
+data <- clusteringU(mcmc2, data, id = id, threshold = 0.5)
+data1 <- data[data$j==1, ]
+# Confusion matrix for the first sampled chain
+table(data1$clustering1, data1$g)
+```
+
+```{r codamcmc2, echo=TRUE}
+# transform the outputs into coda format
+codamcmc2 <- as_coda(mcmc2)
+sumcodamcmc2 <- summary(codamcmc2)
+# coda summaries
+sumcodamcmc2$statistics[grep("beta_num", rownames(sumcodamcmc2$statistics)), ]
+sumcodamcmc2$quantiles[grep("beta_num", rownames(sumcodamcmc2$quantiles)), ]
+sumcodamcmc2$statistics[grep("beta_poi", rownames(sumcodamcmc2$statistics)), ]
+sumcodamcmc2$statistics[grep("beta_ord", rownames(sumcodamcmc2$statistics)), ]
+sumcodamcmc2$statistics[grep("c_ord", rownames(sumcodamcmc2$statistics)), ]
+# or just use
+summary(mcmc2)
+```
+
+```{r codamcmc2_income, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+# par(mar=c(4,4,1,0.5))
+age_grid <- seq(18, 40, by = 0.1)
+# plot_num_vs_x_grouped(data, "income", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+# for(g in 1:3){
+#   rows <- grep(paste0("beta_num_income\\(",g,"\\)"), rownames(sumcodamcmc1$statistics))
+#   beta_num <- sumcodamcmc1$statistics[rows, "Mean"]
+#   lines(x = age_grid,
+#         y = beta_num[1] + bs(age_grid, knots = inner, Boundary.knots = bound, 
+#                              degree = degree, intercept = FALSE) %*% as.matrix(beta_num[-1]),
+#         col = COL[g], lwd = 3)
+# }
+ch <- 1
+burnin <- 0
+thin <- 1
+COL <- rainbow_hcl(mcmc2$modeGplus[ch], c = 80, l = 50)
+
+par(mfrow=nice_nrow_ncol(length(mcmc2$Nums)), mar=c(4,4,1,0.5))
+for(y in mcmc2$Nums){
+  par(mar=c(4,4,1,0.5))
+  plot_num_vs_x_grouped(data, y=y, x="age", g=paste0("clustering",ch), id=id, 
+                        legend_placement="topright", add_lowess = FALSE)
+  
+  newdata <- data.frame(age = age_grid)
+  newdata[,bsnames]<- bs(newdata$age, knots = inner, Boundary.knots = bound,
+                         degree = degree, intercept = FALSE)
+  pred <- predict(mcmc2, newdata, y=y, type="lp", what="fg", method="samples",
+                  burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc2$modeGplus[ch]){
+    g <- mcmc2$clusters[[ch]][ig]
+    lines(x = age_grid,
+          y = pred$fit[,paste0("(",g,")")],
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred$lwr)){
+      lines(x = age_grid,
+            y = pred$lwr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred$upr)){
+      lines(x = age_grid,
+            y = pred$upr[,paste0("(",g,")")],
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+```{r codamcmc2_ntrips, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mar=c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, "ntrips", x="age", g="clustering1", legend_placement="topleft", add_lowess = FALSE)
+for(g in 1:3){
+  rows <- grep(paste0("beta_poi_ntrips\\(",g,"\\)"), rownames(sumcodamcmc2$statistics))
+  beta_poi <- sumcodamcmc2$statistics[rows, "Mean"]
+  lines(x = age_grid,
+        y = exp(beta_poi[1] + bs(age_grid, knots = inner, Boundary.knots = bound,
+                                 degree = degree, intercept = FALSE) %*% as.matrix(beta_poi[-1])),
+        col = COL[g], lwd = 3)
+}
+```
+
+```{r codamcmc2_ntrips_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mar=c(4,4,1,0.5))
+plot(0, 0, type="n", xlim = range(data$age), ylim = c(-0.1, 3), xlab = "age", ylab = "ntrips_splines")
+for(g in 1:3){
+  rows <- grep(paste0("beta_poi_ntrips\\(",g,"\\)"), rownames(sumcodamcmc2$statistics))
+  beta_poi <- sumcodamcmc2$statistics[rows, "Mean"]
+  lines(x = age_grid,
+        y = beta_poi[1] + bs(age_grid, knots = inner, Boundary.knots = bound,
+                             degree = degree, intercept = FALSE) %*% as.matrix(beta_poi[-1]),
+        col = COL[g], lwd = 3)
+}
+```
+
+```{r codamcmc2_satisfaction, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mar=c(4,4,1,0.5))
+plot(0, 0, type="n", xlim = range(data$age), ylim = c(-4, 4), xlab = "age", ylab = "satisfaction")
+for(g in 1:3){
+  rows <- grep(paste0("beta_ord_satisfaction\\(",g,"\\)"), rownames(sumcodamcmc2$statistics))
+  beta_ord <- sumcodamcmc2$statistics[rows, "Mean"]
+  rows <- grep(paste0("c_ord_satisfaction\\(",g,"\\)"), rownames(sumcodamcmc2$statistics))
+  c_ord <- sumcodamcmc2$statistics[rows, "Mean"]
+  for(l in 1:2){
+    lines(x = age_grid,
+          y = -c_ord[l] + bs(age_grid, knots = inner, Boundary.knots = bound,
+                             degree = degree, intercept = FALSE) %*% as.matrix(beta_ord),
+          col = COL[g], lwd = 3)
+  }
+}
+```
+
+
+```{r mcmc2_satisfaction_splines, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc2$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc2$Ords){
+  newdata <- data.frame(age = age_grid)
+  newdata[, bsnames] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                           degree = degree, intercept = FALSE)
+  maxk <- mcmc2$Kord[y]
+  pred_age <- list()
+  for(k in 1:maxk){
+    pred_age[[k]] <- predict(mcmc2, newdata, y=y, type="lp", 
+                             what="fg", method="samples", k=k,
+                             burnin=burnin, thin=thin, chain=ch)
+  }
+  plot(x=0, y=0, type="n",
+       xlim=range(age_grid), ylim=range(unlist(pred_age)),
+       xlab="age", ylab="linear predictor - ordered intercept",
+       main=y)
+  for(k in 1:maxk){
+    for(ig in 1:mcmc2$modeGplus[ch]){
+      g <- mcmc2$clusters[[ch]][ig]
+      lines(x = age_grid,
+            y = pred_age[[k]]$fit[,paste0("(",g,")")],
+            col = COL[ig], lwd = 3)
+      if(!is.null(pred_age[[k]]$lwr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$lwr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+      if(!is.null(pred_age[[k]]$upr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$upr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+    }
+  }
+}
+```
+
+```{r mcmc2_satisfaction_vs_age_clustered, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
+par(mfrow=nice_nrow_ncol(length(mcmc2$Ords)), mar=c(4,4,2,0.5))
+for(y in mcmc2$Ords){
+  plot_cat_vs_x_grouped(data, y=y, x="age", paste0("clustering",ch), main=y)
+}
+```
+

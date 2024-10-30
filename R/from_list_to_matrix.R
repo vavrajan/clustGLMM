@@ -8,9 +8,9 @@ from_list_to_matrix <- function(mcmc){
   for(ch in mcmc$chains){
     iters = draws[[ch]]$m
     nparams <- sum(mcmc$settings[[ch]][mcmc$settings[[ch]]$save, "dimswithG"])
-  retmcmc$draws[[ch]] <- matrix(0, nrow = length(iters), ncol = 1+nparams)
+    retmcmc$draws[[ch]] <- matrix(0, nrow = length(iters), ncol = 1+nparams)
     retmcmc$draws[[ch]][,1] <- iters
-    colnames(retmcmc$draws[[ch]]) <- c("m", unlist(mcmc$param_names))
+    colnames(retmcmc$draws[[ch]]) <- c("m", unlist(mcmc$param_names[[ch]]))
     retmcmc$draws[[ch]] <- as.data.frame(retmcmc$draws[[ch]])
   
     for(p in params){

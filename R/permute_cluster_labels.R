@@ -66,9 +66,21 @@ permute_cluster_labels <-
       # data are saved in lists
       # permute U
       mcmc$last[[ch]]$U <- sapply(mcmc$last[[ch]]$U, function(g){which(perm[[ch]] == g)})
+      # permute w
+      mcmc$last[[ch]]$w <- mcmc$last[[ch]]$w[perm[[ch]]]
+      # permute ng
+      mcmc$last[[ch]]$ng <- mcmc$last[[ch]]$ng[perm[[ch]]]
+      # permute pUig
+      auxpUig <- matrix(-1, nrow = dim(mcmc$last[[ch]]$pUig)[1], ncol = 0)
+      for(g in 1:mcmc$G[ch]){
+        auxpUig <- cbind(auxpUig, mcmc$last[[ch]]$pUig[,perm[[ch]][g]])
+      }
+      colnames(auxpUig) <- colnames(mcmc$last[[ch]]$pUig)
+      mcmc$last[[ch]]$pUig <- auxpUig
       
       # cluster-specific parameters
       params <- rownames(mcmc$settings[[ch]])[as.logical(mcmc$settings[[ch]]$gspec)]
+      params <- setdiff(params, c("w", "ng", "pUig"))
       for(p in intersect(params, names(mcmc$last[[ch]]))){
         aux <- list()
         if(mcmc$settings[[ch]][p,"ydepd1"]){
@@ -87,10 +99,23 @@ permute_cluster_labels <-
       }
       
       ## Permute mcmc$inits, the initial values (similarly as the last values)
+      # permute U
       mcmc$inits[[ch]]$U <- sapply(mcmc$inits[[ch]]$U, function(g){which(perm[[ch]] == g)})
+      # permute w
+      mcmc$inits[[ch]]$w <- mcmc$inits[[ch]]$w[perm[[ch]]]
+      # permute ng
+      mcmc$inits[[ch]]$ng <- mcmc$inits[[ch]]$ng[perm[[ch]]]
+      # permute pUig
+      auxpUig <- matrix(-1, nrow = dim(mcmc$inits[[ch]]$pUig)[1], ncol = 0)
+      for(g in 1:mcmc$G[ch]){
+        auxpUig <- cbind(auxpUig, mcmc$inits[[ch]]$pUig[,perm[[ch]][g]])
+      }
+      colnames(auxpUig) <- colnames(mcmc$inits[[ch]]$pUig)
+      mcmc$inits[[ch]]$pUig <- auxpUig
       
       # cluster-specific parameters
       params <- rownames(mcmc$settings[[ch]])[as.logical(mcmc$settings[[ch]]$gspec)]
+      params <- setdiff(params, c("w", "ng", "pUig"))
       for(p in intersect(params, names(mcmc$inits[[ch]]))){
         aux <- list()
         if(mcmc$settings[[ch]][p,"ydepd1"]){
@@ -102,7 +127,7 @@ permute_cluster_labels <-
           }
         }else{
           for(g in 1:mcmc$G[ch]){
-            aux[[g]] <- mcmc$inits[[ch]][[p]][[perm[[ch]][g]]]
+            aux[[g]] <- mcmc$inits[[ch]][[p]][[perm[[ch]][g]]] 
           } 
         }
         mcmc$inits[[ch]][[p]] <- aux

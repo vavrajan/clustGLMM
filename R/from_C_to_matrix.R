@@ -11,7 +11,15 @@ function(values,
   # save, gspec, G, isy, ynums, yords, ybins, iter, 
   # d1, d2, BYROW, sym, diag, diagval, D
   v <- c(settings[p, ])
-  niter <- length(values) / v$dimswithG
+  if(v$dimswithG > 0){
+    niter <- length(values) / v$dimswithG
+  }else{
+    if(missing(values)){
+      niter <- v$iter
+    }else{
+      niter <- length(values)
+    }
+  }
   Ys <- c()
   if(v$ynums){Ys <- c(Ys, names(family)[is.element(family, c("num", "gaussian"))])}
   if(v$ypois){Ys <- c(Ys, names(family)[is.element(family, c("poi", "poisson"))])}
@@ -22,7 +30,7 @@ function(values,
   sumd1 <- ifelse(v$ydepd1, sum(yspecd1), v$d1*length(Ys))
   #sumd1 <- v$d1*length(Ys)
   
-  if(missing(values) | (length(values) == 0)){
+  if(missing(values) | (length(values) == 0) | (v$dimswithG == 0)){
     RET <- as.data.frame(matrix(NA, nrow = niter, ncol = 0, byrow = TRUE))
   }else{
     RET <- as.data.frame(matrix(values, 

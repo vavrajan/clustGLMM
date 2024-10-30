@@ -741,13 +741,13 @@ created for each chain separately.")
                    paste0(mcmc$clusters[[ch]], collapse = ", "))
     call <- paste0(call, "; we now have clusters: ", 
                    paste0(res$clusters[[ch]], collapse = ", "), ".\n")
-    call <- paste0(call, "Number of iterations with", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
+    call <- paste0(call, "Number of iterations with ", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
     call <- paste0(call, "Out of them, ", Mrhos[ch], " (", 
                    format(Mrhos[ch] / iters[ch] * 100, digits=2), 
-                   "%) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")
+                   " %) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")
     call <- paste0(call, "Therefore, ", iters[ch] - Mrhos[ch], " (",
                    format((iters[ch] - Mrhos[ch]) / iters[ch] * 100, digits=2), 
-                   "%) iterations have been permuted and aligned. These are now eligible for the analysis.\n\n")
+                   " %) iterations have been permuted and aligned. These are now eligible for the analysis.\n\n")
   }
   res$call <- call
   

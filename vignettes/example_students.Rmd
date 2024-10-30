@@ -371,8 +371,13 @@ for(g in 1:3){
 ## Sampling MCMC chains for spline trends for all three outcomes
 ```{r mcmc2, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6}
 set.seed(12345)
-mcmc2 <- clustGLMM(formula = formula2, id = id, family = family, data = data,
-                   G = 3, varying = varying, iter = iter, nchains = 2)
+mcmc3 <- clustGLMM(formula = formula2, id = id, family = family, data = data,
+                   G = 3, varying = varying, iter = iter, nchains = 2, standardize=FALSE)
+
+draws <- rescale_matrix(mcmc2$draws[[ch]], mcmc2$settings[[ch]], mcmc2$family,
+                        mcmc2$lfixnames, mcmc2$lgrpnames, mcmc2$lrannames,
+                        mcmc2$Kord, mcmc2$Kcat, mcmc2$centers, mcmc2$scales)
+
 # preserve the interpretation of cluster labels by permuting cluster-specific parameters
 perm <- list()
 perm[[1]] <- c(2, 3, 1) 

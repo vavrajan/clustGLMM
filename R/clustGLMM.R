@@ -30,8 +30,9 @@ function(
   inits,     # list of initial values from which to start
                 # if missing or NULL --> create your own
   tuning,    # list of tuning parameters
-  iter = 1000,# length of sampled chain
-  nchains = 1 # number of chains
+  iter = 1000, # length of sampled chain
+  nchains = 1, # number of chains
+  standardize = TRUE # should the numeric outcomes and regressors be standardized?
 ){
   # TODO make these function parameters
   
@@ -126,6 +127,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   ### Checking family types + transformations
   ydata <- data
+  centers <- scales <- list()
   # Numeric
   if(nY["Nums"] > 0){
     for(y in Nums){
@@ -136,9 +138,20 @@ Change the save settings if you want to calculate these probabilities afterwards
       if(sum(infs <- is.infinite(yval))>0){
         stop(paste0("There are infinite values for outcome ", y, "!"))
       }
-      ydata[,y] <- yval # numeric values
+      if(standardize){
+        centers[[y]] <- mean(yval, na.rm = TRUE)
+        scales[[y]] <- sd(yval, na.rm = TRUE)
+        ydata[,y] <- scale(yval, center = centers[[y]], scale = scales[[y]]) # numeric values
+      }else{
+        centers[[y]] <- 0.0
+        scales[[y]] <- 1.0
+        ydata[,y] <- yval # numeric values
+      }
     }
   }
+  centers <- unlist(centers)
+  scales <- unlist(scales)
+  
   
   # Poisson
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5){abs(x - as.integer(x)) < tol}
@@ -235,14 +248,47 @@ Change the save settings if you want to calculate these probabilities afterwards
     gauxX <- model.matrix(formula[[y]]$group, data)
     rauxX <- model.matrix(formula[[y]]$random, data)
     if(is.element(y, Ords)){
-      fcols[[y]] <- colnames(fauxX)[-1]
-      gcols[[y]] <- colnames(gauxX)[-1]
+      fcols[[y]] <- setdiff(colnames(fauxX), c("(Intercept)"))
+      gcols[[y]] <- setdiff(colnames(gauxX), c("(Intercept)"))
     }else{
       fcols[[y]] <- colnames(fauxX)
       gcols[[y]] <- colnames(gauxX)
     }
     fcols[[y]] <- setdiff(fcols[[y]], gcols[[y]])
     rcols[[y]] <- colnames(rauxX)
+    
+    # intercept inclusion checks
+    if(standardize){
+      if(is.element(y, Ords)){
+        if((length(gcols[[y]]) > 0) & (!varying["c_ord"])){
+          warning("If standardize = TRUE, when group is nonempty for ordinal outcome,
+                  the ordered intercepts c_ord have to be group-specific.
+                  Otherwise, it would be impossible to rescale parameters back. 
+                  Group-specificity of c_ord changed to TRUE.")
+          varying["c_ord"] <- TRUE
+        }
+      }else{
+        if(!is.element("(Intercept)", union(fcols[[y]], gcols[[y]]))){
+          stop("standardize = TRUE, but column (Intercept) not included in either fixed or group formula. 
+               Then, it would be difficult to transform betas back to original scale.")
+        }
+        if(length(gcols[[y]]) > 0){
+          if(is.element("(Intercept)", fcols[[y]])){
+            # (Intercept) in fixed and non-empty group-specificity
+            # --> has to be group-specific as well
+            warning("If standardize = TRUE, fixed contains (Intercept) and group is non-empty.
+                    (Intercept) is moved to group-specific effects in order to be able to scale parameters back.")
+            fcols[[y]] <- setdiff(fcols[[y]], "(Intercept)")
+            gcols[[y]] <- union("(Intercept)", gcols[[y]])
+            gauxX <- transform(gauxX, "(Intercept)"= 1.0)
+          }
+        }
+      }
+      if((length(rcols[[y]]) > 0) & (!is.element("(Intercept)", rcols[[y]]))){
+        stop("standardize = TRUE, but column (Intercept) not included in random formula, which is non-empty. 
+             Then, it would be difficult to transform random effects back to original scale.")
+      }
+    }
     
     notf <- setdiff(fcols[[y]], Xcolnames)
     Xcolnames <- c(Xcolnames, notf)
@@ -272,6 +318,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       addX <- data.frame(data[,noto])
       colnames(addX) <- noto
       finX <- cbind(finX, addX)
+      # TODO should the offset be also scaled?
     }
     
     nfix[y] <- length(fcols[[y]])
@@ -286,19 +333,35 @@ Change the save settings if you want to calculate these probabilities afterwards
     rannames <- c(rannames, lrannames[[y]])
     offnames <- c(offnames, loffnames[[y]])
   }
+  # Scale regressors in finX
+  std_cols <- setdiff(colnames(finX), c("id", "(Intercept)"))
+  if(standardize){
+    finX_scaled <- scale(finX[,std_cols,drop=FALSE], center = TRUE, scale = TRUE)
+    finX[,std_cols] <- ydata[,std_cols] <- finX_scaled
+    centers <- c(centers, attr(finX_scaled, "scaled:center"))
+    scales <- c(scales, attr(finX_scaled, "scaled:scale"))
+  }else{
+    ydata[,std_cols] <- finX[,std_cols,drop=FALSE]
+    addc <- rep(0.0, length(std_cols))
+    adds <- rep(1.0, length(std_cols))
+    names(addc) <- names(adds) <- std_cols
+    centers <- c(centers, addc)
+    scales <- c(scales, adds)
+  }
+  
   totnran <- sum(nran)+ifelse(tuning$integer$kspec_bi_cat, sum(nran[Cats]*Kcat)-sum(nran[Cats]), 0)
   # totnfix <- sum(nfix)-sum(nfix[Cats])+sum(nfix[Cats]*Kcat)
   # totngrp <- G * (sum(ngrp)-sum(ngrp[Cats])+sum(ngrp[Cats]*Kcat))
   
   if(totnran == 0){
-    warning("There are no random effects specific for each subject.
+    message("There are no random effects specific for each subject.
             InvSigma, InvQ, b and other related parameters will not exist.")
     save[c("InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
            "InvQ", "Q", "detInvQ",
            "b")] <- FALSE
     if(N>n){
-      stop("Some subjects have more than one observation. Therefore,
-           the assumption of independence is violated. ")
+      warning("Some subjects have more than one observation. Therefore,
+              the assumption of independence is violated. ")
     }
   }
   
@@ -312,6 +375,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   
   ### Initial values computation
+  # Initial values are for scaled parameters!!!
   initsgiven = 1
   if(missing(inits)){
     message("Inits are missing, calculating...\n")
@@ -382,7 +446,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Pois){
         aux_form <- paste0(y, " ~ ",
                            formula[[y]]$fixed[2],
-                           " + ", 
+                           " + ",
                            formula[[y]]$group[2]
                            )
         if(noff[y] > 0){
@@ -392,7 +456,17 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
         auxglm0 <- glm(aux_form, data = ydata, family = poisson(link = "log"))
         coefs <- auxglm0$coefficients
-        inits[[ch]]$beta_poi_fix[[y]] <- coefs[fcols[[y]]]
+        beta_fix <- coefs[fcols[[y]]]
+        if(standardize){
+          # scale to the transformed scale
+          notintercept <- setdiff(fcols[[y]], "(Intercept)")
+          beta_fix[notintercept] <- beta_fix[notintercept] * scales[notintercept]
+          if(is.element("(Intercept)", fcols[[y]])){
+            # then gcols has to be empty
+            beta_fix["(Intercept)"] <- beta_fix["(Intercept)"] + sum(beta_fix[notintercept]*centers[notintercept])
+          }
+        }
+        inits[[ch]]$beta_poi_fix[[y]] <- beta_fix
         
         inits[[ch]]$beta_poi[[y]] <- list()
         for(g in 1:G[ch]){
@@ -411,7 +485,16 @@ Change the save settings if you want to calculate these probabilities afterwards
           if(sum(is.na(coefs))>0){
             coefs <- auxglm0$coefficients
           }
-          inits[[ch]]$beta_poi[[y]][[g]] <- coefs[gcols[[y]]]
+          beta <- coefs[gcols[[y]]]
+          if(standardize){
+            # scale to the transformed scale
+            notintercept <- setdiff(gcols[[y]], "(Intercept)")
+            beta[notintercept] <- beta[notintercept] * scales[notintercept]
+            if(is.element("(Intercept)", gcols[[y]])){
+              beta["(Intercept)"] <- beta["(Intercept)"] + sum(beta_fix[fcols[[y]]]*centers[fcols[[y]]]) + sum(beta[notintercept]*centers[notintercept])
+            }
+          }
+          inits[[ch]]$beta_poi[[y]][[g]] <- beta
         }
       } # end for y in Pois
       
@@ -430,7 +513,17 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
         auxglm0 <- glm(aux_form, data = ydata, family = binomial(link = "logit"))
         coefs <- auxglm0$coefficients
-        inits[[ch]]$beta_bin_fix[[y]] <- coefs[fcols[[y]]]
+        beta_fix <- coefs[fcols[[y]]]
+        if(standardize){
+          # scale to the transformed scale
+          notintercept <- setdiff(fcols[[y]], "(Intercept)")
+          beta_fix[notintercept] <- beta_fix[notintercept] * scales[notintercept]
+          if(is.element("(Intercept)", fcols[[y]])){
+            # then gcols has to be empty
+            beta_fix["(Intercept)"] <- beta_fix["(Intercept)"] + sum(beta_fix[notintercept]*centers[notintercept])
+          }
+        }
+        inits[[ch]]$beta_bin_fix[[y]] <- beta_fix
         
         inits[[ch]]$beta_bin[[y]] <- list()
         for(g in 1:G[ch]){
@@ -449,7 +542,16 @@ Change the save settings if you want to calculate these probabilities afterwards
           if(sum(is.na(coefs))>0){
             coefs <- auxglm0$coefficients
           }
-          inits[[ch]]$beta_bin[[y]][[g]] <- coefs[gcols[[y]]]
+          beta <- coefs[gcols[[y]]]
+          if(standardize){
+            # scale to the transformed scale
+            notintercept <- setdiff(gcols[[y]], "(Intercept)")
+            beta[notintercept] <- beta[notintercept] * scales[notintercept]
+            if(is.element("(Intercept)", gcols[[y]])){
+              beta["(Intercept)"] <- beta["(Intercept)"] + sum(beta_fix[fcols[[y]]]*centers[fcols[[y]]]) + sum(beta[notintercept]*centers[notintercept])
+            }
+          }
+          inits[[ch]]$beta_bin[[y]][[g]] <- beta
         }
       } # end for y in Bins
       
@@ -457,18 +559,14 @@ Change the save settings if you want to calculate these probabilities afterwards
       # library("MASS")
       inits[[ch]]$beta_ord <- inits[[ch]]$beta_ord_fix <- inits[[ch]]$a_ord <- inits[[ch]]$c_ord <- inits[[ch]]$pi_ord <-list()
       for(y in Ords){
-        aux_form <- paste0(y, " ~ ",
-                           formula[[y]]$fixed[2],
-                           " + ", 
-                           formula[[y]]$group[2]
-        )
+        aux_form <- paste0(y, " ~ .")
         if(noff[y] > 0){
-          aux_form <- paste0(aux_form, "+ offset(",
-                             formula[[y]]$offset,
-                             ")")
+          aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
+          gcols[[y]] <- union(gcols[[y]], ocols[[y]])
         }
-        auxdata0 <- ydata
-        auxdata0[,y] <- factor(auxdata0[,y])
+        # possibly standardized regressors
+        auxdata0 <- finX[,union(fcols[[y]], gcols[[y]])]
+        auxdata0[,y] <- factor(ydata[,y])
         auxpolr0 <- polr(aux_form, data = auxdata0, Hess = TRUE)
         inits[[ch]]$beta_ord_fix[[y]] <- auxpolr0$coefficients[fcols[[y]]]
         
@@ -476,7 +574,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           inits[[ch]]$c_ord[[y]] <- inits[[ch]]$a_ord[[y]] <- inits[[ch]]$pi_ord[[y]] <- list()
         }else{
           inits[[ch]]$c_ord[[y]] <- auxpolr0$zeta
-          logits <- c(0, exp(auxpolr0$zeta)/(1+exp(auxpolr0$zeta)))
+          logits <- c(0, exp(inits[[ch]]$c_ord[[y]])/(1+exp(inits[[ch]]$c_ord[[y]])))
           inits[[ch]]$a_ord[[y]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
           inits[[ch]]$pi_ord[[y]] <- exp(c(inits[[ch]]$a_ord[[y]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]], 0))))
         }
@@ -512,8 +610,8 @@ Change the save settings if you want to calculate these probabilities afterwards
           inits[[ch]]$beta_ord[[y]][[g]] <- auxpolr$coefficients[gcols[[y]]]
           
           if(varying["c_ord"]){
-            inits[[ch]]$c_ord[[y]][[g]] <- auxpolr$zeta
-            logits <- c(0, exp(auxpolr$zeta)/(1+exp(auxpolr$zeta)))
+            inits[[ch]]$c_ord[[y]][[g]] <- auxpolr$zeta 
+            logits <- c(0, exp(inits[[ch]]$c_ord[[y]][[g]])/(1+exp(inits[[ch]]$c_ord[[y]][[g]])))
             inits[[ch]]$a_ord[[y]][[g]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
             inits[[ch]]$pi_ord[[y]][[g]] <- exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))))
           }
@@ -524,18 +622,13 @@ Change the save settings if you want to calculate these probabilities afterwards
       # library("nnet")
       inits[[ch]]$beta_cat <- inits[[ch]]$beta_cat_fix <- list()
       for(y in Cats){
-        aux_form <- paste0(y, " ~ ",
-                           formula[[y]]$fixed[2],
-                           " + ", 
-                           formula[[y]]$group[2]
-        )
+        aux_form <- paste0(y, " ~ .")
         if(noff[y] > 0){
-          aux_form <- paste0(aux_form, "+ offset(",
-                             formula[[y]]$offset,
-                             ")")
+          aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
         }
-        auxdata0 <- ydata
-        auxdata0[,y] <- factor(auxdata0[,y]) # the first category is the baseline
+        # possibly standardized regressors
+        auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
+        auxdata0[,y] <- factor(datay[,y]) # the first category is the baseline
         auxmult0 <- multinom(as.formula(aux_form), data = auxdata0)
         sumauxmult0 <- summary(auxmult0)
         inits[[ch]]$beta_cat_fix[[y]] <- t(sumauxmult0$coefficients[,fcols[[y]]])
@@ -602,6 +695,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     } # end for ch in 1:nchains
     
   } # end of missing(inits)
+  
   
   
   ### Preparations for transfer from C to List output
@@ -1145,6 +1239,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     #  "beta_num","beta_bin","beta_ord","c_ord","a_ord","beta_cat"
     #  "InvSigma","InvQ","b"
     if(howsave != "cmcmc"){
+      # all last values are returned on the scale used in C --> no rescaling needed
       last[[ch]]$w <- cmcmc$veclast[1:(lastcopied <- dimswithG["w",ch])]
       last[[ch]]$e0 <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
       last[[ch]]$U <- 1+cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n)]
@@ -1343,39 +1438,39 @@ Change the save settings if you want to calculate these probabilities afterwards
         if(varying["InvSigma"]){
           last[[ch]]$InvSigma <- list()
           for(g in 1:G[ch]){
-            pommatrix <- matrix(0, totnran, totnran)
+            auxmatrix <- matrix(0, totnran, totnran)
             pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
-            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-            pommatrix <- t(pommatrix)
-            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-            last[[ch]]$InvSigma[[g]] <- pommatrix
+            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+            auxmatrix <- t(auxmatrix)
+            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+            last[[ch]]$InvSigma[[g]] <- auxmatrix
           }
         }else{
-          pommatrix <- matrix(0, totnran, totnran)
+          auxmatrix <- matrix(0, totnran, totnran)
           pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
-          pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-          pommatrix <- t(pommatrix)
-          pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-          last[[ch]]$InvSigma <- pommatrix
+          auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+          auxmatrix <- t(auxmatrix)
+          auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+          last[[ch]]$InvSigma <- auxmatrix
         }
         # InvQ
         if(varying["InvQ"]){
           last[[ch]]$InvQ <- list()
           for(g in 1:G[ch]){
-            pommatrix <- matrix(0, totnran, totnran)
+            auxmatrix <- matrix(0, totnran, totnran)
             pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
-            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-            pommatrix <- t(pommatrix)
-            pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-            last[[ch]]$InvQ[[g]] <- pommatrix
+            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+            auxmatrix <- t(auxmatrix)
+            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+            last[[ch]]$InvQ[[g]] <- auxmatrix
           }
         }else{
-          pommatrix <- matrix(0, totnran, totnran)
+          auxmatrix <- matrix(0, totnran, totnran)
           pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
-          pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-          pommatrix <- t(pommatrix)
-          pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
-          last[[ch]]$InvQ <- pommatrix
+          auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+          auxmatrix <- t(auxmatrix)
+          auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+          last[[ch]]$InvQ <- auxmatrix
         }
         # b
         last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + dimswithG["b",ch])],
@@ -1432,8 +1527,13 @@ Change the save settings if you want to calculate these probabilities afterwards
                                        family = sorted_family)
         }
       }
-
-      mcmc$draws[[ch]] <- chain
+      if(standardize){
+        mcmc$draws[[ch]] <- rescale_list(chain, lsettings[[ch]], sorted_family,
+                                         lfixnames, lgrpnames, lrannames,
+                                         Kord, Kcat, centers, scales)
+      }else{
+        mcmc$draws[[ch]] <- chain
+      }
       message(paste0("Saving chain ", ch, " into lists is completed.\n"))
     }
 
@@ -1453,8 +1553,13 @@ Change the save settings if you want to calculate these probabilities afterwards
                                  family = sorted_family)
           mcmc$draws[[ch]][, colnames(aux)] <- aux
         }
+        
       }
-
+      if(standardize){
+        mcmc$draws[[ch]] <- rescale_matrix(mcmc$draws[[ch]], lsettings[[ch]], sorted_family,
+                                           lfixnames, lgrpnames, lrannames,
+                                           Kord, Kcat, centers, scales)
+      }
       message(paste0("Saving chain ", ch, " into one big matrix is completed.\n"))
     }
   } # end of chain
@@ -1618,6 +1723,9 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$yspecd2 <- yspecd2
   mcmc$d2spec <- d2spec
   mcmc$isYna <- cisYna
+  mcmc$standardize <- standardize
+  mcmc$centers <- centers
+  mcmc$scales <- scales
   # mcmc$post_processed <- FALSE
   
   class(mcmc) <- "clustglmm"

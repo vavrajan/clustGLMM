@@ -61,6 +61,9 @@ length of each sampled chain.
   \item{nchains}{
 number of chains to be sampled.
 }
+  \item{standardize}{
+a boolean whether the numeric outcome and regressors should be scaled.
+}
 }
 \details{
 Column \code{id} in \code{data} matrix contains different IDs. For simplicity, these IDs are tied with numbers from 1 to total number of unique IDs. Then, unit-specific quantities are referred to by these integers instead of full IDs. 
@@ -110,7 +113,7 @@ The most important output:
 \item{draws}{a list indexed by chain with generated samples saved either in large matrix (\code{howsave = "matrix"}) or a carefully structured list (\code{howsave = "list"}).}
 \item{param_names}{individual parameter (column) names in structured list by general parameter name.}
 
-Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}.
+Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}, \code{standardize}.
 
 Other newly defined quantities included in the output are:
 \item{iterations}{a list per each chain containing iterations available, \code{\link{post_processing}} can create NA values if k-means does not result in permutation, then these iterations are omitted,}
@@ -151,6 +154,8 @@ Other newly defined quantities included in the output are:
 \item{yspecd1}{a list of model parameters, which have their first dimension size dependent on outcomes and how large it is, e,g, fixed-effects \code{beta_num_fix} are vectors that can be of different size among outcomes under different formulae,}
 \item{yspecd2}{a list of matrix-valued model parameters, which have their second dimension size dependent on outcomes and how large it is, e.g. fixed-effects \code{beta_cat_fix} for categorical outcome \code{y in Cats} are matrices (\code{Kcat[y]} * \code{nfix[y]}) with both dimensions dependent on the outcome \code{y},}
 \item{isYna}{a vector of booleans that determine which outcome values are not observed, outcomes are ordered by \code{Ys = c(Nums, Pois, Bins, Ords, Cats)}.}
+\item{centers}{a named vector of centers of numeric outcomes and regressors.}
+\item{scales}{a named vector of scales of numeric outcomes and regressors.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5

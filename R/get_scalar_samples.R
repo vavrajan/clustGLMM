@@ -43,7 +43,7 @@ function(mcmc, what, gspec, dimspec, yspec,
         }else{
           # group-specific but not y-specific
           if(v$D == 0){
-            out$y = mcmc$draws[[ch]][[what]][[gspec]][ind_iterations]
+            out$y = mcmc$draws[[ch]][[what]][ind_iterations, gspec]
           }
           if(v$D == 1){
             out$y = mcmc$draws[[ch]][[what]][[gspec]][ind_iterations,dimspec[1]]
