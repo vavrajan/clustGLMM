@@ -1651,8 +1651,16 @@ Change the save settings if you want to calculate these probabilities afterwards
   if(totnran > 0){
     mcmc$call <- paste0(mcmc$call, "\nThe structure of covariance matrix Sigma for random effects: \n")
     for(y in Ys){
-      for(l in 1:length(lrannames[[y]])){
-        mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
+      if(tuning$integer$kspec_bi_cat & (sorted_family[y] == "cat")){
+        for(k in 1:Kcat[y]){
+          for(l in 1:length(lrannames[[y]])){
+            mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], ", k=", k, "\n")
+          }
+        }
+      }else{
+        for(l in 1:length(lrannames[[y]])){
+          mcmc$call <- paste0(mcmc$call, y, "_", lrannames[[y]][l], "\n")
+        }
       }
     }
   }else{

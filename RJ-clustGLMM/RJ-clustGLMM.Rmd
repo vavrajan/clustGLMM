@@ -73,31 +73,59 @@ library(coda)
 library(lcmm)
 ```
 
-# Introduction
+# Introduction {#sec:introduction}
 
 Our paper [@Vavra-etal2024]. Our package \pkg{clustGLMM}. 
 
 We compare to \CRANpkg{lcmm} [@Proust-Lima-etal2017], \CRANpkg{mixAK}, \CRANpkg{flexmix}, \CRANpkg{MCMCglmm}. We take an inspiration from \CRANpkg{brms}.
 
-# Methodology
+# Methodology {#sec:methodology}
 
+methodology section
 
-
-## GLMMs
+## GLMMs {#subsec:glmms}
 different distribution families
+
+\begin{equation} 
+  Y_{ij}
+  (\#eq:glmm-num)
+\end{equation}
+
+\begin{equation} 
+  Y_{ij}
+  (\#eq:glmm-poi)
+\end{equation}
+
+\begin{equation} 
+  Y_{ij}
+  (\#eq:glmm-bin)
+\end{equation}
+
+\begin{equation} 
+  Y_{ij}
+  (\#eq:glmm-ord)
+\end{equation}
+
+\begin{equation} 
+  Y_{ij}
+  (\#eq:glmm-cat)
+\end{equation}
+
 
 joint modelling of random effects
 
-## Model-based clustering of GLMMs
+## Model-based clustering of GLMMs {#subsec:mbc-glmms}
 + mention sparse finite mixtures
 `Gplus` definition and prior for weights
 
-## Priors
+## Priors {#subsec:priors}
 list of the used prior distributions + link with the parameters of `clustGLMM` function?
 
-# Inference
+# Inference {#sec:inference}
 
-## Scaling the numerical outcomes and regressors
+inference section
+
+## Scaling the numerical outcomes and regressors {#subsec:scaling}
 
 Ideally, for a numeric outcome $Y$ we would like to estimate the model given by:
 $$
@@ -116,7 +144,7 @@ Then, to obtain the original interpretation of model parameters we have to:
 \beta_k = \dfrac{S^Y}{S^F_k} \widetilde{\beta}_k 
 \\
 \widetilde{\beta}_k^{(g)} 
-&\;\rightsquigarrow\; 
+&\;\rightsquigarrow\;
 \beta_k^{(g)} = \dfrac{S^Y}{S^X_k} \widetilde{\beta}_k^{(g)}
 \\
 \widetilde{\beta}_0^{(g)} 
@@ -156,24 +184,20 @@ L &\;=\; \diag
 L \widetilde{\Sigma}^{(g)} L^\top
 \end{align}
 
-*Should we scale regressors also for other than numeric outcomes?*
-
 *What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? e.g. splines with intercept*
 
-*What if random intercept is not included among random effects?*
 
-
-## MCMC estimation
+## MCMC estimation {#subsec:mcmc}
 Gibbs + Metropolis-within-Gibbs steps
 
 algorithm
 
-## clustering probabilities and deviance ?
+## clustering probabilities and deviance {#subsec:clust-prob-deviance}
 integral approximation
 
-## Post-processing
+## Post-processing {#subsec:post-processing}
 
-# Implementation
+# Implementation {#sec:implementation}
 describe in words how it is implemented
 
 main functions
@@ -182,10 +206,133 @@ what is the workflow - how do I structure data, change prior, initialize, how to
 
 + functions in a table
 
-# Application
+
+
+Now we focus on the implementation of the methodology outlined in Sections \@ref(sec:methodology) and \@ref(sec:inference). The overview of the typical workflow and key available functions can be found in Figure \@ref(fig:workflow-diagram). In the following subsections we will go through each step and discuss it in details
+
+```{r workflow-diagram, fig.cap="Diagram of the usual workflow with \\pkg{clustGLMM}."}
+DiagrammeR::grViz("digraph {
+  graph[layout = dot, rankdir = TB]
+  
+  node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15]  
+  rec1[label = '@@1']
+  rec2[label = '@@2']
+  rec3[label = '3. Visual diagnostics', shape = diamond]
+  rec3a[label = 'Continue sampling']
+  rec3b[label = 'Converged']
+  rec4[label = '4. Restrict to samples with the most frequent number of \nnon-empty clusters and resolve label-switching chain-wise']
+  rec5[label = '5. Compare cluster interpretation \\namong chains', shape = diamond]
+  rec5a[label = 'Permute cluster labels']
+  rec5b[label = 'Aligned']
+  rec5c[label = 'Not aligned']
+  
+  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
+  code1[label = 'data, family, formula, varying, ...']
+  code2[label = 'clustGLMM()']
+  code3[label = 'as_coda(), plot()']
+  code4[label = 'post_processing()']
+  code5[label = 'plot(, which=clusters_kerneldensity)']
+  code5a[label = 'permute_cluster_labels()']
+  
+  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
+  code6a[label = 'summary()']
+  code6b[label = 'predict()']
+  code6c[label = 'plot(, which=clusters_kerneldensity)']
+  code6d[label = 'clustering_probabilities_and_deviance()']
+  
+  subgraph cluster6 {
+    graph[layout = fdp, shape = rectangle]
+    style = rounded
+    bgcolor = gold
+    
+    label = ''
+    node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
+    rec6[label = '6. Inference', fillcolor = gold, shape = none]
+    rec6a[label = 'Posterior description with the use of coda']
+    rec6b[label = 'Reconstruct linear predictor']
+    rec6c[label = 'Compare cluster-specific parameters']
+    rec6d[label = 'Approximate posterior of clustering probabilities and deviance']
+  }
+  
+  # edge definitions with the node IDs
+  edge[arrowhead = normal, arrowtail = none]
+  rec1 -> rec2 -> rec3 -> rec3b -> rec4 -> rec5 -> rec5b -> rec6
+  rec3 -> rec3a
+  rec3a -> rec2[label = ' inits = ...$last', fontname = courier]
+  rec5 -> rec5a -> {rec5b rec5c}
+  rec5 -> rec5c
+  rec5c -> rec6[label = 'Separately for each chain', fontanme = Helvetica]
+  
+  edge[arrowhead = none, arrowtail = none]
+  {{rank=same rec1 -> code1}}
+  {{rank=same rec2 -> code2}}
+  {{rank=same rec3 -> code3}}
+  {{rank=same rec4 -> code4}}
+  {{rank=same rec5 -> code5}}
+  {{rank=same rec5a -> code5a}}
+  {{rank=same rec6a -> code6a}}
+  {{rank=same rec6b -> code6b}}
+  {{rank=same rec6c -> code6c}}
+  {{rank=same rec6d -> code6d}}
+  
+  edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
+  rec6 -> rec6a -> rec6b -> rec6c -> rec6d
+  
+  }
+  
+  # Substitutions with R code are possible:
+  [1]: paste0('1. Prepare inputs')
+  [2]: paste0('2. Sample chains')
+  ",
+  height = 500, width = 600)
+```
+## Prepare inputs {#subsec:impl-prepare-inputs}
+
+First, we go through the required input for the main function `clustGLMM()` and describe the expected format. 
+Data are passed through `data` argument as a `data.frame` and should contain all outcomes, regressors and a column `id` that declares which rows correspond to the same subject. These IDs are internally mapped to `1:n` where `n` is the number of unique ID labels. This mapping is returned in `clustglmm` object as `numbered_unique_ids` item. 
+
+The list of outcomes is given by `family` argument. It is a vector containing the types of outcomes named by the outcome names (has to match the column name in `data`). The following labels are available:
+
+* `"num"`, `"gaussian"` for numeric outcomes following \@ref(eq:glmm-num),
+* `"poi"`, `"poisson"` for count outcomes following \@ref(eq:glmm-poi),
+* `"bin"`, `"bernoulli"` for binary outcomes following \@ref(eq:glmm-bin),
+* `"ord"`, `"cumulative"` for ordinal outcomes following \@ref(eq:glmm-ord),
+* `"cat"`, `"categorical"` for categorical outcomes following \@ref(eq:glmm-cat), first category is considered to be the baseline.
+
+Internally, outcomes are ordered by type in the same order as above. Hence, `family` returned by `clustGLMM` may be permuted. The reason is the organization of $\Sigma$ covariance matrix. 
+
+Our flexible implementation allows for different model formula for each outcome. Therefore, all formulas are expected to be passed down as a list `formula` named by the same names as `family`. For each outcome 3 formulas (of class `formula`) are expected:
+
+* `fixed` for effects common to all clusters,
+* `group` for cluster-specific effects,
+* `random` for random `id`-specific effects.
+
+There is also option to add an item `offset` which just contains a column name for offset variable, i.e., the values that shift the linear predictor without any unknown coefficient. By default, no `offset` is considered. Sharing the same terms in both `fixed` and `group` formula is allowed and, by default, is resolved by removing it from `fixed` to `group` formula. For example, if you do not specify the intercept term in any way, it will be considered group-specific by default. Moreover, intercept term is removed from the formula for ordinal outcome, since it is covered by a standalone model parameter `c_ord` (or its transformation `a_ord`, `pi_ord`). The `clustglmm` object returns lists (`lfixnames`, `lgrpnames`, `lrannames`) of covariate names in the given order to match them to the corresponding coefficients `beta...[]` or random effects `b[,]`.      
+
+
+
+## Sample chains {#subsec:impl-sample-chains}
+
+## Visual diagnostics  {#subsec:impl-visual-diagnostics}
+
+## Post-processing {#subsec:impl-post-processing}
+
+## Aligning cluster interpretation {#subsec:impl-permute-cluster-labels}
+
+## Inference {#subsec:impl-inference}
+
+### Posterior description {#subsubsec:impl-summary}
+
+### Linear predictor {#subsubsec:impl-predict}
+
+### Clustering probabilities and deviance {#subsubsec:impl-clust-prob-deviance}
+
+
+
+# Application {#sec:application}
 code+outputs
 
-## Simulated students dataset
+## Simulated students dataset {#subsec:students}
 exemplary use of \pkg{clustGLMM} - step by step explanation and command introduction
 
 ```{r load-students}
@@ -222,7 +369,7 @@ plot_num_vs_x_grouped(students, "log_ntrips", x="age", g="g", legend_placement="
 plot_cat_vs_x_grouped(students, "satisfaction", x="age", g="g")
 ```
 
-### clustGLMM
+### clustGLMM {#subsubsec:students-clustglmm}
 
 how to prepare the call of `clustGLMM`
 
@@ -231,19 +378,19 @@ id <- "i"
 ```
 
 
-### Summaries and plots
+### Summaries and plots {#subsubsec:students-summary}
 what plots and summaries can be obtained from `clustglmm` class object
 
-### `post_processing`
+### `post_processing` {#subsubsec:students-post-processing}
 explain how post processing works and how the user can work with the post-processed family
 
-### `clustering_probabilities_and_deviance`
+### `clustering_probabilities_and_deviance` {#subsubsec:students-clust-prob-deviance}
 approximation of the clustering probabilities and deviance
 
-## Analysis of `paquid` dataset from \pkg{lcmm}
+## Analysis of `paquid` dataset from \pkg{lcmm} {#subsec:paquid}
 direct analysis analogical to the one performed in \pkg{lcmm} + what are our advantages
 
-# Summary
+# Summary {#sec:summary}
 
 \pkg{clustGLMM} is very flexible and provides more than existing packages.
 
