@@ -333,6 +333,9 @@ Change the save settings if you want to calculate these probabilities afterwards
     rannames <- c(rannames, lrannames[[y]])
     offnames <- c(offnames, loffnames[[y]])
   }
+  if(all(!is.na(finX))){
+    stop("There are NA values among regressors, which is not supported.")
+  }
   # Scale regressors in finX
   std_cols <- setdiff(colnames(finX), c("id", "(Intercept)"))
   if(standardize){
@@ -401,7 +404,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       for(y in Nums){
         Xvars <- c(fcols[[y]], gcols[[y]])
         # Using all data
-        nonna <- !is.na(ydata[,y])
+        nonna <- (!is.na(ydata[,y]))
         pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
         boldX <- as.matrix(finX[nonna,Xvars])
         coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
