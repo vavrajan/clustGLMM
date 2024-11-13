@@ -135,7 +135,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       if(!is.numeric(yval)){
         stop(paste0("Outcome ", y, " is not numeric!"))
       }
-      if(sum(infs <- is.infinite(yval))>0){
+      if(any(is.infinite(yval), na.rm = TRUE)){
         stop(paste0("There are infinite values for outcome ", y, "!"))
       }
       if(standardize){
@@ -158,14 +158,14 @@ Change the save settings if you want to calculate these probabilities afterwards
   if(nY["Pois"] > 0){
     for(y in Pois){
       yval <- data[,y]
-      if(!all(is.wholenumber(yval))){
+      if(any(is.infinite(yval))){
+        stop(paste0("There are infinite values for outcome ", y, "!"))
+      }
+      if(!all(is.wholenumber(yval), na.rm = TRUE)){
         stop(paste0("Outcome ", y, " is not integer-valued!"))
       }
-      if(!all(yval >= 0)){
+      if(!all(yval >= 0, na.rm = TRUE)){
         stop(paste0("Outcome ", y, " has some negative values!"))
-      }
-      if(sum(infs <- is.infinite(yval))>0){
-        stop(paste0("There are infinite values for outcome ", y, "!"))
       }
       ydata[,y] <- yval # integer values
     }
@@ -477,7 +477,8 @@ Change the save settings if you want to calculate these probabilities afterwards
           auxglm <- tryCatch(glm(aux_form, data = auxdata,
                                  family = poisson(link = "log")),
                              error=function(e) e, warning=function(w) w)
-          if(is(auxglm,"warning") || is(auxglm,"error")){
+          # if(is(auxglm,"warning") || is(auxglm,"error")){
+          if(is(auxglm,"error")){
             auxglm <- auxglm0
           }else{
             if(!auxglm$converged){
@@ -534,7 +535,8 @@ Change the save settings if you want to calculate these probabilities afterwards
           auxglm <- tryCatch(glm(aux_form, data = auxdata,
                                  family = binomial(link = "logit")),
                              error=function(e) e, warning=function(w) w)
-          if(is(auxglm,"warning") || is(auxglm,"error")){
+          # if(is(auxglm,"warning") || is(auxglm,"error")){
+          if(is(auxglm,"error")){
             auxglm <- auxglm0
           }else{
             if((!auxglm$converged) || (sum(is.na(auxglm$coefficients[gcols[[y]]]))>0)){
@@ -593,7 +595,8 @@ Change the save settings if you want to calculate these probabilities afterwards
           auxpolr <- tryCatch(polr(aux_form, data = auxdata, Hess = TRUE), 
                               error=function(e) e, warning=function(w) w)
           dowithall <- TRUE
-          if(is(auxpolr,"warning") | is(auxpolr,"error")){
+          # if(is(auxpolr,"warning") || is(auxpolr,"error")){
+          if(is(auxpolr,"error")){
             dowithall <- TRUE
           }else{
             logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
@@ -646,7 +649,8 @@ Change the save settings if you want to calculate these probabilities afterwards
           auxdata[,y] <- factor(auxdata[,y]) # the first category is the baseline
           auxmult <- tryCatch(multinom(as.formula(aux_form), data = auxdata),
                               error=function(e) e, warning=function(w) w)
-          if(is(auxmult,"warning") || is(auxmult,"error")){
+          # if(is(auxmult,"warning") || is(auxmult,"error")){
+          if(is(auxmult,"error")){
             auxmult <- auxmult0
           }else{
             if(auxmult$convergence || (sum(is.na(auxmult$coefficients[gcols[[y]]]))>0)){
