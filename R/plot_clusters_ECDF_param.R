@@ -1,5 +1,5 @@
 plot_clusters_ECDF_param <-
-  function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
+  function(mcmc, what, whichg, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
     if(missing(chains)){chains = mcmc$chains}
@@ -12,7 +12,17 @@ plot_clusters_ECDF_param <-
     if(v$yords){Ys <- c(Ys, mcmc$Ords)}
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
-    nonempty <- mcmc$clusters
+    if(missing(whichg)){
+      whichg <- mcmc$clusters
+    }else{
+      if(!is.list(whichg)){
+        gs <- whichg
+        whichg <- list()
+        for(ch in chains){
+          whichg[[ch]] <- gs
+        }
+      }
+    }
     par(mar = c(4,4,1,1))
     
     if(v$dims > 0){  
@@ -25,7 +35,7 @@ plot_clusters_ECDF_param <-
               for(i in 1:v$d1){
                 for(j in 1:v$d2){
                   plot_clusters(mcmc = mcmc, what = what, 
-                                dimspec = c(i,j), whichg = nonempty[[ch]],
+                                dimspec = c(i,j), whichg = whichg[[ch]],
                                 burnin = burnin, thin = thin, 
                                 iterations = iterations, chains = ch, 
                                 setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
@@ -46,7 +56,7 @@ plot_clusters_ECDF_param <-
                 for(j in 2:v$d2){
                   if(i < j){
                     plot_clusters(mcmc = mcmc, what = what, 
-                                  dimspec = c(i,j), whichg = nonempty[[ch]],
+                                  dimspec = c(i,j), whichg = whichg[[ch]],
                                   burnin = burnin, thin = thin, 
                                   iterations = iterations, chains = ch, 
                                   setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE, 
@@ -75,7 +85,7 @@ plot_clusters_ECDF_param <-
               for(ch in chains){
                 for(y in Ys){
                   plot_clusters(mcmc = mcmc, what = what, 
-                                yspec = y, whichg = nonempty[[ch]],
+                                yspec = y, whichg = whichg[[ch]],
                                 burnin = burnin, thin = thin, 
                                 iterations = iterations, chains = ch, 
                                 setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
@@ -87,7 +97,7 @@ plot_clusters_ECDF_param <-
               if(setparmfrow){par(mfrow = nice_nrow_ncol(length(chains)))}
               for(ch in chains){
                 plot_clusters(mcmc = mcmc, what = what,
-                              whichg = nonempty[[ch]],
+                              whichg = whichg[[ch]],
                               burnin = burnin, thin = thin, 
                               iterations = iterations, chains = ch, 
                               setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
@@ -105,7 +115,7 @@ plot_clusters_ECDF_param <-
                   if(setparmfrow){par(mfrow = nice_nrow_ncol(mcmc$yspecd1[[what]][[y]]))}
                   for(i in 1:mcmc$yspecd1[[what]][[y]]){
                     plot_clusters(mcmc = mcmc, what = what, 
-                                  yspec = y, dimspec = i, whichg = nonempty[[ch]],
+                                  yspec = y, dimspec = i, whichg = whichg[[ch]],
                                   burnin = burnin, thin = thin, 
                                   iterations = iterations, chains = ch, 
                                   setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
@@ -120,7 +130,7 @@ plot_clusters_ECDF_param <-
               for(ch in chains){
                 for(i in 1:v$d1){
                   plot_clusters(mcmc = mcmc, what = what, 
-                                dimspec = i, whichg = nonempty[[ch]],
+                                dimspec = i, whichg = whichg[[ch]],
                                 burnin = burnin, thin = thin, 
                                 iterations = iterations, chains = ch, 
                                 setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE,
@@ -150,7 +160,7 @@ plot_clusters_ECDF_param <-
                   for(i in 1:d1){
                     for(j in 1:d2){
                       plot_clusters(mcmc = mcmc, what = what, 
-                                    yspec = y, dimspec = c(i,j), whichg = nonempty[[ch]],
+                                    yspec = y, dimspec = c(i,j), whichg = whichg[[ch]],
                                     burnin = burnin, thin = thin, 
                                     iterations = iterations, chains = ch,
                                     setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE, 
@@ -167,7 +177,7 @@ plot_clusters_ECDF_param <-
                   d2 <- ifelse(v$d2spec, mcmc$d2spec[[what]][i], v$d2)
                   for(j in 1:d2){
                     plot_clusters(mcmc = mcmc, what = what, 
-                                  dimspec = c(i,j), whichg = nonempty[[ch]],
+                                  dimspec = c(i,j), whichg = whichg[[ch]],
                                   burnin = burnin, thin = thin, 
                                   iterations = iterations, chains = ch,
                                   setparmfrow = FALSE, doKern = FALSE, doECDF = TRUE, 

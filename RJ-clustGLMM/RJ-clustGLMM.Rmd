@@ -77,7 +77,7 @@ library(lcmm)
 
 Our paper [@Vavra-etal2024]. Our package \pkg{clustGLMM}. 
 
-We compare to \CRANpkg{lcmm} [@Proust-Lima-etal2017], \CRANpkg{mixAK}, \CRANpkg{flexmix}, \CRANpkg{MCMCglmm}. We take an inspiration from \CRANpkg{brms}.
+We compare to \CRANpkg{lcmm} [@Proust-Lima-etal2017], \CRANpkg{mixAK}, \CRANpkg{flexmix}, \CRANpkg{MCMCglmm}. We take an inspiration from \CRANpkg{brms} and \CRANpkg{coda}.
 
 # Methodology {#sec:methodology}
 
@@ -389,11 +389,40 @@ Before all the outputs of `clustGLMM` are returned in a list, a crude clustering
 
 Finally, the `call` summarizes the sample sizes as well as given formulas for all outcomes - the fixed effects first, then the random effects (in the order assumed by `InvSigma`) and then the group-specific effects. Printing of class `clustGLMM` prints `call` followed by the summary of the crude clustering for each chain separately.    
 
-
-
 ## Visual diagnostics  {#subsec:impl-visual-diagnostics}
 
+We realize that some users may be familiar with already established diagnostics tools. Therefore, we provide function `as_coda` that takes the `clustGLMM` object and converts it to `mcmc.list` object from \CRANpkg{coda} package. Then, all diagnostic tools from that package are at the user's disposal.
+
+However, since the dimension of parametric space of our model can easily reach hundreds (with latent id-specific variables even thousands), these tools may be difficult to use on such large scale. Therefore, we provide a set of plotting functions that are able to cover all individual parameters related to given parameter name:
+
+* `plot_ACF_param` - autocorrelation function, use `plot_ACF` for single scalar parameter choice.
+* `plot_ECDF_param` - empirical cumulative distribution function, use `plot_ECDF` for single scalar parameter choice.
+* `plot_kerneldensity_param` - kernel density estimate, use `plot_kerneldensity` for single scalar parameter choice.
+* `plot_traceplots_param` - trace plots (value vs. iteration), use `plot_traceplots` for single scalar parameter choice.
+* `plot_clusters_ECDF_param` - compare cluster-specific parameter across (non-empty) clusters via ECDF, use `plot_clusters` for single scalar parameter choice. 
+* `plot_clusters_kerneldensity_param` - compare cluster-specific parameter across (non-empty) clusters via kernel density estimates, use `plot_clusters` for single scalar parameter choice. 
+
+These functions are wrapped by `plot.clustglmm` function that covers all of the options with traceplots of total cluster occupation numbers `ng` as preferred default. They allow for cutting of burn-in period and thinning the samples, or even selecting the desired iterations manually. The plots are automatically organized into a matrix of convenient sizes by setting `par(mfrow=...)`. This can be prohibited by `setparmfrow = FALSE`. 
+
+If convergence to the stationary distribution is not yet met then continuation can be simply performed by calling `clustGLMM` with the same input arguments and `inits = ...$last`. If the results do not meet the expected output maybe starting over with adjusted inputs and different seed can help.
+
+
 ## Within-chain post-processing {#subsec:impl-post-processing}
+In ideal case this step can be skipped. But, in previous step it may occur that iterations can correspond to different numbers of non-empty clusters within one chain. Also the meaning of labels can be switched between iterations. Therefore, we prepared a `post_processing()` function based on suggestions by [@FruhwirthSchnatter11]. The goal is to restrict to iterations that have the most common number of non-empty clusters `Gplus` saved as `modeGplus` item of `clustGLMM` output and resolve label-switching so that the inference about cluster-specific parameters is not skewed.   
+
+The function follows the following steps for each chain separately:
+
+0. The procedure works with `mcmc$draws` only under `howsave = "matrix"`, so if `howsave = "list"` then `mcmc` is converted to the `"matrix"` format, post-processed and converted back to "list".  
+1. Take the most frequent `Gplus` value - `modeGplus` - the number of non-empty clusters across the sampled chain and find the posterior draws with `Gplus = modeGplus`. The indices are stored in `inds` and their length is `iters`. 
+2. Target all cluster-specific parameters. To clarify these are parameters with `(g)` in their column name, parameters `w`, `U`, `pUig` do not count. If you prefer to use just a subset of those parameters, you have to specify the column names by `cols` input variable.
+3. Create submatrices of sampled cluster-specific parameters. Index by index in `inds` gather the cluster-specific parameters from only non-empty clusters. Due to label-switching it may happen that different cluster labels correspond to the non-empty clusters at each index. After these operations it may happen that values in one column correspond to different clusters.
+4. Prepare the data for k-means clustering to resolve the label-switching. Gather values for different clusters below each other. That is, if there are `L` different cluster-specific parameters and `iters` samples, then the matrix is rearranged from `iters × (L * modeGplus)` to `(iters * modeGplus) × L`. 
+5. K-means clustering by `kmeans` is applied to matrix from 5). Ideally, rows corresponding to iteration `m` would be each clustered to a different mode. In such case we would obtain a permutation for each row that aligns the meaning of the cluster labels across all iterations. Unfortunately, it may happen that some iterations do not result into clear permutation. In such case, this iteration has to be eliminated (replaced with `NA`), so the length of the chain used for inference is reduced from `iters` to possibly even lower number `Mrhos`. 
+6. Regroup the matrix of cluster-specific data back to the format in 3) while also correcting for the permutations found in 5). This should result in a matrix where all the values in one column  correspond to the same cluster. This output matrix is called `clusterspec`.
+7. Create the matrix of posterior draws by relabelling and permuting clustering-related parameters.
+8. Update all other items saved in `mcmc`. Especially, `clustering`, `certainty`, `G` (now `modeGplus`, possibly different among chains!), `iterations` (omit iterations with NA values created by not leading to permutation in step 5)), `settings` (changed dimensions for cluster-specific parameters), `param_names`, `last` (list of last sampled values - now from the last iterations with `modeGplus` clusters, properly permuted) and `call` (summary of the post-processing). Many items remain the same as in `mcmc`, e.g., even the initial values.
+
+
 
 ## Across-chain post-processing {#subsec:impl-permute-cluster-labels}
 
