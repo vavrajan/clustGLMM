@@ -57,6 +57,7 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
       subdata <- data[data[,group] == g, ]
       boxplot(subdata[,y] ~ factor(subdata[,x]),
               col = COL[as.character(g)],
+              border = dCOL[as.character(g)],
               add = TRUE, xaxt = "n", yaxt = "n")
     }
   }else{
