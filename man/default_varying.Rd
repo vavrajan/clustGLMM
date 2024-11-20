@@ -11,9 +11,9 @@ The following functions are used for setting default values of auxiliary variabl
 }
 \usage{
 default_param()
-default_varying()
-default_tuning()
 default_save()
+default_tuning(experience = FALSE)
+default_varying()
 }
 \details{
 If corresponding lists or vectors are not given to \code{\link{clustGLMM}} then these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} and then adjust them as you wish.  
@@ -89,10 +89,10 @@ The output of \code{default_param} is a named list \code{param} that contains va
 }
 By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is the more sparse results are expected.  
 
-The output of \code{default_param} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
+The output of \code{default_tuning} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
 \describe{
 \item{\code{$integer$freq_proposal_update = 10}}{every \code{freq_proposal_update} iterations change the proposal distributions for Metropolis steps,}
-\item{\code{$integer$times_proposal = 10}}{how many times propose new state within one Metropolis step,}
+\item{\code{$integer$times_proposal = 1}}{how many times propose new state within one Metropolis step,}
 \item{\code{$integer$maxiter = 25}}{maximum iterations allowed during Newton-Raphson update of proposal distribution,}
 \item{\code{$integer$maxnrep = 100}}{maximum number of repetitions of Newton-Raphson with a different start location,}
 \item{\code{$integer$kspec_bi_cat = 0}}{boolean as integer, if \code{TRUE} then each general categorical outcome has different set of random effects for each of \code{Kcat-1} levels,}
@@ -100,15 +100,16 @@ The output of \code{default_param} is a named list \code{tuning} of parameters t
 \item{\code{$double$const_proposal_beta_poi = 1.0}}{constant by which the proposal direction for \code{beta_poi} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_beta_bin_fix = 1.0}}{constant by which the proposal direction for \code{beta_bin_fix} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_beta_bin = 1.0}}{constant by which the proposal direction for \code{beta_bin} is multiplied (const_proposal^2 to variance),}
-\item{\code{$double$const_proposal_beta_ord_fix = 0.5}}{constant by which the proposal direction for \code{beta_ord_fix} is multiplied (const_proposal^2 to variance),}
-\item{\code{$double$const_proposal_beta_ord = 0.5}}{constant by which the proposal direction for \code{beta_ord} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_ord_fix = 1.0}}{constant by which the proposal direction for \code{beta_ord_fix} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_beta_ord = 1.0}}{constant by which the proposal direction for \code{beta_ord} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_beta_cat_fix = 1.0}}{constant by which the proposal direction for \code{beta_cat_fix} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_beta_cat = 1.0}}{constant by which the proposal direction for \code{beta_cat} is multiplied (const_proposal^2 to variance),}
-\item{\code{$double$const_proposal_a_ord = 0.5}}{constant by which the proposal direction for \code{a_ord} is multiplied (const_proposal^2 to variance),}
-\item{\code{$double$const_proposal_b = 0.5}}{constant by which the proposal direction for \code{b} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_a_ord = 1.0}}{constant by which the proposal direction for \code{a_ord} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$const_proposal_b = 1.0}}{constant by which the proposal direction for \code{b} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_e0 = 1.0}}{constant by which the proposal direction for \code{e0} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$tolerance = 1e-07}}{tolerance when computing norm of the shift within Newton-Raphson.}
 }
+With \code{experience = TRUE} the chosen values will be set to those proven suitable from empirical experience.
 
 }
 \references{
@@ -122,8 +123,9 @@ Jan Vávra
 }
 \examples{
 (param <- default_param())
-(varying <- default_varying())
-(tuning <- default_tuning())
 (save <- default_save())
+(tuning <- default_tuning())
+(tuning <- default_tuning(experience = TRUE))
+(varying <- default_varying())
 
 }

@@ -8,8 +8,8 @@ First, initial values are set based on separate univariate GLMMs for each indivi
 }
 \usage{
 clustGLMM(formula, id, family, data, G,  
-  varying, save, howsave, param, inits, tuning, 
-  iter = 1000, nchains = 1)
+  varying, save, howsave = matrix, param, inits, tuning, 
+  iter = 1000, nchains = 1, standardize = TRUE)
 }
 \arguments{
   \item{formula}{

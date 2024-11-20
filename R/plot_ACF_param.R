@@ -1,8 +1,11 @@
 plot_ACF_param <-
-  function(mcmc, what, burnin = 0, thin = 1, iterations, lag.max = 30, chains, setparmfrow = TRUE){
+  function(mcmc, what="ng", burnin = 0, thin = 1, iterations, lag.max = 30, chains, setparmfrow = TRUE, allclusters = FALSE){
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
     if(missing(chains)){chains = mcmc$chains}
+    if(!is.element(what, rownames(mcmc$settings[[chains[1]]]))){
+      stop(paste0("Parameter ", what, " does not exist, check spelling or the rows of setting matrix for possible values."))
+    }
     v <- c(mcmc$settings[[chains[1]]][what, ])
     # assuming all settings are the same for all chains... (G and dimswithG not used here)
     Ys <- c()
@@ -12,7 +15,7 @@ plot_ACF_param <-
     if(v$yords){Ys <- c(Ys, mcmc$Ords)}
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
     
-    if(is.element(what, c("w", "ng"))){
+    if(is.element(what, c("w", "ng")) | allclusters){
       nonempty <- list()
       for(ch in chains){
         nonempty[[ch]] <- 1:mcmc$G[ch] # plot all clusters, not only non-empty
@@ -171,7 +174,8 @@ plot_ACF_param <-
                     plot_ACF(mcmc = mcmc, what = what,
                              gspec = g, yspec = y, 
                              burnin = burnin, thin = thin, lag.max = lag.max,
-                             iterations = iterations, chains = plot_chains[[ch]], labcex = 0.6)
+                             iterations = iterations, chains = plot_chains[[ch]], 
+                             labcex = ifelse(length(nonempty[[ch]])*length(Ys) > 1, 0.6, 1.0))
                   }
                 }
               }
@@ -183,7 +187,8 @@ plot_ACF_param <-
                   plot_ACF(mcmc = mcmc, what = what,
                            gspec = g, 
                            burnin = burnin, thin = thin, lag.max = lag.max,
-                           iterations = iterations, chains = plot_chains[[ch]], labcex = 0.6)
+                           iterations = iterations, chains = plot_chains[[ch]], 
+                           labcex = ifelse(length(nonempty[[ch]]) > 1, 0.6, 1.0))
                 }
               }
             }
@@ -286,14 +291,16 @@ plot_ACF_param <-
                 plot_ACF(mcmc = mcmc, what = what,
                          yspec = y, 
                          burnin = burnin, thin = thin, lag.max = lag.max,
-                         iterations = iterations, chains = chains, labcex = 0.6)
+                         iterations = iterations, chains = chains, 
+                         labcex = ifelse(length(Ys) > 1, 0.6, 1.0))
               }
             }else{
               # not y-specific, neither g-specific
               if(setparmfrow){par(mfrow = c(1,1))}
               plot_ACF(mcmc = mcmc, what = what, 
                        burnin = burnin, thin = thin, lag.max = lag.max,
-                       iterations = iterations, chains = chains, labcex = 0.6)
+                       iterations = iterations, chains = chains, 
+                       labcex = 1.0)
             }
           }
           

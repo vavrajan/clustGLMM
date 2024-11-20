@@ -333,7 +333,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     rannames <- c(rannames, lrannames[[y]])
     offnames <- c(offnames, loffnames[[y]])
   }
-  if(all(!is.na(finX))){
+  if(any(is.na(finX))){
     stop("There are NA values among regressors, which is not supported.")
   }
   # Scale regressors in finX
@@ -1630,9 +1630,8 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "###------------------------------------------------------------###\n")
   mcmc$call <- paste0(mcmc$call, "N = sample size: ", N, "\n")
   mcmc$call <- paste0(mcmc$call, "n = number of units: ", n, "\n")
-  mcmc$call <- paste0(mcmc$call, "observations per unit (minimum): ", min(nsubj), " \n")
-  mcmc$call <- paste0(mcmc$call, "observations per unit (median): ", median(nsubj), " \n")
-  mcmc$call <- paste0(mcmc$call, "observations per unit (maximum): ", max(nsubj), " \n")
+  mcmc$call <- paste0(mcmc$call, "observations per unit (min < med < max): ", 
+                      min(nsubj), " < ", median(nsubj), " < ", max(nsubj), " \n")
   charG <- ifelse(length(unique(G)) == 1, 
                   G[1],
                   paste0(G, collapse = ", "))
@@ -1687,8 +1686,8 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$call <- paste0(mcmc$call, "\nOther group-specific parameters: ", 
                       paste0(gparams, collapse = ", "), "\n")
   saved_params <- rownames(settings)[settings$save]
-  mcmc$call <- paste0(mcmc$call, "\nList of saved parameters in $draws: ", 
-                      paste0(saved_params, collapse = ", "), "\n")
+  # mcmc$call <- paste0(mcmc$call, "\nList of saved parameters in $draws: ", 
+  #                     paste0(saved_params, collapse = ", "), "\n")
   mcmc$call <- paste0(mcmc$call, "\nMCMC sampling: \n")
   mcmc$call <- paste0(mcmc$call, "nchains = number of sampled chains: ", nchains, "\n")
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")

@@ -5,11 +5,11 @@
 Plotting clustered longitudinal (panel) data 
 }
 \description{
-Functions that work with longitudinal data and plot the outcomes with respect to some grouping, e.g. clustering found by \code{\link{clustGLMM}}. 
+Functions that work with longitudinal data and plot the outcomes vs a covariate with respect to some grouping, e.g. clustering found by \code{\link{clustGLMM}}. 
 }
 \usage{
 plot_num_vs_x_grouped(data, y = "y", x = "x", group = "g", id = "i", units, 
-                      xbreaks, add_lowess = TRUE, legend_placement = "topright")
+                      xbreaks, add_lowess = TRUE, alpha = 0.7, legend_placement = "topright")
 plot_cat_vs_x_grouped(data, y = "y", x = "x", group = "g", 
                       xbreaks, main = NA, margin = 0.05, reverse = FALSE)
 }
@@ -21,7 +21,7 @@ a \code{data.frame} containing \code{y}, \code{x}, \code{group}, \code{id}.
 a name of the outcome to be plotted.
 }
   \item{x}{
-a name of numeric regressor. 
+a name of numeric or factor regressor. 
 }
   \item{group}{
 a name of the clustering variable that divides different ids into groups.
@@ -38,6 +38,9 @@ a set of breaks along which to cut regressor \code{x}, if missing \code{x} is di
   \item{add_lowess}{
 a boolean whether to add lowess curves for each group label.
 }
+  \item{alpha}{
+a color transparency factor; applied only for overlapping boxplots if covariate \code{x} is \code{factor}. 
+}
   \item{main}{
 plot title to be printed above the plot.
 }
@@ -52,9 +55,19 @@ a string describing the position of legend, see \code{\link{legend}}.
 }
 }
 \details{
-\code{plot_num_vs_x_grouped} spaghetti-plots the outcome \code{y} wrt covariate \code{x} coloured by \code{group}, grey for level 0 (unclassified). Only units included in \code{units} are plotted. 
+Colors are created automatically by \code{rainbow_hcl} from library \code{colorspace}.
+Slategray colors (and its shades) are used for level 0 (unclassified).
 
-\code{plot_cat_vs_x_grouped} divides the data by covariate \code{x} into groups divided by \code{xbreaks}. Then, for each group label in \code{group} (including level 0 = unclassified) a spineplot capturing the evolution of proportions of a categorical outcome \code{y} wrt the covariate \code{x}. 
+Output of \code{plot_num_vs_x_grouped} depends on the type of covariate \code{x}:
+\describe{
+\item{factor}{boxplots of the outcome \code{y} wrt levels of covariate \code{x} with a transparent color
+determined by \code{group}. Boxplots for the same group may overlap, hence, transparent colors.}
+\item{numeric}{spaghetti-plots the outcome \code{y} wrt covariate \code{x} coloured by \code{group}. 
+Only units included in \code{units} are plotted. }
+}
+
+If \code{x} is not already a factor, \code{plot_cat_vs_x_grouped} divides the data by a numeric covariate \code{x} into groups divided by \code{xbreaks}. 
+Then, for each group label in \code{group} (including level 0 = unclassified) a spineplot capturing the evolution of proportions of a categorical outcome \code{y} wrt the covariate \code{x}. 
 }
 \value{
 The functions do not return anything but produce a plot.

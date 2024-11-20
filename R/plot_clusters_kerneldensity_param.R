@@ -3,6 +3,9 @@ plot_clusters_kerneldensity_param <-
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
     if(missing(chains)){chains = mcmc$chains}
+    if(!is.element(what, rownames(mcmc$settings[[chains[1]]]))){
+      stop(paste0("Parameter ", what, " does not exist, check spelling or the rows of setting matrix for possible values."))
+    }
     v <- c(mcmc$settings[[chains[1]]][what, ])
     # assuming all settings are the same for all chains... (G and dimswithG not used here)
     Ys <- c()
@@ -89,7 +92,7 @@ plot_clusters_kerneldensity_param <-
                                 burnin = burnin, thin = thin, 
                                 iterations = iterations, chains = ch,
                                 setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
-                                labcex = 0.6)
+                                labcex = ifelse(length(chains)*length(Ys) > 1, 0.6, 1.0))
                 }
               }
             }else{
@@ -101,7 +104,7 @@ plot_clusters_kerneldensity_param <-
                               burnin = burnin, thin = thin, 
                               iterations = iterations, chains = ch,
                               setparmfrow = FALSE, doKern = TRUE, doECDF = FALSE, 
-                              labcex = 0.6)
+                              labcex = ifelse(length(chains) > 1, 0.6, 1.0))
               }
             }
           }

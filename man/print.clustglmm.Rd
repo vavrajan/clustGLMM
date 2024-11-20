@@ -7,20 +7,38 @@ Printing the outputs of \code{clustGLMM}
 A method for printing objects of class \code{clustglmm}, the outputs of \code{clustGLMM}.
 }
 \usage{
-print(x, ...)
+print(x, which = "call", ...)
 }
 \arguments{
   \item{x}{
 an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
+}
+  \item{which}{
+a vector containing the following strings 
+\describe{
+\item{\code{"call"}}{to print the overview of the estimated model,}
+\item{\code{"clustering"}}{to print the brief summary of the clustering.}
+}
 }
   \item{...}{
 other arguments.
 }
 }
 \details{
-  First, it prints \code{x$call} that summarizes what has been fitted including sample sizes, number of units, observations per unit, chosen maximal number of clusters, overview of outcomes and selected types, fixed-effects common to all groups, random-effects with the structure of \code{Sigma} matrix, group-specific formulae for outcomes, list of other group-specific parameters and summary of the MCMC sampling. 
+  First, if \code{"call"} is in \code{which}, it prints \code{x$call} that summarizes 
+  what has been fitted including sample sizes, number of units, observations per unit, 
+  chosen maximal number of clusters, overview of outcomes and selected types, 
+  fixed-effects common to all groups, random-effects with the structure of \code{Sigma} matrix, 
+  group-specific formulae for outcomes, list of other group-specific parameters and summary of the MCMC sampling. 
 
-  Next, if \code{x$G > 1}, it summarizes the clustering based on sampled indicators \code{U} for each chain separately. First, \code{modeGplus}, the most frequent value of \code{Gplus} - number of non-empty components, is determined. Then, all samples of cluster indicators \code{U} are gathered from all units to determine \code{modeGplus} most frequent cluster labels, stored in \code{clusters}. To each unit \code{i} we assign the cluster label from \code{clusters} that maximizes the frequency of samples of \code{U[i]}, stored in \code{clustering}. We also keep the relative frequency to the assigned cluster, stored in \code{certainty}. By choosing reasonable \code{threshold}, e.g. \code{0.5}, you can make a unit unclassified (0) if the \code{certainty} is not high enough: \code{clustering[certainty < threshold] <- 0}. 
+  Next, if \code{"clustering"} is in \code{which}, 
+  it summarizes the clustering based on sampled indicators \code{U} for each chain separately. 
+  First, \code{modeGplus}, the most frequent value of \code{Gplus} - number of non-empty components, is determined. 
+  Then, all samples of cluster indicators \code{U} are gathered from all units to determine \code{modeGplus} most frequent cluster labels, stored in \code{clusters}. 
+  To each unit \code{i} we assign the cluster label from \code{clusters} that maximizes the frequency of samples of \code{U[i]}, stored in \code{clustering}. 
+  We also keep the relative frequency to the assigned cluster, stored in \code{certainty}. 
+  By choosing reasonable \code{threshold}, e.g. \code{0.5}, you can make a unit unclassified (0) if the \code{certainty} is not high enough: \code{clustering[certainty < threshold] <- 0}. 
+  If \code{G = 1}, then clustering summary is irrelevant. 
 }
 \value{
   No returned value, only prints.
@@ -96,5 +114,7 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
                   howsave = "matrix")
 
 mcmc
+print(mcmc, which = "clustering")
+print(mcmc, which = c("call", "clustering"))
 
 }

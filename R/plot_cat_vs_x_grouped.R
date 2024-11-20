@@ -27,19 +27,31 @@ function(data, y = "y", x = "x", group = "g", xbreaks, main = NA, margin = 0.05,
     }
   }
   
-  plot(0, G0, type = "n",
-       xlim = range(data[,x]), ylim = c(0-G0*0.03,G0), 
-       xlab = x, ylab = "Group",
-       main = main,
-       xaxt = ifelse(missing(xbreaks),"s","n"), yaxt = "n")
-  axis(2, 0:(G0-1)+0.5, labels = labels, las = 2)
-  
-  if(missing(xbreaks)){
-    xbreaks <- seq(from = min(data[,x]), to = max(data[,x]), length.out = 11)
+  if(is.element("factor", class(data[,x]))){
+    fx <- factor(data[,x])
+    xbreaks <- 0:nlevels(fx) + 0.5
+    plot(0, G0, type = "n",
+         xlim = range(data[,x]), ylim = c(0-G0*0.03,G0), 
+         xlab = x, ylab = "Group",
+         main = main,
+         xaxt = "n", yaxt = "n")
+    axis(1, at = 1:nlevels(fx))
   }else{
-    axis(1, at = xbreaks)
+    plot(0, G0, type = "n",
+         xlim = range(data[,x]), ylim = c(0-G0*0.03,G0), 
+         xlab = x, ylab = "Group",
+         main = main,
+         xaxt = ifelse(missing(xbreaks),"s","n"), yaxt = "n")
+    if(missing(xbreaks)){
+      xbreaks <- seq(from = min(data[,x], na.rm = TRUE), 
+                     to = max(data[,x], na.rm = TRUE), 
+                     length.out = 11)
+    }else{
+      axis(1, at = xbreaks)
+    }
+    fx <- cut(data[,x], breaks = xbreaks)
   }
-  fx <- cut(data[,x], breaks = xbreaks)
+  axis(2, 0:(G0-1)+0.5, labels = labels, las = 2)
   for(g in 1:G0){
     if(is0){
       gg <- ifelse(g==1, 0, gs[g-1])

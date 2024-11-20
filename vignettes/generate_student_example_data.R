@@ -53,8 +53,8 @@ generate_student_example_data <- function(n){
   
   beta_poi <- list()
   beta_poi[[1]] <- c(1.4, -0.2, -1.0, -0.6, -0.2, -0.2, 0.0)
-  beta_poi[[2]] <- c(1.5, -0.7, -1.8, 0.2, -1.0, 0.4, 0.6)
-  beta_poi[[3]] <- c(1.5, -0.8, -1.6, -0.6, -1.0, -0.5, -0.7)
+  beta_poi[[2]] <- c(1.5, -0.7, -1.8, 0.2, -0.8, 0.5, 0.8)
+  beta_poi[[3]] <- c(1.5, -0.8, -1.6, -0.6, -1.0, -0.6, -0.9)
   names(beta_poi[[1]]) <- names(beta_poi[[2]]) <- names(beta_poi[[3]]) <- c(
     "(Intercept)", bsnames
   )
@@ -62,7 +62,7 @@ generate_student_example_data <- function(n){
   beta_ord <- list() # no intercept here
   beta_ord[[1]] <- c(0, 0, 0, 0, 0, 0)
   beta_ord[[2]] <- c(-1.0, -0.5, 0.0, 0.5, 1.0, 1.5)
-  beta_ord[[3]] <- c(-0.5, 0.0, 0.5, 0.0, -0.5, -1.0)
+  beta_ord[[3]] <- c(-0.5, 0.0, 0.5, 0.0, -1.0, -2.0)
   names(beta_ord[[1]]) <- names(beta_ord[[2]]) <- names(beta_ord[[3]]) <- c(
     bsnames
   )

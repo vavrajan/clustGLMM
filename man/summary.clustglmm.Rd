@@ -9,7 +9,7 @@ A method for computing and printing the summary statistics of class \code{clustg
 }
 \usage{
 summary(object, ...)
-print(x, chains=c(1), ...)
+print(x, chains=c(1), which = c("mcmc", "inv_param", "clust_param"), ...)
 }
 \arguments{
   \item{object}{
@@ -40,6 +40,7 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
   \item{output}{the type of output that is summarized: \code{mcmc} samples from \code{clustGLMM}, \code{probs} approximation of clustering probabilities and deviance,}
   \item{fnames}{vector of parameter names invariant to clustering,}
   \item{gnames}{cluster-specific parameter names only for cluster 1,}
+  \item{lnames}{latent variable names (allocation indicators, random effects, missing values),}
   \item{cnames}{clustering related parameter names.}
 }
 \references{
@@ -114,6 +115,6 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 
 mcmc
 s <- summary(mcmc)
-print(s, type="statistics")
-print(s, type="quantiles")
+print(s)
+print(s, which=c("mcmc", "clustering", "inv_param", "clust_param", "latent_param", "g_param"))
 }

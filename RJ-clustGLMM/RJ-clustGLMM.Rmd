@@ -59,7 +59,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = 'figure-latex/')
-options(tinytex.verbose = TRUE)
+options(tinytex.verbose = TRUE, width = 110, digits = 4)
 # options(width = 110) # does not change the template
 library(plotly)
 library(ggplot2)
@@ -195,6 +195,11 @@ algorithm
 ## clustering probabilities and deviance {#subsec:clust-prob-deviance}
 integral approximation
 
+\begin{equation}
+  \mathbf{b}
+  (\#eq:integral-bi-approx)
+\end{equation}
+
 ## Post-processing {#subsec:post-processing}
 
 # Implementation {#sec:implementation}
@@ -214,28 +219,21 @@ Now we focus on the implementation of the methodology outlined in Sections \@ref
 DiagrammeR::grViz("digraph {
   graph[layout = dot, rankdir = TB]
   
-  node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15]  
+  node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
   rec1[label = '@@1']
   rec2[label = '@@2']
-  rec3[label = '3. Visual diagnostics', shape = diamond]
-  rec3a[label = 'Continue sampling']
-  rec3b[label = 'Satisfied']
-  rec3c[label = 'Inappropriate choices']
-  rec4[label = '4. Within chain post-processing:
-\nrestrict to samples with the most frequent number of non-empty clusters,
-\nresolve label-switching
-\neliminate empty clusters']
-  rec5[label = '5. Across chain post-processing:
-\ncompare cluster interpretation among chains
-\npermute cluster labels if it helps']
+  rec3[label = '3. Visual diagnostics']
+  rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
+  rec4[label = '4. Within chain post-processing']
+  rec5[label = '5. Across chain post-processing']
   
   node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
   code1[label = 'data, family, formula, varying, ...']
   code2[label = 'clustGLMM()']
   code3[label = 'as_coda(), plot()']
+  code3a[label = 'If not, return to previous steps (adjust settings or continue in sampling)', fillcolor = white, fontname = Helvetica]
   code4[label = 'post_processing()']
-  code5a[label = 'plot(, which=clusters_kerneldensity)']
-  code5b[label = 'permute_cluster_labels()']
+  code5[label = 'plot(, which=clusters_kerneldensity), permute_cluster_labels()']
   
   node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
   code6a[label = 'summary()']
@@ -259,21 +257,15 @@ DiagrammeR::grViz("digraph {
   
   # edge definitions with the node IDs
   edge[arrowhead = normal, arrowtail = none]
-  rec1 -> rec2 -> rec3 -> rec3b -> rec4 -> rec5 
-  rec3 -> rec3a
-  rec3 -> rec3c
-  rec3a -> rec2[label = ' inits = ...$last', fontname = courier]
-  rec3c -> rec1[label = 'Adjust inputs: priors, group-specificity, ...', fontname = Helvetica]
-  rec5 -> rec6[label = 'if aligned use all chains, 
-\nif not aligned proceed chain-wise', fontanme = Helvetica]
+  rec1 -> rec2 -> rec3 -> rec3a -> rec4 -> rec5 -> rec6
   
   edge[arrowhead = none, arrowtail = none]
   {{rank=same rec1 -> code1}}
   {{rank=same rec2 -> code2}}
   {{rank=same rec3 -> code3}}
+  {{rank=same rec3a -> code3a}}
   {{rank=same rec4 -> code4}}
-  {{rank=same rec5 -> code5a}}
-  {{rank=same rec5 -> code5b}}
+  {{rank=same rec5 -> code5}}
   {{rank=same rec6a -> code6a}}
   {{rank=same rec6b -> code6b}}
   {{rank=same rec6c -> code6c}}
@@ -389,7 +381,7 @@ Before all the outputs of `clustGLMM` are returned in a list, a crude clustering
 
 Finally, the `call` summarizes the sample sizes as well as given formulas for all outcomes - the fixed effects first, then the random effects (in the order assumed by `InvSigma`) and then the group-specific effects. Printing of class `clustGLMM` prints `call` followed by the summary of the crude clustering for each chain separately.    
 
-## Visual diagnostics  {#subsec:impl-visual-diagnostics}
+## Visual diagnostics {#subsec:impl-visual-diagnostics}
 
 We realize that some users may be familiar with already established diagnostics tools. Therefore, we provide function `as_coda` that takes the `clustGLMM` object and converts it to `mcmc.list` object from \CRANpkg{coda} package. Then, all diagnostic tools from that package are at the user's disposal.
 
@@ -408,31 +400,58 @@ If convergence to the stationary distribution is not yet met then continuation c
 
 
 ## Within-chain post-processing {#subsec:impl-post-processing}
-In ideal case this step can be skipped. But, in previous step it may occur that iterations can correspond to different numbers of non-empty clusters within one chain. Also the meaning of labels can be switched between iterations. Therefore, we prepared a `post_processing()` function based on suggestions by [@FruhwirthSchnatter11]. The goal is to restrict to iterations that have the most common number of non-empty clusters `Gplus` saved as `modeGplus` item of `clustGLMM` output and resolve label-switching so that the inference about cluster-specific parameters is not skewed.   
+In ideal case, this step can be skipped. However, in previous step it may occur that iterations can correspond to different numbers of non-empty clusters within one chain. Also the meaning of labels can be switched between iterations. Therefore, we prepared a `post_processing()` function based on suggestions by [@FruhwirthSchnatter11]. The goal is to restrict to iterations that have the most common number of non-empty clusters `Gplus` saved as `modeGplus` item of `clustGLMM` output and resolve label-switching so that the inference about cluster-specific parameters is not skewed.   
 
 The function follows the following steps for each chain separately:
 
-0. The procedure works with `mcmc$draws` only under `howsave = "matrix"`, so if `howsave = "list"` then `mcmc` is converted to the `"matrix"` format, post-processed and converted back to "list".  
+0. Works only with `matrix` format, if `list` then it is converted to `matrix` and then back after the last step.   
 1. Take the most frequent `Gplus` value - `modeGplus` - the number of non-empty clusters across the sampled chain and find the posterior draws with `Gplus = modeGplus`. The indices are stored in `inds` and their length is `iters`. 
-2. Target all cluster-specific parameters. To clarify these are parameters with `(g)` in their column name, parameters `w`, `U`, `pUig` do not count. If you prefer to use just a subset of those parameters, you have to specify the column names by `cols` input variable.
-3. Create submatrices of sampled cluster-specific parameters. Index by index in `inds` gather the cluster-specific parameters from only non-empty clusters. Due to label-switching it may happen that different cluster labels correspond to the non-empty clusters at each index. After these operations it may happen that values in one column correspond to different clusters.
-4. Prepare the data for k-means clustering to resolve the label-switching. Gather values for different clusters below each other. That is, if there are `L` different cluster-specific parameters and `iters` samples, then the matrix is rearranged from `iters × (L * modeGplus)` to `(iters * modeGplus) × L`. 
-5. K-means clustering by `kmeans` is applied to matrix from 5). Ideally, rows corresponding to iteration `m` would be each clustered to a different mode. In such case we would obtain a permutation for each row that aligns the meaning of the cluster labels across all iterations. Unfortunately, it may happen that some iterations do not result into clear permutation. In such case, this iteration has to be eliminated (replaced with `NA`), so the length of the chain used for inference is reduced from `iters` to possibly even lower number `Mrhos`. 
-6. Regroup the matrix of cluster-specific data back to the format in 3) while also correcting for the permutations found in 5). This should result in a matrix where all the values in one column  correspond to the same cluster. This output matrix is called `clusterspec`.
-7. Create the matrix of posterior draws by relabelling and permuting clustering-related parameters.
-8. Update all other items saved in `mcmc`. Especially, `clustering`, `certainty`, `G` (now `modeGplus`, possibly different among chains!), `iterations` (omit iterations with NA values created by not leading to permutation in step 5)), `settings` (changed dimensions for cluster-specific parameters), `param_names`, `last` (list of last sampled values - now from the last iterations with `modeGplus` clusters, properly permuted) and `call` (summary of the post-processing). Many items remain the same as in `mcmc`, e.g., even the initial values.
+2. If the columns to be used for `kmeans` are not passed down, then all cluster-specific parameters with exception of `w`, `U`, `pUig` are selected. 
+3. Iteration by iteration gather the cluster-specific parameters from only non-empty clusters. Each parameter will have `modeGplus` columns that are not necessarily consistent in interpretation.
+4. Stack the columns for the same parameter into one common long column for every considered cluster-specific parameter. Wide matrix becomes tall. 
+5. K-means clustering by `kmeans` is applied to matrix from 4. Ideally, rows corresponding to the same iteration will be each clustered to a different mode. In such case values are permuted accordingly. If the rows for one iteration are not assigned uniquely into different clusters the this iteration is eliminated. In particular, values for cluster-specific parameters will be replaced with `NA`. The summary of `post_processing()` informs about the percetage of lost observations.  
+6. Apply the same permutations to the rest of group-specific parameters and return back to the wide format. 
+7. Create the matrix of posterior draws by joining cluster-invariant samples, permuted (and aligned) group-specific and clustering-related parameters.
+8. Update all other items of `clustGLMM` class accordingly. Especially, `clustering`, `certainty`, `G` (now `modeGplus`, possibly different among chains), `last`, `call` (summary of the post-processing) and many others.
+
+The output of the post-processing is again of `clustGLMM` class and all plotting functions should work even with the limited set of iterations. 
 
 
 
 ## Across-chain post-processing {#subsec:impl-permute-cluster-labels}
 
+Even though, the label-switching has been avoided or dealt with in previous step the interpretation of the labels may not match across multiple chains. This is one of the downsides of random initialization and not fixing the meaning of the clusters a-priori. One way to deal with it would be to take favorite chain and use its `last` state as initiatial value for every other chain and continue in sampling. We provide an alternative in the form of `permute_cluster_labels` function. The user has to supply a list of permutations (one for each chain) and all clustering related quantities in the given `clustGLMM` object will be permuted. However, no automated process for finding the permutations is provided. The permutations have to be determined by close inspection of the plots for cluster-specific parameters across the chains.  
+
+Once the meaning of the cluster labels across chains is aligned, the inference may utilize sampled values from all chains similarly as in `coda` package. However, due to unpredictability of such unsupervised approach the alignment may not be possible, especially, when the number of non-empty clusters does not match across chains. In such case we recommend to proceed chain-wise with the inference and choose the chain that yields the most reasonable and the best interpretable results. 
+
+
 ## Inference {#subsec:impl-inference}
 
 ### Posterior description {#subsubsec:impl-summary}
 
+The basic posterior exploration is performed by `summary.clustglmm`. These outputs are obtained by `summary.mcmc(., na.rm = TRUE)` applied to `clustglmm` object transformed with `as_coda` for each chain separately. The `print` method automatically prints `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. The posterior distribution of the model parameters could be explored visually by provided `plot()` functions, see Section \@ref(subsec:impl-visual-diagnostics). 
+
+The summary of the clustering is based on `clustering` and `certainty` in the `clustglmm` object where all subjects are classified into the cluster with the highest certainty. If some subjects should remain unclassified (label 0) due to insufficient certainty level, this has to be done manually by the user. 
+
+We also provide a couple of functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped` and `plot_cat_vs_x_grouped`. The argument `group` requires division of subjects into some groups, e.g., the resulting clustering. Every cluster will be plotted with one of the colors from `colorspace::rainbow_hcl()` palette and slategrey color is reserved for label 0. 
+
+With `plot_num_vs_x_grouped` the relationship of outcome and continuous covariate `x` is depicted by 'spaghetti' plots, where observations corresponding to the same ID are joined with thin segments (ordered by the x-axis covariate `x`). A thick line of darker color shade then corresponds to the `loess.smooth` curve. Since the clusters can overlap, we recommend to plot subsets of the data separately for better visualization. 
+
+TODO - think about implementing of plots only for subset of groups instead of all of them (default).
+
+With `plot_cat_vs_x_grouped` the relationship of factor outcome and continuous covariate `x` is depicted by 'spineplots'. For each cluster separately, proportions of outcome labels are plotted next to each other to all categories of `x` determined by `xbreaks`, by default set to 11 equidistant points from minimum to maximum.
+
+TODO - what if x is categorical covariate -> boxplots for clusters and spineplots
+
 ### Linear predictor {#subsubsec:impl-predict}
 
+The above mentioned `plot_num_vs_x_grouped` plots loess curves which are quick and easy to plot, yet do not represent the posterior estimates. Therefore, we also provide `predict.clustglmm` method that is able to reconstruct the linear predictor for given `newdata`. For example, majority of covariates could be fixed and only one covariate could attain values on a grid to capture its effect. 
+
+Two methods are implemented. Plug-in method takes the posterior estimates of regression coefficients and computes the corresponding linear combinations which yields only a point estimator of the same type. The other takes the samples of regression coefficients and computes linear combinations for all iterations. This way the full posterior of such linear function is explored, hence, credible intervals (for individual points, not the whole curve) could be computed.  
+
 ### Clustering probabilities and deviance {#subsubsec:impl-clust-prob-deviance}
+
+After MCMC sampling only a crude clustering using sampled allocation indicators is applied. The probability of being clustered into one of the clusters can be expressed as a parametric function, see Section \@ref(subsec:clust-prob-deviance). This involves integration over random effects overcame with Laplace approximation or Gaussian quadrature with hermite polynomials, see equaition \@ref(eq:integral_bi_approx).
 
 
 

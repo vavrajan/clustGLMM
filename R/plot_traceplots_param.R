@@ -1,8 +1,11 @@
 plot_traceplots_param <-
-function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
+function(mcmc, what = "ng", burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE, allclusters = FALSE){
   opar <- par(no.readonly = TRUE)
   on.exit(par(opar))
   if(missing(chains)){chains = mcmc$chains}
+  if(!is.element(what, rownames(mcmc$settings[[chains[1]]]))){
+    stop(paste0("Parameter ", what, " does not exist, check spelling or the rows of setting matrix for possible values."))
+  }
   v <- c(mcmc$settings[[chains[1]]][what, ])
   # assuming all settings are the same for all chains... (G and dimswithG not used here)
   Ys <- c()
@@ -12,7 +15,7 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
   if(v$yords){Ys <- c(Ys, mcmc$Ords)}
   if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
   
-  if(is.element(what, c("w", "ng"))){
+  if(is.element(what, c("w", "ng")) | allclusters){
     nonempty <- list()
     for(ch in chains){
       nonempty[[ch]] <- 1:mcmc$G[ch] # plot all clusters, not only non-empty
@@ -165,8 +168,6 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
           # zero-dimensional parameter
           if(v$isy){
             # y-specific 
-            if(setparmfrow){par(mfrow = c(length(nonempty[[chains[1]]]), length(Ys)))}
-            # plot all chains separately
             for(ch in for_chains){
               if(setparmfrow){par(mfrow = c(length(nonempty[[ch]]), length(Ys)))}
               for(g in nonempty[[ch]]){
@@ -175,20 +176,19 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
                                   gspec = g, yspec = y,
                                   burnin = burnin, thin = thin, 
                                   iterations = iterations, chains = plot_chains[[ch]], 
-                                  labcex = 0.6)
+                                  labcex = ifelse(length(nonempty[[ch]])*length(Ys) > 1, 0.6, 1.0))
                 }
               }
             }
           }else{
             # not y-specific, but still g-specific
-            if(setparmfrow){par(mfrow = nice_nrow_ncol(length(nonempty[[chains[1]]])))}
             for(ch in for_chains){
-              par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])))
+              if(setparmfrow){par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])))}
               for(g in nonempty[[ch]]){
                 plot_traceplots(mcmc = mcmc, what = what,
                                 gspec = g,
                                 burnin = burnin, thin = thin, chains = plot_chains[[ch]],
-                                labcex = 0.6)
+                                labcex = ifelse(length(nonempty[[ch]]) > 1, 0.6, 1.0))
               }
             }
           }
@@ -295,7 +295,7 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
                               yspec = y,
                               burnin = burnin, thin = thin, 
                               iterations = iterations, chains = chains, 
-                              labcex = 0.6)
+                              labcex = ifelse(length(Ys) > 1, 0.6, 1.0))
             }
           }else{
             # not y-specific, neither g-specific
@@ -303,7 +303,7 @@ function(mcmc, what, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRU
             plot_traceplots(mcmc = mcmc, what = what,
                             burnin = burnin, thin = thin, 
                             iterations = iterations, chains = chains,
-                            labcex = 0.6)
+                            labcex = 1.0)
           }
         }
         

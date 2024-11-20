@@ -2,7 +2,7 @@ summary.clustglmm <- function(object, ...){
   coda = as_coda(object, ...)
   
   # computes necessary outputs for summary
-  coda_summary <- fnames <- gnames <- cnames <- list()
+  coda_summary <- fnames <- gnames <- cnames <- lnames <- list()
   for(ch in object$chains){
     coda_summary[[ch]] <- summary(coda[[ch]], na.rm = TRUE)
   
@@ -12,13 +12,20 @@ summary.clustglmm <- function(object, ...){
   
     if(output == "probs"){
       fnames[[ch]] <- c("deviance")
-      gnames[[ch]] <- cnames[[ch]] <- c()
+      gnames[[ch]] <- object$param_names[[ch]][["pUig_int"]]
+      cnames[[ch]] <- c()
+      lnames[[ch]] <- object$param_names[[ch]][["dev_i"]]
     }else{
-      fset = settings[settings$save & !settings$gspec & settings$dims>0, ]
-      fset = fset[setdiff(rownames(fset), c("loglik", "U", "Gplus", "e0")), ]
+      fset = lset = settings[settings$save & !settings$gspec & settings$dims>0, ]
+      fset = fset[setdiff(rownames(fset), c("loglik", "b", "U", "Gplus", "e0")), ]
       fnames[[ch]] <- character(0)
       for(p in rownames(fset)){
         fnames[[ch]] <- c(fnames[[ch]], object$param_names[[ch]][[p]])
+      }
+      
+      lnames[[ch]] <- character(0)
+      for(p in intersect(rownames(lset), c("b", "U", "naY"))){
+        lnames[[ch]] <- c(lnames[[ch]], object$param_names[[ch]][[p]])
       }
       
       gnames[[ch]] <- rownames(coda_summary[[1]]$statistics)[
@@ -41,6 +48,7 @@ summary.clustglmm <- function(object, ...){
               output=output,
               fnames=fnames,
               gnames=gnames,
+              lnames=lnames,
               cnames=cnames)
   
   class(res) <- "summary.clustglmm"
