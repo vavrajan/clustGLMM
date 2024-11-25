@@ -567,13 +567,26 @@ Change the save settings if you want to calculate these probabilities afterwards
         aux_form <- paste0(y, " ~ .")
         if(noff[y] > 0){
           aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
-          gcols[[y]] <- union(gcols[[y]], ocols[[y]])
+          auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
+        }else{
+          auxdata0 <- finX[,union(fcols[[y]], gcols[[y]])]
         }
         # possibly standardized regressors
-        auxdata0 <- finX[,union(fcols[[y]], gcols[[y]])]
         auxdata0[,y] <- factor(ydata[,y])
         auxpolr0 <- polr(aux_form, data = auxdata0, Hess = TRUE)
-        inits[[ch]]$beta_ord_fix[[y]] <- auxpolr0$coefficients[fcols[[y]]]
+        if(length(fcols[[y]]) > 0){
+          fc <- sapply(fcols[[y]], function(x){
+            xdash <- paste0("`", x, "`")
+            if(is.element(xdash, names(auxpolr0$coefficients))){
+              return(xdash)
+            }else{
+              return(x)
+            }
+          })
+        }else{
+          fc <- c()
+        }
+        inits[[ch]]$beta_ord_fix[[y]] <- auxpolr0$coefficients[fc]
         
         if(varying["c_ord"]){
           inits[[ch]]$c_ord[[y]] <- inits[[ch]]$a_ord[[y]] <- inits[[ch]]$pi_ord[[y]] <- list()
@@ -584,6 +597,18 @@ Change the save settings if you want to calculate these probabilities afterwards
           inits[[ch]]$pi_ord[[y]] <- exp(c(inits[[ch]]$a_ord[[y]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]], 0))))
         }
         
+        if(length(gcols[[y]]) > 0){
+          gc <- sapply(gcols[[y]], function(x){
+            xdash <- paste0("`", x, "`")
+            if(is.element(xdash, names(auxpolr0$coefficients))){
+              return(xdash)
+            }else{
+              return(x)
+            }
+          })
+        }else{
+          gc <- c()
+        }
         inits[[ch]]$beta_ord[[y]] <- list()
         for(g in 1:G[ch]){
           if(length(unique(ydata[selection[[g]],y])) == Kord[y]+1){
@@ -604,7 +629,7 @@ Change the save settings if you want to calculate these probabilities afterwards
             if(is.na(sdlogits)){
               dowithall <- TRUE
             }else{
-              if(auxpolr$convergence || sdlogits < 1e-14 || (sum(is.na(auxpolr$coefficients[gcols[[y]]]))>0)){
+              if(auxpolr$convergence || sdlogits < 1e-14 || (sum(is.na(auxpolr$coefficients[gc]))>0)){
                 dowithall <- TRUE
               }
             }
@@ -613,7 +638,7 @@ Change the save settings if you want to calculate these probabilities afterwards
             auxpolr <- auxpolr0
           }
         
-          inits[[ch]]$beta_ord[[y]][[g]] <- auxpolr$coefficients[gcols[[y]]]
+          inits[[ch]]$beta_ord[[y]][[g]] <- auxpolr$coefficients[gc]
           
           if(varying["c_ord"]){
             inits[[ch]]$c_ord[[y]][[g]] <- auxpolr$zeta 
@@ -631,14 +656,40 @@ Change the save settings if you want to calculate these probabilities afterwards
         aux_form <- paste0(y, " ~ .")
         if(noff[y] > 0){
           aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
+          auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
+        }else{
+          auxdata0 <- finX[,union(fcols[[y]], gcols[[y]])]
         }
         # possibly standardized regressors
-        auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
-        auxdata0[,y] <- factor(datay[,y]) # the first category is the baseline
+        auxdata0[,y] <- factor(ydata[,y]) # the first category is the baseline
         auxmult0 <- multinom(as.formula(aux_form), data = auxdata0)
         sumauxmult0 <- summary(auxmult0)
-        inits[[ch]]$beta_cat_fix[[y]] <- t(sumauxmult0$coefficients[,fcols[[y]]])
+        if(length(fcols[[y]]) > 0){
+          fc <- sapply(fcols[[y]], function(x){
+            xdash <- paste0("`", x, "`")
+            if(is.element(xdash, names(auxpolr0$coefficients))){
+              return(xdash)
+            }else{
+              return(x)
+            }
+          })
+        }else{
+          fc <- c()
+        }
+        inits[[ch]]$beta_cat_fix[[y]] <- t(sumauxmult0$coefficients[,fc])
         
+        if(length(gcols[[y]]) > 0){
+          gc <- sapply(gcols[[y]], function(x){
+            xdash <- paste0("`", x, "`")
+            if(is.element(xdash, names(auxpolr0$coefficients))){
+              return(xdash)
+            }else{
+              return(x)
+            }
+          })
+        }else{
+          gc <- c()
+        }
         inits[[ch]]$beta_cat[[y]] <- list()
         for(g in 1:G[ch]){
           if(length(unique(ydata[selection[[g]],y])) == Kcat[y]+1){
@@ -653,12 +704,12 @@ Change the save settings if you want to calculate these probabilities afterwards
           if(is(auxmult,"error")){
             auxmult <- auxmult0
           }else{
-            if(auxmult$convergence || (sum(is.na(auxmult$coefficients[gcols[[y]]]))>0)){
+            if(auxmult$convergence || (sum(is.na(coef(auxmult)[,gc]))>0)){
               auxmult <- auxmult0
             }
           }
           sumauxmult <- summary(auxmult)
-          inits[[ch]]$beta_cat[[y]][[g]] <- t(sumauxmult$coefficients[,gcols[[y]]])
+          inits[[ch]]$beta_cat[[y]][[g]] <- t(sumauxmult$coefficients[,gc])
         }
         
       } # end for y in Cats
@@ -1598,7 +1649,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     TAB <- TAB[order(TAB, decreasing = TRUE)]
     # Only the top modeGplus in frequency are considered
     clusters[[ch]] <- sort(as.numeric(names(TAB)[1:modeGplus[ch]]))
-    
+
     ccU <- apply(Usamples[[ch]], 2, fun, ch=ch)
     clusteringU[,ch] <- ccU[1, ]
     certaintyU[,ch] <- ccU[2, ]
@@ -1606,6 +1657,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   # units with frequency ratio smaller than threshold remain unclassified (group 0)
   # clusteringU[certaintyU < threshold] <- 0
   rownames(clusteringU) <- rownames(certaintyU) <- unique_ids
+  mcmc$Usamples <- Usamples
   
   
   mcmc$modeGplus <- modeGplus
@@ -1693,7 +1745,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")
   mcmc$call <- paste0(mcmc$call, ifelse(initsgiven, 
                                         "Initialized with given values.", 
-                                        "Initialized by uniformely random partition."),
+                                        "Initialized by uniformly random partition."),
                       "\n")
   
 

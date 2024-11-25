@@ -122,7 +122,7 @@ family <- c("gaussian", "poisson", "cumulative")
 names(family) <- Ys <- c("income", "ntrips", "satisfaction")
 ```
 
-Then, we create the same model `formula` under which the data have been generated. Therefore, we prepare the spline basis to be included within the `group` formula (including the intercept) and no fixed effects. In principle, these could be different among outcomes (e.g. only slope term for ordinal variable).   
+Then, we create the same model `formula` under which the data have been generated. For convenience, we prepare the spline basis ahead so that the column names are shorted. These splines are additively included within the `group` formula (the intercept is automatically included) and no fixed effects. In principle, formulas could be different among outcomes (e.g. only slope term for ordinal variable).   
 
 ```{r students-formula, echo=TRUE}
 library(splines)
@@ -141,8 +141,8 @@ formula <- list()
 for(y in Ys){
   formula[[y]] <- list()
   formula[[y]]$fixed <- ~ 1 # will become ~ 0
-  formula[[y]]$group <- as.formula(paste0("~ ", paste(bsnames, collapse = " + ")))
-  # formula[[y]]$group <- ~ bs(age, knots=inner, Boundary.knots = bound, degree = degree, intercept = FALSE)
+  # formula[[y]]$group <- as.formula(paste0("~ ", paste(bsnames, collapse = " + ")))
+  formula[[y]]$group <- ~ bs(age, knots=inner, Boundary.knots = bound, degree = degree, intercept = FALSE)
   formula[[y]]$random <- ~ 1
   formula[[y]]$offset <- ""
 }
@@ -159,7 +159,7 @@ varying["prec_num"] <- FALSE
 
 Let us sample two randomly initialized chains of short length for $G$ higher than the true latent number of clusters. We suppress the standardization as the data were generated without standardization.
 ```{r students-mcmc-initial, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6, fig.cap="Traceplots - initial cluster occupancy numbers.", fig.pos="H"}
-set.seed(1234567)
+set.seed(12345678)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
                   G = 10, nchains = 2, iter = 100, # 300,
                   varying = varying, 
