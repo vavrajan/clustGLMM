@@ -1,5 +1,5 @@
 ---
-title: The R Package clustGLMM - Clustering Longitudinal Data of a Mixed Type
+title: The R Package clustGLMM - Clustering Longitudinal Data of Mixed Type
 date: "2024-10-07"
 abstract: >
   An abstract of less than 150 words.
@@ -279,6 +279,7 @@ DiagrammeR::grViz("digraph {
   ",
   height = 500, width = 600)
 ```
+
 ## Prepare inputs {#subsec:impl-prepare-inputs}
 
 First, we discuss the required input for the main function `clustGLMM()` and describe the expected format. 
@@ -425,11 +426,11 @@ Once the meaning of the cluster labels across chains is aligned, the inference m
 
 ### Posterior description {#subsubsec:impl-summary}
 
-The basic posterior exploration is performed by `summary.clustglmm`. These outputs are obtained by `summary.mcmc(., na.rm = TRUE)` applied to `clustglmm` object transformed with `as_coda` for each chain separately. The `print` method automatically prints `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. The posterior distribution of the model parameters could be explored visually by provided `plot()` functions, see Section \@ref(subsec:impl-visual-diagnostics). 
+The basic posterior exploration is performed using the `summary` method for `clustglmm` objects. These outputs are obtained using the `summary` method for `mcmcm` object with `na.rm = TRUE` after transforming the `clustglmm` object with `as_coda` for each chain separately. The `print` method automatically prints a `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. The posterior distribution of the model parameters could be explored visually using the `plot` method, see Section \@ref(subsec:impl-visual-diagnostics). 
 
 The summary of the clustering is based on `clustering` and `certainty` in the `clustglmm` object where all subjects are classified into the cluster with the highest certainty. If some subjects should remain unclassified (label 0) due to insufficient certainty level, this has to be done manually by the user. 
 
-We also provide a couple of functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped` and `plot_cat_vs_x_grouped`. The argument `group` requires division of subjects into some groups, e.g., the resulting clustering. Every cluster will be plotted with one of the colors from `colorspace::rainbow_hcl()` palette and slategrey color is reserved for label 0. 
+We also provide a functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped` and `plot_cat_vs_x_grouped`. The argument `group` requires division of subjects into some groups, e.g., the resulting clustering. Every cluster is plotted with one of the colors obtained with `colorspace::rainbow_hcl()` with the color slategrey being reserved for label 0. 
 
 With `plot_num_vs_x_grouped` the relationship of outcome and continuous covariate `x` is depicted by 'spaghetti' plots, where observations corresponding to the same ID are joined with thin segments (ordered by the x-axis covariate `x`). A thick line of darker color shade then corresponds to the `loess.smooth` curve. Since the clusters can overlap, we recommend to plot subsets of the data separately for better visualization. 
 
@@ -441,15 +442,13 @@ TODO - what if x is categorical covariate -> boxplots for clusters and spineplot
 
 ### Linear predictor {#subsubsec:impl-predict}
 
-The above mentioned `plot_num_vs_x_grouped` plots loess curves which are quick and easy to plot, yet do not represent the posterior estimates. Therefore, we also provide `predict.clustglmm` method that is able to reconstruct the linear predictor for given `newdata`. For example, majority of covariates could be fixed and only one covariate could attain values on a grid to capture its effect. 
+The above mentioned `plot_num_vs_x_grouped` plots loess curves which are quick and easy to plot, yet do not represent the posterior estimates. Therefore, we also provide a `predict` method for `clustglmm` objects that constructs the linear predictor for given `newdata`. For example, majority of covariates could be fixed and only one covariate could attain values on a grid to capture its effect. 
 
-Two methods are implemented. Plug-in method takes the posterior estimates of regression coefficients and computes the corresponding linear combinations which yields only a point estimator of the same type. The other takes the samples of regression coefficients and computes linear combinations for all iterations. This way the full posterior of such linear function is explored, hence, credible intervals (for individual points, not the whole curve) could be computed.  
+Two methods are implemented. The plug-in method takes the posterior point estimates of the regression coefficients and computes the corresponding linear combinations yielding a point estimator of the same type. The other takes the posterior samples of the regression coefficients and computes linear combinations for all iterations. In this way, samples to approximate the full posterior are obtained, and, for example, credible intervals (for individual points, not the whole curve) could be computed.
 
 ### Clustering probabilities and deviance {#subsubsec:impl-clust-prob-deviance}
 
-After MCMC sampling only a crude clustering using sampled allocation indicators is applied. The probability of being clustered into one of the clusters can be expressed as a parametric function, see Section \@ref(subsec:clust-prob-deviance). This involves integration over random effects overcame with Laplace approximation or Gaussian quadrature with hermite polynomials, see equaition \@ref(eq:integral_bi_approx).
-
-
+After MCMC sampling only a crude clustering using sampled allocation indicators is applied. The probability of being clustered into one of the clusters can be expressed as a parametric function, see Section \@ref(subsec:clust-prob-deviance). This involves integration over random effects which can be numerically approximated using Laplace approximation or Gaussian quadrature with Hermite polynomials, see equation \@ref(eq:integral_bi_approx).
 
 # Application {#sec:application}
 code+outputs
