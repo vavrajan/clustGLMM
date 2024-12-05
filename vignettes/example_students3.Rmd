@@ -221,14 +221,22 @@ set.seed(12345)
 mcmc_pp <- post_processing(mcmc)
 ```
 In the summary of MCMC we can see that the first chain has been shortened. In the summary of clustering-related parameters, both chains have been reduced to just `r mcmc$modeGplus[1]` clusters.  
-```{r students-mcmc-pp, echo = TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Regression coefficients posterior kernel density estimates for income.", fig.pos="H"}
+```{r students-mcmc-pp-summary, echo = TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Regression coefficients posterior kernel density estimates for income.", fig.pos="H"}
 print(summary(mcmc_pp), chains = c(1, 2), which = c("mcmc", "clust_param"))
-plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity")
+```
+
+The comparison of the posterior distribution of the group-specific regression coefficients for numeric outcome(s) can be simply visualized with the following command:
+```{r students-mcmc-pp-beta-num-1, echo = TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Regression coefficients posterior kernel density estimates for income - chain 1.", fig.pos="H"}
+plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity", chains = 1)
+```
+
+```{r students-mcmc-pp-beta-num-2, echo = TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Regression coefficients posterior kernel density estimates for income - chain 2.", fig.pos="H"}
+plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity", chains = 2)
 ```
 
 
 ### Across-chain post-processing {#subsubsec:students-permute-cluster-labels}
-Nevertheless it seems (Figures \@ref{fig:students-mcmc-pp-1} and \@ref{fig:students-mcmc-pp-2}) that the interpretation of the cluster labels is still different from each other. With `permute_cluster_labels()` we align their interpretation to match the true labelling used to generate the data. The permutation has to be set manually by visual inspection of such plots as the two above mentioned.  
+Nevertheless it seems (Figures \@ref{fig:students-mcmc-pp-beta-num-1} and \@ref{fig:students-mcmc-pp-beta-num-2}) that the interpretation of the cluster labels is still different from each other. With `permute_cluster_labels()` we align their interpretation to match the true labelling used to generate the data. The permutation has to be set manually by visual inspection of such plots as the two above mentioned.  
 ```{r students-permuting-labels, echo = TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Permuted last regression coefficients posterior kernel density estimates for income - each chain separately.", fig.pos="H"}
 perm <- list()
 perm[[1]] <- c(2, 1, 3)
@@ -360,13 +368,14 @@ pmcmc <- clustering_probabilities_and_deviance(
 pmcmc
 print(summary(pmcmc), chains = ch, which = "clustering")
 ```
-
+This is how the resulting clustering compares to the true one and the one based on sampled indicators:
 ```{r students-clustering-probabilities-confusion, echo=TRUE}
 students[,paste0("clustering",ch)] <- pmcmc$clustering[students$i,ch]
 table(students[students$j==1,c("g", paste0("clustering",ch))])
 table(students[students$j==1,c(paste0("Uclustering",ch), paste0("clustering",ch))])
 ```
 
+We can visualize the posterior distribution of the clustering probabilities:
 ```{r students-clust-probs-posterior, echo=TRUE, eval=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H"}
 par(mfrow = c(2,4), mar = c(4,4,0.5,0.5))
 for(i in order(pmcmc$certainty[,ch])[1:8]){
