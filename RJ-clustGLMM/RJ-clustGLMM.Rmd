@@ -1,5 +1,5 @@
 ---
-title: The R Package clustGLMM - Clustering Longitudinal Data of a Mixed Type
+title: The R Package clustGLMM - Clustering Longitudinal Data of Mixed Type
 date: "2024-10-07"
 abstract: >
   An abstract of less than 150 words.
@@ -126,18 +126,15 @@ list of the used prior distributions + link with the parameters of `clustGLMM` f
 inference section
 
 ## Scaling the numerical outcomes and regressors {#subsec:scaling}
-
-Ideally, for a numeric outcome $Y$ we would like to estimate the model given by:
+For a numeric outcome $Y$, we assume the following model:
 $$
-Y_{ij} = \beta_0^{(g)} + \mathbf{F}_{ij}^\top \mathbf{\beta} + \mathbf{X}_{ij}^\top \mathbf{\beta}^{(g)} + b_{i,0}+ \mathbf{Z}_{ij}^\top \mathbf{b}_{i} + \varepsilon_{ij}
+Y_{ij} = \beta_0^{(g)} + \mathbf{F}_{ij}^\top \mathbf{\beta} + \mathbf{X}_{ij}^\top \mathbf{\beta}^{(g)} + b_{i,0}+ \mathbf{Z}_{ij}^\top \mathbf{b}_{i} + \varepsilon_{ij}.
 $$
-However, depending on scales of outcome and regressors $\beta$ and $b$ parameters could be of various scales as well. Then, it is not reasonable to assume the same fixed prior for $\beta$ as they may be on different scales. Therefore, we standardize each numeric outcome and column in model matrix. Intercept $\beta_0^{(g)}$ **has to be group-specific** in this case (see the formula for transformation back). We fit the following model treating means $m^\bullet$ and scales $S^\bullet$ as known constants:
-
+The outcome variable and the regressors may be measured on arbitrary scales. Hence, using prior distributions with the same fixed hyperparameter values for $\beta$ might be problematic. To ensure a suitable prior specification regardless of the scale on which the data is observed, we pursue an empirical Bayes approach and standardize the numeric outcome and each column in the model matrix before analysis. For this standardization approach, the intercept $\beta_0^{(g)}$ **has to be group-specific** (see the formula for back-transformation). We thus fit the following model where means $m^\bullet_\bullet$ and scales $S^\bullet_\bullet$ are assumed known constants:
 $$
 \dfrac{Y_{ij} - m^Y}{S^Y} = \widetilde{\beta}_0^{(g)} + \sum\limits_{k\neq 0}\dfrac{F_{ijk} - m^F_k}{S^{F}_k}\widetilde{\beta}_k + \sum\limits_{k\neq 0}\dfrac{X_{ijk} - m^X_k}{S^{X}_k}\widetilde{\beta}_k^{(g)} + \widetilde{b}_{i,0} + \sum\limits_{k\neq 0}\dfrac{Z_{ijk} - m^Z_k}{S^{Z}_k}\widetilde{b}_{i,k} + \widetilde{\varepsilon}_{ij}
 $$
-In this setting coefficients $\beta$ and random effects $b$ are tied to columns of unified scale.  
-Then, to obtain the original interpretation of model parameters we have to:
+The following transformations then provide the original model parameters:
 \begin{align}
 \widetilde{\beta}_k 
 &\;\rightsquigarrow\; 
@@ -213,9 +210,9 @@ what is the workflow - how do I structure data, change prior, initialize, how to
 
 
 
-Now we focus on the implementation of the methodology outlined in Sections \@ref(sec:methodology) and \@ref(sec:inference). The overview of the typical workflow and key available functions can be found in Figure \@ref(fig:workflow-diagram). In the following subsections we will go through each step and discuss it in details
+Now we focus on the implementation of the methodology outlined in Sections \@ref(sec:methodology) and \@ref(sec:inference). An overview of the typical workflow and the key functions is given in Figure \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail.
 
-```{r workflow-diagram, fig.cap="Diagram of the usual workflow with \\pkg{clustGLMM}."}
+```{r workflow-diagram, fig.cap="Typical workflow with \\pkg{clustGLMM} and key functions."}
 DiagrammeR::grViz("digraph {
   graph[layout = dot, rankdir = TB]
   
@@ -279,77 +276,76 @@ DiagrammeR::grViz("digraph {
 ```
 ## Prepare inputs {#subsec:impl-prepare-inputs}
 
-First, we go through the required input for the main function `clustGLMM()` and describe the expected format. 
-Data are passed through `data` argument as a `data.frame` and should contain all outcomes, regressors and a column `id` that declares which rows correspond to the same subject. These IDs are internally mapped to `1:n` where `n` is the number of unique ID labels. This mapping is returned in `clustglmm` object as `numbered_unique_ids` item. 
+First, we discuss the required input for the main function `clustGLMM()` and describe the expected format. 
+Data are passed in the `data` argument as a `data.frame` which contains all outcomes, regressors and a column `id` that indicates which rows correspond to the same subject. The values in `id` are internally mapped to `1:n` where `n` is the number of unique values in `id`. This mapping is returned in the `clustglmm` object as element `numbered_unique_ids`. 
 
-The list of outcomes is given by `family` argument. It is a vector containing the types of outcomes named by the outcome names (has to match the column name in `data`). The following labels are available:
+The outcomes with their types, i.e., their distributions, are specified in the `family` argument. This argument is provided as a named vector indicating the outcome types named by the outcome names matching the column name in `data`. The following types are available:
 
 * `"num"`, `"gaussian"` for numeric outcomes following \@ref(eq:glmm-num),
 * `"poi"`, `"poisson"` for count outcomes following \@ref(eq:glmm-poi),
 * `"bin"`, `"bernoulli"` for binary outcomes following \@ref(eq:glmm-bin),
 * `"ord"`, `"cumulative"` for ordinal outcomes following \@ref(eq:glmm-ord),
-* `"cat"`, `"categorical"` for categorical outcomes following \@ref(eq:glmm-cat), first category is considered to be the baseline.
+* `"cat"`, `"categorical"` for categorical outcomes following \@ref(eq:glmm-cat), where the first category is considered the baseline.
 
-Internally, outcomes are ordered by type in the same order as above. Hence, `family` returned by `clustGLMM` may be permuted. The reason is the organization of $\Sigma$ covariance matrix. 
+Internally, outcomes are ordered to ensure that the types are in the same order as listed above. Ensuring this ordering eases the estimation of the covariance matrix $\Sigma$. The `family` returned by `clustGLMM()` then has this ordering.
 
-Our flexible implementation allows for different model formula for each outcome. Therefore, all formulas are expected to be passed down as a list `formula` named by outcome names the same way as `family`. For each outcome 3 formulas (of class `formula`) are expected:
+Our implementation allows a different model formula for each outcome. All formulas are passed in the argument `formula` as a named list with names indicating the outcomes. For each outcome, three formulas (of class `formula`) are required:
 
 * `fixed` for fixed effects common to all clusters,
 * `group` for cluster-specific fixed effects,
-* `random` for`id`-specific random effects.
+* `random` for `id`-specific random effects.
 
-There is also option to add an item `offset` which just contains a column name for offset variable, i.e., the values that shift the linear predictor without any unknown coefficient. By default, no `offset` is considered. Sharing the same terms in both `fixed` and `group` formula is allowed and, by default, is resolved by removing it from `fixed` to `group` formula. For example, if you do not specify the intercept term in any way, it will be considered group-specific by default. Moreover, intercept term is removed from the formula for ordinal outcome, since it is covered by a standalone model parameter `c_ord` (or its transformation `a_ord`, `pi_ord`). The `clustglmm` object returns lists (`lfixnames`, `lgrpnames`, `lrannames`) of covariate names in the given order to match them to the corresponding coefficients `beta...[]` or random effects `b[,]`.      
+There is also the option to add an element named `offset` which contains the column name of the offset variable, i.e., the values that shift the linear predictor without any unknown coefficient. By default, no `offset` is considered. Sharing the same terms in both the `fixed` and `group` formula is allowed. By default, this is resolved by removing duplicated terms from `fixed` and having them only included in the `group` formula. For example, if the formulas do not contain a specification regarding the intercept, a group-specific intercept is considered. Moreover, the intercept term is removed from the formula for ordinal outcomes, since it is covered by a standalone model parameter `c_ord` (or its transformation `a_ord`, `pi_ord`). The `clustglmm` object returns lists (`lfixnames`, `lgrpnames`, `lrannames`) of covariate names in the given order to match them to the corresponding regression coefficients `beta...[]` or random effects `b[,]`.
 
-Next, there are 4 arguments that are expected to have a certain specific structure: 
+The next four arguments provide more details regarding the model specification (data and prior), the MCMC sampling scheme pursued as well as which sampling results are saved. These arguments are expected to have the following structure: 
 
-* `varying` - a named vector of booleans controlling group-specificity of other model parameters, 
-* `save` - a named vector of booleans controlling which sampled model parameters should be returned, 
+* `varying` - a named vector of booleans controling group-specificity of other model parameters, 
+* `save` - a named vector of booleans controling which sampled model parameters should be returned, 
 * `param` - a list of prior hyperparameters, 
-* `tuning` - a list of integers and doubles that adjust the sampler, especially Metropolis proposal steps constructed by the use of Newton-Raphson (N-R) method. 
+* `tuning` - a list of integers and doubles that adjust the sampler, especially Metropolis proposal steps constructed by the use of the Newton-Raphson (N-R) method. 
 
-For full description of the stored elements see the documentation. If missing, then the default choices constructed by `default_varying()`, `default_save()`, `default_param()`, `default_tuning()` are used. We recommend to call these functions before `clustGLMM`, make the required changes and supply the updated object to `clustGLMM`.
+For full description of the elements of each argument see the documentation. If an arugment is missing, then the default choices constructed by `default_varying()`, `default_save()`, `default_param()`, `default_tuning()` are used. We recommend to call these functions before `clustGLMM()`, change the default object as required and use the updated object in the call to `clustGLMM()`.
 
-Next very important argument is `inits` which is a list of initial values to start each of the chains with. This structure is the same as the output `last` of `clustGLMM`. Hence, it is very straightforward to continue in sampling if stationarity is not yet reached. It suffices to initiate next `clustGLMM` call with the same settings and `inits = ...$last`. Note that if standardization is in effect these initial values relate to the transformed scale and not the original as the returned samples. If the argument `inits` is missing then the initial values are sampled randomly for each chain. 
+The argument `inits` expects a list of initial values used to start each of the chains with. The structure is the same as the output `last` of `clustGLMM()`. Hence, it is very straightforward to continue sampling. It suffices to call `clustGLMM()` with the same settings and specify `inits = ...$last`. Note that if standardization is in effect, these initial values relate to the transformed scale and not the original one, which is used for the returned samples. If the argument `inits` is missing, then the initial values are sampled randomly for each chain. 
 
-It remains to choose the number of chains `nchains` (chains will be labelled by `1:nchains`), the length of the chain to be sampled `iter`, the (maximal) number of underlying groups `G` (could be different for each chain, could be also 1 - no clustering), standardization indicator `standardize` and the style in which the samples should be returned `howsave`. We recommend to use the `matrix` option where all the model parameters are returned in one huge matrix with carefully named columns by the following pseudocode:
+It remains to choose the number of chains `nchains` (chains will be labelled by `1:nchains`), the length of the chain to be sampled `iter`, the (maximum) number of underlying groups `G` (could be different for each chain, could be also 1 to induce no clustering), standardization indicator `standardize` and the style in which the samples should be returned `howsave`. We recommend to use the `"matrix"` option where all the model parameters are returned in one huge matrix with carefully named columns based on the following pseudocode:
 
 ```{r matrix-column-name, eval = FALSE, include = TRUE, echo = TRUE}
 paste0(parameter, # parameter ~ character(1)
-       if(is.outcome.specific){"_", outcome}, # outcome ~ character(1)
-       if(is.group.specific){"(", g, ")")}, # g ~ integer(1)
-       if(is.not.0D){"[", d[1], if(is.2D){",", d[2]}, "]"} # d ~ integer(2)
-       ) # e.g. "beta_num_income(1)[1]"
+       if (is.outcome.specific) {"_", outcome}, # outcome ~ character(1)
+       if (is.group.specific) {"(", g, ")")}, # g ~ integer(1)
+       if (is.not.0D) {"[", d[1], if(is.2D) {",", d[2]}, "]"} # d ~ integer(2)
+) # e.g. "beta_num_income(1)[1]"
 ```
 
-The returned matrix can be huge and very difficult to orient in. Therefore, we provide a second viable option `list`, with which all sampled values are saved in carefully structured list with layers: chain, parameter name, outcome name (if outcome-specific parameter), cluster (if group-specific parameter). The leaves of this structure are arrays (2D or 3D) corresponding to the given subset of parameters. 
-
+Due to the potential huge size of the returned matrix, we also rovide a second viable option corresponding to `"list"`, implying that all sampled values are saved in a carefully structured list with the following layers: chain, parameter name, outcome name (if outcome-specific parameter), cluster (if group-specific parameter). The leaves of this structure are arrays (2D or 3D) corresponding to the given subset of parameters. 
 
 ## Sample chains {#subsec:impl-sample-chains}
 
-Once all the inputs are carefully prepared following the instructions in previous section \@ref(subsec:impl-prepare-inputs), `clustGLMM` can be safely called. In this section we describe the individual steps this function follows. 
+Once all the inputs are carefully prepared according to the instructions in Section \@ref(subsec:impl-prepare-inputs), `clustGLMM()` can be safely called. In this section we describe the individual steps this function performs. 
 
-First, missing arguments are replaced with the default values. The user will be warned if some of the crucial parameters were set to not be returned. Subject identificators `id` are relabelled and outcomes are sorted as outlined in Section \@ref(subsec:impl-prepare-inputs). Then, each outcome is checked for compatibility with its given type:
+First, missing arguments are replaced with their default values. The user is warned if some of the crucial parameters were specified to not be returned (EXAMPLE). Subject indices `id` are relabelled and outcomes are sorted as outlined in Section \@ref(subsec:impl-prepare-inputs). Then, each outcome is checked for compatibility with its given type:
 
-* `num` - values have to be numeric, infinite values are not allowed, otherwise an error occurs. If `standardize=TRUE` then `scale()` is applied with `center` and `scale` determined by `mean` and `sd` while ignoring missing values.
+* `num` - values have to be numeric, Infinite values are not allowed, otherwise an error occurs. If `standardize = TRUE` then `scale()` is applied with `center` and `scale` determined by `mean` and `sd` while ignoring missing values.
 * `poi` - values are checked to be finite non-negative integers, otherwise an error occurs.
-* `bin` - `factor()` is applied and an error occurs if the number of unique categories is not 2. Internally, the first level is considered to be 0, the other 1.
+* `bin` - `factor()` is applied and an error occurs if the number of unique values is not 2. Internally, the first level is considered to be 0, the other 1.
 * `ord` - if not yet of class `ordered`, `factor(., ordered = TRUE)` is called. Internally, the ordered categories are replaced with 0, 1, ..., `Kord`.
 * `cat` - if not yet of class `factor`, `factor()` is called. Internally, the ordered categories are replaced with 0 (baseline), 1, ..., `Kcat`.
 
-Ordinal and categorical outcomes are not allowed to have less than 3 levels (use binary type if 2 levels), but there is no upper limit for number of categories. So, avoid accidentally inserting numeric outcome with too many unique values. Note that the numbers of categories `Kord` and `Kcat` are already lowered by 1 for convenience. 
+Ordinal and categorical outcomes are not allowed to have less than 3 levels (use the binary type for 2 levels), but there is no upper limit for the number of categories. This means the user needs to take care not to specify a numeric outcome with many unique values. Note that the numbers of categories `Kord` and `Kcat` correspond to the actual number of categories reduced by 1 (to account for the numbering starting at 0).
 
-Next, the `formula` is processed and model matrices are created. In fact, they are combined into one large regression matrix with uniquely named columns, since we expect many columns to be repetitively used for many outcomes. For each outcome a list of the column names that are result of `fixed`, `group` and `random` formula is created to orient in the matrix (`lfixnames`, `lgrpnames`, `lrannames`). These lists also determine the order in which the effects are named and saved. For example, `"[1]"` in `"beta_num_income(1)[1]"` informs that this group-specific regression coefficient is tied to the first element of the corresponding `lgrpnames[["income"]]`. During these preparations we eliminate the column names common to `fixed` and `group` are eliminated from `fixed` and remain only in `group` as discussed in Section \@ref(subsec:impl-prepare-inputs).
+Next, the `formula` is processed and model matrices are created. In fact, they are combined into one large regression matrix with uniquely named columns, since we expect many columns to be repetitively used for many outcomes. For each outcome a list of the column names that result from the `fixed`, `group` and `random` formulas is created to orient in the matrix (`lfixnames`, `lgrpnames`, `lrannames`). These lists also determine the order in which the effects are named and saved. For example, `"[1]"` in `"beta_num_income(1)[1]"` informs that this group-specific regression coefficient is tied to the first element of the corresponding `lgrpnames[["income"]]`. During these preparations we eliminate the column names common to `fixed` and `group` from `fixed` and keep them only in `group` as discussed in Section \@ref(subsec:impl-prepare-inputs).
 
-If `standardize=TRUE`, the ability to transform parameters back to the original scale is checked. An error is triggered if the intercept term (column `(Intercept)`) does not appear among the `fixed` and `group` effects. Similarly, it has to be moved to `group` formula if there are other group-specific effects. An ordinal outcome has no explicit intercept within the formula, but the parameter of ordered intercepts has to become group-specific (`varying["c_ord"] = TRUE`) if there are some group-specific effects. Under standardization, random effects have to include random intercept, otherwise an error is triggered. The scaling of columns other than `id` or `(Intercept)` is performed with `scale(, center = TRUE, scale = TRUE)`. The used centers and scales are saved in named vectors `centers` and `scales`.
+If `standardize = TRUE`, the ability to transform parameters back to the original scale is checked. An error is triggered if the intercept term (column `(Intercept)`) does not appear among the `fixed` and `group` effects. In case of group-specific effects, the `group` formula is ensured to include an intercept. An ordinal outcome has no explicit intercept within the formula, but the parameter of the ordered intercepts needs to be group-specific (`varying["c_ord"] = TRUE`) if there are some group-specific effects. In case of standardization, random effects have to include a random intercept, otherwise an error is triggered. The scaling of columns other than `id` or `(Intercept)` is performed with `scale(, center = TRUE, scale = TRUE)`. The used centers and scales are saved in named vectors `centers` and `scales`.
 Finally, note that `NA` values for regressors are not allowed.
 
-Next, the initial values are sampled if the argument `inits` is missing. First, a random partition of units into given number of clusters `G` is created. Then, for each outcome the corresponding model (`lm`, `glm(family=poisson)`, `glm(family=binomial)`, `MASS::polr`, `nnet::multinom`) is fitted with fixed and group-specific effects only and all available data. The estimated fixed effects are used as initial values. Then, the same is fitted on a subset of data corresponding to each cluster separately to get the initial values for group-specific regression coefficients. If an error occurs, e.g. due to small cluster size, then the estimates from the fit with complete data are used instead. The random effects are sampled randomly from centered normal distribution with standard deviation given by `param$init_b_sd`. Precision matrix for random effects is initialized randomly as a diagonal matrix with diagonal elements sampled from gamma distribution with shape `1/param$init_b_sd^2` and unit rate.
+Next, the initial values are sampled if the argument `inits` is missing. First, a random partition of units into given number of clusters `G` is created. Then, for each outcome the corresponding model (`lm`, `glm(family = poisson)`, `glm(family = binomial)`, `MASS::polr`, `nnet::multinom`) is fitted with fixed and group-specific effects only and all available data. The estimated fixed effects are used as initial values. Then, the same is fitted on a subset of data corresponding to each cluster separately to get the initial values for group-specific regression coefficients. If an error occurs, e.g. due to small cluster size, then the estimates from the fit with complete data are used instead. The random effects are sampled randomly from centered normal distribution with standard deviation given by `param$init_b_sd`. Precision matrix for random effects is initialized randomly as a diagonal matrix with diagonal elements sampled from gamma distribution with shape `1/param$init_b_sd^2` and unit rate.
 
 The model consists of a lot of parameters of very different nature (outcome-specificity, cluster-specificity, dimensionality). In order to cope with these differences, each row of matrix `settings` contains all necessary information to properly handle one of the model parameters. Since number of clusters could be different for different chains, a list of such matrices for each chain is returned in the end. The most important columns of this matrix are the total dimension size (with or without cluster-specificity) which are crucial for handling the parameters when storing the sampled values. For outcome-specific parameters (e.g. regression coefficients) supplementary lists `yspecd1` and `yspecd2` contain the total dimension sizes per each outcome.
 
 The sampling is by far the most time-consuming part of the algorithm and its pure R implementation was painfully slow. Therefore, C routines were implemented to do the heavy lifting. It requires non-trivial amount of preparation steps, since only vectors of integers or doubles can be passed down via `.C()`. For example, IDs and cluster allocation indicators are shifted to start from 0 and not 1, labels for the categorical outcomes of first and last category are switched (C functions assume the last category to be the baseline), `NA` values are replaced with zeros. Moreover, initial values are concatenated in the order expected by the C function. These values are duplicated into a vector of the same length that will represent the current parameter values. Both vectors are accompanied by a structure of pointers pointing to the starts of each of the parameters. When a new value of the parameter is sampled (and accepted) the corresponding cells are overwritten. Simultaneously, these new values are saved into prepared storage vectors for each model parameter separately including all the transformed ones (standard deviations, correlations, ...). The C code regularly prints the percentage of sampled iterations so that the analyst can estimate how long will it take. Once the sampling finishes, the vector of last values is processed back into R format. This way, the last sampled values can be used again as initial values. Depending on the save format `howsave` the stored values are processed into the final `$draws` output with the help of `from_C_to_...` functions. 
 
-This sampling is performed sequentially for all chains. This could be very time-consuming, especially for large datasets. Hence, we recommend to parallelize for chains. Simply write a function that calls `clustGLMM` with the same settings for `nchains = 1` and then combines the results into one object. Also note the high memory demands caused not only by the vast number of parameters of large dimension sizes but also due to auxiliary variables. For example, C functions have a 4-compound predictor dedicated to fixed, group, random and offset part, the final predictor is the sum of these four. When some of the effects is updated only the corresponding part of the predictor gets updated, the rest remains untouched. This gets even more expensive for categorical outcomes where the predictor is kept separately the same way for every non-baseline category. In order to lighten the memory demands all operations with symmetric matrices are handled with only the upper triangle.      
+This sampling is performed sequentially for all chains. This could be very time-consuming, especially for large datasets. Hence, we recommend to parallelize for chains. Simply write a function that calls `clustGLMM()` with the same settings for `nchains = 1` and then combines the results into one object. Also note the high memory demands caused not only by the vast number of parameters of large dimension sizes but also due to auxiliary variables. For example, C functions have a 4-compound predictor dedicated to fixed, group, random and offset part, the final predictor is the sum of these four. When some of the effects is updated only the corresponding part of the predictor gets updated, the rest remains untouched. This gets even more expensive for categorical outcomes where the predictor is kept separately the same way for every non-baseline category. In order to lighten the memory demands all operations with symmetric matrices are handled with only the upper triangle.      
 
 Another potential source of long sampling times could be the finding of suitable proposal distribution via N-R method initiated with the last known value. In case the method does not converge or does not meet the required tolerance `tuning$double$tolerance` in the maximal number of steps `tuning$integer$maxiter`, it starts the N-R procedure from a different point (current best approximation scaled by uniformly sampled coefficient from $(0, 1)$). This is repeated until required tolerance is met or the maximal number of N-R reiterations `tuning$integer$maxnrep` is reached. If N-R is not successfully finished, the current best solution is used as the proposal distribution. Since this search for optimal proposal distribution can be very time-consuming, the proposal distributions are updated only every `tuning$integer$freq_proposal_update`-th iteration. Since the acceptance rate could be very low, there is also an option to repeat the proposal step for the same parameters several times with `tuning$integer$times_proposal > 1`. Faster computation times could be achieved by adjusting these tuning parameters, but be warned that the hunt for faster evaluation could be at the cost of lower acceptance rate. We recommend to update the proposal distribution frequently when the stationary distribution is not reached yet. Proposal distribution is scaled by `tuning$double$const_proposal_...` where `...` stands for any parameter updated via Metropolis proposal. Similarly as prior hyperparameters, their value is fixed for every underlying parameter, e.g. cannot set different values for two outcomes of the same type.
 
@@ -372,13 +368,13 @@ Latent variables and model parameters are sampled in the following order:
 
 Note that steps for `InvSigma`, `InvQ` and random effects are avoided if there are no random effects. In such case the outcomes are assumed to be independent as well as observations (rows) with the same ID. But it means that regular cluster-wise regressions could be fitted as well. 
 
-Before all the outputs of `clustGLMM` are returned in a list, a crude clustering is performed for each chain separately. First, the sampled allocation indicators `U` (back in 1, ..., G) are summarized for each individual. Matrix `clustering` then contains the most frequent cluster label and `certainty` contains the proportion of this most frequent labels for each individual. Then, the most frequent number of non-empty clusters `modeGplus` is determined. A list `clusters` then contains `modeGplus` of the most frequent labels in `clustering`. These labels will be used for plotting, others are considered empty and ignored for plotting, unless declared otherwise.
+Before all the outputs of `clustGLMM()` are returned in a list, a crude clustering is performed for each chain separately. First, the sampled allocation indicators `U` (back in 1, ..., G) are summarized for each individual. Matrix `clustering` then contains the most frequent cluster label and `certainty` contains the proportion of this most frequent labels for each individual. Then, the most frequent number of non-empty clusters `modeGplus` is determined. A list `clusters` then contains `modeGplus` of the most frequent labels in `clustering`. These labels will be used for plotting, others are considered empty and ignored for plotting, unless declared otherwise.
 
-Finally, the `call` summarizes the sample sizes as well as given formulas for all outcomes - the fixed effects first, then the random effects (in the order assumed by `InvSigma`) and then the group-specific effects. Printing of class `clustGLMM` prints `call` followed by the summary of the crude clustering for each chain separately.    
+Finally, the `call` summarizes the sample sizes as well as given formulas for all outcomes - the fixed effects first, then the random effects (in the order assumed by `InvSigma`) and then the group-specific effects. Printing of class `clustglmm` prints `call` followed by the summary of the crude clustering for each chain separately.    
 
 ## Visual diagnostics {#subsec:impl-visual-diagnostics}
 
-We realize that some users may be familiar with already established diagnostics tools. Therefore, we provide function `as_coda` that takes the `clustGLMM` object and converts it to `mcmc.list` object from \CRANpkg{coda} package. Then, all diagnostic tools from that package are at the user's disposal.
+We realize that some users may be familiar with already established diagnostics tools. Therefore, we provide function `as_coda` that takes the `clustGLMM()` object and converts it to `mcmc.list` object from \CRANpkg{coda} package. Then, all diagnostic tools from that package are at the user's disposal.
 
 However, since the dimension of parametric space of our model can easily reach hundreds (with latent id-specific variables even thousands), these tools may be difficult to use on such large scale. Therefore, we provide a set of plotting functions that are able to cover all individual parameters related to given parameter name:
 
@@ -391,13 +387,13 @@ However, since the dimension of parametric space of our model can easily reach h
 
 These functions are wrapped by `plot.clustglmm` function that covers all of the options with traceplots of total cluster occupation numbers `ng` as preferred default. They allow for cutting of burn-in period and thinning the samples, or even selecting the desired iterations manually. The plots are automatically organized into a matrix of convenient sizes by setting `par(mfrow=...)`. This can be prohibited by `setparmfrow = FALSE`. 
 
-In case a univariate parameter is of interest, `plot_diagnostics` displays the four plots (ACF, ECDF, kernel density and traceplot) into $2 \times 2$ grid. To select the univariate parameter properly, you need to provide (if applies) or omit (if does not apply) `what` (name of the parameter), `yspec` (to which outcome does it belong, if so), `gspec` (to which group it corresponds to, if so) and `dimspec` (the specific dimension, if not already a scalar). Consult what has to be supplied for which parameter with `settings` matrix. There is also possibility to include a line for the true value of the parameter, if known.  
+In case a univariate parameter is of interest, `plot_diagnostics` displays the four plots (ACF, ECDF, kernel density and traceplot) into $2 \times 2$ grid. To select the univariate parameter properly, you need to provide (if applies) or omit (if does not apply) `what` (name of the parameter), `yspec` (to which outcome does it belong, if so), `gspec` (to which group it corresponds to, if so) and `dimspec` (the specific dimension, if not already a scalar). Consult what has to be supplied for which parameter with `settings` matrix. There is also possibility to include a line for the true value of the parameter, if known.
 
-If convergence to the stationary distribution is not yet met then continuation can be simply performed by calling `clustGLMM` with the same input arguments and `inits = ...$last`. If the results do not meet the expected output maybe starting over with adjusted inputs and different seed can help.
+If convergence to the stationary distribution is not yet met then continuation can be simply performed by calling `clustGLMM()` with the same input arguments and `inits = ...$last`. If the results do not meet the expected output maybe starting over with adjusted inputs and different seed can help.
 
 
 ## Within-chain post-processing {#subsec:impl-post-processing}
-In ideal case, this step can be skipped. However, in previous step it may occur that iterations can correspond to different numbers of non-empty clusters within one chain. Also the meaning of labels can be switched between iterations. Therefore, we prepared a `post_processing()` function based on suggestions by [@FruhwirthSchnatter11]. The goal is to restrict to iterations that have the most common number of non-empty clusters `Gplus` saved as `modeGplus` item of `clustGLMM` output and resolve label-switching so that the inference about cluster-specific parameters is not skewed.   
+In ideal case, this step can be skipped. However, in previous step it may occur that iterations can correspond to different numbers of non-empty clusters within one chain. Also the meaning of labels can be switched between iterations. Therefore, we prepared a `post_processing()` function based on suggestions by [@FruhwirthSchnatter11]. The goal is to restrict to iterations that have the most common number of non-empty clusters `Gplus` saved as `modeGplus` item of `clustglmm` output and resolve label-switching so that the inference about cluster-specific parameters is not skewed.   
 
 The function follows the following steps for each chain separately:
 
@@ -409,7 +405,7 @@ The function follows the following steps for each chain separately:
 5. K-means clustering by `kmeans` is applied to matrix from 4. Ideally, rows corresponding to the same iteration will be each clustered to a different mode. In such case values are permuted accordingly. If the rows for one iteration are not assigned uniquely into different clusters the this iteration is eliminated. In particular, values for cluster-specific parameters will be replaced with `NA`. The summary of `post_processing()` informs about the percetage of lost observations.  
 6. Apply the same permutations to the rest of group-specific parameters and return back to the wide format. 
 7. Create the matrix of posterior draws by joining cluster-invariant samples, permuted (and aligned) group-specific and clustering-related parameters.
-8. Update all other items of `clustGLMM` class accordingly. Especially, `clustering`, `certainty`, `G` (now `modeGplus`, possibly different among chains), `last`, `call` (summary of the post-processing) and many others.
+8. Update all other items of `clustglmm` class accordingly. Especially, `clustering`, `certainty`, `G` (now `modeGplus`, possibly different among chains), `last`, `call` (summary of the post-processing) and many others.
 
 The output of the post-processing is again of `clustGLMM` class and all plotting functions should work even with the limited set of iterations. 
 
@@ -426,11 +422,11 @@ Once the meaning of the cluster labels across chains is aligned, the inference m
 
 ### Posterior description {#subsubsec:impl-summary}
 
-The basic posterior exploration is performed by `summary.clustglmm`. These outputs are obtained by `summary.mcmc(., na.rm = TRUE)` applied to `clustglmm` object transformed with `as_coda` for each chain separately. The `print` method automatically prints `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. The posterior distribution of the model parameters could be explored visually by provided `plot()` functions, see Section \@ref(subsec:impl-visual-diagnostics). 
+The basic posterior exploration is performed using the `summary` method for `clustglmm` objects. These outputs are obtained using the `summary` method for `mcmcm` object with `na.rm = TRUE` after transforming the `clustglmm` object with `as_coda` for each chain separately. The `print` method automatically prints a `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. The posterior distribution of the model parameters could be explored visually using the `plot` method, see Section \@ref(subsec:impl-visual-diagnostics). 
 
 The summary of the clustering is based on `clustering` and `certainty` in the `clustglmm` object where all subjects are classified into the cluster with the highest certainty. If some subjects should remain unclassified (label 0) due to insufficient certainty level, this has to be done manually by the user. 
 
-We also provide a couple of functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped` and `plot_cat_vs_x_grouped`. The argument `group` requires division of subjects into some groups, e.g., the resulting clustering. Every cluster will be plotted with one of the colors from `colorspace::rainbow_hcl()` palette and slategrey color is reserved for label 0. 
+We also provide a functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped` and `plot_cat_vs_x_grouped`. The argument `group` requires division of subjects into some groups, e.g., the resulting clustering. Every cluster is plotted with one of the colors obtained with `colorspace::rainbow_hcl()` with the color slategrey being reserved for label 0. 
 
 With `plot_num_vs_x_grouped` the relationship of outcome and continuous covariate `x` is depicted by 'spaghetti' plots, where observations corresponding to the same ID are joined with thin segments (ordered by the x-axis covariate `x`). A thick line of darker color shade then corresponds to the `loess.smooth` curve. Since the clusters can overlap, we recommend to plot subsets of the data separately for better visualization. If `x` is a factor, then overlapping boxplots with transparent colors are plotted for each level and group. 
 
@@ -441,13 +437,13 @@ With `plot_cat_vs_x_grouped` the relationship of factor outcome and continuous c
 
 ### Linear predictor {#subsubsec:impl-predict}
 
-The above mentioned `plot_num_vs_x_grouped` plots loess curves which are quick and easy to plot, yet do not represent the posterior estimates. Therefore, we also provide `predict.clustglmm` method that is able to reconstruct the linear predictor for given `newdata`. For example, majority of covariates could be fixed and only one covariate could attain values on a grid to capture its effect. 
+The above mentioned `plot_num_vs_x_grouped` plots loess curves which are quick and easy to plot, yet do not represent the posterior estimates. Therefore, we also provide a `predict` method for `clustglmm` objects that constructs the linear predictor for given `newdata`. For example, majority of covariates could be fixed and only one covariate could attain values on a grid to capture its effect. 
 
-Two methods are implemented. Plug-in method takes the posterior estimates of regression coefficients and computes the corresponding linear combinations which yields only a point estimator of the same type. The other takes the samples of regression coefficients and computes linear combinations for all iterations. This way the full posterior of such linear function is explored, hence, credible intervals (for individual points, not the whole curve) could be computed.  
+Two methods are implemented. The plug-in method takes the posterior point estimates of the regression coefficients and computes the corresponding linear combinations yielding a point estimator of the same type. The other takes the posterior samples of the regression coefficients and computes linear combinations for all iterations. In this way, samples to approximate the full posterior are obtained, and, for example, credible intervals (for individual points, not the whole curve) could be computed.
 
 ### Clustering probabilities and deviance {#subsubsec:impl-clust-prob-deviance}
 
-After MCMC sampling only a crude clustering using sampled allocation indicators is applied. The probability of being clustered into one of the clusters can be expressed as a parametric function, see Section \@ref(subsec:clust-prob-deviance). This involves integration over random effects overcame with Laplace approximation or Gaussian quadrature with hermite polynomials, see equaition \@ref(eq:integral_bi_approx).
+After MCMC sampling only a crude clustering using sampled allocation indicators is applied. The probability of being clustered into one of the clusters can be expressed as a parametric function, see Section \@ref(subsec:clust-prob-deviance). This involves integration over random effects which can be numerically approximated using Laplace approximation or Gaussian quadrature with Hermite polynomials, see equation \@ref(eq:integral_bi_approx).
 
 
 
