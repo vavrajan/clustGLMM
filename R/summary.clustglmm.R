@@ -12,6 +12,10 @@ summary.clustglmm <- function(object, ...){
       coda_summary[[ch]] <- list()
       coda_summary[[ch]]$statistics <- stats
       coda_summary[[ch]]$quantiles <- quants
+      coda_summary[[ch]]$start <- 1
+      coda_summary[[ch]]$end <- dim(coda[[ch]])[1]
+      coda_summary[[ch]]$thin <- 1
+      coda_summary[[ch]]$nchain <- 1
     }else{
       coda_summary[[ch]] <- summary(coda[[ch]], na.rm = TRUE) # na.rm = TRUE does not work
     }
