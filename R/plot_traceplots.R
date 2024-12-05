@@ -17,36 +17,17 @@ function(mcmc, scalar_samples,
                                          iterations = iterations, chains = chains)
   }
   if(missing(whatLAB)){
-    whatLAB <- what
-    
-    if(!missing(yspec)){
-      whatLAB <- paste(whatLAB, yspec, sep = "_")
-    }
-    
-    if(!missing(gspec)){
-      whatLAB <- paste0(whatLAB, "(", gspec, ")")
-    }
-    
-    if(missing(dimspec)){
-      # no dimension supplied = no need for supplying -> 1-dim parameter
-    }else{
-      if(length(dimspec) == 1){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],"]")
-      }
-      if(length(dimspec) == 2){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],",",dimspec[2],"]")
-      }
-    }
+    whatLAB <- scalar_samples$whatLAB
   }
   
   ymax <- xmax <- -Inf
   ymin <- xmin <- Inf
   for(ch in chains){
-    scalar_samples[[ch]]$y[is.infinite(scalar_samples[[ch]]$y)] <- NA
-    ymax <- max(c(scalar_samples[[ch]]$y, ymax), na.rm = TRUE)
-    ymin <- min(c(scalar_samples[[ch]]$y, ymin), na.rm = TRUE)
-    xmax <- max(c(scalar_samples[[ch]]$m, xmax), na.rm = TRUE)
-    xmin <- min(c(scalar_samples[[ch]]$m, xmin), na.rm = TRUE)
+    scalar_samples$draws[[ch]]$y[is.infinite(scalar_samples$draws[[ch]]$y)] <- NA
+    ymax <- max(c(scalar_samples$draws[[ch]]$y, ymax), na.rm = TRUE)
+    ymin <- min(c(scalar_samples$draws[[ch]]$y, ymin), na.rm = TRUE)
+    xmax <- max(c(scalar_samples$draws[[ch]]$m, xmax), na.rm = TRUE)
+    xmin <- min(c(scalar_samples$draws[[ch]]$m, xmin), na.rm = TRUE)
   }
   
   if(missing(COL)){
@@ -63,7 +44,7 @@ function(mcmc, scalar_samples,
   mtext(text = "Iteration", side = 1, line = 2.5, cex = labcex)
   mtext(text = whatLAB, side = 2, line = 2.5, cex = labcex)
   for(ch in chains){
-    lines(y ~ m, data = scalar_samples[[ch]], col = COL[ch])
+    lines(y ~ m, data = scalar_samples$draws[[ch]], col = COL[ch])
   }
   # legend
   #legend("top", legend = chains, ncol = length(chains),

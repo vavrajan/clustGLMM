@@ -53,12 +53,15 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
          ylab = y,
          xaxt = "n")
     axis(1, at = 1:nlevels(data[,x]), labels = levels(data[,x]))
-    for(g in ggs){
+    jitter <- seq(-0.2, 0.2, length.out = length(ggs))
+    for(ig in 1:length(ggs)){
+      g <- ggs[ig]
       subdata <- data[data[,group] == g, ]
       boxplot(subdata[,y] ~ factor(subdata[,x]),
               col = COL[as.character(g)],
               border = dCOL[as.character(g)],
-              add = TRUE, xaxt = "n", yaxt = "n")
+              add = TRUE, xaxt = "n", yaxt = "n",
+              at = 1:nlevels(data[,x]) + jitter[ig])
     }
   }else{
     plot(x = c(0,1), y = c(0,1), type = "n", 

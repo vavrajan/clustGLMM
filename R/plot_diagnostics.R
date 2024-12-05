@@ -1,4 +1,4 @@
-plot_all <-
+plot_diagnostics <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations,
@@ -20,29 +20,6 @@ function(mcmc, scalar_samples,
                                          gspec = gspec, dimspec = dimspec, yspec = yspec,
                                          burnin = burnin, thin = thin, 
                                          iterations = iterations, chains = chains)
-  }
-  
-  if(missing(whatLAB)){
-    whatLAB <- what
-    
-    if(!missing(yspec)){
-      whatLAB <- paste(whatLAB, yspec, sep = "_")
-    }
-    
-    if(!missing(gspec)){
-      whatLAB <- paste0(whatLAB, "(", gspec, ")")
-    }
-    
-    if(missing(dimspec)){
-      # no dimension supplied = no need for supplying -> 1-dim parameter
-    }else{
-      if(length(dimspec) == 1){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],"]")
-      }
-      if(length(dimspec) == 2){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],",",dimspec[2],"]")
-      }
-    }
   }
   
   plot_traceplots(mcmc=mcmc, scalar_samples = scalar_samples, 

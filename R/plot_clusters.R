@@ -55,17 +55,17 @@ function(mcmc,
                                 burnin = burnin, thin = thin, 
                                 iterations = iterations, chains = ch)
       if(g == whichg[1]){
-        colnames(aux[[ch]])[which(colnames(aux[[ch]])=="y")] <- paste0("y(",g,")")
-        ssch = aux[[ch]]
+        colnames(aux$draws[[ch]])[which(colnames(aux$draws[[ch]])=="y")] <- paste0("y(",g,")")
+        ssch = aux$draws[[ch]]
       }else{
-        ssch[,paste0("y(",g,")")] <- aux[[ch]]$y
+        ssch[,paste0("y(",g,")")] <- aux$draws[[ch]]$y
       }
     }
     scalar_samples <- rbind(scalar_samples, ssch)
   }
 
   
-  if (missing(whatLAB)){
+  if(missing(whatLAB)){
     whatLAB <- what
     
     if(!missing(yspec)){
@@ -75,12 +75,7 @@ function(mcmc,
     if(missing(dimspec)){
       # no dimension supplied = no need for supplying -> 1-dim parameter
     }else{
-      if(length(dimspec) == 1){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],"]")
-      }
-      if(length(dimspec) == 2){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],",",dimspec[2],"]")
-      }
+      whatLAB <- paste0(whatLAB,"[",paste(dimspec, collapse=","),"]")
     }
   }
   if(missing(COL)){COL <- rainbow_hcl(mcmc$G[chains[1]], c = 80, l =70)}

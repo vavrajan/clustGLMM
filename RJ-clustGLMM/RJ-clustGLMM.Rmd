@@ -83,7 +83,7 @@ We compare to \CRANpkg{lcmm} [@Proust-Lima-etal2017], \CRANpkg{mixAK}, \CRANpkg{
 
 methodology section
 
-## GLMMs {#subsec:glmms}
+## Univariate GLMMs {#subsec:uni-glmms}
 different distribution families
 
 \begin{equation} 
@@ -111,7 +111,7 @@ different distribution families
   (\#eq:glmm-cat)
 \end{equation}
 
-
+## Multivariate GLMMs {#subsec:multi-glmms}
 joint modelling of random effects
 
 ## Model-based clustering of GLMMs {#subsec:mbc-glmms}
@@ -238,21 +238,17 @@ DiagrammeR::grViz("digraph {
   node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
   code6a[label = 'summary()']
   code6b[label = 'predict()']
-  code6c[label = 'plot(, which=clusters_kerneldensity)']
-  code6d[label = 'clustering_probabilities_and_deviance()']
+  code6c[label = 'clustering_probabilities_and_deviance()']
   
   subgraph cluster6 {
-    graph[layout = fdp, shape = rectangle]
-    style = rounded
-    bgcolor = gold
+    graph[layout = fdp, shape = rectangle, style = rounded, fillcolor = gold, style = filled]
     
     label = ''
     node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
     rec6[label = '6. Inference', fillcolor = gold, shape = none]
-    rec6a[label = 'Posterior description with the use of coda']
-    rec6b[label = 'Reconstruct linear predictor']
-    rec6c[label = 'Compare cluster-specific parameters']
-    rec6d[label = 'Approximate posterior of clustering probabilities and deviance']
+    rec6a[label = '6.1 Posterior description with the use of coda']
+    rec6b[label = '6.2 Reconstruct linear predictor']
+    rec6c[label = '6.3 Approximate posterior of clustering probabilities and deviance']
   }
   
   # edge definitions with the node IDs
@@ -269,7 +265,6 @@ DiagrammeR::grViz("digraph {
   {{rank=same rec6a -> code6a}}
   {{rank=same rec6b -> code6b}}
   {{rank=same rec6c -> code6c}}
-  {{rank=same rec6d -> code6d}}
   
   edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
   rec6 -> rec6a -> rec6b -> rec6c -> rec6d
@@ -396,6 +391,8 @@ However, since the dimension of parametric space of our model can easily reach h
 
 These functions are wrapped by `plot.clustglmm` function that covers all of the options with traceplots of total cluster occupation numbers `ng` as preferred default. They allow for cutting of burn-in period and thinning the samples, or even selecting the desired iterations manually. The plots are automatically organized into a matrix of convenient sizes by setting `par(mfrow=...)`. This can be prohibited by `setparmfrow = FALSE`. 
 
+In case a univariate parameter is of interest, `plot_diagnostics` displays the four plots (ACF, ECDF, kernel density and traceplot) into $2 \times 2$ grid. To select the univariate parameter properly, you need to provide (if applies) or omit (if does not apply) `what` (name of the parameter), `yspec` (to which outcome does it belong, if so), `gspec` (to which group it corresponds to, if so) and `dimspec` (the specific dimension, if not already a scalar). Consult what has to be supplied for which parameter with `settings` matrix. There is also possibility to include a line for the true value of the parameter, if known.  
+
 If convergence to the stationary distribution is not yet met then continuation can be simply performed by calling `clustGLMM` with the same input arguments and `inits = ...$last`. If the results do not meet the expected output maybe starting over with adjusted inputs and different seed can help.
 
 
@@ -435,13 +432,12 @@ The summary of the clustering is based on `clustering` and `certainty` in the `c
 
 We also provide a couple of functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped` and `plot_cat_vs_x_grouped`. The argument `group` requires division of subjects into some groups, e.g., the resulting clustering. Every cluster will be plotted with one of the colors from `colorspace::rainbow_hcl()` palette and slategrey color is reserved for label 0. 
 
-With `plot_num_vs_x_grouped` the relationship of outcome and continuous covariate `x` is depicted by 'spaghetti' plots, where observations corresponding to the same ID are joined with thin segments (ordered by the x-axis covariate `x`). A thick line of darker color shade then corresponds to the `loess.smooth` curve. Since the clusters can overlap, we recommend to plot subsets of the data separately for better visualization. 
+With `plot_num_vs_x_grouped` the relationship of outcome and continuous covariate `x` is depicted by 'spaghetti' plots, where observations corresponding to the same ID are joined with thin segments (ordered by the x-axis covariate `x`). A thick line of darker color shade then corresponds to the `loess.smooth` curve. Since the clusters can overlap, we recommend to plot subsets of the data separately for better visualization. If `x` is a factor, then overlapping boxplots with transparent colors are plotted for each level and group. 
 
 TODO - think about implementing of plots only for subset of groups instead of all of them (default).
 
-With `plot_cat_vs_x_grouped` the relationship of factor outcome and continuous covariate `x` is depicted by 'spineplots'. For each cluster separately, proportions of outcome labels are plotted next to each other to all categories of `x` determined by `xbreaks`, by default set to 11 equidistant points from minimum to maximum.
+With `plot_cat_vs_x_grouped` the relationship of factor outcome and continuous covariate `x` is depicted by 'spineplots'. For each cluster separately, proportions of outcome labels are plotted next to each other to all categories of `x` determined by `xbreaks`, by default set to 11 equidistant points from minimum to maximum. If `x` is already a factor, then the same spineplot is created with this categorization. 
 
-TODO - what if x is categorical covariate -> boxplots for clusters and spineplots
 
 ### Linear predictor {#subsubsec:impl-predict}
 

@@ -47,7 +47,9 @@ This function is used mainly internally in plotting functions to find appropriat
 \code{iterations} declares which \code{m} values should be gathered. If \code{iterations} is missing, the returned values are regulated by changing \code{burnin} and \code{thin}. First, only iterations with \code{m > burnin} are selected, then, from the remaining values only \code{seq(1, total_remaining_count, by=thin)} are selected. Also, \code{\link{post_processing}} could turn some of the cluster-specific variables into NA, hence, if \code{gspec} is missing, these cases are avoided.
 }
 \value{
-A list (for each element of \code{chains}) containing \code{data.frame} of three columns: 
+A list containing \code{whatLAB} (the default label for this scalar parameter) and \code{draws} a list with the draws.
+
+\code{draws} is a list (for each element of \code{chains}) containing \code{data.frame} of three columns: 
 \describe{
   \item{m}{iteration numbers,}
   \item{chain}{the chain number,}

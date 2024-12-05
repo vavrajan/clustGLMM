@@ -60,9 +60,10 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 options(width = 110, digits=4)
+# options(width = 40, digits=4)
 ```
 
-```{r packages, warning=FALSE}
+```{r packages}
 library("clustGLMM")
 library("colorspace")
 library("mvtnorm")
@@ -81,7 +82,7 @@ We observe three outcomes:
 * `ntrips` number of trips in the last year,
 * `satisfaction` the level of satisfaction (0=dissatisfied < 1=neither-nor < 2=satisfied).
 
-```{r students-load, warning=FALSE, echo = TRUE}
+```{r students-load, echo = TRUE}
 data(students, package="clustGLMM")
 head(students)
 ```
@@ -97,8 +98,8 @@ par(mar=c(4,4,1,0.5), mfrow = c(1,2))
 plot_num_vs_x_grouped(students, "income", x="age", g="g0", legend_placement="topleft")
 plot_num_vs_x_grouped(students, "income", x="age", g="g", legend_placement="topleft")
 ```
-The groups 2 and 3 are designed to differ in the other two outcomes. In Figure \@ref(fig:students-log-ntrips-vs-age) we clearly see that these students do not go on trips as often as the other two groups. In line with this fact it also seems that they become less satisfied with their life situation compared to the other groups, see Figure \@ref(fig:students-satisfaction-vs-age).
-```{r students-log-ntrips-vs-age, echo=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="The evolution of number of trips (on log-scale) with age blinded (left) and with grouping (right)."}
+The groups 2 and 3 are designed to differ in the other two outcomes. In Figure \@ref(fig:students-ntrips-vs-age) we clearly see that these students do not go on trips as often as the other two groups. In line with this fact it also seems that they become less satisfied with their life situation compared to the other groups, see Figure \@ref(fig:students-satisfaction-vs-age).
+```{r students-ntrips-vs-age, echo=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="The evolution of number of trips (on log-scale) with age blinded (left) and with grouping (right)."}
 par(mar=c(4,4,1,0.5), mfrow = c(1,2))
 plot_num_vs_x_grouped(students, "ntrips", x="age", g="g0", legend_placement="topleft")
 plot_num_vs_x_grouped(students, "ntrips", x="age", g="g", legend_placement="topleft")
@@ -142,7 +143,9 @@ for(y in Ys){
   formula[[y]] <- list()
   formula[[y]]$fixed <- ~ 1 # will become ~ 0
   # formula[[y]]$group <- as.formula(paste0("~ ", paste(bsnames, collapse = " + ")))
-  formula[[y]]$group <- ~ bs(age, knots=inner, Boundary.knots = bound, degree = degree, intercept = FALSE)
+  formula[[y]]$group <- ~ bs(age, 
+                             knots=inner, Boundary.knots = bound, 
+                             degree = degree, intercept = FALSE)
   formula[[y]]$random <- ~ 1
   formula[[y]]$offset <- ""
 }
@@ -158,75 +161,226 @@ varying["prec_num"] <- FALSE
 ### Sample chains {#subsubsec:students-sample-chains}
 
 Let us sample two randomly initialized chains of short length for $G$ higher than the true latent number of clusters. We suppress the standardization as the data were generated without standardization.
-```{r students-mcmc-initial, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6, fig.cap="Traceplots - initial cluster occupancy numbers.", fig.pos="H"}
+```{r students-mcmc-initial, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Traceplots - initial cluster occupancy numbers.", fig.pos="H"}
 set.seed(12345678)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
-                  G = 10, nchains = 2, iter = 100, # 300,
+                  G = 10, nchains = 2, iter = 3500,
                   varying = varying, 
                   standardize = TRUE)
-plot(mcmc)
+plot(mcmc, ng_trace_chain_split = FALSE)
 ```
 
-Let us jump one step ahead to do capture the evolution of cluster occupancy numbers `ng`. In Figure \@ref(fig:students-mcmc-initial) we clearly see that 2 of the 5 clusters die immediately and only 3 non-empty remain. We could start over with $G=3$ but for the purpose of demonstration of other steps, let us continue in sampling:
+Let us jump one step ahead to capture the evolution of cluster occupancy numbers `ng`. In Figure \@ref(fig:students-mcmc-initial) we clearly see that 2 of the 5 clusters die immediately and only 3 non-empty remain. We could start over with $G=3$ but for the purpose of demonstration of other steps, let us continue in sampling:
 
-```{r students-mcmc, message=FALSE, echo=TRUE, results=FALSE}
+```{r students-mcmc, echo=TRUE, results=FALSE}
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
                   inits = mcmc$last,
-                  G = 10, nchains = 2, iter = 100, # 1000,
+                  G = 10, nchains = 2, iter = 1000, # 1000,
                   varying = varying, 
-                  standardize = FALSE)
+                  standardize = TRUE)
 ```
-Wait for the chains to be sampled, depending on the size of the dataset can take several seconds or minutes.
-```{r students-mcmc-print, message=FALSE, echo=TRUE, results=TRUE}
+Wait for the chains to be sampled, depending on the size of the dataset can take several seconds or minutes. The simple `print` statement summarizes the model definition. But also the preliminary results on clustering based on sampled allocation indicators can be printed.  
+```{r students-mcmc-print, echo=TRUE, results=TRUE}
 print(mcmc)
 print(mcmc, which = "clustering")
 ```
 
 
 ### Visual diagnostics  {#subsubsec:students-visual-diagnostics}
-```{r students-mcmc-ng, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6, fig.cap="Traceplots - cluster occupancy numbers.", fig.pos="H"}
+
+By default, `plot(mcmc)` produces the traceplots of cluster occupancy numbers with the use of `plot_ng_trace_chain_split()`. In this special case all clusters one window contains traceplots for all clusters within one chain. For all other inputs, the implemented `plot.clustglmm` plots all chains together into one window but for only a single model parameter. However, it is able to arrange plots for parameters of the same purpose, e.g. all regression coefficients for certain type of outcome. If this is desired for `what = "ng"` just set `np_trace_chain_split = FALSE` as it has been done above. This way we see which clusters are empty (or in the process of being emptied). If there are still some changes in progress, consider further sampling. 
+
+```{r students-mcmc-ng, eval=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Traceplots - cluster occupancy numbers.", fig.pos="H"}
 plot(mcmc)
 ```
 
-```{r students-mcmc-ng-in-one, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=6, fig.cap="Traceplots - cluster occupancy numbers.", fig.pos="H"}
-par(mfrow = nice_nrow_ncol(length(mcmc$chains)), mar = c(4,4,0.5,0.5))
-COL <- diverge_hcl(mcmc$nchains, c = 80, l = 70)
-MIN <- min(sapply(mcmc$chains, function(ch){min(mcmc$draws[[ch]][,paste0("ng(", 1:mcmc$G[ch], ")")], na.rm = TRUE)}))
-MAX <- max(sapply(mcmc$chains, function(ch){max(mcmc$draws[[ch]][,paste0("ng(", 1:mcmc$G[ch], ")")], na.rm = TRUE)}))
-for(ch in mcmc$chains){
-  plot(0, 0, type = "n", 
-       xlim = range(mcmc$draws[[ch]][,"m"]), ylim = c(MIN, MAX),
-       xlab = "Iteration", ylab = "Cluster occupancy number ng")
-  for(g in 1:mcmc$G[ch]){
-    lines(mcmc$draws[[ch]][,paste0("ng(",g,")")] ~ mcmc$draws[[ch]][,"m"],
-          lty = 1, lwd = 1, col = COL[ch])
-  }
-}
-```
-
-```{r students-mcmc-prec-num, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="Traceplots - precision parameter for income.", fig.pos="H"}
+Despite stationarity in the cluster allocation, other model parameters may not have achieved it yet. Check the traceplots for all model parameters by specifying `what` argument. Figure \@ref{fig:students-mcmc-prec-num} showcases the output for the precision error parameter for numeric outcome.
+```{r students-mcmc-prec-num, echo=TRUE, results=FALSE, fig.align='center', fig.width=3, fig.height=2.5, fig.cap="Traceplots - precision parameter for income.", fig.pos="H"}
 plot(mcmc, "prec_num")
 ```
 
-```{r students-mcmc-sd-num, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="The four implemented plots - standard error for income.", fig.pos="H"}
-plot_all(mcmc, what = "sd_num", yspec = "income", trueval = 10.0)
+There is also a possibility to focus on a single chosen scalar model parameter and plot all four implemented types: traceplots, kernel density estimate, ECDF and ACF. Function `plot_diagnostics` also has an option to add a line for the true value of the parameters, if known in advance (with a simulated dataset). 
+
+```{r students-mcmc-sd-num, echo=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="The four implemented plots - standard error for income.", fig.pos="H"}
+plot_diagnostics(mcmc, what = "sd_num", yspec = "income", trueval = 10.0)
 ```
 
-```{r students-mcmc-sd-num-thin, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="The four implemented plots - standard error for income.", fig.pos="H"}
-plot(mcmc, what = "sd_num", which = "ACF", burnin = 10, thin = 5)
+All plotting functions are equipped with an option of trimming initial burn-in phase and thinning the remaining samples to reduce autocorrelation.
+```{r students-mcmc-sd-num-thin, echo=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="Applying thinning to reduce auto-correlation.", fig.pos="H"}
+par(mfrow = c(2,2), mar = c(4,4,0.5,0.5))
+plot_ACF(mcmc, what = "beta_ord", yspec = "satisfaction", gspec = 1, dimspec = 1,
+         burnin = 10, thin = 1)
+plot_ACF(mcmc, what = "beta_ord", yspec = "satisfaction", gspec = 1, dimspec = 1,
+         burnin = 10, thin = 2)
+plot_ACF(mcmc, what = "beta_ord", yspec = "satisfaction", gspec = 1, dimspec = 1,
+         burnin = 10, thin = 5)
+plot_ACF(mcmc, what = "beta_ord", yspec = "satisfaction", gspec = 1, dimspec = 1,
+         burnin = 10, thin = 10)
 ```
 
 ### Within-chain post-processing {#subsubsec:students-post-processing}
+By calling `post_processing` function to unprocessed `clustglmm` class we focus on the samples with `Gplus` equal to the most frequent number of clusters. After that the empty clusters are dropped, remaining are relabelled to `1:modeGplus` and within each iteration the meaning of labels is permuted to align in case of label-switching. The success of this post-processing depends on random initialization made by `kmeans`. 
+```{r students-post-processing, echo = TRUE, results=FALSE}
+set.seed(12345)
+mcmc_pp <- post_processing(mcmc)
+```
+```{r students-mcmc-pp, echo = TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Regression coefficients posterior kernel density estimates for income.", fig.pos="H"}
+print(summary(mcmc_pp), chains = c(1, 2), which = c("clust_param"))
+plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity")
+```
+
 
 ### Across-chain post-processing {#subsubsec:students-permute-cluster-labels}
+Nevertheless it seems (Figures \@ref{fig:students-post-processing} and \@ref{fig:students-post-processing}) that the interpretation of the cluster labels is still different from each other. We align it with `permute_cluster_labels()` where the permutations are created to match the true labelling used to generate the data.  
+```{r students-permuting-labels, echo = TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Permuted last regression coefficients posterior kernel density estimates for income - each chain separately.", fig.pos="H"}
+perm <- list()
+perm[[1]] <- c(2, 1, 3)
+perm[[2]] <- c(3, 2, 1)
+mcmc_pp <- permute_cluster_labels(mcmc_pp, perm = perm)
+print(summary(mcmc_pp), chains = c(1, 2), which = c("group_param"))
+# See? Now the colors match across chains
+par(mfrow = c(1, 2), mar = c(4, 4, 0.5, 0.5))
+plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7, chains = 1, setparmfrow = FALSE)
+plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7, chains = 2, setparmfrow = FALSE)
+```
 
 ### Inference {#subsubsec:students-inference}
 
-```{r students-mcmc-summary, message=FALSE, echo=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="The four implemented plots - standard error for income.", fig.pos="H"}
-print(summary(mcmc), chains = 1, 
+For the inference we choose just one of the chains. The posterior distribution of model parameters can be obtained via `summary` function that applies `summary.mcmc` to coda-like object for each chain separately. Since printing all model parameters could be long, we provide an option to print the summaries in blocks of 
+```{r students-mcmc-summary, echo=TRUE, results=TRUE}
+ch <- 2
+print(summary(mcmc_pp), chains = ch, 
       which = c("mcmc", "clustering", "inv_param", "clust_param"))
+```
+Now that the meaning of cluster labels is aligned with the original labelling we can easily print the confusion matrix and see the low misclassification error even when the crude classification based on sampled indicators is used.
+
+```{r students-misclassification-U-samples, echo=TRUE, results=TRUE, fig.align='center', fig.width=6, fig.height=4, fig.cap="The four implemented plots - standard error for income.", fig.pos="H"}
+students[,paste0("Uclustering",ch)] <- mcmc_pp$clustering[students$i,ch]
+table(students[students$j==1,c("g", paste0("Uclustering",ch))])
 ```
 
 ### Linear predictor {#subsubsec:students-predict}
 
+The most straighforward interpretation of the clusters comes from reconstructing the estimated spline curves for each cluster separately. 
+```{r students-predict-income-and-ntrips, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="The estimated spline curves for income (left) and number of trips (right).", fig.pos="H"}
+age_grid <- seq(18, 40, by = 0.1)
+burnin <- 0
+thin <- 1
+COL <- rainbow_hcl(mcmc_pp$modeGplus[ch], c = 80, l = 50)
+
+par(mfrow=c(1,2), mar=c(4,4,1,0.5))
+for(y in c(mcmc_pp$Nums, mcmc_pp$Pois)){
+  if(is.element(y, mcmc_pp$Nums)){
+    fun <- identity
+  }else{
+    fun <- exp
+  }
+  par(mar=c(4,4,1,0.5))
+  plot_num_vs_x_grouped(students, y=y, x="age", g=paste0("Uclustering",ch), id=id, 
+                        legend_placement="topleft", add_lowess = FALSE)
+  
+  newdata <- data.frame(age = age_grid)
+  newdata[,bsnames]<- bs(newdata$age, knots = inner, Boundary.knots = bound,
+                         degree = degree, intercept = FALSE)
+  pred <- predict(mcmc_pp, newdata, y=y, type="lp", what="fg", method="samples",
+                  burnin=burnin, thin=thin, chain=ch)
+  for(ig in 1:mcmc_pp$modeGplus[ch]){
+    g <- mcmc_pp$clusters[[ch]][ig]
+    lines(x = age_grid, y = fun(pred$fit[,paste0("(",g,")")]),
+          col = COL[ig], lwd = 3)
+    if(!is.null(pred$lwr)){
+      lines(x = age_grid, y = fun(pred$lwr[,paste0("(",g,")")]),
+            col = COL[ig], lty = 2)
+    }
+    if(!is.null(pred$upr)){
+      lines(x = age_grid, y = fun(pred$upr[,paste0("(",g,")")]),
+            col = COL[ig], lty = 2)
+    }
+  }
+}
+```
+
+Comparing Figure \@ref{fig:students-predict-income-and-ntrips} to Figures \@ref{fig:students-income-vs-age} and \@ref{fig:students-ntrips-vs-age} we see that the true clusters and curves have been indeed recovered. The same holds for the ordinal outcome, see Figures \@ref{fig:students-satisfaction-vs-age} and \@ref{fig:students-predict-satisfaction}.
+
+```{r students-predict-satisfaction, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Estimated spline curves for satisfaction with shifting by intercepts (left) and spineplot for each group separately in time (right).", fig.pos="H"}
+par(mfrow=c(1,2), mar=c(4,4,2,0.5))
+for(y in mcmc_pp$Ords){
+  newdata <- data.frame(age = age_grid)
+  newdata[, bsnames] <- bs(age_grid, knots = inner, Boundary.knots = bound, 
+                           degree = degree, intercept = FALSE)
+  maxk <- mcmc_pp$Kord[y]
+  pred_age <- list()
+  for(k in 1:maxk){
+    pred_age[[k]] <- predict(mcmc_pp, newdata, y=y, type="lp", 
+                             what="fg", method="samples", k=k,
+                             burnin=burnin, thin=thin, chain=ch)
+  }
+  plot(x=0, y=0, type="n",
+       xlim=range(age_grid), ylim=range(unlist(pred_age)),
+       xlab="age", ylab="linear predictor - ordered intercept",
+       main=y)
+  for(k in 1:maxk){
+    for(ig in 1:mcmc_pp$modeGplus[ch]){
+      g <- mcmc_pp$clusters[[ch]][ig]
+      lines(x = age_grid,
+            y = pred_age[[k]]$fit[,paste0("(",g,")")],
+            col = COL[ig], lwd = 3)
+      if(!is.null(pred_age[[k]]$lwr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$lwr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+      if(!is.null(pred_age[[k]]$upr) | maxk==1){
+        lines(x = age_grid,
+              y = pred_age[[k]]$upr[,paste0("(",g,")")],
+              col = COL[ig], lty = 2)
+      }
+    }
+  }
+}
+
+for(y in mcmc_pp$Ords){
+  plot_cat_vs_x_grouped(students, y=y, x="age", group=paste0("Uclustering",ch), main=y)
+}
+```
+
+Group 1 (red) represents men who decided not to pursue a university degree and decided to work earlier compared to the other groups. That explains higher income between 18-23 years and its slower growth. Since they probably started their family life earlier, they start going on trips with the kids earlier then other groups. But due to low wages cannot go so often. 
+
+Groups 2 (green) and also 3 (blue) represent men who got the university degree, which explains the steeper curve of increasing income after year 25. However, men in group 2 then travel a lot, which reduces when they start a family. Once the kids grow they start having more trips with them, since they can allow that due to higher income. These family experiences keep their happiness level high.
+
+On the other hand men in group 3 are hard workers. They get only negligibly higher income than mean from group 2, but they do not have much time for trips. Spending a lot of time in work brings a lot of stress which reduces the level of satisfaction. 
+
 ### Clustering probabilities and deviance {#subsubsec:students-clust-prob-deviance}
+
+The clustering presented in the results above is based on sampled allocation indicators and already provides reasonable results. More thorough approach would be to evaluate the posterior distribution of clustering probabilities. Applying `clustering_probabilities_and_deviance` we can evaluate these parameteric functions at carefully chosen iterations (could be parallelized). 
+
+
+```{r students-clustering-probabilities-and-deviance, echo=TRUE, results = FALSE}
+pmcmc <- clustering_probabilities_and_deviance(
+  mcmc_pp, id = id,
+  data = students, dynamic_prob = FALSE,
+  start = 1, end = mcmc_pp$iter, thin = 1, chains = c(1,2),
+  NGQ = 1)
+pmcmc
+print(summary(pmcmc), chains = ch, which = "clustering")
+```
+
+```{r students-clustering-probabilities-confusion, echo=TRUE}
+students[,paste0("clustering",ch)] <- pmcmc$clustering[students$i,ch]
+table(students[students$j==1,c("g", paste0("clustering",ch))])
+table(students[students$j==1,c(paste0("Uclustering",ch), paste0("clustering",ch))])
+```
+
+```{r students-clust-probs-posterior, echo=TRUE, eval=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="Posterior distribution of clustering probabilities.", fig.pos="H"}
+par(mfrow = c(2,4), mar = c(4,4,0.5,0.5))
+for(i in sample(1:500, 8)){
+  plot_clusters(pmcmc, what = "pUig_int", dimspec = i, 
+                chains = ch, setparmfrow = FALSE)
+}
+```
+
+```{r students-pmcmc, echo=FALSE, eval=FALSE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="", fig.pos="H"}
+par(mfrow = c(1,2), mar = c(4,4,0.5,0.5))
+plot_traceplots(pmcmc, what="deviance")
+plot_traceplots(mcmc, what="loglik")
+```

@@ -1,5 +1,5 @@
 post_processing <-
-function(mcmc, cols){
+function(mcmc, cols, iter.max = 200, nstart = 30){
   
   ### 0) The type of saving results has to be "matrix" for the code below
   backtolist <- FALSE
@@ -39,8 +39,6 @@ function(mcmc, cols){
       kmcols[[ch]] <- cols
     }
   }
-  message("columns used for k-means:")
-  print(kmcols)
   
   ### 3) Creating submatrices of sampled cluster-specific parameters
   clusterspec <- whichG <- list()
@@ -77,7 +75,12 @@ created for each chain separately.")
                                                colnames(clusterspec[[ch]]))]
     colnames(forkmeans[[ch]]) <- gsub("\\(1\\)", "", cnames)
   }
-  message("Group-specific parameters stacked below each other, prepared for k-means")
+  message("Group-specific parameters stacked below each other, prepared for k-means.")
+  
+  message("Columns used for k-means:")
+  for(ch in mcmc$chains){
+    print(colnames(forkmeans[[ch]]))
+  }
   
   ### 5) Perform K-means clustering + checking the permutations
   Mrhos <- numeric(mcmc$nchains)
@@ -90,7 +93,8 @@ created for each chain separately.")
     #dim(forkmeans[[ch]])
     #summary(forkmeans[[ch]])
     forkmeans[[ch]] <- scale(as.matrix(forkmeans[[ch]]))
-    km <- kmeans(forkmeans[[ch]], centers = mcmc$modeGplus[ch])
+    km <- kmeans(forkmeans[[ch]], centers = mcmc$modeGplus[ch],
+                 iter.max = iter.max, nstart = nstart)
     # create index matrix
     indmat[[ch]] <- matrix(km$cluster, ncol = mcmc$modeGplus[ch], byrow = FALSE)
     #head(indmat[[ch]])
@@ -246,27 +250,23 @@ created for each chain separately.")
     } # end adding pUig, pUig_int
   } # end of creating draws
   
-  
-  fun <- function(U, ch){
-    tab = table(U)
-    tab <- tab[as.character(clusters[[ch]])]
-    c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
-  }
-  
   ### 8) make the output of the same class as input
   # + make necessary changes
   clusters <- iterations <- list()
-  clustering <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
-  certainty <- matrix(NA, nrow = as.numeric(n), ncol = mcmc$nchains)
+  clustering <- matrix(NA, nrow = as.numeric(mcmc$n), ncol = mcmc$nchains)
+  certainty <- matrix(NA, nrow = as.numeric(mcmc$n), ncol = mcmc$nchains)
   for(ch in mcmc$chains){
     # iterations
-    iterations[[ch]] <- draws[[ch]]$m[ispermutation[[ch]]]
+    iterations[[ch]] <- draws[[ch]][ispermutation[[ch]]==1, "m"]
     # clusters
     clusters[[ch]] <- 1:mcmc$modeGplus[ch]
     # U samples
     if(mcmc$settings[[ch]]["U","save"]){
       Us <- draws[[ch]][,paste0("U[",1:mcmc$n,"]")]
-      ccU <- apply(Us, 2, fun, ch=ch)
+      ccU <- apply(Us, 2, function(U, ch){
+        tab <- table(U)[as.character(clusters[[ch]])]
+        c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iters[ch])
+      }, ch=ch)
       clustering[,ch] <- ccU[1, ]
       certainty[,ch] <- ccU[2, ]
     }else{
@@ -364,9 +364,9 @@ created for each chain separately.")
       if(lsettings[[ch]]["pUig","save"]){
         pvalues <- values[param_names[[ch]]$pUig]
       }else{
-        pvalues <- rep(last[[ch]]$w, each=n)
+        pvalues <- rep(last[[ch]]$w, each=mcmc$n)
       }
-      last[[ch]]$pUig <- matrix(pvalues, n, mcmc$modeGplus[ch], byrow = FALSE)
+      last[[ch]]$pUig <- matrix(pvalues, mcmc$n, mcmc$modeGplus[ch], byrow = FALSE)
       
       # prec_num
       last[[ch]]$prec_num <- list()

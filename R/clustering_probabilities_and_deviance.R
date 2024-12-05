@@ -353,9 +353,7 @@ Change the  settings and use clustGLMM() again.")
     }
     
     if(mcmc$howsave == "cmcmc"){
-      for(p in params[1:14]){
-        cparamvalues[[p]] <- mcmc$draws[[ch]][[p]]
-      }
+      stop("howsave = cmcmc is not supported.")
     }
     
     #dyn.load("Cfun/pUig_dev.dll")
@@ -418,7 +416,7 @@ Change the  settings and use clustGLMM() again.")
          # parameters describing dimensions
          chain     = as.integer(ch), # number of the chain
          G         = as.integer(mcmc$G), # number of classes
-         iter      = as.integer(niter), # total number of generated states
+         iter      = as.integer(niter[ch]), # total number of generated states
          N         = as.integer(N), # total number of observations
          n         = as.integer(n), # total number of subjects (different ids in the dataset)
          nY        = as.integer(mcmc$nY), # 3 numbers: counts of Nums, Ords and Bins variables
@@ -488,7 +486,7 @@ Change the  settings and use clustGLMM() again.")
 
     if(howsave == "matrix"){
       # results will be returned in matrix - the same way as original R function
-      output[[ch]] <- matrix(NA, nrow = niter, ncol = 1+nparams[ch])
+      output[[ch]] <- matrix(NA, nrow = niter[ch], ncol = 1+nparams[ch])
       output[[ch]][,1] <- iters[[ch]]
       colnames(output[[ch]]) <- cnames[[ch]]
       output[[ch]] <- as.data.frame(output[[ch]])
@@ -561,10 +559,9 @@ Change the  settings and use clustGLMM() again.")
   call <- paste0(call, "###----------------------------------------------------------------------------------###\n")
   call <- paste0(call, "N = sample size: ", N, "\n")
   call <- paste0(call, "n = number of units: ", n, "\n")
-  call <- paste0(call, "observations per unit (minimum): ", min(nsubj), " \n")
-  call <- paste0(call, "observations per unit (median): ", median(nsubj), " \n")
-  call <- paste0(call, "observations per unit (maximum): ", max(nsubj), " \n")
-  call <- paste0(call, "G = maximal number of clusters: ", mcmc$G, "\n")
+  call <- paste0(call, "observations per unit (min | median | max): ", 
+                 min(nsubj), " | ", median(nsubj), " | ", max(nsubj), " \n")
+  call <- paste0(call, "G = maximal number of clusters: ", paste(mcmc$G, collapse=", "), "\n")
   
   saved_params <- rownames(res$settings[[chains[1]]])[res$settings[[chains[1]]]$save]
   call <- paste0(call, "\nList of saved parameters in $draws: ", 
@@ -573,8 +570,9 @@ Change the  settings and use clustGLMM() again.")
   call <- paste0(call, "start = first iteration number used: ", start, "\n")
   call <- paste0(call, "end = last iteration number used: ", end, "\n")
   call <- paste0(call, "thin = thinning applied to iterations between start and end: ", thin, "\n")
-  call <- paste0(call, "niter = number of iterations used for approximation: ", niter, "\n")
   call <- paste0(call, "chains = chains used: ", paste(chains, collapse=", "), "\n")
+  call <- paste0(call, "niter = number of iterations used for approximation (per chain): ", 
+                 paste(niter, collapse = ", "), "\n")
   call <- paste0(call, "dynamic_prob = ", as.character(dynamic_prob), " = ", 
                  ifelse(dynamic_prob,
                         "dynamically calculated probabilities", 

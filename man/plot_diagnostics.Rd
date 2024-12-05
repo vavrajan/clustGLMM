@@ -1,9 +1,10 @@
-\name{plot_all}
-\alias{plot_all}
+\name{plot_diagnostics}
+\alias{plot_diagnostics}
 \alias{plot_ACF}
 \alias{plot_ECDF}
 \alias{plot_kerneldensity}
 \alias{plot_traceplots}
+\alias{plot_ng_trace_chain_split}
 \alias{plot_ACF_param}
 \alias{plot_ECDF_param}
 \alias{plot_kerneldensity_param}
@@ -22,7 +23,7 @@ There are 4 main plots to be created:
   \item{\code{kerneldensity}}{one-dimensional kernel density estimate,}
   \item{\code{traceplots}}{parameter samples against the iteration number.}
 }
-All of these for one specific parameter can be plotted by \code{plot_all}. 
+All of these for one specific parameter can be plotted by \code{plot_diagnostics}. 
 These functions above work only for a univariate parameter. 
 Plots for all elements of a multivariate parameter can be created using \code{..._param} functions. 
 A special function is \code{plot_clusters} which allows to compare densities or ECDFs of univariate group-specific parameter across non-empty clusters.  
@@ -40,9 +41,12 @@ plot_kerneldensity(mcmc, scalar_samples, what, gspec, dimspec, yspec,
 plot_traceplots(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                 burnin = 0, thin = 1, iterations, chains, 
                 COL, labcex = 1, whatLAB)
-plot_all(mcmc, scalar_samples, what, gspec, dimspec, yspec,
-         burnin = 0, thin = 1, lag.max, iterations, chains, trueval, setparmfrow = TRUE, 
-         COL, move.width = 0.3, whatLAB)
+plot_ng_trace_chain_split(mcmc, 
+                          burnin = 0, thin = 1, iterations, chains,
+                          setparmfrow = TRUE)
+plot_diagnostics(mcmc, scalar_samples, what, gspec, dimspec, yspec,
+                 burnin = 0, thin = 1, lag.max, iterations, chains, trueval, 
+                 setparmfrow = TRUE, COL, move.width = 0.3, whatLAB)
 plot_ACF_param(mcmc, what, burnin = 0, thin = 1, lag.max = 30, iterations, chains, 
                setparmfrow = TRUE, allclusters = FALSE)
 plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, 
@@ -142,7 +146,7 @@ a boolean declaring whether ECDFs should be plotted for comparing different clus
     \item{\code{kerneldensity}}{Kernel density estimator plots have the range of sampled values on x-axis and the density value in [0, max(density)] on y-axis. Different colors depict different chains.}
     \item{\code{traceplot}}{Traceplots have the range of the considered iteration numbers on x-axis and the sampled values of the parameter on y-axis. Different colors depict different chains. Stationarity of these plots is desired for reliable posterior approximation, if the plots are not stationary then consider continuation in sampling. }
   }
-  You can plot all 4 of these by \code{plot_all}. 
+  You can plot all 4 of these by \code{plot_diagnostics}. 
   By default they are produced in 2 by 2 layout, but if you would prefer some different arrangement you can do that before calling the function and supressing \code{setparmfrow = FALSE}. 
   
   Using the functions above you can only plot a scalar model parameter which is specified by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. 
@@ -150,6 +154,7 @@ a boolean declaring whether ECDFs should be plotted for comparing different clus
   By default, only cluster-specific parameters for the (non-empty) clusters saved in \code{mcmc$clusters} are arranged.
   If the labels across chains do not coincide, then chains are plotted separately.
   The exception is made for \code{w} and \code{ng} for which always all clusters are plotted. 
+  Moreover, there is special function \code{plot_ng_trace_chain_split} for plotting traces of \code{ng} for all clusters into one plot per chain (default by \code{\link{plot.clustglmm}}). 
   Using function \code{\link{nice_nrow_ncol}} plots are arranged into a most effective grid. 
   Moreover, parameters which are symmetric matrices (with or without diagonal) are arranged as expected and only the upper triangle is filled with plots. 
   See examples below.
@@ -227,6 +232,8 @@ nchains <- 2  # number of chains to be sampled
 ## No inits specified
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
                   G = Gmax, iter = 1500, nchains = nchains)
+plot(mcmc)
+plot(mcmc, ng_trace_chain_split=FALSE)
                        
 ###-----------------------------------------------------------------------------
 ###     Creating plots
@@ -249,7 +256,7 @@ plot_kerneldensity(mcmc = mcmc, what = "beta_num_fix", yspec = mcmc$Nums[1],
                    dimspec = 1, dolegend = TRUE)
 plot_traceplots(mcmc = mcmc, what = "beta_num_fix", yspec = mcmc$Nums[1],
                 dimspec = 1)
-plot_all(mcmc = mcmc, what = "beta_num_fix", yspec = mcmc$Nums[1], dimspec = 1)
+plot_diagnostics(mcmc = mcmc, what = "beta_num_fix", yspec = mcmc$Nums[1], dimspec = 1)
 
 ## Correlation matrix between the random effects
 par(mfrow = c(mcmc$totnran-1, mcmc$totnran-1), mar = c(4, 4, 1, 1))

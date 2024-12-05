@@ -4,7 +4,17 @@ summary.clustglmm <- function(object, ...){
   # computes necessary outputs for summary
   coda_summary <- fnames <- gnames <- cnames <- lnames <- list()
   for(ch in object$chains){
-    coda_summary[[ch]] <- summary(coda[[ch]], na.rm = TRUE)
+    if(sum(is.na(coda[[ch]])) > 0){
+      stats <- data.frame(Mean = apply(coda[[ch]], 2, mean, na.rm = TRUE),
+                          SD = apply(coda[[ch]], 2, sd, na.rm = TRUE))
+      quants <- t(apply(coda[[ch]], 2, quantile, 
+                        probs = c(0.025, 0.25, 0.5, 0.75, 0.975), na.rm = TRUE))
+      coda_summary[[ch]] <- list()
+      coda_summary[[ch]]$statistics <- stats
+      coda_summary[[ch]]$quantiles <- quants
+    }else{
+      coda_summary[[ch]] <- summary(coda[[ch]], na.rm = TRUE) # na.rm = TRUE does not work
+    }
   
     settings <- object$settings[[ch]]
     output <- ifelse(length(intersect(rownames(settings), c("deviance", "dev_i", "pUig_int"))) > 0,

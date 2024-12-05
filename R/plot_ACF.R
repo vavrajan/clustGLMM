@@ -16,30 +16,11 @@ function(mcmc, scalar_samples,
                                          burnin = burnin, thin = thin, 
                                          iterations = iterations, chains = chains)
   }
-  subiter <- max(unlist(lapply(scalar_samples, function(x){dim(x)[1]})), na.rm=TRUE)
+  subiter <- max(unlist(lapply(scalar_samples$draws, function(x){dim(x)[1]})), na.rm=TRUE)
   if(lag.max >= subiter){lag.max <- subiter-1}
   
   if(missing(whatLAB)){
-    whatLAB <- what
-    
-    if(!missing(yspec)){
-      whatLAB <- paste(whatLAB, yspec, sep = "_")
-    }
-    
-    if(!missing(gspec)){
-      whatLAB <- paste0(whatLAB, "(", gspec, ")")
-    }
-    
-    if(missing(dimspec)){
-      # no dimension supplied = no need for supplying -> 1-dim parameter
-    }else{
-      if(length(dimspec) == 1){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],"]")
-      }
-      if(length(dimspec) == 2){
-        whatLAB <- paste0(whatLAB,"[",dimspec[1],",",dimspec[2],"]")
-      }
-    }
+    whatLAB <- scalar_samples$whatLAB
   }
   
   if(missing(COL)){
@@ -61,7 +42,7 @@ function(mcmc, scalar_samples,
   chcount <- 0
   for(ch in chains){
     chcount <- chcount+1
-    pomACF <- acf(scalar_samples[[ch]]$y, lag.max = lag.max, plot = F, na.action = na.pass)$acf[,1,1]
+    pomACF <- acf(scalar_samples$draws[[ch]]$y, lag.max = lag.max, plot = F, na.action = na.pass)$acf[,1,1]
     lines(pomACF ~ c(0:lag.max + posun[chcount]),
           col = COL[ch], lwd = 2)
     segments(x0 = c(0:lag.max)+posun[chcount], 

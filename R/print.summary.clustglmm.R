@@ -1,4 +1,5 @@
-print.summary.clustglmm <- function(x, chains=c(1L), which = c("mcmc", "inv_param", "clust_param"), ...){
+print.summary.clustglmm <- function(x, chains=c(1L), 
+                                    which = c("mcmc", "inv_param", "clust_param"), ...){
   # cat("Call:\n")
   # cat(x$call)
   # cat("\n## Clustering based on sampled indicators:\n")
@@ -17,8 +18,8 @@ print.summary.clustglmm <- function(x, chains=c(1L), which = c("mcmc", "inv_para
   
   cat("\n## Summary of the sampled parameters:\n")
   for(ch in chains){
-    ss <- x$coda_summary[[ch]]$statistics
-    sq <- x$coda_summary[[ch]]$quantiles
+    ss <- as.matrix(x$coda_summary[[ch]]$statistics)
+    sq <- as.matrix(x$coda_summary[[ch]]$quantiles)
     s <- cbind(sq[,c("2.5%", "25%", "50%")], ss[,"Mean",drop=F], sq[,c("75%", "97.5%")])
     cat("-----------------------------------------------------------------------\n")
     cat(paste0("Chain ", ch, "\n"))
@@ -45,38 +46,42 @@ print.summary.clustglmm <- function(x, chains=c(1L), which = c("mcmc", "inv_para
       print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
     }
     
-    cat("\nSummary of the key parameter estimates\n")
-    cat("-----------------------------------------------------------------------\n")
-    
-    if(is.element("inv_param", which)){
-      if(length(x$fnames[[ch]]) > 0){
-        cat("\nCluster-invariant parameters:\n")
-        print(s[x$fnames[[ch]],,drop=FALSE])
+    if(length(intersect(which, 
+                        c("inv_param", "clust_param", "latent_param", "group_param"))
+              ) > 0){
+      cat("\nSummary of the key parameter estimates\n")
+      cat("-----------------------------------------------------------------------\n")
+
+      if(is.element("inv_param", which)){
+        if(length(x$fnames[[ch]]) > 0){
+          cat("\nCluster-invariant parameters:\n")
+          print(s[x$fnames[[ch]],,drop=FALSE])
+        }
       }
-    }
-    
-    if(is.element("clust_param", which)){
-      cint <- intersect(x$cnames[[ch]], rownames(s))
-      if(length(cint) > 0){
-        cat("\nClustering-related parameters:\n")
-        print(s[cint,,drop=FALSE])
+      
+      if(is.element("clust_param", which)){
+        cint <- intersect(x$cnames[[ch]], rownames(s))
+        if(length(cint) > 0){
+          cat("\nClustering-related parameters:\n")
+          print(s[cint,,drop=FALSE])
+        }
       }
-    }
-    
-    if(is.element("latent_param", which)){
-      iint <- intersect(x$inames[[ch]], rownames(s))
-      if(length(iint) > 0){
-        cat("\nLatent variables:\n")
-        print(s[iint,,drop=FALSE])
+      
+      if(is.element("latent_param", which)){
+        iint <- intersect(x$inames[[ch]], rownames(s))
+        if(length(iint) > 0){
+          cat("\nLatent variables:\n")
+          print(s[iint,,drop=FALSE])
+        }
       }
-    }
-    
-    if(is.element("group_param", which)){
-      if(length(x$gnames[[ch]]) > 0){
-        for(g in x$clusters[[ch]]){
-          gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), x$gnames[[ch]])
-          cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
-          print(s[gnames,,drop=FALSE])
+      
+      if(is.element("group_param", which)){
+        if(length(x$gnames[[ch]]) > 0){
+          for(g in x$clusters[[ch]]){
+            gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), x$gnames[[ch]])
+            cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
+            print(s[gnames,,drop=FALSE])
+          }
         }
       }
     }
