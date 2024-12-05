@@ -26,7 +26,7 @@ plot_ng_trace_chain_split <- function(mcmc,
   
   MIN <- min(sapply(chains, 
                     function(ch){min(ngdraws[[ch]], na.rm = TRUE)}))
-  MIN <- max(sapply(chains, 
+  MAX <- max(sapply(chains, 
                     function(ch){max(ngdraws[[ch]], na.rm = TRUE)}))
   
   par(mfrow = nice_nrow_ncol(length(chains)), mar = c(4,4,0.5,0.5))

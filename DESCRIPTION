@@ -22,3 +22,4 @@ Description: Provides an MCMC sampler for modelling multivariate regression mode
   or by proper exploration of posterior distribution of classification probabilities.
 License: GPL-2
 Imports: coda, colorspace, gaussquad, graphics, grDevices, HDInterval, MASS, methods, mvtnorm, nnet, splines, stats, utils
+Depends: R (>= 4.0.0)
