@@ -49,16 +49,16 @@ S3method(print, summary.clustglmm)
 importFrom("coda", "as.mcmc.list", "mcmc")
 importFrom("colorspace", "diverge_hcl", "rainbow_hcl")
 importFrom("gaussquad", "hermite.he.quadrature.rules")
-importFrom("grDevices", "grey.colors", "rgb")
-importFrom("graphics", "abline", "axis", "legend", "lines", "mtext",
-           "par", "rect", "segments", "text")
+importFrom("grDevices", "col2rgb", "grey.colors", "rgb")
+importFrom("graphics", "abline", "axis", "boxplot", "legend", "lines", "mtext",
+           "par", "points", "rect", "segments", "text")
 importFrom("HDInterval", "hdi")
 importFrom("MASS", "polr")
 importFrom("methods", "is")
 importFrom("mvtnorm", "rmvnorm")
 importFrom("nnet", "multinom")
 importFrom("splines", "bs")
-importFrom("stats", "acf", "as.formula", "binomial", "density", "ecdf",
+importFrom("stats", "acf", "as.formula", "binomial", "coef", "density", "ecdf",
            "glm", "kmeans", "lowess", "loess.smooth", "median", "model.matrix", "na.pass",
            "poisson", "quantile", "rbinom", "rgamma", "rnorm", "rpois", "runif",
            "sd")
