@@ -1,14 +1,18 @@
 predict.clustglmm <- 
 function(object, newdata, y=names(object$family)[1], k=NA,
-         type="lp", method="samples", what="fg",
+         type=c("lp", "response"), method=c("samples", "plugin"), what=c("fg", "f", "g"),
          fun_posterior=mean, 
          level=0.95, interval="ET",
-         chain=1, burnin=0, thin=1, gs=object$clusters[[chain]]){
+         chain=1, burnin=0, thin=1, gs=object$clusters[[chain]], ...){
   # we rather work with "matrix" format here
   if(object$howsave == "list"){
     object <- from_list_to_matrix(object)
   }
-  
+
+  type <- match.arg(type)
+  method <- match.arg(method)
+  what <- match.arg(what)
+    
   alpha_half <- (1-level)/2
   params <- colnames(object$draws[[chain]])[-1]
   draws <- object$draws[[chain]][object$draws[[chain]]$m > burnin, params]

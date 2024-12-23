@@ -59,8 +59,10 @@ plot_clusters(mcmc, what, dimspec, yspec, whichg,
               burnin = 0, thin = 1, setparmfrow = TRUE, 
               iterations, chains, doKern = TRUE, doECDF = TRUE,
               COL, labcex = 0.8, whatLAB, wherelegend = "topright")
-plot_clusters_kerneldensity_param(mcmc, what, whichg, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
-plot_clusters_ECDF_param(mcmc, what, whichg, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE)
+plot_clusters_kerneldensity_param(mcmc, what, whichg, burnin = 0, thin = 1,
+                                  iterations, chains, setparmfrow = TRUE)
+plot_clusters_ECDF_param(mcmc, what, whichg, burnin = 0, thin = 1, iterations,
+                         chains, setparmfrow = TRUE)
 }
 \arguments{
   \item{mcmc}{

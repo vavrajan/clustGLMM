@@ -7,11 +7,11 @@ Plot the outputs of \code{clustGLMM}
 Triggers plotting functions for selected parameter depending on the choice of the plot.
 }
 \usage{
-plot(x, what="ng", which="traceplots", ...)
+\method{plot}{clustglmm}(x, what="ng", which="traceplots", ng_trace_chain_split=TRUE, ...)
 }
 \arguments{
   \item{x}{
-an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
+an object of class \code{"clustglmm"}, an output of function \code{clustGLMM}.
 }
   \item{what}{
 a string containing the name of the parameter. 
@@ -19,6 +19,7 @@ a string containing the name of the parameter.
   \item{which}{
 a string declaring the type of the plot to be created.
 }
+  \item{ng_trace_chain_split}{a logical indicating ...}
   \item{...}{
 other arguments.
 }
@@ -37,7 +38,7 @@ Depending on \code{which} the following functions are called:
 These functions except also \code{burnin} (initial part of the chain to be ignored), \code{thin} (plot only every \code{thin}th sample) and \code{chains} (a vector of chain numbers to be plotted).
 }
 \value{
-  No returned value, only creates plots.
+  No return value, only creates plots.
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5

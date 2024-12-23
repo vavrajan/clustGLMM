@@ -9,7 +9,8 @@ Functions that work with longitudinal data and plot the outcomes vs a covariate 
 }
 \usage{
 plot_num_vs_x_grouped(data, y = "y", x = "x", group = "g", id = "i", units, 
-                      xbreaks, add_lowess = TRUE, alpha = 0.7, legend_placement = "topright")
+                      xbreaks, add_lowess = TRUE, alpha = 0.7,
+                      legend_placement = "topright")
 plot_cat_vs_x_grouped(data, y = "y", x = "x", group = "g", 
                       xbreaks, main = NA, margin = 0.05, reverse = FALSE)
 }
