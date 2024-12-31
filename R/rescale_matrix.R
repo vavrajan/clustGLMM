@@ -11,6 +11,7 @@ rescale_matrix <- function(draws, settings,
   Ys <- c(Nums, Pois, Bins, Ords, Cats)
   
   ### beta_num, beta_num_fix, prec_num, sd_num, var_num
+  # and naY
   for(y in Nums){
     int_fix <- which(lfixnames[[y]]=="(Intercept)") # could be empty
     notint_fix <- setdiff(seq_len(length(lfixnames[[y]])), int_fix) # could be empty
@@ -84,6 +85,20 @@ rescale_matrix <- function(draws, settings,
         }
       }
     }
+    
+    # naY
+    if(settings["naY","save"]){
+      if(settings["naY","gspec"]){
+        for(g in 1:settings["naY","G"]){
+          pnames <- grep(paste0("naY_", y, "\\(", g, "\\)"), colnames(draws))
+          draws[,pname] <- draws[,pname] * scales[y] + centers[y]
+        }
+      }else{
+        pname <- grep(paste0("naY_", y), colnames(draws))
+        draws[,pname] <- draws[,pname] * scales[y] + centers[y]
+      }
+    }
+    
   } # end of for y in Nums
   
   ### beta_poi, beta_poi_fix

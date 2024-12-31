@@ -885,7 +885,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   ## Data
   # First column is going to be the id variable (0-th column)
   cId <- numbered_unique_ids[as.character(data[,id])] - 1
-  # -1 is there for C which works better with number beggining with 0
+  # -1 is there for C which works better with number beginning with 0
   # other columns  (beginning with 1st column)
   cY <- numeric()
   for(y in Ys){
@@ -907,7 +907,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     c(sum(cisYna), 1)
   settings["naY", c("ydepd1", "isy", "ynums", "ypois", "ybins", "yords", "ycats")] <-
     rep(TRUE, 7)
-  yspecd1$naY <- colSums(is.na(ydata[,Ys,drop=FALSE]))
+  yspecd1$naY <- apply(ydata[,Ys,drop=FALSE], 2, function(x){sum(is.na(x))})
   
   cX <- numeric()
   # take only needed columns

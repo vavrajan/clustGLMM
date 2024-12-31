@@ -48,9 +48,9 @@ author:
 # tex file. Don't forget to rename the bib file and change this example value.
 type: vignette
 output: 
-#   html_document
-  pdf_document:
-    extra_dependencies: ["float"]
+   html_document
+#  pdf_document:
+#    extra_dependencies: ["float"]
 # output: 
 # rjtools::rjournal_article:
 #   self_contained: yes
@@ -111,6 +111,7 @@ plot_cat_vs_x_grouped(students, "satisfaction", x="age", g="g0")
 plot_cat_vs_x_grouped(students, "satisfaction", x="age", g="g")
 ```
 
+
 In the following subsections we follow the steps as in section \@ref{sec:implementation} to illustrate the general workflow depicted in Figure \@ref{fig:workflow-diagram}.
 
 
@@ -151,12 +152,39 @@ for(y in Ys){
 }
 ```
 
-Numerical outcome was generated with the same standard across groups. By default the group-specificity of `prec_num` is set to `TRUE`. Hence, it has to be changed to `FALSE`. For `save`, `param` and `tuning` we wish to use the default options. 
+```{r students-NAs-eval, echo = FALSE, eval = TRUE}
+set.seed(31415)
+nmis <- 5
+na_indices <- na_true_vals <- list()
+for(y in Ys){
+  na_indices[[y]] <- sort(sample(1:dim(students)[1], nmis))
+  na_true_vals[[y]] <- students[na_indices[[y]], y]
+  students[na_indices[[y]], y] <- NA
+}
+```
+
+For demonstrative purposes we will pretend that `r nmis` random outcome values for each type will be missing:
+```{r students-NAs-print, echo = TRUE, eval = FALSE}
+set.seed(31415)
+nmis <- 5
+na_indices <- na_true_vals <- list()
+for(y in Ys){
+  na_indices[[y]] <- sort(sample(1:dim(students)[1], nmis))
+  na_true_vals[[y]] <- students[na_indices[[y]], y]
+  students[na_indices[[y]], y] <- NA
+}
+```
+We will show that `clustGLMM` is able to estimate these missing values. 
+
+Numerical outcome was generated with the same standard error across groups. By default the group-specificity of `prec_num` is set to `TRUE`. Hence, it has to be changed to `FALSE`. Also the estimates for the missing values are not returned automatically, unless we set `save["naY"] = TRUE`. For `param` and `tuning` we now wish to use the default options. 
 
 ```{r students-defaults, echo = TRUE}
 (varying <- default_varying())
 varying["prec_num"] <- FALSE
+(save <- default_save())
+save["naY"] <- TRUE
 ```
+
 
 ### Sample chains {#subsubsec:students-sample-chains}
 
@@ -165,7 +193,7 @@ Let us sample two randomly initialized chains of short length for $G$ higher tha
 set.seed(12345678)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
                   G = 10, nchains = 2, iter = 3500,
-                  varying = varying, 
+                  varying = varying, save = save,
                   standardize = TRUE)
 plot(mcmc, ng_trace_chain_split = FALSE)
 ```
@@ -176,7 +204,7 @@ Let us jump one step ahead to capture the evolution of cluster occupancy numbers
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
                   inits = mcmc$last,
                   G = 10, nchains = 2, iter = 1000, # 1000,
-                  varying = varying, 
+                  varying = varying, save = save,
                   standardize = TRUE)
 ```
 Wait for the chains to be sampled, depending on the size of the dataset can take several seconds or minutes. The simple `print` statement summarizes the model definition. But also the preliminary results on clustering based on sampled allocation indicators can be printed.  
@@ -261,9 +289,21 @@ print(summary(mcmc_pp), chains = ch,
 ```
 Now that the meaning of cluster labels is aligned with the original labelling we can easily print the confusion matrix and see the low misclassification error even when the crude classification based on sampled indicators is used.
 
-```{r students-misclassification-U-samples, echo=TRUE, results=TRUE, fig.align='center', fig.width=6, fig.height=4, fig.cap="The four implemented plots - standard error for income.", fig.pos="H"}
+```{r students-misclassification-U-samples, echo=TRUE, results=TRUE}
 students[,paste0("Uclustering",ch)] <- mcmc_pp$clustering[students$i,ch]
 table(students[students$j==1,c("g", paste0("Uclustering",ch))])
+```
+
+We can also have a look how well do we predict the missing values:
+```{r students-mcmc-naY, echo=TRUE, results=TRUE, fig.align='center', fig.width=7, fig.height=5, fig.cap="Predictive distribution for missing outcome values.", fig.pos="H"}
+par(mfrow = c(3,nmis), mar = c(4,4,0.5,0.5))
+for(y in names(family)){
+  for(j in 1:nmis){
+    plot_kerneldensity(mcmc_pp, what = "naY", yspec = y, dimspec = j, labcex = 0.8)
+    abline(v = as.numeric(na_true_vals[[y]][j]) - ifelse(y=="satisfaction", 1, 0), 
+           col = "seagreen", lty = 2)
+  }
+}
 ```
 
 ### Linear predictor {#subsubsec:students-predict}

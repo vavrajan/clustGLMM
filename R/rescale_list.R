@@ -11,6 +11,7 @@ rescale_list <- function(draws, settings,
   Ys <- c(Nums, Pois, Bins, Ords, Cats)
   
   ### beta_num, beta_num_fix, prec_num, sd_num, var_num
+  # and naY
   for(y in Nums){
     int_fix <- which(lfixnames[[y]]=="(Intercept)") # could be empty
     notint_fix <- setdiff(seq_len(length(lfixnames[[y]])), int_fix) # could be empty
@@ -74,6 +75,17 @@ rescale_list <- function(draws, settings,
         }else{
           draws[[p]][,y] <- draws[[p]][,y] * multiplier
         }
+      }
+    }
+    
+    # naY
+    if(settings["naY","save"]){
+      if(settings["naY","gspec"]){
+        for(g in 1:settings["naY","G"]){
+          draws[[p]][[g]][[y]] <- draws[[p]][[g]][[y]] * scales[y] + centers[y]
+        }
+      }else{
+        draws[[p]][[y]] <- draws[[p]][[y]] * scales[y] + centers[y]
       }
     }
   } # end of for y in Nums
