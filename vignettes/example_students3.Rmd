@@ -154,7 +154,7 @@ for(y in Ys){
 
 ```{r students-NAs-eval, echo = FALSE, eval = TRUE}
 set.seed(31415)
-nmis <- 5
+nmis <- 6
 na_indices <- na_true_vals <- list()
 for(y in Ys){
   na_indices[[y]] <- sort(sample(1:dim(students)[1], nmis))
@@ -166,7 +166,7 @@ for(y in Ys){
 For demonstrative purposes we will pretend that `r nmis` random outcome values for each type will be missing:
 ```{r students-NAs-print, echo = TRUE, eval = FALSE}
 set.seed(31415)
-nmis <- 5
+nmis <- 6
 na_indices <- na_true_vals <- list()
 for(y in Ys){
   na_indices[[y]] <- sort(sample(1:dim(students)[1], nmis))
@@ -284,7 +284,7 @@ plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7,
 For the inference we choose just one of the chains. The posterior distribution of model parameters can be obtained via `summary` function that applies `summary.mcmc` to coda-like object for each chain separately. Since printing all model parameters would be long, we provide here only the summary of the clustering-invariant model parameters. For example, the true values of the correlations between random intercepts were set to 0.1, 0.5, 0.8, which are indeed covered by the 95% credible intervals.
 ```{r students-mcmc-summary, echo=TRUE, results=TRUE}
 ch <- 2
-print(summary(mcmc_pp), chains = ch, 
+print(sum_pp <- summary(mcmc_pp), chains = ch, 
       which = c("mcmc", "clustering", "inv_param"))
 ```
 Now that the meaning of cluster labels is aligned with the original labelling we can easily print the confusion matrix and see the low misclassification error even when the crude classification based on sampled indicators is used.
@@ -295,16 +295,23 @@ table(students[students$j==1,c("g", paste0("Uclustering",ch))])
 ```
 
 We can also have a look how well do we predict the missing values:
-```{r students-mcmc-naY, echo=TRUE, results=TRUE, fig.align='center', fig.width=7, fig.height=5, fig.cap="Predictive distribution for missing outcome values.", fig.pos="H"}
+```{r students-mcmc-naY, echo=TRUE, results=TRUE, fig.align='center', fig.width=10, fig.height=5, fig.cap="Predictive distribution for missing outcome values.", fig.pos="H"}
 par(mfrow = c(3,nmis), mar = c(4,4,0.5,0.5))
 for(y in names(family)){
   for(j in 1:nmis){
     plot_kerneldensity(mcmc_pp, what = "naY", yspec = y, dimspec = j, labcex = 0.8)
     abline(v = as.numeric(na_true_vals[[y]][j]) - ifelse(y=="satisfaction", 1, 0), 
            col = "seagreen", lty = 2)
+    if(y != "satisfaction"){
+      abline(v = sum_pp$coda_summary[[ch]]$quantiles[paste0("naY_",y,"[",j,"]"),
+                                                     c("2.5%","97.5%")], 
+             col = "black", lty = 3)
+    }
   }
 }
 ```
+The seagreen line in Figure \@ref{fig:students-mcmc-naY} highlights the true erased value, which for numerical outcomes are always covered by 95% CI (black dots). 
+
 
 ### Linear predictor {#subsubsec:students-predict}
 
@@ -416,9 +423,9 @@ table(students[students$j==1,c(paste0("Uclustering",ch), paste0("clustering",ch)
 ```
 
 We can visualize the posterior distribution of the clustering probabilities:
-```{r students-clust-probs-posterior, echo=TRUE, eval=TRUE, results=FALSE, fig.align='center', fig.width=6, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H"}
+```{r students-clust-probs-posterior, echo=TRUE, eval=TRUE, results=FALSE, fig.align='center', fig.width=8, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H"}
 par(mfrow = c(2,4), mar = c(4,4,0.5,0.5))
-for(i in order(pmcmc$certainty[,ch])[1:8]){
+for(i in order(pmcmc$certainty[,ch])[21:28]){
   plot_clusters(pmcmc, what = "pUig_int", dimspec = i, 
                 chains = ch, setparmfrow = FALSE, doECDF = FALSE)
 }

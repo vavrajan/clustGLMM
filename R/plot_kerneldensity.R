@@ -30,7 +30,7 @@ function(mcmc, scalar_samples,
   
   kernest <- data.frame()
   for(ch in chains){
-    dd <- density(scalar_samples$draws[[ch]]$y, na.rm = T)
+    dd <- density(scalar_samples$draws[[ch]]$y, na.rm = TRUE)
     kernest <- rbind(kernest, data.frame(x=dd$x, y=dd$y, chain = ch))
   }
   plot(c(min(kernest$y),max(kernest$y)) ~ quantile(kernest$x, probs = c(0.03,0.97)), type = "n",

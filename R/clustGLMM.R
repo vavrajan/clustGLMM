@@ -1625,10 +1625,21 @@ Change the save settings if you want to calculate these probabilities afterwards
   
   
   ## U-based clustering
-  fun <- function(U, ch){
+  fun0 <- function(U, ch){
+    tab = table(U)
+    as.numeric(is.element(as.character(1:G[ch]), names(tab)))
+  }
+  
+  fun1 <- function(U, ch){
     tab = table(U)
     tab <- tab[as.character(clusters[[ch]])]
-    c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iter)
+    as.numeric(names(which.max(tab)))
+  }
+  
+  fun2 <- function(U, ch){
+    tab = table(U)
+    tab <- tab[as.character(clusters[[ch]])]
+    max(tab, na.rm=TRUE)/iter
   }
     
   clusters <- iterations <- list()
@@ -1640,19 +1651,40 @@ Change the save settings if you want to calculate these probabilities afterwards
     # find modeGplus - the most common Gplus value
     tab <- table(mcmc$draws[[ch]]$Gplus)
     modeGplus[ch] <- as.numeric(names(tab)[which.max(tab)])
+    # print(modeGplus[ch])
     # U samples
     Usamples[[ch]] <- from_C_to_matrix(values = Usamples[[ch]],
                                        p = "U",
                                        settings = lsettings[[ch]],
                                        family = sorted_family)
-    TAB <- table(unlist(Usamples[[ch]]))
-    TAB <- TAB[order(TAB, decreasing = TRUE)]
-    # Only the top modeGplus in frequency are considered
-    clusters[[ch]] <- sort(as.numeric(names(TAB)[1:modeGplus[ch]]))
+    # TAB <- table(unlist(Usamples[[ch]]))
+    # TAB <- TAB[order(TAB, decreasing = TRUE)]
+    # clusters[[ch]] <- sort(as.numeric(names(TAB)[1:modeGplus[ch]]))
+    # Matrix indicating which cluster in which iteration is nonempty
+    nonempties <- apply(Usamples[[ch]], 1, fun0, ch=ch)
+    # Only the top modeGplus in non-empty frequency are considered
+    sumnonempt <- apply(nonempties, 1, sum)
+    names(sumnonempt) <- as.character(1:G[ch])
+    sumnonempt <- sumnonempt[order(sumnonempt, decreasing = TRUE)]
+    clusters[[ch]] <- sort(as.numeric(names(sumnonempt)[1:modeGplus[ch]]))
+    #print(clusters[[ch]])
+    #print(table(Usamples[[ch]][,122]))
 
-    ccU <- apply(Usamples[[ch]], 2, fun, ch=ch)
-    clusteringU[,ch] <- ccU[1, ]
-    certaintyU[,ch] <- ccU[2, ]
+    # ccU <- apply(Usamples[[ch]], 2, fun, ch=ch)
+    # print(ccU)
+    # clusteringU[,ch] <- ccU[1, ]
+    # certaintyU[,ch] <- ccU[2, ]
+    #print(dim(Usamples[[ch]]))
+    cgU <- apply(Usamples[[ch]], 2, fun1, ch=ch)
+    #print(cgU['U[121]'])
+    #print(cgU['U[122]'])
+    #print(cgU['U[123]'])
+    #print(dim(cgU))
+    cyU <- apply(Usamples[[ch]], 2, fun2, ch=ch)
+    #print(cyU)
+    #print(dim(cyU))
+    clusteringU[,ch] <- cgU
+    certaintyU[,ch] <- cyU
   }
   # units with frequency ratio smaller than threshold remain unclassified (group 0)
   # clusteringU[certaintyU < threshold] <- 0

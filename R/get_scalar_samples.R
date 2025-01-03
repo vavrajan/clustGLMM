@@ -6,6 +6,7 @@ function(mcmc, what, gspec, dimspec, yspec,
     stop("Thinning parameter has to be integer and thin >= 1.")
   }
   if(missing(chains)){chains = mcmc$chains}
+  misiter = missing(iterations)
 
   v <- mcmc$settings[[chains[1]]][what,]
   whatLAB <- what
@@ -77,7 +78,7 @@ function(mcmc, what, gspec, dimspec, yspec,
   scalar_samples$draws <- list()
     
   for(ch in chains){
-    if(missing(iterations)){
+    if(misiter){
       # iterations = seq(burnin+1, mcmc$iter, by = thin)
       # iterations <- mcmc$draws[[ch]]$m
       if(is.null(gspec)){
