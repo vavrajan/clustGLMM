@@ -165,7 +165,7 @@ for(y in Ys){
 
 For demonstrative purposes we will pretend that `r nmis` random outcome values for each type will be missing:
 ```{r students-NAs-print, echo = TRUE, eval = FALSE}
-set.seed(31415)
+set.seed(123456789)
 nmis <- 6
 na_indices <- na_true_vals <- list()
 for(y in Ys){
@@ -192,7 +192,7 @@ Let us sample two randomly initialized chains of short length for $G$ higher tha
 ```{r students-mcmc-initial, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Traceplots - initial cluster occupancy numbers.", fig.pos="H"}
 set.seed(12345678)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
-                  G = 10, nchains = 2, iter = 3500,
+                  G = 10, nchains = 2, iter = 3000, # 3500,
                   varying = varying, save = save,
                   standardize = TRUE)
 plot(mcmc, ng_trace_chain_split = FALSE)
@@ -201,9 +201,10 @@ plot(mcmc, ng_trace_chain_split = FALSE)
 Let us jump one step ahead to capture the evolution of cluster occupancy numbers `ng` separately for each cluster by suppressing the default with `ng_trace_chain_split = FALSE`. In Figure \@ref(fig:students-mcmc-initial) we clearly see that some of the `r mcmc$G[1]` clusters die immediately and in the end only `mcmc$modeGplus[2]` non-empty remain. We could start over with $G=3$ but for the purpose of demonstration of other steps, let us continue in sampling:
 
 ```{r students-mcmc, echo=TRUE, results=FALSE}
+set.seed(123)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
                   inits = mcmc$last,
-                  G = 10, nchains = 2, iter = 1000, # 1000,
+                  G = 10, nchains = 2, iter = 1000, 
                   varying = varying, save = save,
                   standardize = TRUE)
 ```
@@ -216,7 +217,7 @@ print(mcmc, which = "clustering")
 
 ### Visual diagnostics  {#subsubsec:students-visual-diagnostics}
 
-Let us examine the default plot constructed by `plot(mcmc)`, which stacks the traceplots of cluster occupancy numbers into one plot. We see that the three clusters go through some minor changes over time, but otherwise keep stable. If there would be still some changes in progress, consider additional sampling. Also note that for the blue chain there is actually fourth thin cluster that becomes empty only after cca 160 steps. For proper inference of group-specific parameters this chain has to be post-processed (see the next step).
+Let us examine the default plot constructed by `plot(mcmc)`, which stacks the traceplots of cluster occupancy numbers into one plot. We see that the three clusters go through some minor changes over time, but otherwise keep stable. If there would be still some changes in progress, consider additional sampling. Also note that for the red chain there is actually fourth thin cluster that becomes empty only after cca 250 steps. For proper inference of group-specific parameters this chain has to be post-processed (see the next step).
 
 ```{r students-mcmc-ng, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Traceplots - cluster occupancy numbers.", fig.pos="H"}
 plot(mcmc)
@@ -267,8 +268,8 @@ plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity", chains = 2)
 Nevertheless it seems (Figures \@ref{fig:students-mcmc-pp-beta-num-1} and \@ref{fig:students-mcmc-pp-beta-num-2}) that the interpretation of the cluster labels is still different from each other. With `permute_cluster_labels()` we align their interpretation to match the true labelling used to generate the data. The permutation has to be set manually by visual inspection of such plots as the two above mentioned.  
 ```{r students-permuting-labels, echo = TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Permuted last regression coefficients posterior kernel density estimates for income - each chain separately.", fig.pos="H"}
 perm <- list()
-perm[[1]] <- c(2, 1, 3)
-perm[[2]] <- c(3, 1, 2)
+perm[[1]] <- c(3, 2, 1) # c(2, 1, 3)
+perm[[2]] <- c(1, 3, 2)
 mcmc_pp <- permute_cluster_labels(mcmc_pp, perm = perm)
 print(summary(mcmc_pp), chains = c(1, 2), which = c("group_param"))
 # See? Now the colors match across chains
@@ -283,7 +284,7 @@ plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7,
 
 For the inference we choose just one of the chains. The posterior distribution of model parameters can be obtained via `summary` function that applies `summary.mcmc` to coda-like object for each chain separately. Since printing all model parameters would be long, we provide here only the summary of the clustering-invariant model parameters. For example, the true values of the correlations between random intercepts were set to 0.1, 0.5, 0.8, which are indeed covered by the 95% credible intervals.
 ```{r students-mcmc-summary, echo=TRUE, results=TRUE}
-ch <- 2
+ch <- 1
 print(sum_pp <- summary(mcmc_pp), chains = ch, 
       which = c("mcmc", "clustering", "inv_param"))
 ```
@@ -425,9 +426,17 @@ table(students[students$j==1,c(paste0("Uclustering",ch), paste0("clustering",ch)
 We can visualize the posterior distribution of the clustering probabilities:
 ```{r students-clust-probs-posterior, echo=TRUE, eval=TRUE, results=FALSE, fig.align='center', fig.width=8, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H"}
 par(mfrow = c(2,4), mar = c(4,4,0.5,0.5))
-for(i in order(pmcmc$certainty[,ch])[21:28]){
+for(i in order(pmcmc$certainty[,ch])[1:8]){
   plot_clusters(pmcmc, what = "pUig_int", dimspec = i, 
                 chains = ch, setparmfrow = FALSE, doECDF = FALSE)
+}
+```
+We chose to plot the probabilities for individuals with the lowest certainty to show the competing clusters. However, the density plot does automatically scaly y-axis to capture all clusters including the one concentrated around zero, which ends in enormous spike around zero which completely overshadows the other two clusters. Better to use ECDF:
+```{r students-clust-probs-posterior-ECDF, echo=TRUE, eval=TRUE, results=FALSE, fig.align='center', fig.width=8, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H"}
+par(mfrow = c(2,4), mar = c(4,4,0.5,0.5))
+for(i in order(pmcmc$certainty[,ch])[1:8]){
+  plot_clusters(pmcmc, what = "pUig_int", dimspec = i, 
+                chains = ch, setparmfrow = FALSE, doKern = FALSE)
 }
 ```
 
