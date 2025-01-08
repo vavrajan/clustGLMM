@@ -9,7 +9,8 @@ A method for computing and printing the summary statistics of class \code{clustg
 }
 \usage{
 summary(object, ...)
-print(x, chains=c(1), which = c("mcmc", "inv_param", "clust_param"), ...)
+print(x, which = c("mcmc", "inv_param", "clust_param"), chains = c(1), 
+      clusters = x$clusters, pattern = "", ...)
 }
 \arguments{
   \item{object}{
@@ -18,15 +19,37 @@ an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
   \item{x}{
 an object of class \code{"summary.clustglmm"}, an output of \code{summary.clustGLMM} function.
 }
+  \item{which}{
+a vector of strings that select which summaries should be printed.
+}
   \item{chains}{
 a vector of chain numbers to print summary results of.
+}  
+  \item{clusters}{
+a list of cluster labels to print for group-specific parameters per each chain.
+}
+  \item{pattern}{
+a pattern to be used for \code{grep} search among parameter names to include within the summary, empty by default (all from the selected category).
 }
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
 }
 }
 \details{
-  \code{print.summary} prints a summary for each selected chain in \code{chains}. First, a brief summary of clustering is provided. The raw output of \code{clustGLMM} is based on sampled allocation indicators, output of \code{clustering_probabilities_and_deviance} provides summary of clustering based on approximated clustering probabilities. Then, the summary statistics for the key model parameters are provided in several blocks in \code{library(coda)} style. The output of \code{summary} contains both tables (\code{"statistics"} or \code{"quantiles"}) but only a combination of these two is printed (all quantiles and Mean). 
+  \code{print.summary} prints a summary for each selected chain in \code{chains}. 
+  Depending on what is included within \code{which} argument the following summaries are printed:
+  \item{mcmc}{an overview of the sampled chains,}
+  \item{clustering}{summary of the clustering,}
+  \item{inv_param}{cluster-invariant parameters,}
+  \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w})}
+  \item{latent_param}{latent parameters (random effects \code{b}, allocation indicators \code{U}, missing outcome values \code{naY}}
+  \item{group_param}{group-specific parameters}
+  Regarding \code{clustering} option, raw output of \code{clustGLMM} is based on sampled allocation indicators, output of \code{clustering_probabilities_and_deviance} provides summary of clustering based on approximated clustering probabilities. 
+  When printing the summary of the parameters, there is possibility to use \code{pattern} to shorten the list of printed parameters if needed.
+  Group-specific parameters are printed only for the cluster labels in \code{clusters}. 
+  By default, only parameters for non-empty clusters are printed. 
+  The output of \code{summary} contains both \code{coda}-like tables (\code{"statistics"} and \code{"quantiles"}), 
+  but only a combination of these two is printed (all quantiles and Mean). 
 }
 \value{
   \code{summary} returns a list of:
@@ -116,5 +139,5 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 mcmc
 s <- summary(mcmc)
 print(s)
-print(s, which=c("mcmc", "clustering", "inv_param", "clust_param", "latent_param", "g_param"))
+print(s, which=c("mcmc", "clustering", "inv_param", "clust_param", "latent_param", "group_param"))
 }

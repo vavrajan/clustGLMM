@@ -31,7 +31,7 @@ summary.clustglmm <- function(object, ...){
       lnames[[ch]] <- object$param_names[[ch]][["dev_i"]]
     }else{
       fset = lset = settings[settings$save & !settings$gspec & settings$dims>0, ]
-      fset = fset[setdiff(rownames(fset), c("loglik", "b", "U", "Gplus", "e0")), ]
+      fset = fset[setdiff(rownames(fset), c("loglik", "b", "U", "Gplus", "e0", "naY")), ]
       fnames[[ch]] <- character(0)
       for(p in rownames(fset)){
         fnames[[ch]] <- c(fnames[[ch]], object$param_names[[ch]][[p]])
