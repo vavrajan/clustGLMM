@@ -8,9 +8,9 @@ Predicts the linear combinations of fixed and group part of the model formulae o
 }
 \usage{
 \method{predict}{clustglmm}(object, newdata, y = names(object$family)[1],
-    k = NA, type = c("lp", "response"), method = c("samples", "plugin"),
+    k = NA, type = c("link", "response"), method = c("samples", "plugin"),
     what = c("fg", "f", "g"), fun_posterior = mean, level = 0.95,
-    interval = c("none", "ET", "HPD"), chain = 1, burnin = 0, thin = 1,
+    interval = c("ET", "HPD"), chain = 1, burnin = 0, thin = 1,
     gs = object$clusters[[chain]], ...)
 }
 \arguments{
@@ -27,7 +27,7 @@ Predicts the linear combinations of fixed and group part of the model formulae o
     an integer; level of ordinal or categorical outcome to be predicted.
 }
   \item{type}{
-    what should be predicted; one of \code{"lp"} (default) or \code{"response"}
+    what should be predicted; one of \code{"link"} (default) or \code{"response"}
     (not implemented yet), see Details below.
 }
   \item{method}{
@@ -64,7 +64,7 @@ Predicts the linear combinations of fixed and group part of the model formulae o
 \details{
 Depending on \code{type} the following is computed:
 \describe{
-  \item{lp}{reconstructs the linear predictor for given outcome
+  \item{link}{reconstructs the linear predictor for given outcome
     \code{y}. You can specify by \code{what}: "f", "g", "fg" which part
     of the predictor should be reconstructed: the fixed part invariant
     to all clusters, the group-specific part for chosen clusters
@@ -177,15 +177,15 @@ nchains <- 2   # number of chains to be sampled
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
                   G = Gmax, iter = iter, nchains = nchains,
                   howsave = "matrix")
-predict(mcmc, newdata = data, type = "lp")
+predict(mcmc, newdata = data, type = "link")
 
 # predict the evolution in time for covariate f=0
 newdata <- data.frame("x" = seq(0, 1, length.out=100), "f"=factor(0, levels=c(0,1)))
 
 # numeric outcome
-predict(mcmc, newdata, y="ynum", type="lp", what="fg")
+predict(mcmc, newdata, y="ynum", type="link", what="fg")
 
 # categorical outcome
-predict(mcmc, newdata, y="ycat", k=1, type="lp", what="fg")
+predict(mcmc, newdata, y="ycat", k=1, type="link", what="fg")
 
 }

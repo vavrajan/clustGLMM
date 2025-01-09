@@ -429,41 +429,42 @@ rescale_matrix <- function(draws, settings,
       for(m in 1:dim(draws)[1]){
         if(settings["InvSigma","gspec"]){
           for(g in 1:settings["InvSigma","G"]){
-            if(settings["Sigma","save"]){
-              values <- unlist(draws[m,grep(paste0("^Sigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
-              Sigma <- matrix(0, totnran, totnran)
-              Sigma[upper.tri(Sigma, diag = TRUE)] <- values
-              Sigma <- t(Sigma)
-              Sigma[upper.tri(Sigma, diag = TRUE)] <- values
-              # InvSigma <- solve(Sigma)
-              # sdSigma <- sqrt(diag(Sigma))
-              # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-            }else{
-              if(settings["InvSigma","save"]){
-                values <- unlist(draws[m,grep(paste0("^InvSigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
-                InvSigma <- matrix(0, totnran, totnran)
-                InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
-                InvSigma <- t(InvSigma)
-                InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
-                Sigma <- chol2inv(chol(InvSigma))
-                # sdSigma <- sqrt(diag(Sigma))
-                # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-              }else{
-                if(settings["sdSigma","save"] & settings["corSigma","save"]){
-                  sdSigma <- unlist(draws[m,grep(paste0("^sdSigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
-                  cors <- unlist(draws[m,grep(paste0("^corSigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
-                  corSigma <- matrix(1, totnran, totnran)
-                  corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
-                  corSigma <- t(corSigma)
-                  corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
-                  Sigma <- diag(sdSigma, nrow=totnran) %*% corSigma %*% diag(sdSigma, nrow=totnran)
-                  # InvSigma <- solve(Sigma)
-                }else{
-                  # message("None of InvSigma, Sigma, (sdSigma, corSigma) is saved.")
-                  Sigma <- diag(totnran)
-                }
-              }
-            }
+            Sigma <- get_Sigma(draws, m, settings, g = g, howsave = "matrix")
+            # if(settings["Sigma","save"]){
+            #   values <- unlist(draws[m,grep(paste0("^Sigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
+            #   Sigma <- matrix(0, totnran, totnran)
+            #   Sigma[upper.tri(Sigma, diag = TRUE)] <- values
+            #   Sigma <- t(Sigma)
+            #   Sigma[upper.tri(Sigma, diag = TRUE)] <- values
+            #   # InvSigma <- solve(Sigma)
+            #   # sdSigma <- sqrt(diag(Sigma))
+            #   # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
+            # }else{
+            #   if(settings["InvSigma","save"]){
+            #     values <- unlist(draws[m,grep(paste0("^InvSigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
+            #     InvSigma <- matrix(0, totnran, totnran)
+            #     InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
+            #     InvSigma <- t(InvSigma)
+            #     InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
+            #     Sigma <- chol2inv(chol(InvSigma))
+            #     # sdSigma <- sqrt(diag(Sigma))
+            #     # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
+            #   }else{
+            #     if(settings["sdSigma","save"] & settings["corSigma","save"]){
+            #       sdSigma <- unlist(draws[m,grep(paste0("^sdSigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
+            #       cors <- unlist(draws[m,grep(paste0("^corSigma\\(",g,"\\)"), colnames(draws)),drop=FALSE])
+            #       corSigma <- matrix(1, totnran, totnran)
+            #       corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
+            #       corSigma <- t(corSigma)
+            #       corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
+            #       Sigma <- diag(sdSigma, nrow=totnran) %*% corSigma %*% diag(sdSigma, nrow=totnran)
+            #       # InvSigma <- solve(Sigma)
+            #     }else{
+            #       # message("None of InvSigma, Sigma, (sdSigma, corSigma) is saved.")
+            #       Sigma <- diag(totnran)
+            #     }
+            #   }
+            # }
             # perform rescaling and save new values
             newSigma <- L %*% Sigma %*% t(L)
             if(settings["Sigma","save"]){
@@ -489,41 +490,42 @@ rescale_matrix <- function(draws, settings,
           }# end for g in 1:G
         }else{
           # First get Sigma matrix for iteration m
-          if(settings["Sigma","save"]){
-            values <- unlist(draws[m,grep("^Sigma", colnames(draws)),drop=FALSE])
-            Sigma <- matrix(0, totnran, totnran)
-            Sigma[upper.tri(Sigma, diag = TRUE)] <- values
-            Sigma <- t(Sigma)
-            Sigma[upper.tri(Sigma, diag = TRUE)] <- values
-            # InvSigma <- solve(Sigma)
-            # sdSigma <- sqrt(diag(Sigma))
-            # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-          }else{
-            if(settings["InvSigma","save"]){
-              values <- unlist(draws[m,grep("^InvSigma", colnames(draws)),drop=FALSE])
-              InvSigma <- matrix(0, totnran, totnran)
-              InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
-              InvSigma <- t(InvSigma)
-              InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
-              Sigma <- chol2inv(chol(InvSigma))
-              # sdSigma <- sqrt(diag(Sigma))
-              # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-            }else{
-              if(settings["sdSigma","save"] & settings["corSigma","save"]){
-                sdSigma <- unlist(draws[m,grep("^sdSigma", colnames(draws)),drop=FALSE])
-                cors <- unlist(draws[m,grep("^corSigma", colnames(draws)),drop=FALSE])
-                corSigma <- matrix(1, totnran, totnran)
-                corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
-                corSigma <- t(corSigma)
-                corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
-                Sigma <- diag(sdSigma, nrow=totnran) %*% corSigma %*% diag(sdSigma, nrow=totnran)
-                # InvSigma <- solve(Sigma)
-              }else{
-                # message("None of InvSigma, Sigma, (sdSigma, corSigma) is saved.")
-                Sigma <- diag(totnran)
-              }
-            }
-          }
+          Sigma <- get_Sigma(draws, m, settings, howsave = "matrix")
+          # if(settings["Sigma","save"]){
+          #   values <- unlist(draws[m,grep("^Sigma", colnames(draws)),drop=FALSE])
+          #   Sigma <- matrix(0, totnran, totnran)
+          #   Sigma[upper.tri(Sigma, diag = TRUE)] <- values
+          #   Sigma <- t(Sigma)
+          #   Sigma[upper.tri(Sigma, diag = TRUE)] <- values
+          #   # InvSigma <- solve(Sigma)
+          #   # sdSigma <- sqrt(diag(Sigma))
+          #   # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
+          # }else{
+          #   if(settings["InvSigma","save"]){
+          #     values <- unlist(draws[m,grep("^InvSigma", colnames(draws)),drop=FALSE])
+          #     InvSigma <- matrix(0, totnran, totnran)
+          #     InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
+          #     InvSigma <- t(InvSigma)
+          #     InvSigma[upper.tri(InvSigma, diag = TRUE)] <- values
+          #     Sigma <- chol2inv(chol(InvSigma))
+          #     # sdSigma <- sqrt(diag(Sigma))
+          #     # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
+          #   }else{
+          #     if(settings["sdSigma","save"] & settings["corSigma","save"]){
+          #       sdSigma <- unlist(draws[m,grep("^sdSigma", colnames(draws)),drop=FALSE])
+          #       cors <- unlist(draws[m,grep("^corSigma", colnames(draws)),drop=FALSE])
+          #       corSigma <- matrix(1, totnran, totnran)
+          #       corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
+          #       corSigma <- t(corSigma)
+          #       corSigma[upper.tri(corSigma, diag = FALSE)] <- cors
+          #       Sigma <- diag(sdSigma, nrow=totnran) %*% corSigma %*% diag(sdSigma, nrow=totnran)
+          #       # InvSigma <- solve(Sigma)
+          #     }else{
+          #       # message("None of InvSigma, Sigma, (sdSigma, corSigma) is saved.")
+          #       Sigma <- diag(totnran)
+          #     }
+          #   }
+          # }
           # perform rescaling and save new values
           newSigma <- L %*% Sigma %*% t(L)
           if(settings["Sigma","save"]){

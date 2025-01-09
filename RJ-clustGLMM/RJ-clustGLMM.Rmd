@@ -749,7 +749,7 @@ for(y in c(mcmc_pp$Nums, mcmc_pp$Pois)){
   plot_num_vs_x_grouped(students, y=y, x="age", g=paste0("Uclustering",ch), id=id, 
                         legend_placement="topleft", add_lowess = FALSE)
   
-  pred <- predict(mcmc_pp, newdata, y=y, type="lp", what="fg", method="samples",
+  pred <- predict(mcmc_pp, newdata, y=y, type="link", what="fg", method="samples",
                   burnin=burnin, thin=thin, chain=ch)
   for(ig in 1:mcmc_pp$modeGplus[ch]){
     g <- mcmc_pp$clusters[[ch]][ig]
@@ -776,7 +776,7 @@ for(y in mcmc_pp$Ords){
   maxk <- mcmc_pp$Kord[y]
   pred_age <- list()
   for(k in 1:maxk){
-    pred_age[[k]] <- predict(mcmc_pp, newdata, y=y, type="lp", 
+    pred_age[[k]] <- predict(mcmc_pp, newdata, y=y, type="link", 
                              what="fg", method="samples", k=k,
                              burnin=burnin, thin=thin, chain=ch)
   }

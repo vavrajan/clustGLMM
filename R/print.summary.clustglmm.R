@@ -31,7 +31,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
   # }
   # 
   
-  cat("\n## Summary of the sampled parameters:\n")
+  
   for(ch in chains){
     ss <- as.matrix(x$coda_summary[[ch]]$statistics)
     sq <- as.matrix(x$coda_summary[[ch]]$quantiles)
@@ -61,6 +61,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
       print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
     }
     
+    # cat("\n## Summary of the sampled parameters:\n")
     if(length(intersect(which, 
                         c("inv_param", "clust_param", "latent_param", "group_param"))
               ) > 0){

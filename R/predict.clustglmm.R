@@ -1,17 +1,21 @@
 predict.clustglmm <- 
 function(object, newdata, y=names(object$family)[1], k=NA,
-         type=c("lp", "response"), method=c("samples", "plugin"), what=c("fg", "f", "g"),
+         type=c("link", "response"), 
+         method=c("samples", "plugin"), 
+         what=c("fg", "f", "g"),
          fun_posterior=mean, 
-         level=0.95, interval="ET",
+         level=0.95, 
+         interval=c("ET", "HPD"),
          chain=1, burnin=0, thin=1, gs=object$clusters[[chain]], ...){
   # we rather work with "matrix" format here
   if(object$howsave == "list"){
     object <- from_list_to_matrix(object)
   }
 
-  type <- match.arg(type)
-  method <- match.arg(method)
-  what <- match.arg(what)
+  type <- match.arg(type, c("link", "response"))
+  method <- match.arg(method, c("samples", "plugin"))
+  what <- match.arg(what, c("fg", "f", "g"))
+  interval <- match.arg(interval, c("ET", "HPD"))
     
   alpha_half <- (1-level)/2
   params <- colnames(object$draws[[chain]])[-1]
@@ -38,7 +42,7 @@ function(object, newdata, y=names(object$family)[1], k=NA,
   }
   
   if(method == "samples"){
-    if(type == "lp"){
+    if(type == "link"){
       fX <- model.matrix(object$formula[[y]]$fixed, newdata)
       gX <- model.matrix(object$formula[[y]]$group, newdata)
       fX <- fX[, object$lfixnames[[y]]]
@@ -116,7 +120,7 @@ function(object, newdata, y=names(object$family)[1], k=NA,
   }
   
   if(method == "plugin"){
-    if(type == "lp"){
+    if(type == "link"){
       fX <- model.matrix(object$formula[[y]]$fixed, newdata)
       gX <- model.matrix(object$formula[[y]]$group, newdata)
       fX <- fX[, object$lfixnames[[y]]]
