@@ -13,6 +13,7 @@ Explores the posterior predictive distribution of the response.
     type = c("link", "response", "posterior_predictive_response"), 
     method = c("samples", "plugin"),
     what = c("fg", "f", "g"), 
+    posterior_predictive_by_cluster=TRUE,
     fun_posterior = mean, level = 0.95, interval = c("ET", "HPD"), 
     chain = 1, burnin = 0, thin = 1,
     gs = object$clusters[[chain]], ...)
@@ -36,6 +37,9 @@ Explores the posterior predictive distribution of the response.
 }
   \item{what}{
     more detailed clarification to the selected \code{type = "link"}.
+}
+  \item{posterior_predictive_by_cluster}{
+    should under the posterior predictive distribution for response be explored for each cluster separately?
 }
   \item{fun_posterior}{
     a function summarizing samples into an estimator of location parameter of posterior distribution; e.g. \code{mean} or \code{median}.
@@ -76,12 +80,13 @@ Depending on \code{type} the following is computed:
   Not transformed for \code{num}.
   Transformed by \code{exp} for \code{poi}.
   Category probabilities for \code{bin}, \code{ord} and \code{cat}.}
-  \item{posterior_predictive_response}{explores the posterior predictive distribution. 
+  \item{posterior_predictive_response}{explores the posterior predictive distribution.
+  Depending on \code{posterior_predictive_by_cluster}, 
+  either for each cluster separately or you learn a mixture over given clusters \code{gs}.
   For each iteration in \code{object$draws[[chain]]}, 
   samples latent parameters (allocation and random effects) and then an outcome value.
-  It is important to know that only clusters in \code{gs} are considered here! 
-  Hence, you may just learn predictive distribution if observations belong to one of the chosen clusters
-  or learn the mixture with \code{length(gs) > 1}.}
+  It is important to know that only clusters in \code{gs} are considered here, other clusters are ignored. 
+  }
 }
 
 Argument \code{what} only specifies option \code{type="link"}:

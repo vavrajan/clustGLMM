@@ -3,6 +3,7 @@ predict.clustglmm <-
            type=c("link", "response", "posterior_predictive_response"), 
            method=c("samples", "plugin"), 
            what=c("fg", "f", "g"),
+           posterior_predictive_by_cluster=TRUE,
            fun_posterior=mean, 
            level=0.95, 
            interval=c("ET", "HPD"),
@@ -39,7 +40,7 @@ predict.clustglmm <-
     fX <- fX[, object$lfixnames[[y]]]
     gX <- gX[, object$lgrpnames[[y]]]
     rX <- rX[, object$lrannames[[y]]]
-    ry <- grep(paste0("^",y,"[0-9]+"), unlist(object$lrannames))
+    ry <- grep(paste0("^",y), names(unlist(object$lrannames)))
     
     beta_fix_name <- paste0("beta_",object$family[y],"_fix")
     beta_grp_name <- paste0("beta_",object$family[y])
@@ -121,7 +122,6 @@ predict.clustglmm <-
     
     # Just linear predictor
     if(type == "link"){
-      print("ahoj type 1")
       res[["fit"]] <- apply(samples[[what]], c(1,2,4), fun_posterior)[,,,drop=TRUE]
       if(interval == "ET"){
         res[["lwr"]] <- apply(samples[[what]], c(1,2,4), quantile, probs = alpha_half)[,,,drop=TRUE]
@@ -136,7 +136,6 @@ predict.clustglmm <-
     
     # On response level
     if(type == "response"){
-      print("ahoj type 2")
       # Depending on type of outcome:
       if(object$family[y] == "num"){
         samples[["response"]] <- samples[["fg"]] # ? + samples[["o"]]
@@ -156,10 +155,10 @@ predict.clustglmm <-
         for(m in 1:dim(draws)[1]){
           for(ig in 1:length(gs)){
             exp_eta <- exp(samples[["fg"]][, ig, m, ]) # ? # + samples[["o"]]
-            pk <- cbind(rep(0, dim(newdata)[1]), 
+            pk <- cbind(rep(1, dim(newdata)[1]), 
                         exp_eta / (1 + exp_eta),
-                        rep(1, dim(newdata)[1]))
-            samples[["response"]][, ig, m, ] <- pk[,2:(maxK+2)] - pk[,1:(maxK+1)]
+                        rep(0, dim(newdata)[1]))
+            samples[["response"]][, ig, m, ] <- pk[,1:(maxK+1)] - pk[,2:(maxK+2)]
           }
         }
       }
@@ -169,7 +168,7 @@ predict.clustglmm <-
           for(ig in 1:length(gs)){
             exp_eta <- exp(cbind(rep(0,dim(newdata)[1]), # 0 for baseline
                                  samples[["fg"]][, ig, m, ]))  # ? # + samples[["o"]]
-            softmax <- exp_eta / apply(exp_eta, 1, sum)
+            softmax <- exp_eta / rowSums(exp_eta)
             samples[["response"]][, ig, m, ] <- softmax
           }
         }
@@ -188,17 +187,22 @@ predict.clustglmm <-
       
     }
     
-    # Posterio predictive distribution of the response
+    # Posterior predictive distribution of the response
     if(type == "posterior_predictive_response"){
-      print("ahoj type 3")
-      samples[["y"]] <- array(dim = c(dim(newdata)[1], 1, dim(draws)[1], 1))
-      samples[["aux"]] <- array(dim = c(dim(newdata)[1], 1, dim(draws)[1], 
+      gdim = ifelse(posterior_predictive_by_cluster, length(gs), 1)
+      samples[["y"]] <- array(dim = c(dim(newdata)[1], 
+                                      gdim, 
+                                      dim(draws)[1], 
+                                      1))
+      samples[["aux"]] <- array(dim = c(dim(newdata)[1], 
+                                        gdim, 
+                                        dim(draws)[1], 
                                         ifelse(is.element(object$family[y], c("num", "poi")),
                                                1, maxK+1)))
       
       for(m in 1:dim(draws)[1]){
-        samples[["r"]] <- array(dim = c(dim(newdata)[1], 1, 1))
-        samples[["eta"]] <- array(dim = c(dim(newdata)[1], 1, maxK))
+        samples[["r"]] <- array(dim = c(dim(newdata)[1], gdim, 1))
+        samples[["eta"]] <- array(dim = c(dim(newdata)[1], gdim, maxK))
         
         # get w
         w <- draws[m, paste0("w(",gs,")")]
@@ -215,24 +219,51 @@ predict.clustglmm <-
         
         ### Generate latent data - U and b
         ### !!! only clusters in gs are considered here !!!
-        U <- as.numeric(sample(as.character(gs), dim(newdata)[1], replace = TRUE, prob = w))
-        if(settings["InvSigma","gspec"]){
-          b <- t(sapply(U, function(u){rmvnorm(1, 
-                                               mean = rep(0, object$totnran),
-                                               sigma = Sigma[[u]])}))
+        if(posterior_predictive_by_cluster){
+          if(settings["InvSigma","gspec"]){
+            b <- lapply(gs, function(g){rmvnorm(dim(newdata)[1], 
+                                                mean = rep(0, object$totnran),
+                                                sigma = Sigma[[g]])[, ry, drop=FALSE]})
+            for(ig in 1:length(gs)){
+              samples[["r"]][, ig, 1] <- apply(b[[gs[ig]]] * rX, 1, sum)
+            }
+          }else{
+            b <- rmvnorm(dim(newdata)[1],
+                         mean = rep(0, object$totnran),
+                         sigma = Sigma)[, ry, drop=FALSE]
+            for(ig in 1:length(gs)){
+              samples[["r"]][, ig, 1] <- apply(b * rX, 1, sum)
+            }
+          }
+          
+          # reconstruct predictor eta
+          for(ig in 1:length(gs)){
+            for(k in 1:maxK){
+              for(j in 1:dim(newdata)[1]){
+                samples[["eta"]][j, ig, k] <- 
+                  samples[["fg"]][j, ig, m, k] + samples[["r"]][j, ig, 1] + samples[["o"]][j, 1, 1]
+              }
+            }
+          }
+          
         }else{
-          b <- rmvnorm(dim(newdata)[1],
-                       mean = rep(0, object$totnran),
-                       sigma = Sigma)
-        }
-        # only random effects for outcome y
-        b <- b[, ry, drop=FALSE]
-        samples[["r"]][, 1, 1] <- apply(b * rX, 1, sum)
-        # TODO kspec_bi_cat!!!
-        
-        
-        # reconstruct predictor eta
-        for(ig in 1:length(gs)){
+          U <- as.numeric(sample(as.character(gs), dim(newdata)[1], replace = TRUE, prob = w))
+          if(settings["InvSigma","gspec"]){
+            b <- t(sapply(U, function(u){rmvnorm(dim(newdata)[1], 
+                                                 mean = rep(0, object$totnran),
+                                                 sigma = Sigma[[u]])}))
+            
+          }else{
+            b <- rmvnorm(dim(newdata)[1],
+                         mean = rep(0, object$totnran),
+                         sigma = Sigma)
+          }
+          b <- b[, ry, drop=FALSE]
+          samples[["r"]][, 1, 1] <- apply(b * rX, 1, sum)
+          # TODO kspec_bi_cat!!!
+          
+          
+          # reconstruct predictor eta
           for(k in 1:maxK){
             for(j in 1:dim(newdata)[1]){
               samples[["eta"]][j, 1, k] <- 
@@ -240,7 +271,6 @@ predict.clustglmm <-
             }
           }
         }
-        
         
         ### Sampling outcomes
         if(object$family[y] == "num"){
@@ -250,49 +280,54 @@ predict.clustglmm <-
           }else{
             sd <- sd_num
           }
-          samples[["y"]][, 1, m, 1] <- rnorm(dim(newdata)[1], 
-                                             mean = samples[["eta"]][, 1, 1], 
+          samples[["y"]][, , m, 1] <- rnorm(dim(newdata)[1]*gdim, 
+                                             mean = samples[["eta"]][, , 1], 
                                              sd = sd)
-          samples[["aux"]][, 1, m, 1] <- samples[["eta"]][, 1, 1]
+          samples[["aux"]][, , m, 1] <- samples[["eta"]][, , 1]
         }
         
         if(object$family[y] == "poi"){
-          exp_eta <- exp(samples[["eta"]][1, , 1])
-          samples[["y"]][, 1, m, 1] <- rpois(dim(newdata)[1], lambda = exp_eta)
-          samples[["aux"]][, 1, m, 1] <- exp_eta
-          
+          exp_eta <- exp(samples[["eta"]][, , 1])
+          samples[["y"]][, , m, 1] <- rpois(dim(newdata)[1]*gdim, lambda = exp_eta)
+          samples[["aux"]][, , m, 1] <- exp_eta
         }
         
         if(object$family[y] == "bin"){
-          exp_eta <- exp(samples[["eta"]][, 1, 1])
-          prob <- exp_eta / (1 + exp_eta)
-          samples[["y"]][, 1, m, 1] <- rbinom(dim(newdata)[1], 1, prob = prob) 
-          samples[["aux"]][, 1, m, 2] <- prob
-          samples[["aux"]][, 1, m, 1] <- 1 - prob
+          for(g in 1:gdim){
+            exp_eta <- exp(samples[["eta"]][, g, 1])
+            prob <- exp_eta / (1 + exp_eta)
+            samples[["y"]][, g, m, 1] <- rbinom(dim(newdata)[1], 1, prob = prob) 
+            samples[["aux"]][, g, m, 2] <- prob
+            samples[["aux"]][, g, m, 1] <- 1 - prob
+          }
         }
         
         if(object$family[y] == "ord"){
-          exp_eta <- exp(samples[["eta"]][, 1, ])
-          pk <- cbind(rep(0, dim(newdata)[1]), 
-                      exp_eta / (1 + exp_eta),
-                      rep(1, dim(newdata)[1]))
-          qk <- pk[,2:(maxK+2)] - pk[,1:(maxK+1)]
-          for(j in 1:dim(newdata)[1]){
-            # auxU <- runif(1)
-            # samples[["y"]][j, 1, m, 1] <- sum(pk[j,] < auxU)
-            samples[["y"]][j, 1, m, 1] <- sample(1:(maxK+1), 1, prob = qk[j,])
+          for(g in 1:gdim){
+            exp_eta <- exp(samples[["eta"]][, g, ])
+            pk <- cbind(rep(1, dim(newdata)[1]), 
+                        exp_eta / (1 + exp_eta),
+                        rep(0, dim(newdata)[1]))
+            qk <- pk[,1:(maxK+1)] - pk[,2:(maxK+2)]
+            for(j in 1:dim(newdata)[1]){
+              # auxU <- runif(1)
+              # samples[["y"]][j, 1, m, 1] <- sum(pk[j,] < auxU)
+              samples[["y"]][j, g, m, 1] <- sample(1:(maxK+1), 1, prob = qk[j,])
+            }
+            samples[["aux"]][, g, m, ] <- qk
           }
-          samples[["aux"]][, 1, m, ] <- qk
         }
         
         if(object$family[y] == "cat"){
-          exp_eta <- exp(cbind(rep(0,dim(newdata)[1]), # 0 for baseline
-                               samples[["eta"]][, 1, ]))
-          softmax <- exp_eta / apply(exp_eta, 1, sum)
-          for(j in 1:dim(newdata)[1]){
-            samples[["y"]][j, 1, m, 1] <- sample(1:(maxK+1), 1, prob = softmax[j,])
+          for(g in 1:gdim){
+            exp_eta <- exp(cbind(rep(0,dim(newdata)[1]), # 0 for baseline
+                                 samples[["eta"]][, g, ]))
+            softmax <- exp_eta / rowSums(exp_eta)
+            for(j in 1:dim(newdata)[1]){
+              samples[["y"]][j, g, m, 1] <- sample(1:(maxK+1), 1, prob = softmax[j,])
+            }
+            samples[["aux"]][, g, m, ] <- softmax
           }
-          samples[["aux"]][, 1, m, ] <- softmax
         }
       }
       
@@ -435,10 +470,10 @@ predict.clustglmm <-
       if(object$family[y] == "ord"){
         for(ig in 1:length(gs)){
           exp_eta <- exp(samples[["fg"]][, ig, ]) # ? # + samples[["o"]]
-          pk <- cbind(rep(0, dim(newdata)[1]), 
+          pk <- cbind(rep(1, dim(newdata)[1]), 
                       exp_eta / (1 + exp_eta),
-                      rep(1, dim(newdata)[1]))
-          samples[["response"]][, ig, ] <- pk[,2:(maxK+2)] - pk[,1:(maxK+1)]
+                      rep(0, dim(newdata)[1]))
+          samples[["response"]][, ig, ] <- pk[,1:(maxK+1)] - pk[,2:(maxK+2)]
         }
       }
       
@@ -446,7 +481,7 @@ predict.clustglmm <-
         for(ig in 1:length(gs)){
           exp_eta <- exp(cbind(rep(0,dim(newdata)[1]), # 0 for baseline
                                samples[["fg"]][, ig, ]))  # ? # + samples[["o"]]
-          softmax <- exp_eta / apply(exp_eta, 1, sum)
+          softmax <- exp_eta / rowSums(exp_eta)
           samples[["response"]][, ig, ] <- softmax
         }
       }

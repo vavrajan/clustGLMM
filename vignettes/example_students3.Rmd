@@ -367,13 +367,33 @@ for(y in c(mcmc_pp$Nums, mcmc_pp$Pois)){
     lines(x = age_grid, y = pred$lwr[,paste0("(",g,")")], col = COL[g], lty = 2)
     lines(x = age_grid, y = pred$upr[,paste0("(",g,")")], col = COL[g], lty = 2)
   }
+  
+  ## Posterior predictive distribution over all clusters
+  # pred <- predict(mcmc_pp, newdata, y=y, 
+  #                 type="posterior_predictive_response",
+  #                 posterior_predictive_by_cluster=FALSE,
+  #                 method="samples",
+  #                 burnin=burnin, thin=thin, chain=ch)
+  # lines(x = age_grid, y = pred$lwr, col = "black", lty = 1)
+  # lines(x = age_grid, y = pred$upr, col = "black", lty = 1)
+  
+  ## Posterior predictive distribution for each cluster separately
+  pred <- predict(mcmc_pp, newdata, y=y, 
+                  type="posterior_predictive_response",
+                  posterior_predictive_by_cluster=TRUE,
+                  method="samples",
+                  burnin=burnin, thin=thin, chain=ch)
+  for(g in mcmc_pp$clusters[[ch]]){
+    lines(x = age_grid, y = pred$lwr[,g], col = COL[g], lty = 1)
+    lines(x = age_grid, y = pred$upr[,g], col = COL[g], lty = 1)
+  }
 }
 ```
 
 Comparing Figure \@ref{fig:students-predict-income-and-ntrips} to Figures \@ref{fig:students-income-vs-age} and \@ref{fig:students-ntrips-vs-age} we see that the true clusters and curves have been indeed recovered. The same holds for the ordinal outcome, see Figures \@ref{fig:students-satisfaction-vs-age} and \@ref{fig:students-predict-satisfaction}.
 
 ```{r students-predict-satisfaction, echo=TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=5, fig.cap="Estimated spline curves for satisfaction with shifting by intercepts (left) and spineplot for each group separately in time (right).", fig.pos="H"}
-par(mfrow=c(1,2), mar=c(4,4,2,0.5))
+par(mfrow=c(1,3))
 for(y in mcmc_pp$Ords){
   # Predicted spline curves 
   maxK <- mcmc_pp$Kord[y]
@@ -381,9 +401,10 @@ for(y in mcmc_pp$Ords){
                   what="fg", method="samples", 
                   burnin=burnin, thin=thin, chain=ch)
   
+  par(mar=c(4,4,2,0.5))
   plot(x=0, y=0, type="n",
        xlim=range(age_grid), ylim=range(unlist(pred)),
-       xlab="age", ylab="linear predictor - ordered intercept",
+       xlab="age", ylab="Linear predictor - ordered intercept",
        main=y)
   for(k in 1:maxK){
     for(g in mcmc_pp$clusters[[ch]]){
@@ -396,7 +417,34 @@ for(y in mcmc_pp$Ords){
     }
   }
   
+  # Predicted probabilities
+  pred <- predict(mcmc_pp, newdata, y=y, type="response", 
+                  what="fg", method="samples", 
+                  burnin=burnin, thin=thin, chain=ch)
+  
+  par(mar=c(4,4,2,2.5))
+  plot(x=0, y=0, type="n",
+       xlim=range(age_grid), ylim=range(1, maxK+2),
+       xlab="age", ylab="Predicted probability for level k",
+       yaxt = "n",
+       main=y)
+  axis(2, at=0.5+1:(maxK+1), labels = paste0("k=",0:maxK))
+  for(p in c(0.2, 0.5, 0.8)){
+    axis(4, at=p+1:(maxK+1), labels = rep(p, maxK+1), las=1, cex = 0.8)
+  }
+  for(k in 1:(maxK+1)){
+    for(g in mcmc_pp$clusters[[ch]]){
+      lines(x = age_grid, y = k+pred$fit[,paste0("(",g,")"),paste0("k=",k)],
+            col = COL[g], lwd = 3)
+      lines(x = age_grid, y = k+pred$lwr[,paste0("(",g,")"),paste0("k=",k)],
+            col = COL[g], lty = 2)
+      lines(x = age_grid, y = k+pred$upr[,paste0("(",g,")"),paste0("k=",k)],
+            col = COL[g], lty = 2)
+    }
+  }
+  
   # Spineplots
+  par(mar=c(4,4,2,0.5))
   plot_cat_vs_x_grouped(students, y=y, x="age", group=paste0("Uclustering",ch), main=y)
 }
 ```
