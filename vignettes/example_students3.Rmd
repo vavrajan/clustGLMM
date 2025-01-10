@@ -356,28 +356,16 @@ COL <- rainbow_hcl(mcmc_pp$modeGplus[ch], c = 80, l = 50)
 
 par(mfrow=c(1,2), mar=c(4,4,1,0.5))
 for(y in c(mcmc_pp$Nums, mcmc_pp$Pois)){
-  if(is.element(y, mcmc_pp$Nums)){
-    fun <- identity
-  }else{
-    fun <- exp
-  }
   plot_num_vs_x_grouped(students, y=y, x="age", g=paste0("Uclustering",ch), id=id, 
                         legend_placement="topleft", add_lowess = FALSE)
   
-  pred <- predict(mcmc_pp, newdata, y=y, type="link", what="fg", method="samples",
+  pred <- predict(mcmc_pp, newdata, y=y, type="response", method="samples",
                   burnin=burnin, thin=thin, chain=ch)
-  for(ig in 1:mcmc_pp$modeGplus[ch]){
-    g <- mcmc_pp$clusters[[ch]][ig]
-    lines(x = age_grid, y = fun(pred$fit[,paste0("(",g,")")]),
-          col = COL[ig], lwd = 3)
-    if(!is.null(pred$lwr)){
-      lines(x = age_grid, y = fun(pred$lwr[,paste0("(",g,")")]),
-            col = COL[ig], lty = 2)
-    }
-    if(!is.null(pred$upr)){
-      lines(x = age_grid, y = fun(pred$upr[,paste0("(",g,")")]),
-            col = COL[ig], lty = 2)
-    }
+  
+  for(g in mcmc_pp$clusters[[ch]]){
+    lines(x = age_grid, y = pred$fit[,paste0("(",g,")")], col = COL[g], lwd = 3)
+    lines(x = age_grid, y = pred$lwr[,paste0("(",g,")")], col = COL[g], lty = 2)
+    lines(x = age_grid, y = pred$upr[,paste0("(",g,")")], col = COL[g], lty = 2)
   }
 }
 ```
@@ -388,33 +376,23 @@ Comparing Figure \@ref{fig:students-predict-income-and-ntrips} to Figures \@ref{
 par(mfrow=c(1,2), mar=c(4,4,2,0.5))
 for(y in mcmc_pp$Ords){
   # Predicted spline curves 
-  maxk <- mcmc_pp$Kord[y]
-  pred_age <- list()
-  for(k in 1:maxk){
-    pred_age[[k]] <- predict(mcmc_pp, newdata, y=y, type="link", 
-                             what="fg", method="samples", k=k,
-                             burnin=burnin, thin=thin, chain=ch)
-  }
+  maxK <- mcmc_pp$Kord[y]
+  pred <- predict(mcmc_pp, newdata, y=y, type="link", 
+                  what="fg", method="samples", 
+                  burnin=burnin, thin=thin, chain=ch)
+  
   plot(x=0, y=0, type="n",
-       xlim=range(age_grid), ylim=range(unlist(pred_age)),
+       xlim=range(age_grid), ylim=range(unlist(pred)),
        xlab="age", ylab="linear predictor - ordered intercept",
        main=y)
-  for(k in 1:maxk){
-    for(ig in 1:mcmc_pp$modeGplus[ch]){
-      g <- mcmc_pp$clusters[[ch]][ig]
-      lines(x = age_grid,
-            y = pred_age[[k]]$fit[,paste0("(",g,")")],
-            col = COL[ig], lwd = 3)
-      if(!is.null(pred_age[[k]]$lwr) | maxk==1){
-        lines(x = age_grid,
-              y = pred_age[[k]]$lwr[,paste0("(",g,")")],
-              col = COL[ig], lty = 2)
-      }
-      if(!is.null(pred_age[[k]]$upr) | maxk==1){
-        lines(x = age_grid,
-              y = pred_age[[k]]$upr[,paste0("(",g,")")],
-              col = COL[ig], lty = 2)
-      }
+  for(k in 1:maxK){
+    for(g in mcmc_pp$clusters[[ch]]){
+      lines(x = age_grid, y = pred$fit[,paste0("(",g,")"),paste0("k=",k)],
+            col = COL[g], lwd = 3)
+      lines(x = age_grid, y = pred$lwr[,paste0("(",g,")"),paste0("k=",k)],
+            col = COL[g], lty = 2)
+      lines(x = age_grid, y = pred$upr[,paste0("(",g,")"),paste0("k=",k)],
+            col = COL[g], lty = 2)
     }
   }
   

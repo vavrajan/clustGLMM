@@ -45,6 +45,7 @@ On the other hand \code{get_sd_num} returns standard deviations for all clusters
 First, it tries to get it from \code{sd_num}, if saved.
 If not it transforms either from \code{prec_num} or \code{var_num}. 
 If none of the above, error is triggered. 
+}
 \value{
 A single covariance matrix \code{Sigma} or standard deviation(s) of numeric outcome \code{y}.
 }

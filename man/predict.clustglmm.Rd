@@ -1,16 +1,20 @@
 \name{predict.clustglmm}
 \alias{predict.clustglmm}
 \title{
-Estimate predictors from formulae
+Predict method for clustglmm class
 }
 \description{
-Predicts the linear combinations of fixed and group part of the model formulae of \code{clustGLMM} output.
+Predicts the linear combinations of fixed and group part of the regression of \code{clustGLMM} output. 
+Transforms linear predictors to response level. 
+Explores the posterior predictive distribution of the response.
 }
 \usage{
 \method{predict}{clustglmm}(object, newdata, y = names(object$family)[1],
-    k = NA, type = c("link", "response"), method = c("samples", "plugin"),
-    what = c("fg", "f", "g"), fun_posterior = mean, level = 0.95,
-    interval = c("ET", "HPD"), chain = 1, burnin = 0, thin = 1,
+    type = c("link", "response", "posterior_predictive_response"), 
+    method = c("samples", "plugin"),
+    what = c("fg", "f", "g"), 
+    fun_posterior = mean, level = 0.95, interval = c("ET", "HPD"), 
+    chain = 1, burnin = 0, thin = 1,
     gs = object$clusters[[chain]], ...)
 }
 \arguments{
@@ -23,18 +27,15 @@ Predicts the linear combinations of fixed and group part of the model formulae o
   \item{y}{
     a string; outcome to be predicted.
 }
-  \item{k}{
-    an integer; level of ordinal or categorical outcome to be predicted.
-}
   \item{type}{
-    what should be predicted; one of \code{"link"} (default) or \code{"response"}
-    (not implemented yet), see Details below.
+    what should be predicted; one of \code{"link"} (default), \code{"response"} or
+    \code{"posterior_predictive_response"}, see Details below.
 }
   \item{method}{
     the method of predicting; one of \code{"samples"} (default) or \code{"plugin"}, see Details below.
 }
   \item{what}{
-    more detailed clarification to the selected \code{type}.
+    more detailed clarification to the selected \code{type = "link"}.
 }
   \item{fun_posterior}{
     a function summarizing samples into an estimator of location parameter of posterior distribution; e.g. \code{mean} or \code{median}.
@@ -43,7 +44,7 @@ Predicts the linear combinations of fixed and group part of the model formulae o
     the credibility level of credible intervals; 0.95 by default.
 }
   \item{interval}{
-    the method of constructing credible intervals; one of \code{"none"}, \code{"ET"} (equal-tailed by default) or \code{"HPD"} (highest-posterior density), see Details below.
+    the method of constructing credible intervals; one of \code{"ET"} (equal-tailed by default) or \code{"HPD"} (highest-posterior density), see Details below.
 }
   \item{chain}{
     chain number to be used to do the prediction, the default is the first \code{chain = 1}.
@@ -65,11 +66,29 @@ Predicts the linear combinations of fixed and group part of the model formulae o
 Depending on \code{type} the following is computed:
 \describe{
   \item{link}{reconstructs the linear predictor for given outcome
-    \code{y}. You can specify by \code{what}: "f", "g", "fg" which part
+    \code{y}. You can specify by \code{what} which part
+    of the predictor should be reconstructed: 
+    "f", "g", "fg", which part
     of the predictor should be reconstructed: the fixed part invariant
     to all clusters, the group-specific part for chosen clusters
     \code{gs} or sum of both (default).}
-  \item{response}{not yet implemented.}
+  \item{response}{linear predictor "fg" transformed depending on the outcome type. 
+  Not transformed for \code{num}.
+  Transformed by \code{exp} for \code{poi}.
+  Category probabilities for \code{bin}, \code{ord} and \code{cat}.}
+  \item{posterior_predictive_response}{explores the posterior predictive distribution. 
+  For each iteration in \code{object$draws[[chain]]}, 
+  samples latent parameters (allocation and random effects) and then an outcome value.
+  It is important to know that only clusters in \code{gs} are considered here! 
+  Hence, you may just learn predictive distribution if observations belong to one of the chosen clusters
+  or learn the mixture with \code{length(gs) > 1}.}
+}
+
+Argument \code{what} only specifies option \code{type="link"}:
+\describe{
+  \item{f}{the fixed part of linear predictor invariant to all clusters,}
+  \item{g}{the group-specific part of linear predictor for chosen clusters \code{gs},}
+  \item{fg}{sum of the two above.}
 }
 
 As we approximate the posterior distribution with samples, there may be
@@ -83,12 +102,11 @@ way:
     option allows for construction of credible intervals.}
   \item{plugin}{estimate the model parameters with \code{fun_posterior}
     first and then plug them into the function defining the
-    quantity. Does not provide credible intervals (yet?).}
+    quantity. Does not provide credible intervals and \code{type="posterior_predictive_response"}.}
 }
 
-The computation of credible intervals is given by \code{interval}:
+The computation of credible intervals under \code{method="samples"} is given by \code{interval}:
 \describe{
-  \item{none}{no lower and upper bound desired.}
   \item{ET}{equal-tailed credible interval determined out of samples
     from posterior distribution with \code{quantile} function with
     \code{probs = c((1-level)/2, 1 - (1-level)/2}.}
@@ -96,17 +114,30 @@ The computation of credible intervals is given by \code{interval}:
     of samples from posterior distribution with \code{\link{hdi}}
     function from \pkg{HDInterval}.}
 }
+For \code{method="plugin"} the credible intervals are not implemented.
 }
 \value{
 For given outcome \code{y} returns a list with
 \describe{
-  \item{$fit}{the estimate of the posterior location.}
-  \item{$lwr}{the lower bound of credible interval.}
-  \item{$lwr}{the upper bound of credible interval.}
+  \item{$fit}{the estimate of the posterior location obtained via function \code{fun_posterior} over samples,}
+  \item{$lwr}{the lower bound of credible interval, if \code{method="samples"},}
+  \item{$upr}{the upper bound of credible interval, if \code{method="samples"}.}
 }
-Depending on cluster-specificity of the task, the results are either one
-column matrix or a matrix with each column corresponding to one of the
-required clusters named by \code{paste0("(", gs, ")")}.
+
+Moreover, \code{type="posterior_predictive_response"} provides
+\describe{
+  \item{$samples}{the non-aggregated samples of the response,}
+  \item{$aux}{the auxiliary quantities used to each generate outcome. 
+  Linear predictor for numeric, 
+  exponential of linear predictor for count,
+  probabilities for binary, ordinal and categorical outcomes.}
+}
+
+The output is an array of up to 4 dimensions (dropped if only size 1) in this exact order:
+\item{1.}{the size of \code{newdata},}
+\item{2.}{the number of clusters \code{length(gs)}, unless just 1 (then dropped) if not group-specific (\code{what="f"}),}
+\item{3.}{the dimension of samples, if not reduced by \code{fun_posterior} (only \code{$samples} and \code{$aux}).}
+\item{4.}{the number of different outcome levels: 1 for numeric and count (then dropped), K (probabilities) or K-1 (predictors) for categorical outcome of K levels}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
@@ -184,8 +215,12 @@ newdata <- data.frame("x" = seq(0, 1, length.out=100), "f"=factor(0, levels=c(0,
 
 # numeric outcome
 predict(mcmc, newdata, y="ynum", type="link", what="fg")
+predict(mcmc, newdata, y="ynum", type="posterior_predictive_distribution")
+
+# count outcome
+predict(mcmc, newdata, y="ypoi", type="response")
 
 # categorical outcome
-predict(mcmc, newdata, y="ycat", k=1, type="link", what="fg")
+predict(mcmc, newdata, y="ycat", type="link", what="fg")
 
 }

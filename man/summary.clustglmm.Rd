@@ -38,12 +38,14 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
 \details{
   \code{print.summary} prints a summary for each selected chain in \code{chains}. 
   Depending on what is included within \code{which} argument the following summaries are printed:
-  \item{mcmc}{an overview of the sampled chains,}
-  \item{clustering}{summary of the clustering,}
-  \item{inv_param}{cluster-invariant parameters,}
-  \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w})}
-  \item{latent_param}{latent parameters (random effects \code{b}, allocation indicators \code{U}, missing outcome values \code{naY}}
-  \item{group_param}{group-specific parameters}
+  \describe{
+    \item{mcmc}{an overview of the sampled chains,}
+    \item{clustering}{summary of the clustering,}
+    \item{inv_param}{cluster-invariant parameters,}
+    \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w}),}
+    \item{latent_param}{latent parameters (random effects \code{b}, allocation indicators \code{U}, missing outcome values \code{naY},}
+    \item{group_param}{group-specific parameters.}
+  }
   Regarding \code{clustering} option, raw output of \code{clustGLMM} is based on sampled allocation indicators, output of \code{clustering_probabilities_and_deviance} provides summary of clustering based on approximated clustering probabilities. 
   When printing the summary of the parameters, there is possibility to use \code{pattern} to shorten the list of printed parameters if needed.
   Group-specific parameters are printed only for the cluster labels in \code{clusters}. 
