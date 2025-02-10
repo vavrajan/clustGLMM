@@ -1,6 +1,5 @@
 \name{get_scalar_samples}
 \alias{get_scalar_samples}
-\alias{get_Sigma}
 \title{
 Finds samples for specified scalar model parameter 
 }
