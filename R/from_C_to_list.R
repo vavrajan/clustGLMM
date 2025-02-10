@@ -181,8 +181,8 @@ function(values,
                 if(v$d2spec){
                   cumsumni <- 0
                   for(i in 1:v$d1){
-                    RET[[k]][m,i,1:specd2[i]] <- values[(m-1)*v$dimswithG + (k-1)*v$dims + cumsumni + 1:specd2[i]]
-                    cumsumni <- cumsumni + specd2[i]
+                    RET[[k]][m,i,seq_len(yspecd2[i])] <- values[(m-1)*v$dimswithG + (k-1)*v$dims + cumsumni + seq_len(yspecd2[i])]
+                    cumsumni <- cumsumni + yspecd2[i]
                   }
                 }else{
                   RET[[k]][m,,] <- matrix(values[(m-1)*v$G*v$d1*v$d2 + (k-1)*v$d1*v$d2 + 1:(v$d1*v$d2)],
@@ -333,8 +333,8 @@ function(values,
               if(v$d2spec){
                 cumsumni <- 0
                 for(i in 1:v$d1){
-                  RET[m,i,1:specd2[i]] <- values[(m-1)*v$dims + cumsumni + 1:specd2[i]]
-                  cumsumni <- cumsumni + specd2[i]
+                  RET[m,i,seq_len(yspecd2[i])] <- values[(m-1)*v$dims + cumsumni + seq_len(yspecd2[i])]
+                  cumsumni <- cumsumni + yspecd2[i]
                 }
               }else{
                 RET[m,,] <- matrix(values[(m-1)*v$d1*v$d2 + 1:(v$d1*v$d2)],
