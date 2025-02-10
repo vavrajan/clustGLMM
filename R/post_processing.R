@@ -371,7 +371,7 @@ created for each chain separately.")
       # prec_num
       last[[ch]]$prec_num <- list()
       if(lsettings[[ch]]["prec_num","save"]){
-        if(varying["prec_num"]){
+        if(mcmc$varying["prec_num"]){
           for(y in mcmc$Nums){
             last[[ch]]$prec_num[[y]] <- list()
           }
@@ -386,7 +386,7 @@ created for each chain separately.")
           }
         }
       }else{
-        if(varying["prec_num"]){
+        if(mcmc$varying["prec_num"]){
           for(y in mcmc$Nums){
             last[[ch]]$prec_num[[y]] <- list()
           }
