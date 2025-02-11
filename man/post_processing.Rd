@@ -105,7 +105,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{plot_all}}, \code{\link{nice_nrow_ncol}}, \code{\link{post_processing}}, \code{\link{kmeans}}.
+\code{\link{clustGLMM}}, \code{\link{plot.clustglmm}}, \code{\link{nice_nrow_ncol}}, \code{\link{post_processing}}, \code{\link{kmeans}}.
 }
 \examples{
 ###-----------------------------------------------------------------------------

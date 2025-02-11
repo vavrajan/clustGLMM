@@ -72,7 +72,7 @@ If \code{...to_matrix} then the output is again a list for each chain separately
 
 If \code{...to_C} then the output is a long vector where all the parameter values are stacked together in the order assumed in C functions. 
 
-If \code{...to_coda} then the output is a \code{mcmc.list} object from \code{library(coda)}. \code{as_coda} is a wrapper that triggers \code{...to_coda} corresponding to \code{mcmc$howsave}. Then you can use environment for monitoring, investigating, plotting if you are familiar with it. However, a minor warning: the number of parameters is quite huge and can get overwhelming. Therefore, a set of plotting functions is provided with this package, see \code{\link{plot_all}}.  
+If \code{...to_coda} then the output is a \code{mcmc.list} object from \code{library(coda)}. \code{as_coda} is a wrapper that triggers \code{...to_coda} corresponding to \code{mcmc$howsave}. Then you can use environment for monitoring, investigating, plotting if you are familiar with it. However, a minor warning: the number of parameters is quite huge and can get overwhelming. Therefore, a set of plotting functions is provided with this package, see \code{\link{plot.clustglmm}}.
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
@@ -81,7 +81,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{plot_all}}, \code{\link{clustering_probabilities_and_deviance}}
+\code{\link{clustGLMM}}, \code{\link{plot.clustglmm}}, \code{\link{clustering_probabilities_and_deviance}}
 }
 \examples{
 

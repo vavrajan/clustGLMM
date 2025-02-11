@@ -64,7 +64,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{plot_all}}
+\code{\link{clustGLMM}}, \code{\link{plot.clustglmm}}
 }
 \examples{
 ###-----------------------------------------------------------------------------

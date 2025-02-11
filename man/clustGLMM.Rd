@@ -164,7 +164,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{generate_longitudinal_mixed_type_data}}, \code{\link{plot_all}}, \code{\link{default_varying}}
+\code{\link{generate_longitudinal_mixed_type_data}}, \code{\link{plot.clustglmm}}, \code{\link{default_varying}}
 }
 \examples{
 
