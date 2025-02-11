@@ -7,7 +7,7 @@ Printing the outputs of \code{clustGLMM}
 A method for printing objects of class \code{clustglmm}, the outputs of \code{clustGLMM}.
 }
 \usage{
-print(x, which = "call", ...)
+\method{print}{clustglmm}(x, which = "call", ...)
 }
 \arguments{
   \item{x}{

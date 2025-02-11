@@ -16,9 +16,9 @@ Functions are used internally in \code{clustGLMM} or \code{pUig_dev} to prepare 
 }
 \usage{
 as_coda(mcmc, burnin=0, thin=1)
-from_C_to_list(values, p, settings, yspecd1, yspecd2, family)
-from_C_to_matrix(values, p, settings, yspecd1, yspecd2, family)
-from_list_to_C(draws, iterations, p, settings, yspecd1, yspecd2, family)
+from_C_to_list(values, p, settings, yspecd1=NULL, yspecd2=NULL, family)
+from_C_to_matrix(values, p, settings, yspecd1=NULL, yspecd2=NULL, family)
+from_list_to_C(draws, iterations, p, settings, yspecd1=NULL, yspecd2=NULL, family)
 from_list_to_coda(mcmc, burnin=0, thin=1)
 from_list_to_matrix(mcmc)
 from_matrix_to_C(draws, iterations, p, settings)

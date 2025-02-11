@@ -23,10 +23,10 @@ a vector of column names of cluster-specific variables to be used for k-means cl
 If missing, all cluster-specific parameters are used. 
 }
   \item{iter.max}{
-the maximum number of iterations of \code{\link{kmeans}} algorithm allowed. 
+the maximum number of iterations of \code{\link[stats]{kmeans}} algorithm allowed. 
 }
   \item{nstart}{
-how many random sets for \code{\link{kmeans}} should be chosen? 
+how many random sets for \code{\link[stats]{kmeans}} should be chosen? 
 }
   \item{perm}{
 a list of permutation of cluster labels, one permutation for each chain.  
@@ -53,9 +53,9 @@ After these operations it may happen that values in one column correspond to dif
 
 4) Prepare the data for k-means clustering to resolve the label-switching. 
 Gather values for different clusters below each other. 
-That is, if there are \code{L} different cluster-specific parameters and \code{iters} samples, then the matrix is rearranged from \code{iters × (L * modeGplus)} to \code{(iters * modeGplus) × L}. 
+That is, if there are \code{L} different cluster-specific parameters and \code{iters} samples, then the matrix is rearranged from \code{iters * (L * modeGplus)} to \code{(iters * modeGplus) * L}. 
 
-5) K-means clustering \code{\link{kmeans(., centers=modeGplus, iter.max = iter.max, nstart = nstart)}} is applied to matrix from 5). 
+5) K-means clustering \code{\link[stats]{kmeans}} using \code{centers=modeGplus, iter.max = iter.max, nstart = nstart} is applied to matrix from 5). 
 Ideally, rows corresponding to iteration \code{m} would be each clustered to a different mode. 
 In such case, we would obtain a permutation for each row that aligns the meaning of the cluster labels across all iterations. 
 Unfortunately, it may happen that some iterations do not result into clear permutation. 
@@ -105,7 +105,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{plot.clustglmm}}, \code{\link{nice_nrow_ncol}}, \code{\link{post_processing}}, \code{\link{kmeans}}.
+\code{\link{clustGLMM}}, \code{\link{plot.clustglmm}}, \code{\link{nice_nrow_ncol}}, \code{\link{post_processing}}, \code{\link[stats]{kmeans}}.
 }
 \examples{
 ###-----------------------------------------------------------------------------

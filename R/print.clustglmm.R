@@ -1,4 +1,4 @@
-print.clustglmm <- function(x, which = c("call"), ...){
+print.clustglmm <- function(x, which = "call", ...){
   if(is.element("call", which)){
     cat("Call:\n\n")
     cat(x$call)

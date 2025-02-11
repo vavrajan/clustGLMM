@@ -1,5 +1,5 @@
 print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_param"), 
-                                    chains = c(1L), 
+                                    chains = 1L, 
                                     clusters,
                                     pattern = "", ...){
   # what clusters to print

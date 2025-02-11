@@ -8,7 +8,8 @@ To evaluate clustering probabilities all latent variables need to be integrated 
 }
 \usage{
 clustering_probabilities_and_deviance(mcmc, id, data, dynamic_prob = FALSE, 
-  start = 1, end = mcmc$iter, thin = 1, chains = 1:mcmc$nchains, 
+  start = 1, end = mcmc$iter, thin = 1, chains = mcmc$chains,
+  howsave = mcmc$howsave,                                      
   tolerance = mcmc$tuning$double$tolerance, 
   maxiter = mcmc$tuning$integer$maxiter, 
   maxnrep = mcmc$tuning$integer$maxnrep, 

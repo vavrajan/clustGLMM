@@ -8,9 +8,9 @@ Computing the summary statistics of outputs of \code{clustGLMM}
 A method for computing and printing the summary statistics of class \code{clustglmm}, the outputs of \code{clustGLMM} function.
 }
 \usage{
-summary(object, ...)
-print(x, which = c("mcmc", "inv_param", "clust_param"), chains = c(1), 
-      clusters = x$clusters, pattern = "", ...)
+\method{summary}{clustglmm}(object, ...)
+\method{print}{summary.clustglmm}(x, which = c("mcmc", "inv_param", "clust_param"), chains = 1L, 
+      clusters, pattern = "", ...)
 }
 \arguments{
   \item{object}{
@@ -26,7 +26,7 @@ a vector of strings that select which summaries should be printed.
 a vector of chain numbers to print summary results of.
 }  
   \item{clusters}{
-a list of cluster labels to print for group-specific parameters per each chain.
+a list of cluster labels to print for group-specific parameters per each chain; if missing \code{x$clusters} is used.
 }
   \item{pattern}{
 a pattern to be used for \code{grep} search among parameter names to include within the summary, empty by default (all from the selected category).

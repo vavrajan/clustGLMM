@@ -15,6 +15,9 @@ default_save()
 default_tuning(experience = FALSE)
 default_varying()
 }
+\arguments{
+  \item{experience}{a logical indicating if the default values are changed to values proven suitable from empirical experience}
+}
 \details{
 If corresponding lists or vectors are not given to \code{\link{clustGLMM}} then these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} and then adjust them as you wish.  
 }
