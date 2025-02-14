@@ -182,8 +182,8 @@ plot_ACF_param <-
             }else{
               # not y-specific, but still g-specific
               for(ch in for_chains){
-                if(setparmfrow){par(mfrow = nice_nrow_ncol(nonempty[[ch]]))}
-                for(g in 1:nonempty[[ch]]){
+                if(setparmfrow){par(mfrow = nice_nrow_ncol(length(nonempty[[ch]])))}
+                for(g in nonempty[[ch]]){
                   plot_ACF(mcmc = mcmc, what = what,
                            gspec = g, 
                            burnin = burnin, thin = thin, lag.max = lag.max,
@@ -214,7 +214,7 @@ plot_ACF_param <-
             }else{
               # the size of the dimension depends on outcomes
               for(ch in for_chains){
-                if(setparmfrow){par(mfrow = c(nonempty[[ch]], v$d1))}
+                if(setparmfrow){par(mfrow = c(length(nonempty[[ch]]), v$d1))}
                 for(g in nonempty[[ch]]){
                   for(i in 1:v$d1){
                     plot_ACF(mcmc = mcmc, what = what,
