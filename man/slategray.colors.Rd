@@ -35,6 +35,5 @@ Jan Vávra
 }
 \examples{
 slategray.colors(5, start=0.3, end=0.9)
-# in plot_cat_vs_x_grouped
-slategray.colors(5, start=0.1, end=0.7)
+slategrey.colors(5, start=0.1, end=0.7)
 }
