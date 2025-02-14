@@ -67,7 +67,7 @@ plot_ACF_param <-
                                                     iterations = iterations, chains = plot_chains[[ch]])
                       plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
                            xaxt = "n", yaxt = "n", bty = "n")
-                      means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                      means <- lapply(auxdata$draws, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
                       text(0.5,0.5, labels = format(mean(unlist(means[plot_chains[[ch]]])), digits = 2, nsmall = 2))
                     }
                   }
@@ -92,7 +92,7 @@ plot_ACF_param <-
                                                 iterations = iterations, chains = chains)
                   plot(x=c(0,1), y=c(0,1), type = "n", xlab = "", ylab = "",
                        xaxt = "n", yaxt = "n", bty = "n")
-                  means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                  means <- lapply(auxdata$draws, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
                   text(0.5,0.5, labels = format(mean(unlist(means[chains])), digits = 2, nsmall = 2))
                 }
               }
@@ -122,7 +122,7 @@ plot_ACF_param <-
                                                       gspec = g, dimspec = c(j,i),
                                                       burnin = burnin, thin = thin, 
                                                       iterations = iterations, chains = plot_chains[[ch]])
-                        means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                        means <- lapply(auxdata$draws, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
                         text(0.5,0.5, labels = format(mean(unlist(means[plot_chains[[ch]]])), digits = 2, nsmall = 2))
                       }
                     }
@@ -151,7 +151,7 @@ plot_ACF_param <-
                                                   dimspec = c(j,i),
                                                   burnin = burnin, thin = thin, 
                                                   iterations = iterations, chains = chains)
-                    means <- lapply(auxdata, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
+                    means <- lapply(auxdata$draws, function(x){ifelse(is.null(x), NA, mean(x$y, na.rm=TRUE))})
                     text(0.5,0.5, labels = format(mean(unlist(means[chains])), digits = 2, nsmall = 2))
                   }
                 }
