@@ -127,7 +127,7 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 ###          !!! output is already scaled back !!!
 ###-----------------------------------------------------------------------------
 some_draws <- list()
-for(ch in chains){
+for(ch in 1:nchains){
   some_draws[[ch]] <- rescale_matrix(mcmc$draws[[ch]], mcmc$settings[[ch]],
                                      mcmc$family, mcmc$lfixnames, mcmc$lgrpnames, mcmc$lrannames,
                                      mcmc$Kord, mcmc$Kcat, mcmc$centers, mcmc$scales
