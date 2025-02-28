@@ -624,7 +624,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           if(is(auxpolr,"error")){
             dowithall <- TRUE
           }else{
-            logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
+            logits <- plogis(auxpolr$zeta)
             sdlogits <- sd(logits)
             if(is.na(sdlogits)){
               dowithall <- TRUE
@@ -667,7 +667,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         if(length(fcols[[y]]) > 0){
           fc <- sapply(fcols[[y]], function(x){
             xdash <- paste0("`", x, "`")
-            if(is.element(xdash, names(auxpolr0$coefficients))){
+            if(is.element(xdash, names(auxmult0$coefficients))){
               return(xdash)
             }else{
               return(x)
@@ -681,7 +681,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         if(length(gcols[[y]]) > 0){
           gc <- sapply(gcols[[y]], function(x){
             xdash <- paste0("`", x, "`")
-            if(is.element(xdash, names(auxpolr0$coefficients))){
+            if(is.element(xdash, names(auxmult0$coefficients))){
               return(xdash)
             }else{
               return(x)
