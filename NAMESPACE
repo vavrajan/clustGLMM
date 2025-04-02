@@ -63,6 +63,6 @@ importFrom("nnet", "multinom")
 importFrom("splines", "bs")
 importFrom("stats", "acf", "as.formula", "binomial", "coef", "density", "ecdf",
            "glm", "kmeans", "lowess", "loess.smooth", "median", "model.matrix", "na.pass",
-           "poisson", "quantile", "rbinom", "rgamma", "rnorm", "rpois", "runif",
+           "plogis", "poisson", "quantile", "rbinom", "rgamma", "rnorm", "rpois", "runif",
            "sd")
 importFrom("utils", "head")
