@@ -118,7 +118,7 @@ void metrgibbs_beta_ord(struct str_state* last,   // OUT+IN last known values of
       // Update proposal distribution, if needed
       if((*m % *((*tuning).freq_proposal_update)) == 0){
         // call Newton-Raphson for y-th outcome and g=G, which means all of them
-        //printf("\nC: Trigerring newton_raphson for beta_ord_fix: y = %d, g = %d \n", y, *G);
+        // Rprintf("\nC: Trigerring newton_raphson for beta_ord_fix: y = %d, g = %d \n", y, *G);
         newton_raphson(last, (*param).sd_beta_ord_fix, 
                        Y+*N * shift_nY, X, spec, dims, 
                        predictor_num, predictor_poi, predictor_bin, predictor_ord+*N * 4 * y, predictor_cat,
@@ -136,7 +136,7 @@ void metrgibbs_beta_ord(struct str_state* last,   // OUT+IN last known values of
       }
       
       // Perform Metropolis within Gibbs
-      //printf("\nC: Trigerring metropolis for beta_ord_fix: y = %d, g = %d \n", y, *G);
+      // Rprintf("\nC: Trigerring metropolis for beta_ord_fix: y = %d, g = %d \n", y, *G);
       metropolis(last, (*param).sd_beta_ord_fix, 
                  Y+*N * shift_nY, X, spec, dims, 
                  predictor_num, predictor_poi, predictor_bin, predictor_ord+*N * 4 * y, predictor_cat,
@@ -202,7 +202,7 @@ void metrgibbs_beta_ord(struct str_state* last,   // OUT+IN last known values of
         // Update proposal distribution, if needed
         if((*m % *((*tuning).freq_proposal_update)) == 0){
           // call Newton-Raphson for y-th outcome within g-th cluster
-          //printf("\nC: Trigerring newton_raphson for beta_ord: y = %d, g = %d \n", y, g);
+          // Rprintf("\nC: Trigerring newton_raphson for beta_ord: y = %d, g = %d \n", y, g);
           newton_raphson(last, (*param).sd_beta_ord, 
                          Y+*N * shift_nY, X, spec, dims, 
                          predictor_num, predictor_poi, predictor_bin, predictor_ord+*N * 4 * y, predictor_cat,
@@ -220,7 +220,7 @@ void metrgibbs_beta_ord(struct str_state* last,   // OUT+IN last known values of
         }
         
         // Perform Metropolis within Gibbs
-        //printf("\nC: Trigerring metropolis for beta_ord: y = %d, g = %d \n", y, g);
+        // Rprintf("\nC: Trigerring metropolis for beta_ord: y = %d, g = %d \n", y, g);
         metropolis(last, (*param).sd_beta_ord, 
                    Y+*N * shift_nY, X, spec, dims, 
                    predictor_num, predictor_poi, predictor_bin, predictor_ord+*N * 4 * y, predictor_cat,

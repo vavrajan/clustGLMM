@@ -113,7 +113,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
       // Update proposal distribution, if needed
       if((*m % *((*tuning).freq_proposal_update)) == 0){
         // call Newton-Raphson for y-th outcome and g=G, which means all of them
-        //printf("\nC: Trigerring newton_raphson for beta_bin_fix: y = %d, g = %d \n", y, *G);
+        //Rprintf("\nC: Trigerring newton_raphson for beta_bin_fix: y = %d, g = %d \n", y, *G);
         newton_raphson(last, (*param).sd_beta_bin_fix, 
                        Y+*N * shift_nY, X, spec, dims, 
                        predictor_num, predictor_poi, predictor_bin+*N * 4 * y, predictor_ord, predictor_cat,
@@ -156,7 +156,8 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
   //// Predictor update - fixed part ////
   ////-------------------------------////
   int update[4];
-  int K[nY[2]];
+  int* K;
+  K = (int*)malloc(nY[2] * sizeof(int));
   
   update[0] = 1;
   update[1] = update[2] = update[3] = 0;
@@ -256,5 +257,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
     // Arrays with necessary parameters from one state //
     (*last).beta_bin_fix, (*last).beta_bin, (*last).b, (*last).U            
   );
+  
+  free(K);
   
 }

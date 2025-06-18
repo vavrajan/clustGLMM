@@ -145,7 +145,7 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
   nrep = 0;
   
   for(j = 0; ((j < *((*tuning).maxiter)) & (!(*converged))); j++){
-    //printf("\nnewton_raphson: j = %d", j);
+    // Rprintf("\nnewton_raphson: j = %d", j);
     // First compute the gradient and negative hessian matrix
     (*d_d2_fun)(last, hyperparameter, Y, X, spec, dims, 
      predictor_num, predictor_poi, predictor_bin, predictor_ord, predictor_cat, pred_skip,
@@ -153,32 +153,32 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
      nfix, cumnfix, totnfix, FormulaF, n_i, i_j, nUg, listUi, 
      theta_max, grad, hess);
     
-    //printf("\nnewton_raphson: grad: ");
-    //for(k = 0; k < dim_theta; k++){
-    //  printf("%d = %f, ", k, grad[k]);
-    //}
+    // Rprintf("\nnewton_raphson: grad: ");
+    // for(k = 0; k < dim_theta; k++){
+    //   Rprintf("%d = %f, ", k, grad[k]);
+    // }
     //fflush(stdout);
     
-    //printf("\nnewton_raphson: hess: ");
-    //for(k = 0; k < dim_theta*(dim_theta + 1)/2; k++){
-    //  printf("%d = %f, ", k, hess[k]);
-    //}
+    // Rprintf("\nnewton_raphson: hess: ");
+    // for(k = 0; k < dim_theta*(dim_theta + 1)/2; k++){
+    //   Rprintf("%d = %f, ", k, hess[k]);
+    // }
     //fflush(stdout);
     
     // Solve for shift using Cholesky decomposition
     retchol = cholesky_solve(hess, &dim_theta, grad, chol, almost_shift);
     if(retchol == 0){
-      //printf("\nnewton raphson: hess not positive definite!!! j=%d, g=%d, dim_theta=%d, nrep=%d",
-      //       j, *g, dim_theta, nrep);
+      // Rprintf("\nnewton raphson: hess not positive definite!!! j=%d, g=%d, dim_theta=%d, nrep=%d",
+      //        j, *g, dim_theta, nrep);
       //fflush(stdout);
       //failed = 1;
       nrep++;
       // it came to a nonsense --> start all again from different value
       j = 0; // start over
-      //printf("\nnewton_raphson: prev theta_max for g = %d: ", *g);
-      //for(k=0; k < dim_theta; k++){
-      //  printf("%d = %f, ", k, theta_max[k]);
-      //}
+      // Rprintf("\nnewton_raphson: prev theta_max for g = %d: ", *g);
+      // for(k=0; k < dim_theta; k++){
+      //   Rprintf("%d = %f, ", k, theta_max[k]);
+      // }
       //fflush(stdout);
       u = runif(0.0, 1.0)*runif(0.0, 1.0);
       for(k = 0; k < dim_theta; k++){
@@ -186,10 +186,10 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
         //theta_max[k] = rnorm((0.0 + nrep*prev_max[k])/(1+nrep),0.5+1/nrep);
         // seems that lesser variance and closer to previous maximal solution is better
       }
-      //printf("\nnewton_raphson: new theta_max for g = %d: ", *g);
-      //for(k=0; k < dim_theta; k++){
-      //  printf("%d = %f, ", k, theta_max[k]);
-      //}
+      // Rprintf("\nnewton_raphson: new theta_max for g = %d: ", *g);
+      // for(k=0; k < dim_theta; k++){
+      //   Rprintf("%d = %f, ", k, theta_max[k]);
+      // }
       //fflush(stdout);
       
       (*fun)(last, hyperparameter, Y, X, spec, dims, 
@@ -211,14 +211,14 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
       }
     }else{
 
-      //printf("\nnewton_raphson: chol: ");
-      //for(k = 0; k < dim_theta*(dim_theta + 1)/2; k++){
-      //  printf("%d = %f, ", k, chol[k]);
-      //}
+      // Rprintf("\nnewton_raphson: chol: ");
+      // for(k = 0; k < dim_theta*(dim_theta + 1)/2; k++){
+      //   Rprintf("%d = %f, ", k, chol[k]);
+      // }
       //fflush(stdout);
       
       backsolve2(chol, almost_shift, &dim_theta, shift);
-      //printf("\nnewton_raphson: After solve.\n");
+      // Rprintf("\nnewton_raphson: After solve.\n");
       
       // New theta - shift added to previous max
       for(k = 0; k < dim_theta; k++){
@@ -234,6 +234,7 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
           norm_shift += shift[k] * shift[k];
         }
         norm_shift = sqrt(norm_shift);
+        //Rprintf("\nnormshift = %f, ", norm_shift);
         
         // Evaluate new loglik value
         (*fun)(last, hyperparameter, Y, X, spec, dims, 
@@ -287,7 +288,7 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
         //failed = 1;
         nrep++;
         // it came to a nonsense --> start all again from different value
-        //printf("\nnewton_raphson: loglik for [g=%d] is infinite start over!", *g);
+        // Rprintf("\nnewton_raphson: loglik for [g=%d] is infinite start over!", *g);
         //fflush(stdout);
         j = 0; // start over
         u = runif(0.0, 1.0)*runif(0.0, 1.0); // closer to zero
@@ -296,10 +297,10 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
           // seems that lesser variance and closer to previous maximal solution is better
           theta_max[k] = u*prev_max[k];
         }
-        //printf("\nnewton_raphson: new theta_max for g = %d: ", *g);
-        //for(k=0; k < dim_theta; k++){
-        //  printf("%d = %f, ", k, theta_max[k]);
-        //}
+        // Rprintf("\nnewton_raphson: new theta_max for g = %d: ", *g);
+        // for(k=0; k < dim_theta; k++){
+        //   Rprintf("%d = %f, ", k, theta_max[k]);
+        // }
         //fflush(stdout);
         
         (*fun)(last, hyperparameter, Y, X, spec, dims, 
@@ -321,12 +322,12 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
         }
       }else{
   
-        //printf("\nnewton_raphson: Iteration %d for g = %d, theta: ", j, *g);
-        //for(k=0; k < dim_theta; k++){
-        //  printf("%d = %f, ", k, theta_max[k]);
-        //}
+        // Rprintf("\nnewton_raphson: Iteration %d for g = %d, theta: ", j, *g);
+        // for(k=0; k < dim_theta; k++){
+        //   Rprintf("%d = %f, ", k, theta_max[k]);
+        // }
         //fflush(stdout);
-        //printf("\nnewton_raphson: normshift = %f ", norm_shift);
+        // Rprintf("\nnewton_raphson: normshift = %f ", norm_shift);
         //fflush(stdout);
         
       }

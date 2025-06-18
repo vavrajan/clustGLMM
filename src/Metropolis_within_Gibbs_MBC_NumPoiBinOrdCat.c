@@ -772,7 +772,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     nfix +shiftnY, ngrp +shiftnY, nran +shiftnY, noff +shiftnY, 
     cumnfix +shiftnY, cumngrp +shiftnY, cumnran +shiftnY, cumnoff +shiftnY, 
     &totnran,
-    dims+10,     // dimension of single group-specific beta_num
+    dims+10,     // dimension of single group-specific beta_ord
     K_beta +shiftnY, &kspec_bi_cat,
     // Arrays with necessary parameters from one state //
     inits.beta_ord_fix, inits.beta_ord, inits.b, inits.U            
@@ -800,7 +800,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     nfix +shiftnY, ngrp +shiftnY, nran +shiftnY, noff +shiftnY, 
     cumnfix +shiftnY, cumngrp +shiftnY, cumnran +shiftnY, cumnoff +shiftnY, 
     &totnran,
-    dims+15,     // dimension of single group-specific beta_num
+    dims+15,     // dimension of single group-specific beta_cat
     Kcat, &kspec_bi_cat,
     // Arrays with necessary parameters from one state //
     inits.beta_cat_fix, inits.beta_cat, inits.b, inits.U            

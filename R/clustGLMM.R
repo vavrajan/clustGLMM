@@ -406,7 +406,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         # Using all data
         nonna <- (!is.na(ydata[,y]))
         pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
-        boldX <- as.matrix(finX[nonna,Xvars])
+        boldX <- as.matrix(finX[nonna,Xvars,drop=FALSE])
         coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
         names(coefs) <- Xvars
         MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
@@ -423,7 +423,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         for(g in 1:G[ch]){
           inds <- selection[[g]] & !is.na(ydata[,y])
           pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]]], 1, sum)
-          boldX <- as.matrix(finX[inds, Xvars])
+          boldX <- as.matrix(finX[inds, Xvars, drop=FALSE])
           XtX <- t(boldX) %*% boldX
           coefs <- try(as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY)), silent = TRUE)
           if(is(coefs, "try-error")){
@@ -567,9 +567,9 @@ Change the save settings if you want to calculate these probabilities afterwards
         aux_form <- paste0(y, " ~ .")
         if(noff[y] > 0){
           aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
-          auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
+          auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]])),drop=FALSE]
         }else{
-          auxdata0 <- finX[,union(fcols[[y]], gcols[[y]])]
+          auxdata0 <- finX[,union(fcols[[y]], gcols[[y]]),drop=FALSE]
         }
         # possibly standardized regressors
         auxdata0[,y] <- factor(ydata[,y])
@@ -619,12 +619,13 @@ Change the save settings if you want to calculate these probabilities afterwards
           auxdata[,y] <- factor(auxdata[,y])
           auxpolr <- tryCatch(polr(aux_form, data = auxdata, Hess = TRUE), 
                               error=function(e) e, warning=function(w) w)
-          dowithall <- TRUE
+          # dowithall <- TRUE
+          dowithall <- FALSE
           # if(is(auxpolr,"warning") || is(auxpolr,"error")){
           if(is(auxpolr,"error")){
             dowithall <- TRUE
           }else{
-            logits <- plogis(auxpolr$zeta)
+            logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
             sdlogits <- sd(logits)
             if(is.na(sdlogits)){
               dowithall <- TRUE
@@ -750,9 +751,11 @@ Change the save settings if you want to calculate these probabilities afterwards
       
       
       if(ch == nchains){message("Inits are ready.\n")}
+      
     } # end for ch in 1:nchains
     
   } # end of missing(inits)
+  
   
   
   
@@ -1227,7 +1230,7 @@ Change the save settings if you want to calculate these probabilities afterwards
          X         = as.double(cX),
          varying   = as.integer(varying),
          save      = as.integer(unlist(csave)),
-         vecparam  = as.double(cparam), # passed as vector of values 
+         vecparam  = as.double(cparam), # passed as vector of values
          vecinits  = as.double(cinits), # passed as vector of double values (except U)
          veclast   = double(length(cinits)), # passed as vector of double values (except U)
          # parameters describing dimensions
@@ -1248,7 +1251,7 @@ Change the save settings if you want to calculate these probabilities afterwards
          Kord      = as.integer(Kord), # the counts of categories of ordinal variables (-1)
          Kcat      = as.integer(Kcat), # the counts of categories of categorical variables (-1)
          dims      = as.integer(cdims), # the length of subarray that corresponds to one state (disected by various parameters)
-         dimswithG = as.integer(dimswithG[,ch]), # the length of subarray that corresponds to one state 
+         dimswithG = as.integer(dimswithG[,ch]), # the length of subarray that corresponds to one state
          # (disected by various parameters, also multiplication by K incorporated when such parameters is class-specific)
          # arrays to store generated states
          beta_num_fix= cstore$beta_num_fix,
