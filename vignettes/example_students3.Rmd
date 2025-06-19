@@ -14,7 +14,7 @@ author:
     email: bettina.gruen@wu.ac.at
     orcid: 0000-0001-7265-4773
     url: https://statmath.wu.ac.at/~gruen
-    affiliation: Vienna University of Economics and Bussiness
+    affiliation: Vienna University of Economics and Business
     address:
     - Welthandelsplatz 1
     - 1020 Wien
@@ -22,7 +22,7 @@ author:
     email: gertraud.malsiner-walli@wu.ac.at
     orcid: 0000-0002-1213-4749
     url: https://statmath.wu.ac.at/~malsiner
-    affiliation: Vienna University of Economics and Bussiness
+    affiliation: Vienna University of Economics and Business
     address:
     - Welthandelsplatz 1
     - 1020 Wien
@@ -104,6 +104,7 @@ demonstrate a wide range of the functionality of package **clustGLMM**:
   are identical across the latent groups. Thus one can simplify the
   fitted model by restricting this parameter to be identical across
   latent groups.
+
 
 We load the dataset and inspect the first few entries:
 ```{r students-load, echo = TRUE}

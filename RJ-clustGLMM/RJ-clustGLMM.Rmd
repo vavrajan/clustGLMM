@@ -9,7 +9,7 @@ author:
   address:
   - Sokolovská 49/83
   - 186 75 Praha 8
-  affiliation2: Vienna University of Economics and Bussiness
+  affiliation2: Vienna University of Economics and Business
   address2:
   - Welthandelsplatz 1
   - 1020 Wien
@@ -17,7 +17,7 @@ author:
   email: bettina.gruen@wu.ac.at
   orcid: "0000-0001-7265-4773"
   url: "https://research.wu.ac.at/de/persons/bettina-gr%C3%BCn-7"
-  affiliation: Vienna University of Economics and Bussiness
+  affiliation: Vienna University of Economics and Business
   address:
   - Welthandelsplatz 1
   - 1020 Wien
@@ -25,7 +25,7 @@ author:
   email: "gertraud.malsiner-walli@wu.ac.at"
   orcid: "0000-0002-1213-4749"
   url: "https://research.wu.ac.at/de/persons/gertraud-malsiner-walli-3"
-  affiliation: Vienna University of Economics and Bussiness
+  affiliation: Vienna University of Economics and Business
   address:
   - Welthandelsplatz 1
   - 1020 Wien
@@ -935,6 +935,7 @@ the new labeling is correct:
 
 ```{r students-permuting-labels-2, echo = TRUE, results=FALSE, fig.align='center', fig.width=10, fig.height=4, fig.cap="Permuted last regression coefficients posterior kernel density estimates for income - each chain separately.", fig.pos="H"}
 print(summary(mcmc_pp), chains = c(1, 2), which = "group_param")
+print(summary(mcmc_pp), chains = c(1, 2), which = c("clust_param", "inv_param"))
 # See? Now the colors match across chains
 par(mfrow = c(1, 2), mar = c(4, 4, 0.5, 0.5))
 plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7, 
