@@ -17,7 +17,7 @@ clustering_probabilities_and_deviance(mcmc, id, data, dynamic_prob = FALSE,
 }
 \arguments{
   \item{mcmc}{
-an output of \code{\link{clustGLMM}}.
+an object of class \code{clustglmm} (an output of \code{\link{clustGLMM}} function).
 }
   \item{id}{
 a string, name of the column containing unit ID. Moreover, new units not used in MCMC sampling can be used here.  
@@ -75,13 +75,16 @@ To approximate \code{totnran}-dimensional integral over random effects we use Ad
 
 }
 \value{
-  If \code{howsave = "list"}, then it is a list of outputs for different chains (from \code{chains}). Each chain then contains the following quantities:
+  Output is an \code{clustglmm} object so that already existing methods are applicable. Most of the outputs are taken from the given \code{mcmc} object.
+  
+  Depending on the choice of \code{howsave = "list"} or \code{howsave = "matrix"}, the \code{$draws} argument contains a list of outputs for different chains (from \code{chains}) organized in either \code{list} or \code{matrix} format. Each chain then contains the following quantities:
   \describe{
-    \item{\code{deviance}}{a scalar containing the model deviance,}
     \item{\code{dev_i}}{a vector of individual unit contribution to the model deviance,}
-    \item{\code{pUig_int}}{a \code{n} by \code{G} matrix containing clustering probability towards one of \code{G} clusters.}
+    \item{\code{deviance}}{a scalar containing the model deviance (sum of all individual contributions),}
+    \item{\code{pUig_int}}{a group-specific vector of length equal to number of unique \code{id} labels containing clustering probabilities towards one of \code{mcmc$G} clusters. The mapping between ids and numbers is given via the item \code{$numbered_unique_ids}.}
   }
-  If \code{howsave = "matrix"}, then the output is a matrix where each row is one sample iteration and columns are named by the output variables above. 
+  
+  Outputs \code{$clustering} and \code{$draws} are derived from \code{pUig_int} by averaging and evaluation, which cluster has the highest posterior probability. 
 }
 \references{
 Pinheiro, J.C., Chao, E.C. Efficient Laplacian and adaptive Gaussian quadrature algorithms for multilevel generalized linear mixed models. J. Comput. Graph. Stat. 15(1), 58–81 (2006). https://doi.org/10.1198/106186006x96962
