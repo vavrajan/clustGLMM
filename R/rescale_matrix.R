@@ -242,7 +242,11 @@ rescale_matrix <- function(draws, settings,
       for(g in 1:settings["c_ord", "G"]){
         cnames <- paste0("c_ord_",y,"(",g,")[",1:Kord[y],"]")
         bnames <- paste0("beta_ord_",y,"(",g,")[",notint_grp,"]")
-        shift <- shift_fix + as.matrix(draws[,bnames,drop=FALSE]) %*% centers[lgrpnames[[y]][notint_grp]]
+        if(length(notint_grp) > 0){
+          shift <- shift_fix + as.matrix(draws[,bnames,drop=FALSE]) %*% centers[lgrpnames[[y]][notint_grp]]
+        }else{
+          shift <- shift_fix
+        }
         for(cn in cnames){
           draws[,cn] <- draws[,cn] + shift
         }

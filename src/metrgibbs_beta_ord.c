@@ -87,7 +87,7 @@ void metrgibbs_beta_ord(struct str_state* last,   // OUT+IN last known values of
                         // Tuning parameters
                         struct str_tuning* tuning       // tuning parameters
 ){
-  //printf("\nmetrgibbs_beta_poi: Ahoj");
+  //printf("\nmetrgibbs_beta_ord: Ahoj");
   //fflush(stdout);
   
   int y, g;

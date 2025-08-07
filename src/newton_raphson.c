@@ -254,10 +254,21 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
             theta_new[k] = theta_max[k] + shift[k];
           }
           
-          if((isfinite(loglik_new)) & (norm_shift + abs(loglik_new - loglik_max) < *((*tuning).tolerance))){
-            cont_half = 0;
+          // if((isfinite(loglik_new)) & (norm_shift + abs(loglik_new - loglik_max) < *((*tuning).tolerance))){
+          if(isfinite(loglik_new)){
+            if(norm_shift < *((*tuning).tolerance)){
+              cont_half = 0;
+            }else{
+              // Rprintf("continue in halving!1");
+              cont_half = 1;
+            }
           }else{
-            cont_half = 1;
+            if(norm_shift < *((*tuning).tolerance)){
+              cont_half = 0;
+            }else{
+              // Rprintf("continue in halving!2");
+              cont_half = 1;
+            }
           }
           
         }else{
