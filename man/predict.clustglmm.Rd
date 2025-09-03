@@ -116,7 +116,7 @@ The computation of credible intervals under \code{method="samples"} is given by 
     from posterior distribution with \code{quantile} function with
     \code{probs = c((1-level)/2, 1 - (1-level)/2}.}
   \item{HPD}{highest-posterior density credible interval determined out
-    of samples from posterior distribution with \code{\link{hdi}}
+    of samples from posterior distribution with \code{\link[HDInterval]{hdi}}
     function from \pkg{HDInterval}.}
 }
 For \code{method="plugin"} the credible intervals are not implemented.

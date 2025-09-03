@@ -75,7 +75,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{clustGLMM}}, \code{\link{clustering_probabilities_and_deviance}}, \code{\link{print.summary.clustglmm}}, \code{\link{summary.mcmc}}
+\code{\link{clustGLMM}}, \code{\link{clustering_probabilities_and_deviance}}, \code{\link{print.summary.clustglmm}}, \code{\link[coda]{summary.mcmc}}
 }
 \examples{
 
