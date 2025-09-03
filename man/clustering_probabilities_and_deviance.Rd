@@ -182,26 +182,14 @@ probs <- clustering_probabilities_and_deviance(mcmc, id, newdata,
 ###-----------------------------------------------------------------------------
 ###     Final clustering
 ###-----------------------------------------------------------------------------
-probmean <- ps <- list()
-clustering <- matrix(-1, nrow = as.numeric(nnew), ncol = mcmc$nchains)
-certainty <- matrix(-1, nrow = as.numeric(nnew), ncol = mcmc$nchains)
-for(ch in 1:mcmc$nchains){
-  ps[[ch]] <- probs[probs$chain == ch, grep("pUig", colnames(probs))]
-  psum <- summary(coda::mcmc(ps[[ch]]))
-  probmean[[ch]] <- matrix(psum$statistics[,"Mean"], ncol = mcmc$G,
-                           nrow = nnew, byrow = TRUE)
-  
-  clustering[,ch] <- apply(probmean[[ch]], 1, which.max)
-  certainty[,ch] <- apply(probmean[[ch]], 1, max)
-}
+certainty <- probs$certainty
+clustering <- probs$clustering
 # To be classified in the cluster with maximal clustering probability,
 # it has to overcome the given threshold, otherwise remains unclassified.
 threshold <- 0.5
 clustering[certainty < threshold] <- 0
 
-ch = 1
-probmean[[ch]]
-rowSums(probmean[[ch]])
+ch <- 1
 newdata$clustering <- clustering[,ch]
 
 newdata1 <- newdata[newdata$j==1,]
