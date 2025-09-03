@@ -3,7 +3,8 @@ from_matrix_to_coda <- function(mcmc, burnin=0, thin=1){
   # There is slight possibility that it will produce some NA values
   # We also omit n allocation indicators U
   for(ch in mcmc$chains){
-    codamcmc[[ch]] <- mcmc$draws[[ch]][mcmc$draws[[ch]]$m > burnin, ]
+    codamcmc[[ch]] <- sapply(mcmc$draws[[ch]], as.numeric)
+    codamcmc[[ch]] <- codamcmc[[ch]][mcmc$draws[[ch]]$m > burnin, ]
     codamcmc[[ch]] <- codamcmc[[ch]][seq(1, dim(codamcmc[[ch]])[1], by = thin),-1,drop=FALSE]
     if(dim(mcmc$draws[[ch]])[1] == mcmc$iter){
       # We work with original chain of length mcmc$iter
