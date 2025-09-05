@@ -2,7 +2,7 @@
 \alias{post_processing}
 \alias{permute_cluster_labels}
 \title{
-Post-process the clustGLMM sampled chains
+Post-process the Chains Sampled with \code{clustGLMM}
 }
 \description{
 Sampling MCMC chains via \code{\link{clustGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. 

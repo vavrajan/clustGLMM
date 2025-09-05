@@ -1,7 +1,7 @@
 \name{predict.clustglmm}
 \alias{predict.clustglmm}
 \title{
-Predict method for clustglmm class
+Predict Method for Class \code{clustglmm} 
 }
 \description{
 Predicts the linear combinations of fixed and group part of the regression of \code{clustGLMM} output. 

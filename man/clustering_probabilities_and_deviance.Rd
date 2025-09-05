@@ -1,7 +1,7 @@
 \name{clustering_probabilities_and_deviance}
 \alias{clustering_probabilities_and_deviance}
 \title{
-Evaluate clustering probabilities and deviance of clustGLMM output
+Evaluate Clustering Probabilities and Deviance of Output of \code{clustGLMM}
 }
 \description{
 To evaluate clustering probabilities all latent variables need to be integrated out of log-pdf contributions. Jointly modelled random effects for mixed-type outcomes cannot be integrated out in a closed formula. Hence, we utilize Laplace's approximation or even Adaptive Gaussian Quadrature (AGQ) in order to approximate these integrals. Samples of model parameters from \code{clustGLMM} are sent to C environment for faster evaluation.  

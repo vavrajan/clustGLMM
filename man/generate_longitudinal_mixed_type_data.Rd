@@ -1,7 +1,7 @@
 \name{generate_longitudinal_mixed_type_data}
 \alias{generate_longitudinal_mixed_type_data}
 \title{
-Generate an artificial longitudinal dataset of mixed-type outcomes
+Generate an Artificial Longitudinal Dataset with Mixed-type Outcomes
 }
 \description{
 Five different longitudinal outcomes are sampled accoring to the model described by Vávra et al. (2024). Column \code{i} is the unit id, \code{j} is the number of observation for \code{i}th unit. Numeric \code{ynum}, count \code{ypoi}, binary \code{ybin}, ordinal \code{yord} and categorical \code{ycat} outcomes are sampled according to predictors \code{pred_...} which are constructed from the intercept, time covariate \code{x}, categorical covariate \code{f} and the random effects \code{b_...}. The definition of the predictor can be adjusted.

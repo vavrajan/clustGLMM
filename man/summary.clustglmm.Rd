@@ -2,10 +2,10 @@
 \alias{summary.clustglmm}
 \alias{print.summary.clustglmm}
 \title{
-Computing the summary statistics of outputs of \code{clustGLMM}
+Compute the Summary Statistics of \code{clustGLMM} Output
 }
 \description{
-A method for computing and printing the summary statistics of class \code{clustglmm}, the outputs of \code{clustGLMM} function.
+A method for computing and printing the summary statistics of class \code{clustglmm}, the output from the \code{clustGLMM} function.
 }
 \usage{
 \method{summary}{clustglmm}(object, ...)
