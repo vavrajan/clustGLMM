@@ -86,8 +86,10 @@ function(data, y = "y", x = "x", group = "g", id = "i", units, xbreaks,
       for(g in ggs){
         gdata <- data[data[,group]==g,]
         gdata <- gdata[order(gdata[,x]),]
-        lws <- loess.smooth(gdata[,x], gdata[,y])
-        lines(lws, col = dCOL[as.character(g)], lwd = 5)
+        lws <- try(loess.smooth(gdata[,x], gdata[,y]), TRUE)
+        if(!inherits(lws, "try-error")){
+          lines(lws, col = dCOL[as.character(g)], lwd = 5)
+        }
       }
     }
   }

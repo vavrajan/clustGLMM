@@ -147,35 +147,25 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
 threshold <- 0.5 # if not exceeded, unit remains unclassified
 
 # posterior mode of Gplus=number of nonemtpy components
-modeGplus <- as.numeric(tapply(mcmc$all$Gplus, mcmc$all$chain, 
-                               function(x){names(table(x))[which.max(table(x))]}))
+mcmc$modeGplus
 
+# labels of non-empty clusters in each chain
+mcmc$clusters
+
+# clustering based on sampled indicators
+myclustering <- mcmc$clustering
+
+# the highest estimated clustering probability among all clusters
+mcmc$certainty
+
+# units with frequency ratio smaller than chosen threshold remain unclassified (group 0)
+myclustering[mcmc$certainty < threshold] <- 0
 clusters <- list()
-for(ch in 1:nchains){
-  TAB <- table(unlist(mcmc$all[mcmc$all$chain == ch,grep("U\\\\[",colnames(mcmc$all))]))
-  TAB <- TAB[order(TAB, decreasing = TRUE)]
-  clusters[[ch]] <- as.numeric(names(TAB)[1:modeGplus[ch]])
-}
-TAB # clusters are labelled from 0 to mcmc$G-1
-clusters # the labels of non-empty clusters in each chain 
-
-Us <- mcmc$all[,c("chain", paste0("U[",1:n,"]"))]
-clusteringU <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
-certaintyU <- matrix(-1, nrow = as.numeric(n), ncol = mcmc$nchains)
-for(i in 1:n){
-  TAB <- table(Us[,i+1], Us$chain)
-  # the cluster is the one with the highest frequency
-  clusteringU[i,] <- as.numeric(rownames(TAB)[apply(TAB, 2, which.max)])
-  # the highest frequency ratio
-  certaintyU[i,] <- apply(TAB/mcmc$iter, 2, max)
-}
-# units with frequency ratio smaller than threshold remain unclassified (group 0)
-clusteringU[certaintyU < threshold] <- 0
 
 # proposed clustering by each chain separately
 for(ch in 1:mcmc$nchains){
-  data[,paste0("clustering",ch)] <- clusteringU[data[,id],ch]
-  data[,paste0("certainty",ch)] <- certaintyU[data[,id],ch]
+  data[,paste0("clustering",ch)] <- myclustering[data[,id],ch]
+  data[,paste0("certainty",ch)] <- mcmc$certainty[data[,id],ch]
 }
 
 data1 <- data[data$j==1,]
@@ -193,7 +183,7 @@ plot_num_vs_x_grouped(data, y = "ynum", x = "x", group = "clustering1", id = "i"
 
 # Plotting binary, ordinal, categorical outcomes
 plot_cat_vs_x_grouped(data, y = "ybin", x = "x", group = "g")
-plot_cat_vs_x_grouped(data, y = "ybin", x = "x", group = "g")
+plot_cat_vs_x_grouped(data, y = "ybin", x = "x", group = "g", reverse = TRUE)
 plot_cat_vs_x_grouped(data, y = "ybin", x = "x", group = "clustering1")
 plot_cat_vs_x_grouped(data, y = "yord", x = "x", group = "g", reverse = TRUE)
 plot_cat_vs_x_grouped(data, y = "yord", x = "x", group = "g", reverse = FALSE)
