@@ -163,7 +163,16 @@ nchains <- 2  # number of chains to be sampled
 
 ## No inits specified
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
-                  G = Gmax, iter = 1000, nchains = nchains)
+                  G = Gmax, iter = 500, nchains = nchains)
+
+## Extract the last state
+inits <- mcmc$last
+
+## Initialize with inits
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
+                  G = Gmax,
+                  inits = inits,
+                  iter = 1000, nchains = nchains)
 
 # for the sake of an example we have too short iter
 # use higher iter for proper inference
