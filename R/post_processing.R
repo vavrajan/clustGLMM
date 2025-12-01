@@ -264,7 +264,7 @@ created for each chain separately.")
     if(mcmc$settings[[ch]]["U","save"]){
       Us <- draws[[ch]][,paste0("U[",1:mcmc$n,"]")]
       ccU <- apply(Us, 2, function(U, ch){
-        tab <- table(U)[as.character(clusters[[ch]])]
+        tab <- table(factor(U, as.character(clusters[[ch]])))
         c(as.numeric(names(which.max(tab))), max(tab, na.rm=TRUE)/iters[ch])
       }, ch=ch)
       clustering[,ch] <- ccU[1, ]
@@ -331,7 +331,7 @@ created for each chain separately.")
   for(ch in mcmc$chains){
     last[[ch]] <- list()
     m <- iters[ch]
-    while((rowuniques[[ch]][m] != mcmc$modeGplus[ch]) & m > 0){
+    while(m > 0 && (rowuniques[[ch]][m] != mcmc$modeGplus[ch])){
       m <- m-1
     }
     if(m == 0){
