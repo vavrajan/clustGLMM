@@ -276,9 +276,12 @@ predict.clustglmm <-
         if(object$family[y] == "num"){
           sd_num <- get_sd_num(draws, m, settings, y = y, howsave="matrix")
           if(settings["prec_num","gspec"]){
-            sd <- sd_num[U]
+            ## CHECK
+            U <- as.numeric(sample(as.character(gs), dim(newdata)[1], replace = TRUE, prob = w))
+            sd <- unlist(sd_num)[U]
+            ## CHECK
           }else{
-            sd <- sd_num
+            sd <- unlist(sd_num)
           }
           samples[["y"]][, , m, 1] <- rnorm(dim(newdata)[1]*gdim, 
                                              mean = samples[["eta"]][, , 1], 

@@ -220,6 +220,12 @@ perm[[1]] <- 1:mcmc$G[[1]] # change if needed
 perm[[2]] <- rev(1:mcmc$G[[2]]) # change if needed
 
 # function to permute meaning of cluster labels in mcmc according to perm
+
+## CHECK & CORRECT
+mcmc$settings[[1]]["prec_num", "ydepd1"] <- TRUE
+mcmc$settings[[2]]["prec_num", "ydepd1"] <- TRUE
+## CHECK & CORRECT
+
 mcmc <- permute_cluster_labels(mcmc, perm)
 
 
