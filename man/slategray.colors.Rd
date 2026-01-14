@@ -2,7 +2,7 @@
 \alias{slategray.colors}
 \alias{slategrey.colors}
 \title{
-Slategray color palette
+Slategray Color Palette
 }
 \description{
 Creates a vector of \code{n} slategray colors.

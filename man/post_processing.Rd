@@ -2,7 +2,7 @@
 \alias{post_processing}
 \alias{permute_cluster_labels}
 \title{
-Post-process the clustGLMM sampled chains
+Post-process the Chains Sampled with \code{clustGLMM}
 }
 \description{
 Sampling MCMC chains via \code{\link{clustGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. 
@@ -169,7 +169,16 @@ nchains <- 2  # number of chains to be sampled
 
 ## No inits specified
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data, 
-                  G = Gmax, iter = 1000, nchains = nchains)
+                  G = Gmax, iter = 500, nchains = nchains)
+
+## Extract the last state
+inits <- mcmc$last
+
+## Initialize with inits
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = data,
+                  G = Gmax,
+                  inits = inits,
+                  iter = 1000, nchains = nchains)
 
 # for the sake of an example we have too short iter
 # use higher iter for proper inference
@@ -217,6 +226,12 @@ perm[[1]] <- 1:mcmc$G[[1]] # change if needed
 perm[[2]] <- rev(1:mcmc$G[[2]]) # change if needed
 
 # function to permute meaning of cluster labels in mcmc according to perm
+
+## CHECK & CORRECT
+mcmc$settings[[1]]["prec_num", "ydepd1"] <- TRUE
+mcmc$settings[[2]]["prec_num", "ydepd1"] <- TRUE
+## CHECK & CORRECT
+
 mcmc <- permute_cluster_labels(mcmc, perm)
 
 

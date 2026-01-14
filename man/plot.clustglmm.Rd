@@ -1,7 +1,7 @@
 \name{plot.clustglmm}
 \alias{plot.clustglmm}
 \title{
-Plot the outputs of \code{clustGLMM}
+Plot the Output of \code{clustGLMM}
 }
 \description{
 Triggers plotting functions for selected parameter depending on the choice of the plot.

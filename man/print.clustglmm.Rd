@@ -1,7 +1,7 @@
 \name{print.clustglmm}
 \alias{print.clustglmm}
 \title{
-Printing the outputs of \code{clustGLMM}
+Print the Output of \code{clustGLMM}
 }
 \description{
 A method for printing objects of class \code{clustglmm}, the outputs of \code{clustGLMM}.

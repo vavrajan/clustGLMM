@@ -9,7 +9,7 @@
 \alias{from_matrix_to_coda}
 \alias{from_matrix_to_list}
 \title{
-Change the output formats of \code{clustGLMM}
+Change the Output Formats of \code{clustGLMM}
 }
 \description{
 Functions are used internally in \code{clustGLMM} or \code{pUig_dev} to prepare data as an input of C function or to process data coming from C functions. Works for separate parameters, hence to transfer all the samples \code{for} cycles through chains and parameters are necessary. This is done in \code{from_list_to_matrix} and \code{from_matrix_to_list} which are able to switch between \code{howsave = "list"} and \code{howsave = "matrix"}.

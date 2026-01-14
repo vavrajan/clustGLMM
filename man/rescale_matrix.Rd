@@ -2,7 +2,7 @@
 \alias{rescale_matrix}
 \alias{rescale_list}
 \title{
-Rescale the raw draws 
+Rescale the Raw Draws 
 }
 \description{
 In \code{\link{clustGLMM}} if \code{standardize=TRUE}, the model parameters are sampled using the scaled numeric outcomes and regressors. The goal of these functions is to transform these parameters into the original scale. Works for a specific chain only.

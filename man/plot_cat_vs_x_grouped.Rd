@@ -2,7 +2,7 @@
 \alias{plot_cat_vs_x_grouped}
 \alias{plot_num_vs_x_grouped}
 \title{
-Plotting clustered longitudinal (panel) data 
+Plot Clustered Longitudinal (Panel) Data 
 }
 \description{
 Functions that work with longitudinal data and plot the outcomes vs a covariate with respect to some grouping, e.g. clustering found by \code{\link{clustGLMM}}. 

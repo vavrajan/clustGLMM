@@ -1,7 +1,7 @@
 \name{predict.clustglmm}
 \alias{predict.clustglmm}
 \title{
-Predict method for clustglmm class
+Predict Method for Class \code{clustglmm} 
 }
 \description{
 Predicts the linear combinations of fixed and group part of the regression of \code{clustGLMM} output. 
@@ -220,7 +220,7 @@ newdata <- data.frame("x" = seq(0, 1, length.out=100), "f"=factor(0, levels=c(0,
 
 # numeric outcome
 predict(mcmc, newdata, y="ynum", type="link", what="fg")
-predict(mcmc, newdata, y="ynum", type="posterior_predictive_distribution")
+predict(mcmc, newdata, y="ynum", type="posterior_predictive_response")
 
 # count outcome
 predict(mcmc, newdata, y="ypoi", type="response")

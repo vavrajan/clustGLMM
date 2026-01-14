@@ -4,7 +4,7 @@
 \alias{default_tuning}
 \alias{default_varying}
 \title{
-clustGLMM - Setting default values
+Setting Default Values in \code{clustGLMM}
 }
 \description{
 The following functions are used for setting default values of auxiliary variables such as hyperparameters of indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.

@@ -1,7 +1,7 @@
 \name{get_scalar_samples}
 \alias{get_scalar_samples}
 \title{
-Finds samples for specified scalar model parameter 
+Extract Samples for Specified Scalar Model Parameter 
 }
 \description{
 This function takes an output of \code{clustGLMM} and finds all values related to specified model parameter in a given range (possibly thinned). The implementation reacts not only to what is given but also to what is NOT given. To use it appropriately you need to know which model parameters are group-specific, outcome-dependent and many dimensions do they have.

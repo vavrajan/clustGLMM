@@ -2,11 +2,11 @@
 \alias{get_Sigma}
 \alias{get_sd_num}
 \title{
-Finds m-th sample of Sigma or sd_num
+Extract the m-th Sample of Sigma or sd_num
 }
 \description{
-These two parameters are be saved under different formats or tranformation.
-Goal of these functions is to return m-th sample of corresponding parameter even if it has to be transformed from another equivalent saved parameter.
+These two parameters are saved under different formats or tranformation.
+These functions return the m-th sample of the corresponding parameter even if it has to be transformed from another equivalent saved parameter.
 }
 \usage{
 get_Sigma(draws, m, settings, g = NA, howsave = "matrix")  
@@ -33,7 +33,7 @@ the format under which \code{draws} is saved.
 }
 }
 \details{
-From \code{draws}, only \code{m}-th element is used, which slightly differs depending on \code{howsave}.
+From \code{draws}, only the \code{m}-th element is used, which slightly differs depending on \code{howsave}.
 Functions are able to detect group-specificity and dimension from \code{settings}.
 
 If \code{Sigma} is group-specific, then only matrix for gorup \code{g} is returned.

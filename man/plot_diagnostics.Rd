@@ -13,7 +13,7 @@
 \alias{plot_clusters_ECDF_param}
 \alias{plot_clusters_kerneldensity_param}
 \title{
-Plot mcmc samples from \code{clustGLMM}
+Plot MCMC Samples from \code{clustGLMM}
 }
 \description{
 There are 4 main plots to be created:

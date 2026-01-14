@@ -1,7 +1,7 @@
 \name{nice_nrow_ncol}
 \alias{nice_nrow_ncol}
 \title{
-Finds optimal matrix dimensions given number of cells
+Determine Optimal Matrix Dimensions Given the Number of Cells
 }
 \description{
 Did you ever want to arrange \emph{n} small plots to one big plot of matrix grid? To do so, the easiest way is to set \code{par(mfrow = c(nrow, ncol))}. Once, you can set it manually. But what if you need to do this over and over for different \emph{n} values? The following function proposes \code{nrow} and \code{ncol} such that \code{nrow * ncol >= n} and the remainder \code{nrow * ncol - n} is the smallest possible. 

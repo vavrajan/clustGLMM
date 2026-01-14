@@ -1,7 +1,7 @@
 \name{clustGLMM}
 \alias{clustGLMM}
 \title{
-Sample MCMC for a mixture of GLMMs of mixed-type
+Sample MCMC for a Mixture of GLMMs of Mixed-type
 }
 \description{
 First, initial values are set based on separate univariate GLMMs for each individual outcome. Then, an inner \code{C} function is called to do the hard work of sampling (Metropolis within Gibbs sampling). Outputs are processed and returned in required format (either in nicely organized lists or one huge \code{all} matrix).
