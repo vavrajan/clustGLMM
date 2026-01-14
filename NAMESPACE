@@ -60,6 +60,7 @@ importFrom("MASS", "polr")
 importFrom("methods", "is")
 importFrom("mvtnorm", "rmvnorm")
 importFrom("nnet", "multinom")
+importFrom("RcppHungarian", "HungarianSolver")
 importFrom("splines", "bs")
 importFrom("stats", "acf", "as.formula", "binomial", "coef", "density", "ecdf",
            "glm", "kmeans", "lowess", "loess.smooth", "median", "model.matrix", "na.pass",

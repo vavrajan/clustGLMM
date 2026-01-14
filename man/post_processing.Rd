@@ -29,7 +29,8 @@ the maximum number of iterations of \code{\link[stats]{kmeans}} algorithm allowe
 how many random sets for \code{\link[stats]{kmeans}} should be chosen? 
 }
   \item{perm}{
-a list of permutation of cluster labels, one permutation for each chain.  
+a list of permutation of cluster labels, one permutation for each chain. 
+If missing, the chains are aligned to chain 1 by Hungarian algorithm, see library \code{RcppHungarian}. 
 }
 }
 \details{
@@ -90,6 +91,11 @@ cluster 3 is to become cluster 2,
 cluster 4 is to become cluster 3,
 
 cluster 1 is to become cluster 4.
+
+If \code{perm} is missing, then labels within the first chain are fixed. 
+For remaining chains we take the posterior means of group-specific parameters and compute the root mean square errors among all couples of cluster labels (between the first and currect chain).
+The resulting cost matrix is sent to \code{\link{HungarianSolver}} and second column of \code{$pairs} output is used as the permuation for the current chain.
+This automatic choice of \code{perm} is slowed down by the call of \code{\link{summary}} to \code{mcmc}. 
 }
 \value{
 Both functions return back list of class \code{\link{clustGLMM}}, the same structure as \code{mcmc}, but with modified items.

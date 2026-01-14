@@ -11,17 +11,18 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
   
   ### 1) Find the posterior draws with Gplus = modeGplus
   inds <- ms <- list()
-  iters <- numeric(mcmc$nchains)
+  iters <- orig_iters <- numeric(mcmc$nchains)
   for(ch in mcmc$chains){
     submcmc <- mcmc$draws[[ch]][, c("m", "Gplus")]
+    orig_iters[ch] <- nrow(submcmc)
     ms[[ch]] <- submcmc[submcmc$Gplus == mcmc$modeGplus[ch], "m"]
     inds[[ch]] <- which(submcmc$Gplus == mcmc$modeGplus[ch])
     iters[ch] <- length(inds[[ch]])
   }
-  message("modeGplus:")
-  print(mcmc$modeGplus)
-  message("Frequency of the modeGplus value:")
-  print(iters)
+  # message("modeGplus:")
+  # print(mcmc$modeGplus)
+  # message("Frequency of the modeGplus value:")
+  # print(iters)
   
   ### 2) Columns of mcmc$draws that are cluster-specific parameters
   allgcols <- kmcols <- list()
@@ -59,8 +60,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     cnames <- c("m", subcols)
     colnames(clusterspec[[ch]]) <- cnames
   }
-  message("Subset of states of cluster-specific parameters with Gplus=modeGplus 
-created for each chain separately.")
+  # message("Subset of states of cluster-specific parameters with Gplus=modeGplus created for each chain separately.")
   
   
   ### 4) Prepare for k-means clustering
@@ -75,12 +75,12 @@ created for each chain separately.")
                                                colnames(clusterspec[[ch]]))]
     colnames(forkmeans[[ch]]) <- gsub("\\(1\\)", "", cnames)
   }
-  message("Group-specific parameters stacked below each other, prepared for k-means.")
+  # message("Group-specific parameters stacked below each other, prepared for k-means.")
   
-  message("Columns used for k-means:")
-  for(ch in mcmc$chains){
-    print(colnames(forkmeans[[ch]]))
-  }
+  # message("Columns used for k-means:")
+  # for(ch in mcmc$chains){
+  #   print(colnames(forkmeans[[ch]]))
+  # }
   
   ### 5) Perform K-means clustering + checking the permutations
   Mrhos <- numeric(mcmc$nchains)
@@ -103,9 +103,9 @@ created for each chain separately.")
     Mrhos[ch] <- sum(rowuniques[[ch]] < mcmc$modeGplus[ch])
   }
   # mcmc$Mrhos <- Mrhos
-  message("K-means performed")
-  message("Percentage of non-permutations within K-means")
-  print(paste0(Mrhos / iters * 100, " %"))
+  # message("K-means performed")
+  # message("Percentage of non-permutations within K-means")
+  # print(paste0(Mrhos / iters * 100, " %"))
   
   ### 6) Update the clusterspec matrix according to suggested permutations
   ispermutation <- list()
@@ -130,7 +130,7 @@ created for each chain separately.")
       }
     }
   }
-  message("Each row permuted according to the found permutation")
+  # message("Each row permuted according to the found permutation")
   
   ### 7) New draws
   draws <- list()
@@ -741,7 +741,9 @@ created for each chain separately.")
                    paste0(mcmc$clusters[[ch]], collapse = ", "))
     call <- paste0(call, "; we now have clusters: ", 
                    paste0(res$clusters[[ch]], collapse = ", "), ".\n")
-    call <- paste0(call, "Number of iterations with ", mcmc$modeGplus[ch], " clusters: ", iters[ch], ".\n")
+    call <- paste0(call, "Number of iterations with ", mcmc$modeGplus[ch], " clusters: ", iters[ch], " (", 
+                   format(iters[ch] / orig_iters[ch] * 100, digits=2), 
+                   " %).\n")
     call <- paste0(call, "Out of them, ", Mrhos[ch], " (", 
                    format(Mrhos[ch] / iters[ch] * 100, digits=2), 
                    " %) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")

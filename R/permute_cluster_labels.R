@@ -3,6 +3,34 @@ permute_cluster_labels <-
     # perm contains list of permutations - each for one chain
     # perm[[ch]][1] contains which old cluster should be the new first one (for chain ch)
     # ... and so on
+    # require(RcppHungarian)
+    
+    # Hungarian algorithm for pairing the labels 
+    if(missing(perm)){
+      sum_mcmc <- summary(mcmc)
+      gnames1 <- sum_mcmc$gnames[[1]]
+      
+      perm <- list()
+      perm[[1]] <- 1:mcmc$G[1]
+      for(ch in setdiff(mcmc$chains, 1)){
+        gnamesch <- sum_mcmc$gnames[[ch]]
+        # Cost matrix computation
+        cost <- matrix(NA, nrow = mcmc$G[1], ncol = mcmc$G[ch])
+        for(g1 in 1:mcmc$G[1]){
+          for(g2 in 1:mcmc$G[ch]){
+            gnameg1 <- gsub("\\(1\\)", paste0("\\(",g1,"\\)"), gnames1)
+            gnameg2 <- gsub("\\(1\\)", paste0("\\(",g2,"\\)"), gnamesch)
+            dif <- sum_mcmc$coda_summary[[1]]$statistics[gnameg1, "Mean"] - 
+              sum_mcmc$coda_summary[[ch]]$statistics[gnameg2, "Mean"]
+            cost[g1, g2] <- sqrt(mean(dif^2))
+          }
+        }
+        # Hungarian algorithm 
+        sol <- HungarianSolver(cost)
+        # Permutation 
+        perm[[ch]] <- sol$pairs[,2]
+      }
+    }
     
     for(ch in mcmc$chains){
       if((length(perm[[ch]]) != mcmc$G[ch]) | (length(unique(perm[[ch]])) < mcmc$G[ch])){
