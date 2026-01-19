@@ -306,7 +306,7 @@ otherwise the old value is retained. Finally, the new value of $\boldsymbol{\ome
 
 ## Clustering probabilities and deviance {#subsec:clust-prob-deviance}
 
-Using an MCMC sampling approach with data augmentation, we avoid approximating the integral \@ref(eq:pdf-int-bi-Ui) to estimate the model parameters. However, to determine some other quantities of interest such as the clustering probabilities or evaluating the deviance, this integration over the random effects needs to be performed. In particular, the clustering probabilities for an individual $i$ can be viewed as parameteric functions of the primary model parameters and the data of the individual $i$ and are proportional to
+Using an MCMC sampling approach with data augmentation, we avoid approximating the integral \@ref(eq:pdf-int-bi-Ui) to estimate the model parameters. However, to determine some quantities of interest such as the clustering probabilities or evaluating the deviance, this integration over the random effects needs to be performed. In particular, the clustering probabilities for an individual $i$ can be viewed as parameteric functions of the primary model parameters and the data of the individual $i$ and are proportional to
 \begin{align*}
 u_{i,g}(\boldsymbol{\beta}, &\boldsymbol{\tau}, \mathbf{c}, \boldsymbol{\Sigma}, \mathbf{w} | \mathbb{Y}_i, \mathbb{X}_i, \mathbb{Z}_i) 
 \propto\\
@@ -316,25 +316,22 @@ p\left(\mathbb{Y}_i \,\left\vert\, U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F
 p\left(\mathbf{b}_i \,\left\vert\, U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right.\right)
 \mathrm{d} \mathbf{b}_i.
 \end{align*}
-Using log-pdfs (accumulated to a function $h^{(g)}$ in variable $\mathbf{b}_i$) within the integral we reformulate the integration problem as an integral of exponential form $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, for which methods of approximation are available. 
-
-Laplace approximation relies on Taylor expansion of second order of the function $h^{(g)}$, differentiable and concave by its nature. By N-R method maximum $\widehat{\mathbf{b}}_i^{(g)}$ and negative Hessian matrix $H^{(g)}$ are found and used to approximate 
+We reformulate the integrand as a function $\exp\{h^{(g)}\}$ in variable $\mathbf{b}_i$, i.e., as $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, to apply an approximation method. The Laplace approximation relies on the Taylor expansion of the second order of the function $h^{(g)}$, assuming that it is differentiable and concave. Using the N-R method the maximum $\widehat{\mathbf{b}}_i^{(g)}$ and the negative Hessian matrix $H^{(g)}$ at the maximum are found. These are then used in the Laplace approximation:
 \begin{equation}
   \int \exp\left\{h^{(g)}(\mathbf{b}_i)\right\} \mathrm{d} \mathbf{b}_i
   \approx 
-  |H^{(g)}|^{-\frac{1}{2}} \exp\left\{h\left(\widehat{\mathbf{b}}_i^{(g)}\right)\right\} 
+  |H^{(g)}|^{-\frac{1}{2}} \exp\left\{h\left(\widehat{\mathbf{b}}_i^{(g)}\right)\right\}. 
   (\#eq:integral-bi-approx)
 \end{equation}
-We insert these approximations into the clustering probabilities $u_{i,g}$ defined above. The normalizing denominator for the proportionality is an approximation to $p(\mathbb{Y}_i \,|\, \mathbb{X}_i, \mathbb{Z}_i)$ from \@ref(eq:pdf-int-bi-Ui), which is only one step to single-individual-contribution to deviance defined as $-2\log p(\mathbb{Y}_i \,|\, \mathbb{X}_i, \mathbb{Z}_i)$.
+We use these approximations to obtain estimates for the clustering probabilities $u_{i,g}$ defined above. The normalizing denominator for the proportionality is an approximation to $p(\mathbb{Y}_i \,|\, \mathbb{X}_i, \mathbb{Z}_i)$ from \@ref(eq:pdf-int-bi-Ui), which can be used to determine the contribution of a single individual to the deviance defined as $-2\log p(\mathbb{Y}_i \,|\, \mathbb{X}_i, \mathbb{Z}_i)$.
 
-However, such approximation of the integral is very crude. To achieve higher precision we also implemented its natural generalization to Adaptive Gaussian Quadrature following @PinheiroChao06. The idea is to evaluate the function $h^{(g)}$ on a suitable grid of $\mathbf{b}_i$ values determined by the maximal point $\widehat{\mathbf{b}}_i^{(g)}$ and $H^{(g)}$-scaled roots of the Hermite polynomial of prescribed order. First order, has only one root (0), which yields the Laplace approximation. The higher order is chosen, the exponentially more points is there to evaluate function $h^{(g)}$ in. Explicit details can be found in the supplementary material to @Vavra-etal2024.
+In general, however, the Laplace approximation of the integral is rather crude. To reduce the approximation error, we also implemented Adaptive Gaussian Quadrature, a natural generalization of Laplace approximation, following @PinheiroChao06. The idea is to evaluate the function $h^{(g)}$ on a suitable grid of $\mathbf{b}_i$ values determined by the maximal point $\widehat{\mathbf{b}}_i^{(g)}$ and $H^{(g)}$-scaled roots of the Hermite polynomial of prescribed order. The first order polynomial has only one root (0), thus yielding the Laplace approximation. The number of points where function $h^{(g)}$ needs to be evaluated increases exponentially with the order of the polynomial. Further details can be found in the supplementary material to @Vavra-etal2024.
 
-These approximations have to be done for all considered cluster labels $g$ and for every sampled set of model parameters within the MCMC chain to explore the posterior distribution of $u_{i,g}$ properly. Moreover, the full deviance requires repetition for each individual within the dataset, which becomes very expensive. Hence, we resort to crude approximations and strongly advice parallel computations. 
-
+These approximations have to be done for all considered cluster labels $g$ and for every sampled set of model parameters within the MCMC chain to explore the posterior distribution of $u_{i,g}$ properly. Moreover, the full deviance requires the separate evaluation for each individual within the dataset. This is usually computationally very expensive and, hence, we usually rely on crude approximations and strongly advice to employ parallel computations in case better approximations are desired. 
 
 # Implementation {#sec:implementation}
 
-Now we focus on the implementation of the methodology outlined in preceding sections. An overview of the typical workflow and the key functions is given in Figure \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail.
+Now we focus on the implementation of the methodology outlined in the preceding sections. An overview of the typical workflow and the key functions is given in Figure \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail.
 
 ```{r workflow-diagram, fig.cap="Typical workflow with \\pkg{clustGLMM} and key functions.", out.width="100%", dev="png"}
 DiagrammeR::grViz("digraph {
