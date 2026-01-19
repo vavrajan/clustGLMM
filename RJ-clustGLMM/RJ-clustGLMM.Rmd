@@ -649,8 +649,8 @@ n <- length(unique(students$i))
 ```
 
 The dataset contains in total observations for $n = `r n`$
-persons. Column `i` represents the id variable for the persons and `j`
-gives the observation number for that person. Each person belongs to
+individuals. Column `i` represents the id variable for the individuals and `j`
+gives the observation number for that individual. Each individual belongs to
 one of three latent groups as indicated by `g`. In addition to `age`
 and the three outcome variables, the dataset also contains other
 variables corresponding to latent data such as the random intercepts
@@ -678,7 +678,7 @@ where the effects are barely distinguishable.
 
 Groups 2 and 3 are designed to not differ in the outcome variable
 `income`, but in the other two outcomes. In Figure
-\@ref(fig:students-ntrips-vs-age) we clearly see that the persons in
+\@ref(fig:students-ntrips-vs-age) we clearly see that the individuals in
 group 3 do not go on trips as often as the other two groups. In
 addition they also become less satisfied with their life situation
 compared to the other groups, see Figure
