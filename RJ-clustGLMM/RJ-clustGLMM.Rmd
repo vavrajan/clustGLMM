@@ -79,15 +79,15 @@ library("lcmm")
 
 # Introduction {#sec:introduction}
 
-Clustering longitudinal data is a key task in many fields, including medicine, psychology, and the social sciences, where repeated measurements of heterogeneous types are commonly encountered. These data often consist of a combination of continuous, count, binary, ordinal, and nominal outcome variables, collected across time and across individuals. Modeling such data structures using a multivariate regression setup requires the flexibility to jointly account for individual random effects, group-specific heterogeneity, and temporal correlation.
+Clustering longitudinal data is a key task in many fields, including medicine, psychology, and the social sciences, where repeated measurements of heterogeneous types are commonly collected for individuals. These data often consist of a combination of continuous, count, binary, ordinal, and nominal outcome variables. Modeling such data structures using a multivariate regression setup requires the flexibility to jointly account for individual random effects, group-specific heterogeneity, and temporal correlation.
 
 While several R packages address parts of this problem, there remains a need for a unified, flexible, and extensible approach to clustering mixed-type longitudinal data within a fully probabilistic framework. Package \CRANpkg{lcmm} [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package \CRANpkg{flexmix} [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering longitudinal structures or mixed outcomes in a hierarchical framework. Packages such as \CRANpkg{MCMCglmm} [@Hadfield10MCMCglmm] and \CRANpkg{mixAK} [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes.
 
 To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a mixture of generalized linear mixed models (GLMMs), allowing for a flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, enabling a full posterior characterization of both, model parameters and latent cluster assignments.
 
-Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a high-level interface to Bayesian GLMMs via Stan [@RStan], and \CRANpkg{coda} [@Plummer06coda], which facilitates MCMC output analysis. By focusing specifically on clustering, \pkg{clustGLMM} fills a gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a practical and extensible solution for researchers working with complex longitudinal data.
+Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a high-level interface to Bayesian GLMMs via Stan [@RStan], and \CRANpkg{coda} [@Plummer06coda], which facilitates MCMC output analysis. By focusing specifically on clustering, \pkg{clustGLMM} fills a gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a practical and extensible solution for researchers working with complex longitudinal data. In particular, a number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also identify cluster distributions and classify observations to allow for a convenient use in clustering applications. 
 
-All computations and graphics in this paper have been done with \pkg{clustGLMM} version 1.0-0 and R version `r getRversion()` using R Markdown. The newest release version of \pkg{clustGLMM} is always available from the Comprehensive R Archive Network at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a package vignette.
+All computations and graphics in this paper have been done with \pkg{clustGLMM} version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of \pkg{clustGLMM} is always available from the Comprehensive R Archive Network at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a package vignette.
 
 # Methodology {#sec:methodology}
 
@@ -101,12 +101,12 @@ We assume that the data provided is collected for $n$ individuals with observati
 $$
 \eta_{ijr} = \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r + \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r,
 $$
-with fixed effects $\boldsymbol{\beta}_r$ and subject-specific random effects $\mathbf{b}_{i}^r$ forms the heart of the model for outcome $r$. 
+with fixed effects $\boldsymbol{\beta}_r$ and individual-specific random effects $\mathbf{b}_{i}^r$ represents the main part for modeling outcome $r$. 
 
-For each outcome we consider one of five different types of GLMMs. Each type comes with its own challenges to overcome. In particular, we distinguish between the following regression models: 
+For each outcome we consider one of five different types of GLMMs, i.e., different specifications how the response distribution is specified and the link function selected to relate the mean to the linear predictor. In particular, we distinguish the following regression models: 
 
-* For simplicity, we consider only classical normal linar mixed-effects model for a quantitative (numeric) outcome $r\in\mathcal{R}^{\mathsf{Num}}$. This requires an additional dispersion parameter which captures the variability of the regression errors. As usual in Bayesian statistics, we parametrize the normal distribution via the precision parameter $\tau_r>0$. 
-* For count outcomes, $r\in\mathcal{R}^{\mathsf{Poi}}$, we consider the Poisson distribution with the usual log-link. This specification does not require any additional model parameter. 
+* We consider normal linar mixed-effects models for a quantitative (numeric) outcome $r\in\mathcal{R}^{\mathsf{Num}}$. This requires an additional dispersion parameter which captures the variability of the regression errors. As usual in Bayesian statistics, we parametrize the normal distribution via the precision parameter $\tau_r>0$. 
+* For count outcomes, $r\in\mathcal{R}^{\mathsf{Poi}}$, we consider the Poisson distribution with the usual log link. This specification does not require any additional model parameter. 
 * Binary outcomes, $r\in\mathcal{R}^{\mathsf{Bin}}$, are modeled by a logistic regression with the logit link function $\mathsf{logit}(x) = \log (x/(1-x))$. 
 
 If the number of categories, $K^r$, is higher than 2, we consider the following two generalizations:
@@ -131,33 +131,32 @@ The probability distributions of the observed outcomes given the linear predicto
   \mathsf{logit}^{-1} \left(\eta_{ijr}\right), 
   &\qquad r \in\mathcal{R}^{\mathsf{Bin}},
   \\
-  \mathsf{P} \left[\left. Y_{ij}^r > k \,\right\vert\, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  \mathsf{P} \left[\left. Y_{ij}^r > k \,\right\vert\, c_{r,k}, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
   &= 
-  \mathsf{logit}^{-1} \left(\eta_{ijr} - c_{k,r}\right), 
+  \mathsf{logit}^{-1} \left(\eta_{ijr} - c_{r,k}\right), 
   &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Ord}},
   \\
   \mathsf{P} \left[\left. Y_{ij}^r = k \,\right\vert\, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
   &= 
   \frac{\exp (\eta_{ijkr})}{1 + \sum\limits_{\kappa=1}^{K^r-1} \exp (\eta_{ij\kappa r})}, 
-  &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Cat}},
+  &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Cat}}.
 \end{align*}
-where $\mathsf{logit}^{-1}(x) = e^x/(1+e^x)$.
 
-Assuming independence among the set of outcomes is often unrealistic. Hence, we opt for a joint modeling approach which captures dependency between the observations of the same individual. In particular, we stack the random effects for each individual $i$ into one vector $\mathbf{b}_{i} = \{\mathbf{b}_{i}^r, r\in\mathcal{R}\}$ of length $d^R$ and assume that they are across individuals independently distributed from a multivariate normal distribution, $\mathbf{b}_{i} \sim \mathsf{N}_{d^R}(\mathbf{0}, \boldsymbol{\Sigma})$ where $\boldsymbol{\Sigma}$ is any positive definite matrix. This implies that the outcomes for the same individual are marginally dependent. However, they are still independent conditional on the random effects. 
+Assuming independence among the set of outcomes for the same individual is often unrealistic. Hence, we opt for a joint modeling approach which captures the dependency between the observations of the same individual. In particular, we stack the random effects for each individual $i$ into one vector $\mathbf{b}_{i} = \{\mathbf{b}_{i}^r, r\in\mathcal{R}\}$ of length $d^R$ and assume that they are across individuals independently distributed from a multivariate normal distribution, $\mathbf{b}_{i} \sim \mathsf{N}_{d^R}(\mathbf{0}, \boldsymbol{\Sigma})$ where $\boldsymbol{\Sigma}$ is any positive definite matrix. This implies that the outcomes for the same individual are marginally dependent. However, they are still independent conditional on the random effects. 
 
 ## Model-based clustering of GLMMs {#subsec:mbc-glmms}
 
 The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach will fail. We thus extend our model by supposing that indeed the individuals are drawn from a set of different models which induce different groups thus that the regression parameters differ remarkably across the groups. 
 
-We apply the model-based clustering (MBC) approach by @RafteryDean06. We assume presence of $G$ latent groups that follow the model outlined in [Section](#subsec:glmms) but possibly differ in values of the parameters. The groups may differ in the evolution over time, in the error precision of numeric outcome or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters should be group-specific and which ones are shared among all latent groups. Parameters with an upper superscript $(g)$, e.g., $\tau_r^{(g)}$, denotes the corresponding model parameter specific for group $g = 1, \ldots, G$. Parameter without this superscript denotes either parameter shared among groups or a collection of the corresponding parameters across all groups depending on context.
+We apply a model-based clustering approach and assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regressio parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups. Parameters with an upper superscript $(g)$, e.g., $\tau_r^{(g)}$, are group-specific. Parameters without this superscript are parameters which are the same across groups or represent the set of the corresponding parameters across all groups depending on context.
 
-Turning group-specificity on and off is simple for auxiliary model parameters like $\tau_r$, $\mathbf{c}_r$ or $\boldsymbol{\Sigma}$. The fixed effects could be all made group-specific as well, however, in many real applications we have registered that some of the effects are similar across all groups. To allow for flexible choice of group-specific effects we divided the fixed-effects contribution to the linear predictor into two parts. The linear predictor for group $g$ now takes the form of 
+Turning group-specificity on or off is simple for auxiliary model parameters like $\tau_r$, $\mathbf{c}_r$ or $\boldsymbol{\Sigma}$. The fixed effects could also all be easily made group-specific. However, in many real applications, we noted that indeed some of the effects are similar across all groups and imposing such a restriction simplifies the model and facilitates estimation and interpretation. E.g., we split the fixed-effects contribution to the linear predictor into two parts such that the linear predictor for group $g$ takes the form of 
 $$
 \eta_{ijr}^{(g)} = \mathbf{F}_{ijr}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + \mathbf{Z}_{ijr}^\top \mathbf{b}_{ir},
 $$
 where $\boldsymbol{\beta}_r^F$ are the fixed effects shared among all groups  and $\boldsymbol{\beta}_r^{(g)}$ are the fixed effects specific to group $g$. Naturally, the sets of regressors $\mathbf{F}_{ijr}$ and $\mathbf{X}_{ijr}$ need to be mutually exclusive to avoid identifiability issues. 
 
-Each individual $i$ belongs to one of the clusters, for which we define the group allocation indicators $U_i \in \{1, \ldots, G\}$. Cluster size is governed by the marginal cluster allocation probabilities $w_g = \mathsf{P}(U_i = g)$ that sum up to one over $g = 1, \ldots, G$. Marginalizing over the latent model quantities we obtain a mixture distribution with the following probability density function (pdf):
+Each individual $i$ belongs to one of the groups, for which we define the group allocation indicators $U_i \in \{1, \ldots, G\}$. Group size is governed by the marginal group allocation probabilities $w_g = \mathsf{P}(U_i = g)$ that sum up to one over $g = 1, \ldots, G$. Marginalizing over the latent model quantities we obtain a mixture distribution with the following probability density function (pdf):
 \begin{equation}
   p(\mathbb{Y}_i \,\vert\, \mathbb{X}_{i}, \mathbb{Z}_{i})
   = \sum\limits_{g=1}^{G} 
@@ -167,9 +166,7 @@ Each individual $i$ belongs to one of the clusters, for which we define the grou
   \mathrm{d} \mathbf{b}_i,
   (\#eq:pdf-int-bi-Ui)
 \end{equation}
-where $p(\,\vert\,)$ denotes the conditional pdf. Due to generality of the covariance matrix $\boldsymbol{\Sigma}$ the integral over the random effects $\mathbf{b}_i$ cannot be evaluated exactly. In Bayesian statistics we avoid these integrals by not marginalizing over the random effects and working with the conditional distributions. 
-
-
+where $p(\,\vert\,)$ denotes the conditional pdf. Due to the generality of the covariance matrix $\boldsymbol{\Sigma}$, the integral over the random effects $\mathbf{b}_i$ cannot be evaluated exactly. In Bayesian estimation using MCMC sampling, we avoid these integrals by not marginalizing over the random effects and working with the conditional distributions. 
 
 ## Priors {#subsec:priors}
 
@@ -190,7 +187,7 @@ Next, we need a prior distribution suitable for the positive definite covariance
 
 Finally, we adopt *sparse finite mixture* approach and assign a symmetric Dirichlet distribution for the marginal cluster allocation probabilities. It is governed by parameter $e_0$ that controls the probability to create spurious clusters. The lower it is, the higher probability that only a few clusters will be important and the rest of the clusters will be either rare or even empty. We use this prior setting to determine the suitable number of clusters by emptying the redundant clusters (*more details later*). To reduce the impact of specific choice of $e_0$ we randomize it with a gamma prior that can express our desire for sparse mixture. Given a set of all allocation indicators $U_i, i = 1, \ldots, n$ we define the total cluster occupancy numbers as $n^{(g)} = \sum\limits_{g=1}^G \indicator(U_i = g)$. Then, the number of nonempty clusters as is $G_+ = \sum\limits_{g=1}^G \indicator(n^{(g)} > 0)$.
 
-We summarize the choices for the prior distribution in Table \@ref(tab:prior-table) where we also include the default choices for hyperparameters and link them to the corresponding elements in `clustGLMM` package. 
+We summarize the choices for the prior distributions in Table \@ref(tab:prior-table). This table also includes the default choices for the hyperparameters and links them to the corresponding elements in the \pkg{clustGLMM} package. 
 
 ```{r prior-table, tab.cap = "Overview of prior distributions and their hyperparameters including the default values."}
 ptab <- data.frame(Notation = c("$\\beta_{lr}^F$, $\\beta_{lr}^{(g)}$",
