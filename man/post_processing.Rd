@@ -30,11 +30,11 @@ how many random sets for \code{\link[stats]{kmeans}} should be chosen?
 }
   \item{perm}{
 a list of permutation of cluster labels, one permutation for each chain. 
-If missing, the chains are aligned to chain 1 by Hungarian algorithm, see library \code{RcppHungarian}. 
+If missing, the chains are aligned to chain 1 based on the Hungarian algorithm, see package \pkg{RcppHungarian}.
 }
 }
 \details{
-\code{post_processing} follows the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016) to identify the number of underlying cluster and to resolve possible issues with label-switching. 
+\code{post_processing} follows the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al. (2016) to identify the number of underlying cluster and to resolve possible issues with label-switching.
 All post-processing is done separately for each chain, keep in mind that the results among chains may differ due to different initial conditions. 
 The procedure can be divided into several steps:
 
