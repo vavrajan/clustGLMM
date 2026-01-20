@@ -25,12 +25,12 @@ function(
   tuning,    # list of tuning parameters
   inits,     # list of initial values from which to start
              # if missing or NULL --> create your own
-  howsave = "matrix",   # how should be the output MCMC chains returned?
-             # matrix - in a matrix with special column names
-             # list - in lists of lists of parameters...
   iter = 1000, # length of sampled chain
   nchains = 1, # number of chains
-  standardize = TRUE # should the numeric outcomes and regressors be standardized?
+  standardize = TRUE, # should the numeric outcomes and regressors be standardized?
+  howsave = "matrix"  # how should be the output MCMC chains returned?
+             # matrix - in a matrix with special column names
+             # list - in lists of lists of parameters...
 ){
   # TODO make these function parameters
   
