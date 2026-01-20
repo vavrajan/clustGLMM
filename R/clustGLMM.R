@@ -1,5 +1,3 @@
-#mcmc_MBC_GLMMs <- function(...) UseMethod("mbcglmms")
-#mbcglmms.default <-
 clustGLMM <- 
 function(
   formula,   # list of formulas for each of the variables
@@ -8,28 +6,28 @@ function(
   data,      # a data.frame object containing outcomes, regressors and id
   G,         # total number of latent Groups=clusters (can be different for all chains)
   varying,   # which parameters should be class-specific
-                # order: prec_num, c_ord, InvSigma, InvQ, naY
+             # order: prec_num, c_ord, InvSigma, InvQ, naY
   save,      # what parameters should be saved, in order:
-              # "beta_num", "beta_num_grp",
-              # "prec_num", "sd_num", "var_num",
-              # "beta_poi", "beta_poi_grp",
-              # "beta_bin", "beta_bin_grp",
-              # "beta_ord", "beta_ord_grp",
-              # "a_ord", "c_ord", "pi_ord",
-              # "beta_cat", "beta_cat_grp",
-              # "InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
-              # "InvQ", "Q", "detInvQ",
-              # "b",
-              # "w", "ng",
-              # "loglik", "pUig", "U",
-              # "Gplus", "e0"
-  howsave = "matrix",   # how should be the output MCMC chains returned?
-                # matrix - in a matrix with special column names
-                # list - in lists of lists of parameters...
+             # "beta_num", "beta_num_grp",
+             # "prec_num", "sd_num", "var_num",
+             # "beta_poi", "beta_poi_grp",
+             # "beta_bin", "beta_bin_grp",
+             # "beta_ord", "beta_ord_grp",
+             # "a_ord", "c_ord", "pi_ord",
+             # "beta_cat", "beta_cat_grp",
+             # "InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
+             # "InvQ", "Q", "detInvQ",
+             # "b",
+             # "w", "ng",
+             # "loglik", "pUig", "U",
+             # "Gplus", "e0"
   param,     # list of hyperparameters for prior distributions
-  inits,     # list of initial values from which to start
-                # if missing or NULL --> create your own
   tuning,    # list of tuning parameters
+  inits,     # list of initial values from which to start
+             # if missing or NULL --> create your own
+  howsave = "matrix",   # how should be the output MCMC chains returned?
+             # matrix - in a matrix with special column names
+             # list - in lists of lists of parameters...
   iter = 1000, # length of sampled chain
   nchains = 1, # number of chains
   standardize = TRUE # should the numeric outcomes and regressors be standardized?
