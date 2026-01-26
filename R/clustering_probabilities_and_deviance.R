@@ -43,13 +43,13 @@ function(mcmc,      # MCMC generated parameters
        & mcmc$save["beta_ord_fix"] & mcmc$save["beta_ord"] 
        & mcmc$save["beta_cat_fix"] & mcmc$save["beta_cat"])
      ){
-    stop("Some of the parameters w, c_ord, prec_num, betas was not saved.
-Change the  settings and use clustGLMM() again.")
+    stop("Some of the parameters w, c_ord, prec_num, betas were not saved.
+Change the settings and use clustGLMM() again.")
   }
   
   if((!mcmc$save["InvSigma"]) & (mcmc$settings[[chains[1]]]["InvSigma", "dims"] > 0)){
-    stop("Parameter InvSigma was not saved and its dimension is > 0 (it exists).
-Change the  settings and use clustGLMM() again.")
+    stop("Parameter InvSigma was not saved and its dimension is > 0 (i.e., it exists).
+Change the settings and use clustGLMM() again.")
   }
   
   # Calculation will be done by C function, to speed up calculation
@@ -353,7 +353,7 @@ Change the  settings and use clustGLMM() again.")
     }
     
     if(mcmc$howsave == "cmcmc"){
-      stop("howsave = cmcmc is not supported.")
+      stop("howsave = \"cmcmc\" is not supported.")
     }
     
     #dyn.load("Cfun/pUig_dev.dll")
