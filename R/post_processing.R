@@ -737,19 +737,44 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     call <- paste0(call, "Chain ", ch, "\n")
     call <- paste0(call, "-----------------------------------------------------------------------\n")
     call <- paste0(call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
-    call <- paste0(call, "Instead of clusters: ", 
-                   paste0(mcmc$clusters[[ch]], collapse = ", "))
-    call <- paste0(call, "; we now have clusters: ", 
-                   paste0(res$clusters[[ch]], collapse = ", "), ".\n")
-    call <- paste0(call, "Number of iterations with ", mcmc$modeGplus[ch], " clusters: ", iters[ch], " (", 
-                   format(iters[ch] / orig_iters[ch] * 100, digits=2), 
-                   " %).\n")
-    call <- paste0(call, "Out of them, ", Mrhos[ch], " (", 
-                   format(Mrhos[ch] / iters[ch] * 100, digits=2), 
-                   " %) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.\n")
-    call <- paste0(call, "Therefore, ", iters[ch] - Mrhos[ch], " (",
-                   format((iters[ch] - Mrhos[ch]) / iters[ch] * 100, digits=2), 
-                   " %) iterations have been permuted and aligned. These are now eligible for the analysis.\n\n")
+    
+    sentence <- paste0("Instead of clusters: ", 
+                       paste0(mcmc$clusters[[ch]], collapse = ", "),
+                       "; we now have clusters: ", 
+                       paste0(res$clusters[[ch]], collapse = ", "), ".")
+    wsent <- strwrap(sentence, width = getOption("width"))
+    for(l in 1:length(wsent)){
+      call <- paste0(call, wsent[l], "\n")
+    }
+    
+    sentence <- paste0("Number of iterations with ", 
+                       mcmc$modeGplus[ch], 
+                       " clusters: ", 
+                       iters[ch], 
+                       " (", 
+                       format(iters[ch] / orig_iters[ch] * 100, digits=2), 
+                       " %)")
+    wsent <- strwrap(sentence, width = getOption("width"))
+    for(l in 1:length(wsent)){
+      call <- paste0(call, wsent[l], "\n")
+    }
+    
+    sentence <- paste0("Out of them, ", Mrhos[ch], " (", 
+                       format(Mrhos[ch] / iters[ch] * 100, digits=2), 
+                       " %) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.")
+    wsent <- strwrap(sentence, width = getOption("width"))
+    for(l in 1:length(wsent)){
+      call <- paste0(call, wsent[l], "\n")
+    }
+    
+    sentence <- paste0("Therefore, ", iters[ch] - Mrhos[ch], " (",
+                       format((iters[ch] - Mrhos[ch]) / iters[ch] * 100, digits=2), 
+                       " %) iterations have been permuted and aligned. These are now eligible for the analysis.")
+    wsent <- strwrap(sentence, width = getOption("width"))
+    for(l in 1:length(wsent)){
+      call <- paste0(call, wsent[l], "\n")
+    }
+    call <- paste0(call, "\n")
   }
   res$call <- call
   

@@ -167,6 +167,69 @@ where we considered exactly one outcome for each available type for simplificati
 
 <!-- What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? E.g., splines with intercept? -->
 
+# Priors
+
+We summarize our choices for the prior distributions in Table \@ref(tab:prior-table). This table also includes the default choices for the hyperparameters and links them to the corresponding elements in the \pkg{clustGLMM} package. 
+
+```{r prior-table, tab.cap = "Overview of prior distributions and their hyperparameters including the default values."}
+ptab <- data.frame(Notation = c("$\\beta_{lr}^F$, $\\beta_{lr}^{(g)}$",
+                                "$\\tau_r$",
+                                "$\\beta_{lr}^F$, $\\beta_{lr}^{(g)}$",
+                                "$\\mathbf{c}_r$",
+                                "$\\mathbf{b}_i$",
+                                "$\\boldsymbol{\\Sigma}^{-1}$",
+                                "$\\mathbb{Q}^{-1}$",
+                                "$w_g$", 
+                                "$e_0$"), 
+                   Distribution = c("$\\mathsf{N}(0,\\tau_r^{-1} s_{\\mathsf{Num}}^2)$", 
+                                    "$\\Gamma(a_\\tau,b_\\tau)$",
+                                    "$\\mathsf{N}(0,s_r^2)$", 
+                                    "transformed $\\mathsf{Dir}(\\alpha)$",
+                                    "$\\mathsf{N}_{d^R}(0,\\boldsymbol{\\Sigma})$",
+                                    "$\\mathsf{W}_{d^R}(\\nu_0+d^R, \\mathbb{Q})$",
+                                    "$\\mathsf{W}_{d^R}(\\nu_1+d^R, v\\mathbb{I})$",
+                                    "$\\mathsf{Dir}(e_0)$",
+                                    "$\\Gamma(a_e,b_e)$"), 
+                   Hyperparameter = c("$s_{\\mathsf{Num}} = 1$",
+                                      "$a_\\tau = 1$, $b_\\tau = 10$",
+                                      "$s_{r} = 1$",
+                                      "$\\alpha = 1$",
+                                      "",
+                                      "$\\nu_0=1$",
+                                      "$\\nu_1=1$, $v=100$",
+                                      "",
+                                      "$a_e = 1, b_e = 100$"),
+                   clustGLMM = c("$\\mathtt{beta\\_num\\_fix\\_sd}$, $\\mathtt{beta\\_num\\_sd}$",
+                                 "$\\mathtt{prec\\_num\\_shp}$, $\\mathtt{prec\\_num\\_rte}$",
+                                 "$\\mathtt{beta\\_type\\_fix\\_sd}$, $\\mathtt{beta\\_type\\_sd}$",
+                                 "$\\mathtt{api\\_prior}$",
+                                 "",
+                                 "$\\mathtt{InvSigma\\_df}$",
+                                 "$\\mathtt{InvQ\\_df}$, $\\mathtt{InvV}$",
+                                 "",
+                                 "$\\mathtt{e0\\_shp}$, $\\mathtt{e0\\_rte}$"),
+                   Note = c("or with $\\tau_r^{(g)}$, for conjugacy",
+                            "or for $\\tau_r^{(g)}$",
+                            "$s_r$ specific to type not each outcome",
+                            "for $\\pi_{r,k}^{(g)} = \\mathsf{logit}^{-1}(c_{r,k-1}^{(g)}) - \\mathsf{logit}^{-1}(c_{r,k}^{(g)})$",
+                            "or with $\\boldsymbol{\\Sigma}^{(g)}$",
+                            "or for $\\boldsymbol{\\Sigma}^{-(g)} := \\left(\\boldsymbol{\\Sigma}^{(g)}\\right)^{-1}$",
+                            "or for $\\mathbb{Q}^{-(g)} := \\left(\\mathbb{Q}^{(g)}\\right)^{-1}$",
+                            "symmetric, $e_0$ randomized",
+                            "sparse finite mixture with $a_e/b_e$ low"),
+                   row.names = c("Fixed effects ($\\mathsf{Num}$)", 
+                                 "Error precision",
+                                 "Fixed effects (other)", 
+                                 "Ordered intercepts",
+                                 "Random effects", 
+                                 "Precision matrix",
+                                 "Inverse scale matrix",
+                                 "Cluster proportions",
+                                 "Sparsity"))
+kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
+```
+
+
 # Implementation {#sec:implementation}
 
 In the following, we discuss the implementation of the methodology outlined previously. An overview of the typical workflow and the key functions is given in Figure \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail. 
@@ -181,7 +244,7 @@ DiagrammeR::grViz("digraph {
   rec3[label = 'Visual diagnostics']
   rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
   rec4[label = 'Within chain post-processing']
-  rec5[label = 'Across chain post-processing']
+  rec5[label = 'Across chain post-processing', fillcolor = LemonChiffon]
   
   node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
   code1[label = 'data, family, formula, varying, ...']

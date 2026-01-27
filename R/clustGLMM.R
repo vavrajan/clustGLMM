@@ -1730,24 +1730,33 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$call <- paste0(mcmc$call, "\nFixed effects invariant towards clustering (in order of appearance): \n")
   for(y in Ys){
     if(length(lfixnames[[y]]) > 0){
-      add <- paste0(y, " ~ ", paste0(lfixnames[[y]], collapse = ", "))
-      if(nchar(add) > getOption("width")){
-        add <- substr(add, 1, getOption("width"))
-        substr(add, getOption("width")-2, getOption("width")) <- "..."
+      # add <- paste0(y, " ~ ", paste0(lfixnames[[y]], collapse = ", "))
+      add <- paste0(y, " ~ ", as.character(formula[[y]]$fixed)[2])
+      wadd <- strwrap(add, width = getOption("width"))
+      for(l in 1:length(wadd)){
+        mcmc$call <- paste0(mcmc$call, wadd[l], "\n")
       }
-      mcmc$call <- paste0(mcmc$call, add, "\n")
+      # if(nchar(add) > getOption("width")){
+      #   add <- substr(add, 1, getOption("width"))
+      #   substr(add, getOption("width")-2, getOption("width")) <- "..."
+      # }
+      # mcmc$call <- paste0(mcmc$call, add, "\n")
     }else{
       mcmc$call <- paste0(mcmc$call, y, " ~ 0 \n")
     }
   }
   mcmc$call <- paste0(mcmc$call, "\nRandom effects invariant towards clustering: \n")
   for(y in Ys){
-    add <- paste0(y, " ~ ", formula[[y]]$random[2])
-    if(nchar(add) > getOption("width")){
-      add <- substr(add, 1, getOption("width"))
-      substr(add, getOption("width")-2, getOption("width")) <- "..."
+    add <- paste0(y, " ~ ", as.character(formula[[y]]$random)[2])
+    wadd <- strwrap(add, width = getOption("width"))
+    for(l in 1:length(wadd)){
+      mcmc$call <- paste0(mcmc$call, wadd[l], "\n")
     }
-    mcmc$call <- paste0(mcmc$call, add, "\n")
+    # if(nchar(add) > getOption("width")){
+    #   add <- substr(add, 1, getOption("width"))
+    #   substr(add, getOption("width")-2, getOption("width")) <- "..."
+    # }
+    # mcmc$call <- paste0(mcmc$call, add, "\n")
   }
   if(totnran > 0){
     mcmc$call <- paste0(mcmc$call, "\nThe structure of covariance matrix Sigma for random effects: \n")
@@ -1771,12 +1780,17 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$call <- paste0(mcmc$call, "\nGroup-specific effects for outcomes (in order of appearance): \n")
   for(y in Ys){
     if(length(lgrpnames[[y]]) > 0){
-      add <- paste0(y, " ~ ", paste0(lgrpnames[[y]], collapse = ", "))
-      if(nchar(add) > getOption("width")){
-        add <- substr(add, 1, getOption("width"))
-        substr(add, getOption("width")-2, getOption("width")) <- "..."
+      # add <- paste0(y, " ~ ", paste0(lgrpnames[[y]], collapse = ", "))
+      add <- paste0(y, " ~ ", as.character(formula[[y]]$group)[2])
+      wadd <- strwrap(add, width = getOption("width"))
+      for(l in 1:length(wadd)){
+        mcmc$call <- paste0(mcmc$call, wadd[l], "\n")
       }
-      mcmc$call <- paste0(mcmc$call, add, "\n")
+      # if(nchar(add) > getOption("width")){
+      #   add <- substr(add, 1, getOption("width"))
+      #   substr(add, getOption("width")-2, getOption("width")) <- "..."
+      # }
+      # mcmc$call <- paste0(mcmc$call, add, "\n")
     }else{
       mcmc$call <- paste0(mcmc$call, y, " ~ 0 \n")
     }
