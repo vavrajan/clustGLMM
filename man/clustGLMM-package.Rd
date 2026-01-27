@@ -8,11 +8,9 @@
 \packageDescription{clustGLMM}
 }
 \details{
-The DESCRIPTION file:
-\packageDESCRIPTION{clustGLMM}
-\packageIndices{clustGLMM}
-The key function of this package is \code{\link{clustGLMM}} which creates mcmc samples. To call this function the data, formulae and other auxiliary parameters need to be set up carefully before, so please follow the examples or tutorials.
-Package also includes many other functions: one for generating longitudinal data of mixed-type (\code{\link{generate_longitudinal_mixed_type_data}}), functions to generate plots (\code{\link{plot_traceplots}}, \code{\link{plot_traceplots_param}}, \code{\link{plot_kerneldensity}}, \code{\link{plot_kerneldensity_param}}, \code{\link{plot_ACF}}, \code{\link{plot_ACF_param}}, \code{\link{plot_ECDF}}, \code{\link{plot_ECDF_param}}, \code{\link{plot_clusters}}, \code{\link{plot_clusters_ECDF_param}}, \code{\link{plot_clusters_kerneldensity_param}}, \code{\link{plot.clustglmm}}, \code{\link{plot_num_vs_x_grouped}}, \code{\link{plot_cat_vs_x_grouped}}), functions for post-processing the samples (\code{\link{post_processing}}, \code{\link{permute_cluster_labels}}) and many other functions for internal computations.
+The key function is \code{\link{clustGLMM}} which creates MCMC samples. The data, formulae and other auxiliary parameters need to be set up carefully before calling this function. The examples and tutorials may be used for guidance. 
+
+The package also includes many other functions: one for generating longitudinal data of mixed-type (\code{\link{generate_longitudinal_mixed_type_data}}), functions to generate plots (\code{\link{plot_traceplots}}, \code{\link{plot_traceplots_param}}, \code{\link{plot_kerneldensity}}, \code{\link{plot_kerneldensity_param}}, \code{\link{plot_ACF}}, \code{\link{plot_ACF_param}}, \code{\link{plot_ECDF}}, \code{\link{plot_ECDF_param}}, \code{\link{plot_clusters}}, \code{\link{plot_clusters_ECDF_param}}, \code{\link{plot_clusters_kerneldensity_param}}, \code{\link{plot.clustglmm}}, \code{\link{plot_num_vs_x_grouped}}, \code{\link{plot_cat_vs_x_grouped}}), functions for post-processing the samples (\code{\link{post_processing}}, \code{\link{permute_cluster_labels}}) and many other functions for internal computations.
 }
 \author{
 \packageAuthor{clustGLMM}
