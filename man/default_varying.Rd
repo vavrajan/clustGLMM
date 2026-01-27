@@ -7,7 +7,7 @@
 Setting Default Values in \code{clustGLMM}
 }
 \description{
-The following functions are used for setting default values of auxiliary variables such as hyperparameters of indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
+The following functions are used for setting default values for the hyperparameters of the priors \code{default_param}, indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
 }
 \usage{
 default_param()
@@ -16,13 +16,13 @@ default_tuning(experience = FALSE)
 default_varying()
 }
 \arguments{
-  \item{experience}{a logical indicating if the default values are changed to values proven suitable from empirical experience}
+  \item{experience}{a logical, indicating if the default values are changed to values proven suitable from empirical experience}
 }
 \details{
-If corresponding lists or vectors are not given to \code{\link{clustGLMM}} then these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} and then adjust them as you wish.  
+If the corresponding lists or vectors are not given as arguments to \code{\link{clustGLMM}}, these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} arguments and then adjust them.
 }
 \value{
-The output of \code{default_varying} is a named vector \code{varying} that contains a boolean for each model parameter that may be considered cluster-specific. The defaults are
+The output of \code{default_varying} is a named vector \code{varying} that contains a Boolean for each model parameter that may be considered group-specific. The defaults are
 \describe{
   \item{\code{varying["prec_num"] = TRUE}}{group-specific precisions for numeric outcomes,}
   \item{\code{varying["c_ord"] = TRUE}}{group-specific ordered intercepts for ordinal outcomes,}
@@ -31,7 +31,7 @@ The output of \code{default_varying} is a named vector \code{varying} that conta
   \item{\code{varying["naY"] = FALSE}}{group-invariant imputed missing outcome values.}
 }
 
-The output of \code{default_save} is a named vector \code{save} that contains a boolean for each model parameter including some transformed parameters. Lets introduce all the model parameter together with the default \code{save} setting:
+The output of \code{default_save} is a named vector \code{save} that contains a Boolean for each model parameter including some transformed parameters indicating if they are saved and included in the return object. The defaults are
 \describe{
   \item{\code{save["beta_num_fix"] = TRUE}}{fixed effects for numeric outcomes,}
   \item{\code{save["beta_num"] = TRUE}}{group-specific effects for numeric outcomes,}
@@ -88,17 +88,17 @@ The output of \code{default_param} is a named list \code{param} that contains va
 \item{\code{param[["init_b_sd"]] = 0.01}}{standard deviation for sampling initial values of random effects \code{b},}
 \item{\code{param[["e0_shp"]] = 1}}{prior shape of \code{e0},}
 \item{\code{param[["e0_rte"]] = 100}}{prior rate of \code{e0},}
-\item{\code{param[["InvV"]] = 0.01}}{diagonal element of the prior inverse scale matrix for InvQ.}
+\item{\code{param[["InvV"]] = 0.01}}{diagonal element of the prior inverse scale matrix for \code{InvQ}.}
 }
 By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is the more sparse results are expected.  
 
 The output of \code{default_tuning} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
 \describe{
 \item{\code{$integer$freq_proposal_update = 10}}{every \code{freq_proposal_update} iterations change the proposal distributions for Metropolis steps,}
-\item{\code{$integer$times_proposal = 1}}{how many times propose new state within one Metropolis step,}
+\item{\code{$integer$times_proposal = 1}}{how many times a new state is proposed within one Metropolis step,}
 \item{\code{$integer$maxiter = 25}}{maximum iterations allowed during Newton-Raphson update of proposal distribution,}
 \item{\code{$integer$maxnrep = 100}}{maximum number of repetitions of Newton-Raphson with a different start location,}
-\item{\code{$integer$kspec_bi_cat = 0}}{boolean as integer, if \code{TRUE} then each general categorical outcome has different set of random effects for each of \code{Kcat-1} levels,}
+\item{\code{$integer$kspec_bi_cat = 0}}{Boolean as integer, if \code{TRUE} then each categorical outcome has a different set of random effects for each of \code{Kcat-1} levels,}
 \item{\code{$double$const_proposal_beta_poi_fix = 1.0}}{constant by which the proposal direction for \code{beta_poi_fix} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_beta_poi = 1.0}}{constant by which the proposal direction for \code{beta_poi} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_beta_bin_fix = 1.0}}{constant by which the proposal direction for \code{beta_bin_fix} is multiplied (const_proposal^2 to variance),}
@@ -110,7 +110,7 @@ The output of \code{default_tuning} is a named list \code{tuning} of parameters 
 \item{\code{$double$const_proposal_a_ord = 1.0}}{constant by which the proposal direction for \code{a_ord} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_b = 1.0}}{constant by which the proposal direction for \code{b} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_e0 = 1.0}}{constant by which the proposal direction for \code{e0} is multiplied (const_proposal^2 to variance),}
-\item{\code{$double$tolerance = 1e-07}}{tolerance when computing norm of the shift within Newton-Raphson.}
+\item{\code{$double$tolerance = 1e-07}}{tolerance when computing the norm of the shift within Newton-Raphson.}
 }
 With \code{experience = TRUE} the chosen values will be set to those proven suitable from empirical experience.
 
