@@ -897,7 +897,7 @@ table(students[students$j == 1, c("g", paste0("Uclustering", ch))])
 We can also inspect how well we predict the missing values for income:
 
 ```{r students-mcmc-naY, echo=TRUE, results=TRUE, fig.align="center", fig.width=8, fig.height=5, fig.cap="Predictive distribution for missing outcome values.", fig.pos="H", out.width="100%"}
-par(mar = c(4, 4, 0.5, 0.5), mfrow = nice_nrow_ncol(nmis))
+par(mar = c(4, 4, 0.5, 0.5), mfrow = c(2, 3))
 y <- "income"
 for (j in 1:nmis) {
   plot_kerneldensity(mcmc_pp, what = "naY", yspec = y, dimspec = j, labcex = 0.8)
