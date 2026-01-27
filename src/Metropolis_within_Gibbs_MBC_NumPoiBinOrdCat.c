@@ -884,11 +884,11 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   }
   Gp = *G - Gm;
   
-  Rprintf("\nC: ng and nUg calculated");
-  for(g = 0; g < *G; g++){
-    Rprintf("\nC: ng[%d] = %d, nUg[%d] = %d, G=%d, Gp=%d, Gm=%d",
-            g, ngg[g], g, nUg[g], *G, Gp, Gm);
-  }
+  //Rprintf("\nC: ng and nUg calculated");
+  //for(g = 0; g < *G; g++){
+  //  Rprintf("\nC: ng[%d] = %d, nUg[%d] = %d, G=%d, Gp=%d, Gm=%d",
+  //          g, ngg[g], g, nUg[g], *G, Gp, Gm);
+  //}
   //fflush(stdout);
   
   ////------------------------------////
@@ -1334,8 +1334,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   double new_loglik;
   double pcum, mcum;
   int tog;
-  int print;
-  print = 0;
+  int verbose = 0;
   
   //printf("\nC: All loaded and prepared, about to start sampling");
   //fflush(stdout);
@@ -1368,7 +1367,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
         }
       }
       
-      if(print){
+      if(verbose){
         Rprintf("\nC: naY sampled");
         //fflush(stdout);
       }
@@ -1395,7 +1394,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
       }
     }
     
-    if(print){
+    if(verbose){
       Rprintf("\nC: beta_num_fix and beta_num sampled");
       //fflush(stdout);
     }
@@ -1420,7 +1419,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
         var_num[m*dimswithG[4] + j] = 1/last.prec_num[j];
       }
     }
-    if(print){
+    if(verbose){
       Rprintf("\nC: prec_num sampled");
       //fflush(stdout);
     }
@@ -1450,7 +1449,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
         beta_poi[m*dimswithG[6] + j] = last.beta_poi[j];
       }
     }
-    if(print){
+    if(verbose){
       Rprintf("\nC: beta_poi_fix and beta_poi sampled");
       //fflush(stdout);
     }
@@ -1481,7 +1480,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
       }
     }
     
-    if(print){
+    if(verbose){
       Rprintf("\nC: beta_bin_fix and beta_bin sampled");
       //fflush(stdout);
     }
@@ -1512,7 +1511,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
         beta_ord[m*dimswithG[10] + j] = last.beta_ord[j];
       }
     }
-    if(print){
+    if(verbose){
       Rprintf("\nC: beta_ord_fix and beta_ord sampled");
       //fflush(stdout);
     }
@@ -1578,7 +1577,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
         pi_ord[m*dimswithG[13] + j] = last.pi_ord[j];
       }
     } 
-    if(print){
+    if(verbose){
       Rprintf("\nC: a_ord, c_ord and pi_ord sampled");
       //fflush(stdout);
     }
@@ -1608,7 +1607,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
         beta_cat[m*dimswithG[15] + j] = last.beta_cat[j];
       }
     }
-    if(print){
+    if(verbose){
       Rprintf("\nC: beta_cat_fix and beta_cat sampled");
       //fflush(stdout);
     }
@@ -1623,7 +1622,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
           InvSigma[m*dimswithG[16] + j] = last.InvSigma[j];
         }
       }
-      if(print){
+      if(verbose){
         Rprintf("\nC: InvSigma sampled");
         //fflush(stdout);
       }
@@ -1638,7 +1637,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
           InvQ[m*dimswithG[21] + j] = last.InvQ[j];
         }
       }
-      if(print){
+      if(verbose){
         Rprintf("\nC: InvQ sampled");
         //fflush(stdout);
       }
@@ -1668,7 +1667,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
           b[m*dimswithG[24] + j] = last.b[j];
         }
       }
-      if(print){
+      if(verbose){
         Rprintf("\nC: b sampled");
         //fflush(stdout);
       }
@@ -1705,7 +1704,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
       for(g = 0; g < dimswithG[25]; g++)
         w[m*dimswithG[25] + g] = last.w[g];
     }
-    if(print){
+    if(verbose){
       Rprintf("\nC: w sampled");
       //fflush(stdout);
     }
@@ -1723,7 +1722,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                // Tuning parameters
                lag_proposal_bi, &tuning
     );
-    if(print){
+    if(verbose){
       Rprintf("\ngibbs_pUig has just ended");
       //fflush(stdout);
     }
@@ -1752,7 +1751,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
       }
     }
     
-    if(print){
+    if(verbose){
       Rprintf("\nC: pUig and U[i] sampled");
       //fflush(stdout);
       
@@ -1776,7 +1775,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     if(save[31]){
       e0[m] = *(last.e0);
     }
-    if(print){
+    if(verbose){
       Rprintf("\nC: e0 sampled\n");
       //fflush(stdout);
     }

@@ -349,7 +349,7 @@ void pUig_dev(
   
   int aux_iter;
   int converged;
-  int print = 0;
+  int verbose = 0;
   int nrep;
   double max_value = LOW_VALUE;
   double value_at_shifted_bi;
@@ -623,12 +623,12 @@ void pUig_dev(
                        nran, cumnran, totnran, FormulaR,
                        noff, cumnoff, FormulaO,
                        &ij, i_j, kspec_bi_cat, 
-                       &print, shifted_bi, &value_at_shifted_bi);
+                       &verbose, shifted_bi, &value_at_shifted_bi);
             if(isfinite(value_at_shifted_bi) == 0 ){
               //printf("\nApproximation: i = %d, g = %d, l = %d, approx = %f, value = %f",
               //      i, g, l, approx, value_at_shifted_bi);
               //fflush(stdout);
-              print = 1;
+              verbose = 1;
               logpbi_dev(Y, isYna, X,  
                          pbeta_num_fix, pbeta_num, pprec_num, 
                          pbeta_poi_fix, pbeta_poi, 
@@ -642,9 +642,9 @@ void pUig_dev(
                          nran, cumnran, totnran, FormulaR,
                          noff, cumnoff, FormulaO,
                          &ij, i_j, kspec_bi_cat, 
-                         &print, shifted_bi, &value_at_shifted_bi);
+                         &verbose, shifted_bi, &value_at_shifted_bi);
             }else{
-              print = 0;
+              verbose = 0;
             }
             
             // d) add the weighted exp value_at_shifted_bi to the approximation sum
