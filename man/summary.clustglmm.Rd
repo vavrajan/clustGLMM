@@ -5,7 +5,7 @@
 Compute the Summary Statistics of \code{clustGLMM} Output
 }
 \description{
-A method for computing and printing the summary statistics of class \code{clustglmm}, the output from the \code{clustGLMM} function.
+A method for computing and printing the summary statistics for objects of class \code{"clustglmm"}, the output from function \code{\link{clustGLMM}}.
 }
 \usage{
 \method{summary}{clustglmm}(object, ...)
@@ -14,19 +14,19 @@ A method for computing and printing the summary statistics of class \code{clustg
 }
 \arguments{
   \item{object}{
-an object of class \code{"clustglmm"}, an output of \code{clustGLMM} function.
+an object of class \code{"clustglmm"} (as returned by function \code{\link{clustGLMM}}).
 }
   \item{x}{
-an object of class \code{"summary.clustglmm"}, an output of \code{summary.clustGLMM} function.
+an object of class \code{"summary.clustglmm"} (as returned by the \code{summary} method for \code{"clustglmm"} objects) .
 }
   \item{which}{
-a vector of strings that select which summaries should be printed.
+a character vector that indicate which summaries should be printed.
 }
   \item{chains}{
-a vector of chain numbers to print summary results of.
+a vector of chain numbers to print summary results for.
 }  
   \item{clusters}{
-a list of cluster labels to print for group-specific parameters per each chain; if missing \code{x$clusters} is used.
+a list of cluster labels for which group-specific parameters are printed for each chain; if missing \code{x$clusters} is used.
 }
   \item{pattern}{
 a pattern to be used for \code{grep} search among parameter names to include within the summary, empty by default (all from the selected category).
@@ -36,11 +36,11 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
 }
 }
 \details{
-  \code{print.summary} prints a summary for each selected chain in \code{chains}. 
-  Depending on what is included within \code{which} argument the following summaries are printed:
+  \code{print.summary} prints a summary for each chain selected by argument \code{chains}. 
+  Depending on what is selected with the \code{which} argument, the following summaries are printed:
   \describe{
     \item{mcmc}{an overview of the sampled chains,}
-    \item{clustering}{summary of the clustering,}
+    \item{clustering}{a summary of the clustering,}
     \item{inv_param}{cluster-invariant parameters,}
     \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w}),}
     \item{latent_param}{latent parameters (random effects \code{b}, allocation indicators \code{U}, missing outcome values \code{naY},}
