@@ -103,7 +103,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Implemented by Jan Vávra for performing a simulation study in Vávra et al. (2024).
 }
 \examples{
-n <- 500      
+n <- 100      
 n_i <- 4       
 G <- 2         
 timepar <- "mix" 
@@ -129,4 +129,8 @@ ldata <- generate_longitudinal_mixed_type_data(n = n, n_i = n_i,
                      Kord = Kord, Kcat = Kcat, kspec_bi_cat = kspec_bi_cat)
 data <- ldata$data
 head(data)
+
+# The same as the "longitudinal_mixed_type_data"
+# which will be used in other examples
+data("longitudinal_mixed_type_data")
 }

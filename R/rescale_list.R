@@ -279,7 +279,7 @@ rescale_list <- function(draws, settings,
     for(x in notint_grp){
       for(g in 1:settings["beta_cat", "G"]){
         for(k in 1:Kcat[y]){
-          draws$beta_cat[[g]][[y]][,x,k] <- draws$beta_cat[[g]][,x,k] / scales[lgrpnames[[y]][x]]
+          draws$beta_cat[[g]][[y]][,x,k] <- draws$beta_cat[[g]][[y]][,x,k] / scales[lgrpnames[[y]][x]]
         }
       }
     }

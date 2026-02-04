@@ -31,7 +31,7 @@ function(draws,
               di = which(draws$m==i)
               for(k in 1:v$G){
                 for(y in 1:length(Ys)){
-                  RET <- c(RET, as.data.frame(draws[[p]][[k]][di, Ys[y]]))
+                  RET <- c(RET, draws[[p]][[k]][di, Ys[y]])
                 }
               }
             }

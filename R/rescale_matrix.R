@@ -17,7 +17,7 @@ rescale_matrix <- function(draws, settings,
     notint_fix <- setdiff(seq_len(length(lfixnames[[y]])), int_fix) # could be empty
     for (x in notint_fix) {
       bname <- paste0("beta_num_fix_", y, "[", x, "]")
-      draws[, bname] <- draws[, bname] * scales[y]/ scales[lfixnames[[y]][x]]
+      draws[, bname] <- as.numeric(draws[, bname] * scales[y]/ scales[lfixnames[[y]][x]])
     }
     
     int_grp <- which(lgrpnames[[y]] == "(Intercept)") # could be empty
@@ -25,7 +25,7 @@ rescale_matrix <- function(draws, settings,
     for (x in notint_grp) {
       for (g in 1:settings["beta_num", "G"]) {
         bname <- paste0("beta_num_", y, "(", g, ")[", x, "]")
-        draws[, bname] <- draws[, bname] * scales[y] / scales[lgrpnames[[y]][x]]
+        draws[, bname] <- as.numeric(draws[, bname] * scales[y] / scales[lgrpnames[[y]][x]])
       }
     }
     
@@ -44,7 +44,7 @@ rescale_matrix <- function(draws, settings,
       bname <- paste0("beta_num_fix_", y, "[", int_fix, "]")
       draws[, bname] <- centers[y] + scales[y] * draws[, bname]
       if (length(notint_fix) > 0) {
-        draws[, bname] <- draws[, bname] - shift_fix
+        draws[, bname] <- as.numeric(draws[, bname] - shift_fix)
       }
       # There cannot be any group-specific effects
       # The error should have already occurred or (Intercept) has been made group-specific
@@ -58,13 +58,13 @@ rescale_matrix <- function(draws, settings,
         draws[, bname] <- centers[y] + scales[y] * draws[, bname]
         # subtract scaled centers combined with beta_num_fix
         if (length(notint_fix) > 0) {
-          draws[, bname] <- draws[, bname] - shift_fix
+          draws[, bname] <- as.numeric(draws[, bname] - shift_fix)
         }
         # subtract scaled centers combined with group-specific beta_num
         if (length(notint_grp) > 0) {
           bnames <- paste0("beta_num_", y, "(", g, ")[", notint_grp, "]")
-          draws[, bname] <- draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*%
-              centers[lgrpnames[[y]][notint_grp]]
+          draws[, bname] <- as.numeric(draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*%
+              centers[lgrpnames[[y]][notint_grp]])
         }
       }
     }
@@ -79,11 +79,11 @@ rescale_matrix <- function(draws, settings,
         if (settings[p, "gspec"]) {
           for (g in 1:settings[p, "G"]) {
             pname <- paste0(p, "_", y, "(", g, ")")
-            draws[, pname] <- draws[, pname] * multiplier
+            draws[, pname] <- as.numeric(draws[, pname] * multiplier)
           }
         }else{
           pname <- paste0(p, "_", y)
-          draws[, pname] <- draws[, pname] * multiplier
+          draws[, pname] <- as.numeric(draws[, pname] * multiplier)
         }
       }
     }
@@ -93,11 +93,11 @@ rescale_matrix <- function(draws, settings,
       if (settings["naY", "gspec"]) {
         for (g in 1:settings["naY", "G"]) {
           pnames <- grep(paste0("naY_", y, "\\(", g, "\\)"), colnames(draws))
-          draws[, pname] <- draws[, pname] * scales[y] + centers[y]
+          draws[, pname] <- as.numeric(draws[, pname] * scales[y] + centers[y])
         }
       }else{
         pname <- grep(paste0("naY_", y), colnames(draws))
-        draws[, pname] <- draws[, pname] * scales[y] + centers[y]
+        draws[, pname] <- as.numeric(draws[, pname] * scales[y] + centers[y])
       }
     }
     
@@ -109,7 +109,7 @@ rescale_matrix <- function(draws, settings,
     notint_fix <- setdiff(seq_len(length(lfixnames[[y]])), int_fix) # could be empty
     for (x in notint_fix) {
       bname <- paste0("beta_poi_fix_", y, "[", x, "]")
-      draws[, bname] <- draws[, bname] / scales[lfixnames[[y]][x]]
+      draws[, bname] <- as.numeric(draws[, bname] / scales[lfixnames[[y]][x]])
     }
     
     int_grp <- which(lgrpnames[[y]] == "(Intercept)") # could be empty
@@ -117,7 +117,7 @@ rescale_matrix <- function(draws, settings,
     for (x in notint_grp) {
       for (g in 1:settings["beta_poi", "G"]) {
         bname <- paste0("beta_poi_", y, "(", g, ")[", x, "]")
-        draws[, bname] <- draws[, bname] / scales[lgrpnames[[y]][x]]
+        draws[, bname] <- as.numeric(draws[, bname] / scales[lgrpnames[[y]][x]])
       }
     }
     
@@ -134,7 +134,7 @@ rescale_matrix <- function(draws, settings,
       # Intercept is among fixed effects
       bname <- paste0("beta_poi_fix_", y, "[", int_fix, "]")
       if (length(notint_fix) > 0) {
-        draws[, bname] <- draws[, bname] - shift_fix
+        draws[, bname] <- as.numeric(draws[, bname] - shift_fix)
       }
       # There cannot be any group-specific effects
       # The error should have already occurred or (Intercept) has been made group-specific
@@ -147,12 +147,13 @@ rescale_matrix <- function(draws, settings,
         bname <- paste0("beta_poi_", y, "(", g, ")[", int_grp, "]")
         # subtract scaled centers combined with beta_poi_fix
         if (length(notint_fix) > 0) {
-          draws[, bname] <- draws[, bname] - shift_fix
+          draws[, bname] <- as.numeric(draws[, bname] - shift_fix)
         }
         # subtract scaled centers combined with group-specific beta_poi
         if (length(notint_grp) > 0) {
           bnames <- paste0("beta_poi_", y, "(", g, ")[", notint_grp, "]")
-          draws[, bname] <- draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*% centers[lgrpnames[[y]][notint_grp]]
+          draws[, bname] <- as.numeric(draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) 
+                                       %*% centers[lgrpnames[[y]][notint_grp]])
         }
       }
     }
@@ -165,7 +166,7 @@ rescale_matrix <- function(draws, settings,
     notint_fix <- setdiff(seq_len(length(lfixnames[[y]])), int_fix) # could be empty
     for (x in notint_fix) {
       bname <- paste0("beta_bin_fix_", y, "[", x, "]")
-      draws[, bname] <- draws[, bname] / scales[lfixnames[[y]][x]]
+      draws[, bname] <- as.numeric(draws[, bname] / scales[lfixnames[[y]][x]])
     }
     
     int_grp <- which(lgrpnames[[y]] == "(Intercept)") # could be empty
@@ -173,7 +174,7 @@ rescale_matrix <- function(draws, settings,
     for (x in notint_grp) {
       for (g in 1:settings["beta_bin", "G"]) {
         bname <- paste0("beta_bin_", y, "(", g, ")[", x, "]")
-        draws[, bname] <- draws[, bname] / scales[lgrpnames[[y]][x]]
+        draws[, bname] <- as.numeric(draws[, bname] / scales[lgrpnames[[y]][x]])
       }
     }
     
@@ -190,7 +191,7 @@ rescale_matrix <- function(draws, settings,
       # Intercept is among fixed effects
       bname <- paste0("beta_bin_fix_", y, "[", int_fix, "]")
       if (length(notint_fix) > 0) {
-        draws[, bname] <- draws[, bname] - shift_fix
+        draws[, bname] <- as.numeric(draws[, bname] - shift_fix)
       }
       # There cannot be any group-specific effects
       # The error should have already occurred or (Intercept) has been made group-specific
@@ -203,12 +204,13 @@ rescale_matrix <- function(draws, settings,
         bname <- paste0("beta_bin_", y, "(", g, ")[", int_grp, "]")
         # subtract scaled centers combined with beta_bin_fix
         if (length(notint_fix) > 0) {
-          draws[, bname] <- draws[, bname] - shift_fix
+          draws[, bname] <- as.numeric(draws[, bname] - shift_fix)
         }
         # subtract scaled centers combined with group-specific beta_bin
         if (length(notint_grp) > 0) {
           bnames <- paste0("beta_bin_", y, "(", g, ")[", notint_grp, "]")
-          draws[, bname] <- draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*% centers[lgrpnames[[y]][notint_grp]]
+          draws[, bname] <- as.numeric(draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) 
+                                       %*% centers[lgrpnames[[y]][notint_grp]])
         }
       }
     }
@@ -220,14 +222,14 @@ rescale_matrix <- function(draws, settings,
     notint_fix <- seq_len(length(lfixnames[[y]])) # could be empty
     for (x in notint_fix) {
       bname <- paste0("beta_ord_fix_", y, "[", x, "]")
-      draws[, bname] <- draws[, bname] / scales[lfixnames[[y]][x]]
+      draws[, bname] <- as.numeric(draws[, bname] / scales[lfixnames[[y]][x]])
     }
     
     notint_grp <- seq_len(length(lgrpnames[[y]])) # could be empty
     for (x in notint_grp) {
       for (g in 1:settings["beta_ord", "G"]) {
         bname <- paste0("beta_ord_", y, "(", g, ")[", x, "]")
-        draws[, bname] <- draws[, bname] / scales[lgrpnames[[y]][x]]
+        draws[, bname] <- as.numeric(draws[, bname] / scales[lgrpnames[[y]][x]])
       }
     }
     
@@ -250,7 +252,7 @@ rescale_matrix <- function(draws, settings,
           shift <- shift_fix
         }
         for (cn in cnames) {
-          draws[, cn] <- draws[, cn] + shift
+          draws[, cn] <- as.numeric(draws[, cn] + shift)
         }
         # logits
         logits <- matrix(0, nrow = dim(draws)[1], ncol = Kord[y] + 2)
@@ -262,14 +264,14 @@ rescale_matrix <- function(draws, settings,
         if (settings["a_ord", "save"]) {
           anames <- paste0("a_ord_", y, "(", g, ")[", 1:Kord[y], "]")
           for (k in 1:Kord[y]) {
-            draws[, anames[k]] <- log((logits[, k+1] - logits[, k])/(1-logits[, Kord[y]+1]))
+            draws[, anames[k]] <- as.numeric(log((logits[, k+1] - logits[, k])/(1-logits[, Kord[y]+1])))
           }
         }
         # pi_ord
         if (settings["pi_ord", "save"]) {
           pinames <- paste0("pi_ord_", y, "(", g, ")[", 1:(Kord[y]+1), "]")
           for (k in 1:(Kord[y]+1)) {
-            draws[, pinames[k]] <- logits[, k+1] - logits[, k]
+            draws[, pinames[k]] <- as.numeric(logits[, k+1] - logits[, k])
           }
         }
       }
@@ -278,7 +280,7 @@ rescale_matrix <- function(draws, settings,
       # There should be no group-specific effects --> error already before
       # or c_ord has been made group-specific
       for (cn in cnames) {
-        draws[, cn] <- draws[, cn] + shift_fix
+        draws[, cn] <- as.numeric(draws[, cn] + shift_fix)
       }
       # logits
       logits <- matrix(0, nrow = dim(draws)[1], ncol = Kord[y] + 2)
@@ -290,14 +292,14 @@ rescale_matrix <- function(draws, settings,
       if (settings["a_ord", "save"]) {
         anames <- paste0("a_ord_", y, "[", 1:Kord[y], "]")
         for (k in 1:Kord[y]) {
-          draws[, anames[k]] <- log((logits[, k+1] - logits[, k])/(1-logits[, Kord[y]+1]))
+          draws[, anames[k]] <- as.numeric(log((logits[, k+1] - logits[, k])/(1-logits[, Kord[y]+1])))
         }
       }
       # pi_ord
       if (settings["pi_ord", "save"]) {
         pinames <- paste0("pi_ord_", y, "[", 1:(Kord[y]+1), "]")
         for (k in 1:(Kord[y]+1)) {
-          draws[, pinames[k]] <- logits[, k+1] - logits[, k]
+          draws[, pinames[k]] <- as.numeric(logits[, k+1] - logits[, k])
         }
       }
     } # end of if/else c_ord group-specific
@@ -310,7 +312,7 @@ rescale_matrix <- function(draws, settings,
     for (x in notint_fix) {
       for (k in 1:Kcat[y]) {
         bname <- paste0("beta_cat_fix_", y, "[", x, ",", k, "]")
-        draws[, bname] <- draws[, bname] / scales[lfixnames[[y]][x]]
+        draws[, bname] <- as.numeric(draws[, bname] / scales[lfixnames[[y]][x]])
       }
     }
     
@@ -320,7 +322,7 @@ rescale_matrix <- function(draws, settings,
       for (g in 1:settings["beta_cat", "G"]) {
         for (k in 1:Kcat[y]) {
           bname <- paste0("beta_cat_", y, "(", g, ")[", x, ",", k, "]")
-          draws[, bname] <- draws[, bname] / scales[lgrpnames[[y]][x]]
+          draws[, bname] <- as.numeric(draws[, bname] / scales[lgrpnames[[y]][x]])
         }
       }
     }
@@ -340,7 +342,7 @@ rescale_matrix <- function(draws, settings,
       for (k in 1:Kcat[y]) {
         bname <- paste0("beta_cat_fix_", y, "[", int_fix, ",", k, "]")
         if (length(notint_fix) > 0) {
-          draws[, bname] <- draws[, bname] - shift_fix[, k]
+          draws[, bname] <- as.numeric(draws[, bname] - shift_fix[, k])
         }
       }
       # There cannot be any group-specific effects
@@ -355,12 +357,13 @@ rescale_matrix <- function(draws, settings,
           bname <- paste0("beta_cat_", y, "(", g, ")[", int_grp, ",", k, "]")
           # subtract scaled centers combined with beta_cat_fix
           if (length(notint_fix) > 0) {
-            draws[, bname] <- draws[, bname] - shift_fix[, k]
+            draws[, bname] <- as.numeric(draws[, bname] - shift_fix[, k])
           }
           # subtract scaled centers combined with group-specific beta_cat
           if (length(notint_grp) > 0) {
             bnames <- paste0("beta_cat_", y, "(", g, ")[", notint_grp, ",", k, "]")
-            draws[, bname] <- draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*% centers[lgrpnames[[y]][notint_grp]]
+            draws[, bname] <- as.numeric(draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) 
+                                         %*% centers[lgrpnames[[y]][notint_grp]])
           }
         }
       }
@@ -381,18 +384,18 @@ rescale_matrix <- function(draws, settings,
         for (z in notint_ran) {
           for (i in 1:settings["b", "d1"]) {
             bname <- paste0("b[", i, ",",z+yadd, "]")
-            draws[, bname] <- draws[, bname] * yscl / scales[lrannames[[y]][z]]
+            draws[, bname] <- as.numeric(draws[, bname] * yscl / scales[lrannames[[y]][z]])
           }
         }
         # Now update random intercepts (can be empty only if notint_ran is empty)
         if (length(int_ran) > 0) {
           for (i in 1:settings["b", "d1"]) {
             bname <- paste0("b[", i, ",", int_ran+yadd, "]")
-            draws[, bname] <- yscl * draws[, bname] 
+            draws[, bname] <- as.numeric(yscl * draws[, bname])
             if (length(notint_ran) > 0) {
               bnames <- paste0("b[", i, ",", notint_ran+yadd, "]")
-              draws[, bname] <- draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*%
-                  centers[lrannames[[y]][notint_ran]]
+              draws[, bname] <- as.numeric(draws[, bname] - as.matrix(draws[, bnames, drop = FALSE]) %*%
+                  centers[lrannames[[y]][notint_ran]])
             }
           }
         }

@@ -111,7 +111,7 @@ permute_cluster_labels <-
       params <- setdiff(params, c("w", "ng", "pUig"))
       for(p in intersect(params, names(mcmc$last[[ch]]))){
         aux <- list()
-        if(mcmc$settings[[ch]][p,"ydepd1"]){
+        if(mcmc$settings[[ch]][p,"isy"]){
           for(y in names(mcmc$last[[ch]][[p]])){
             aux[[y]] <- list()
             for(g in 1:mcmc$G[ch]){
@@ -146,7 +146,7 @@ permute_cluster_labels <-
       params <- setdiff(params, c("w", "ng", "pUig"))
       for(p in intersect(params, names(mcmc$inits[[ch]]))){
         aux <- list()
-        if(mcmc$settings[[ch]][p,"ydepd1"]){
+        if(mcmc$settings[[ch]][p,"isy"]){
           for(y in names(mcmc$inits[[ch]][[p]])){
             aux[[y]] <- list()
             for(g in 1:mcmc$G[ch]){

@@ -21,8 +21,8 @@ from_matrix_to_coda <- function(mcmc, burnin=0, thin=1){
   out <- try(as.mcmc.list(codamcmc), silent = TRUE)
   if(is(out, "try-error")){
     # cannot coerce to mcmc.list
-    warning("Cannot coerce to mcmc.list because of different number of variables in each chain. 
-            Only a list of mcmc objects is returned, apply summary(), etc. only per chain.")
+    message("Cannot coerce to mcmc.list because of different number of variables in each chain. 
+Only a list of mcmc objects is returned, apply summary(), etc. only per chain.")
   }else{
     codamcmc <- out
   }
