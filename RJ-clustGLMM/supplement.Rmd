@@ -232,7 +232,7 @@ kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
 
 # Implementation {#sec:implementation}
 
-In the following, we discuss the implementation of the methodology outlined previously. An overview of the typical workflow and the key functions is given in Figure \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail. 
+In the following, we discuss the implementation of the methodology outlined in the main paper. An overview of the typical workflow and the key functions is given in Figure \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail. 
 
 ```{r workflow-diagram, fig.cap="Typical workflow with \\pkg{clustGLMM} and key functions.", out.width="100%", dev="png"}
 DiagrammeR::grViz("digraph {

@@ -93,11 +93,11 @@ rescale_matrix <- function(draws, settings,
       if (settings["naY", "gspec"]) {
         for (g in 1:settings["naY", "G"]) {
           pnames <- grep(paste0("naY_", y, "\\(", g, "\\)"), colnames(draws))
-          draws[, pname] <- as.numeric(draws[, pname] * scales[y] + centers[y])
+          draws[, pnames] <- draws[, pnames] * scales[y] + centers[y]
         }
       }else{
-        pname <- grep(paste0("naY_", y), colnames(draws))
-        draws[, pname] <- as.numeric(draws[, pname] * scales[y] + centers[y])
+        pnames <- grep(paste0("naY_", y), colnames(draws))
+        draws[, pnames] <- draws[, pnames] * scales[y] + centers[y]
       }
     }
     
@@ -238,7 +238,7 @@ rescale_matrix <- function(draws, settings,
       bnames <- paste0("beta_ord_fix_", y, "[", notint_fix, "]")
       shift_fix <- as.matrix(draws[, bnames, drop = FALSE]) %*% centers[lfixnames[[y]][notint_fix]]
     }else{
-      shift_fix <- data.frame(x = rep(0, dim(draws)[1])) # irrelevant
+      shift_fix <- matrix(rep(0, dim(draws)[1]), ncol = 1) # irrelevant
     }
     
     # For ordinal outcomes we have ordered intercepts c_ord
