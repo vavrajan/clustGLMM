@@ -217,6 +217,11 @@ predict.clustglmm <-
           Sigma <- get_Sigma(draws, m, settings, howsave = "matrix")
         }
         
+        # get sd_num
+        if(object$family[y] == "num"){
+          sd_num <- unlist(get_sd_num(draws, m, settings, y = y, howsave="matrix"))
+        }
+        
         ### Generate latent data - U and b
         ### !!! only clusters in gs are considered here !!!
         if(posterior_predictive_by_cluster){
@@ -246,10 +251,20 @@ predict.clustglmm <-
             }
           }
           
+          # other parameters we need
+          if(object$family[y] == "num"){
+            if(settings["prec_num","gspec"]){
+              sd_num_newdata <- rep(sd_num[gs], each = dim(newdata)[1])
+            }else{
+              sd_num_newdata <- rep(sd_num, dim(newdata)[1]*gdim)
+            }
+          }
+          
         }else{
           U <- as.numeric(sample(as.character(gs), dim(newdata)[1], replace = TRUE, prob = w))
+          
           if(settings["InvSigma","gspec"]){
-            b <- t(sapply(U, function(u){rmvnorm(dim(newdata)[1], 
+            b <- t(sapply(U, function(u){rmvnorm(1, 
                                                  mean = rep(0, object$totnran),
                                                  sigma = Sigma[[u]])}))
             
@@ -270,22 +285,22 @@ predict.clustglmm <-
                 samples[["fg"]][j, U[j], m, k] + samples[["r"]][j, 1, 1] + samples[["o"]][j, 1, 1]
             }
           }
+          
+          # other parameters we need
+          if(object$family[y] == "num"){
+            if(settings["prec_num","gspec"]){
+              sd_num_newdata <- sd_num[U]
+            }else{
+              sd_num_newdata <- rep(sd_num, dim(newdata)[1])
+            }
+          }
         }
         
         ### Sampling outcomes
         if(object$family[y] == "num"){
-          sd_num <- get_sd_num(draws, m, settings, y = y, howsave="matrix")
-          if(settings["prec_num","gspec"]){
-            ## CHECK
-            U <- as.numeric(sample(as.character(gs), dim(newdata)[1], replace = TRUE, prob = w))
-            sd <- unlist(sd_num)[U]
-            ## CHECK
-          }else{
-            sd <- unlist(sd_num)
-          }
           samples[["y"]][, , m, 1] <- rnorm(dim(newdata)[1]*gdim, 
-                                             mean = samples[["eta"]][, , 1], 
-                                             sd = sd)
+                                            mean = samples[["eta"]][, , 1], 
+                                            sd = sd_num_newdata)
           samples[["aux"]][, , m, 1] <- samples[["eta"]][, , 1]
         }
         
@@ -472,6 +487,7 @@ predict.clustglmm <-
       
       if(object$family[y] == "ord"){
         for(ig in 1:length(gs)){
+          # TODO ordered intercepts c_ord? --> should already be in samples
           exp_eta <- exp(samples[["fg"]][, ig, ]) # ? # + samples[["o"]]
           pk <- cbind(rep(1, dim(newdata)[1]), 
                       exp_eta / (1 + exp_eta),
