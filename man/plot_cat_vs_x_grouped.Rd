@@ -8,10 +8,10 @@ Plot Clustered Longitudinal (Panel) Data
 Functions that work with longitudinal data and plot the outcomes vs a covariate with respect to some grouping, e.g. clustering found by \code{\link{clustGLMM}}. 
 }
 \usage{
-plot_num_vs_x_grouped(data, y = "y", x = "x", group = "g", id = "i", units, 
+plot_num_vs_x_grouped(data, y = "y", x = "x", group, id = "i", units, 
                       xbreaks, add_lowess = TRUE, alpha = 0.7,
                       legend_placement = "topright")
-plot_cat_vs_x_grouped(data, y = "y", x = "x", group = "g", 
+plot_cat_vs_x_grouped(data, y = "y", x = "x", group, 
                       xbreaks, main = NA, margin = 0.05, reverse = FALSE)
 }
 \arguments{
@@ -26,6 +26,7 @@ a name of numeric or factor regressor.
 }
   \item{group}{
 a name of the clustering variable that divides different ids into groups.
+If missing, all observations are given label "0" plotted with \code{\link{slategray.colors}}.
 }
   \item{id}{
 a name of the id variable.
@@ -57,7 +58,7 @@ a string describing the position of legend, see \code{\link{legend}}.
 }
 \details{
 Colors are created automatically by \code{rainbow_hcl} from library \code{colorspace}.
-Slategray colors (and its shades) are used for level 0 (unclassified).
+\code{\link{slategray.colors}} are used for group 0 (unclassified).
 
 Output of \code{plot_num_vs_x_grouped} depends on the type of covariate \code{x}:
 \describe{
@@ -68,7 +69,7 @@ Only units included in \code{units} are plotted. }
 }
 
 If \code{x} is not already a factor, \code{plot_cat_vs_x_grouped} divides the data by a numeric covariate \code{x} into groups divided by \code{xbreaks}. 
-Then, for each group label in \code{group} (including level 0 = unclassified) a spineplot capturing the evolution of proportions of a categorical outcome \code{y} wrt the covariate \code{x}. 
+Then, for each group label in \code{group} (including group 0 = unclassified) a spineplot capturing the evolution of proportions of a categorical outcome \code{y} wrt the covariate \code{x}. 
 }
 \value{
 The functions do not return anything but produce a plot.

@@ -206,7 +206,7 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family,
 ###-----------------------------------------------------------------------------
 
 # By default, predicts the first outcome in mcmc$family
-predict(mcmc, newdata = longitudinal_mixed_type_data, type = "link")
+predict(mcmc, newdata = subset(longitudinal_mixed_type_data, i %in% 1:3), type = "link")
 # result is list of fit, lwr, upr matrices
 
 # Predict the evolution in time for covariate f=0
@@ -219,10 +219,10 @@ p1 <- predict(mcmc, newdata, y="ynum", type="link", what="fg")
 p2 <- predict(mcmc, newdata, y="ynum", type="posterior_predictive_response")
 
 matplot(newdata$x, p1$fit, type = "l", lty = 1, lwd = 2)
-matplot(newdata$x, p1$lwr, type = "l", lty = 2, add = T)
-matplot(newdata$x, p1$upr, type = "l", lty = 2, add = T)
-matplot(newdata$x, p2$lwr, type = "l", lty = 3, add = T) # needs longer chains
-matplot(newdata$x, p2$upr, type = "l", lty = 3, add = T) # needs longer chains
+matplot(newdata$x, p1$lwr, type = "l", lty = 2, add = TRUE)
+matplot(newdata$x, p1$upr, type = "l", lty = 2, add = TRUE)
+matplot(newdata$x, p2$lwr, type = "l", lty = 3, add = TRUE) # needs longer chains
+matplot(newdata$x, p2$upr, type = "l", lty = 3, add = TRUE) # needs longer chains
 
 ## Count outcome - conditional mean 
 # predictor
@@ -233,12 +233,12 @@ p1 <- predict(mcmc, newdata, y="ypoi", type="response")
 p2 <- predict(mcmc, newdata, y="ypoi", type="posterior_predictive_response")
 
 matplot(newdata$x, p1$fit, type = "l", lty = 1, lwd = 2)
-matplot(newdata$x, p1$lwr, type = "l", lty = 2, add = T)
-matplot(newdata$x, p1$upr, type = "l", lty = 2, add = T)
-matplot(newdata$x, p2$lwr, type = "l", lty = 3, add = T) # needs longer chains
-matplot(newdata$x, p2$upr, type = "l", lty = 3, add = T) # needs longer chains
+matplot(newdata$x, p1$lwr, type = "l", lty = 2, add = TRUE)
+matplot(newdata$x, p1$upr, type = "l", lty = 2, add = TRUE)
+matplot(newdata$x, p2$lwr, type = "l", lty = 3, add = TRUE) # needs longer chains
+matplot(newdata$x, p2$upr, type = "l", lty = 3, add = TRUE) # needs longer chains
 
 ## Categorical outcome - list of fit, lwr, upr 3D arrays (category dimension added)
-predict(mcmc, newdata, y="ycat", type="link", what="fg")
+predict(mcmc, newdata[1:5,], y="ycat", type="link", what="fg")
 
 }

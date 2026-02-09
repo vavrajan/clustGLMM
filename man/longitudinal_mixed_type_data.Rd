@@ -5,11 +5,11 @@
 A Simulated Dataset of Longitudinal Mixed-Type Data
 }
 \description{
-An artificially created dataset by \code{\link{generate_longitudinal_mixed_type}} 
+An artificially created dataset by \code{\link{generate_longitudinal_mixed_type_data}} 
 to demonstrate the use of \code{\link{clustGLMM}}. 
-For details about the parameter setting see the example at the bottom of \code{\link{generate_longitudinal_mixed_type}}.
+For details about the parameter setting see the example at the bottom of \code{\link{generate_longitudinal_mixed_type_data}}.
 }
-\usage{data("students")}
+\usage{data("longitudinal_mixed_type_data")}
 \format{
   A data frame with 400 rows and 32 columns.
   \describe{
@@ -19,10 +19,10 @@ For details about the parameter setting see the example at the bottom of \code{\
     \item{\code{bs1},...,\code{bs5}}{B-spline basis for \code{x}}
     \item{\code{f}}{factor regressor}
     \item{\code{g}}{a true group label from 1, 2, 3}
-    \item{\code{b_type}}{random intercept for the given \code{type}}
-    \item{\code{pred_type}}{predictor for the given \code{type}, categorical has multiple predictors for different categories}
-    \item{\code{c_ordL}}{ordered intercept for level \code{L}}
-    \item{\code{ytype}}{an outcome of the given \code{type}}
+    \item{\code{b_num}}{random intercept for the outcome of numerical type, analogously for other types}
+    \item{\code{pred_num}}{predictor for the outcome of numerical type, analogously for other types, categorical has multiple predictors for different categories}
+    \item{\code{c_ord1}}{ordered intercept for level 1, analogously for other levels}
+    \item{\code{ynum}}{an outcome of numerical type, analogously for other types}
   }
 }
 \examples{
