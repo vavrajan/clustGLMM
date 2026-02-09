@@ -5,7 +5,7 @@ function(mcmc, scalar_samples,
          chains, trueval, setparmfrow = TRUE,
          COL, move.width = 0.3, whatLAB){
   opar <- par(no.readonly = TRUE)
-  on.exit(par(opar))
+  # on.exit(par(opar))
   if(setparmfrow){par(mfrow = c(2,2))}
   if(missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
@@ -44,4 +44,8 @@ function(mcmc, scalar_samples,
            what=what, gspec=gspec, dimspec=dimspec, yspec=yspec,
            chains=chains, COL=COL, labcex = 0.8, whatLAB=whatLAB,
            lag.max = lag.max, move.width = move.width)
+  
+  if(!identical(opar, par(no.readonly = TRUE))){
+    on.exit(par(opar))
+  }
 }

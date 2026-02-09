@@ -2,7 +2,7 @@ plot_ng_trace_chain_split <- function(mcmc,
                                       burnin = 0, thin = 1, iterations, chains,
                                       setparmfrow = TRUE){
   opar <- par(no.readonly = TRUE)
-  on.exit(par(opar))
+  # on.exit(par(opar))
   if(missing(chains)){chains = mcmc$chains}
   if(setparmfrow){par(mfrow = nice_nrow_ncol(length(chains)))}
   
@@ -29,7 +29,7 @@ plot_ng_trace_chain_split <- function(mcmc,
   MAX <- max(sapply(chains, 
                     function(ch){max(ngdraws[[ch]], na.rm = TRUE)}))
   
-  par(mfrow = nice_nrow_ncol(length(chains)), mar = c(4,4,0.5,0.5))
+  # par(mfrow = nice_nrow_ncol(length(chains)), mar = c(4,4,0.5,0.5))
   for(ch in chains){
     plot(0, 0, type = "n", 
          xlim = range(iters[[ch]]), ylim = c(MIN, MAX),
@@ -38,5 +38,9 @@ plot_ng_trace_chain_split <- function(mcmc,
       lines(ngdraws[[ch]][,g] ~ iters[[ch]],
             lty = 1, lwd = 1, col = COL[ch])
     }
+  }
+  
+  if(!identical(opar, par(no.readonly = TRUE))){
+    on.exit(par(opar))
   }
 }

@@ -1,7 +1,7 @@
 plot_num_vs_x_grouped <- 
 function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
          add_lowess = TRUE, alpha = 0.7, legend_placement = "topright"){
-  # opar <- par(no.readonly = TRUE)
+  opar <- par(no.readonly = TRUE)
   # on.exit(par(opar))
   
   if(missing(group)){
@@ -99,4 +99,8 @@ function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
     }
   }
   legend(legend_placement, names(dCOL), col = dCOL, lty=1, bty="n", lwd = 2)
+  
+  if(!identical(opar, par(no.readonly = TRUE))){
+    on.exit(par(opar))
+  }
 }

@@ -6,7 +6,7 @@ plot.clustglmm <- function(x, what="ng", which="traceplots", ng_trace_chain_spli
   }
   if(missing(which)){
     if(what == "pUig_int"){
-      which="clusters_kerneldensity"
+      which="clusters_ECDF"
     }
   }
   

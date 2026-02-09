@@ -1,7 +1,7 @@
 plot_kerneldensity_param <-
 function(mcmc, what = "ng", burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE, allclusters = FALSE){
   opar <- par(no.readonly = TRUE)
-  on.exit(par(opar))
+  # on.exit(par(opar))
   if(missing(chains)){chains = mcmc$chains}
   if(!is.element(what, rownames(mcmc$settings[[chains[1]]]))){
     stop(paste0("Parameter ", what, " does not exist, check spelling or the rows of setting matrix for possible values."))
@@ -385,6 +385,10 @@ function(mcmc, what = "ng", burnin = 0, thin = 1, iterations, chains, setparmfro
     }
   }else{
     warning("There is nothing to be plotted, parameter dimension is 0.")
+  }
+  
+  if(!identical(opar, par(no.readonly = TRUE))){
+    on.exit(par(opar))
   }
 }
 

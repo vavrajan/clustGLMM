@@ -1,6 +1,6 @@
 plot_cat_vs_x_grouped <-
 function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, reverse = FALSE){
-  # opar <- par(no.readonly = TRUE)
+  opar <- par(no.readonly = TRUE)
   # on.exit(par(opar))
   if(missing(group)){
     group <- "g"
@@ -84,5 +84,9 @@ function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, rever
     legend("bottom", legend = rev(0:(ncat-1)), pt.bg = mCOL[,1], pch = 22, ncol = ncat, bty = "n")
   }else{
     legend("bottom", legend = 0:(ncat-1), pt.bg = mCOL[,1], pch = 22, ncol = ncat, bty = "n")
+  }
+  
+  if(!identical(opar, par(no.readonly = TRUE))){
+    on.exit(par(opar))
   }
 }
