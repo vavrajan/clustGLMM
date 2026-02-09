@@ -5,8 +5,10 @@ function(mcmc, scalar_samples,
          chains, trueval, setparmfrow = TRUE,
          COL, move.width = 0.3, whatLAB){
   opar <- par(no.readonly = TRUE)
-  # on.exit(par(opar))
-  if(setparmfrow){par(mfrow = c(2,2))}
+  if(setparmfrow){
+    par(mfrow = c(2,2))
+    on.exit(par(opar))
+  }
   if(missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
   #if (missing(yspec)){yspec <- ifelse(is.null(mcmc$Nums), mcmc$Ords[1], mcmc$Nums[1])}
@@ -45,7 +47,4 @@ function(mcmc, scalar_samples,
            chains=chains, COL=COL, labcex = 0.8, whatLAB=whatLAB,
            lag.max = lag.max, move.width = move.width)
   
-  if(!identical(opar, par(no.readonly = TRUE))){
-    on.exit(par(opar))
-  }
 }

@@ -317,19 +317,19 @@ Column `i` represents the id variable for the individuals and `j` gives the obse
 The set of three outcome variables is accompanied by the `age` of a person when interviewed, which will be the only explanatory variable.
 To be able to show that package \pkg{clustGLMM} can also be used when there are missing values in the outcome variables, we insert `r nmis` missing values for each outcome.
 
-We use `plot_num_vs_x_grouped()` and `plot_cat_vs_x_grouped()` to inspect how the outcomes depend on age. 
-
+We use `plot_num_vs_x_grouped()` and `plot_cat_vs_x_grouped()` with default choice of `group` (no grouping) to inspect how the outcomes depend on age. 
 ```{r students-outcomes-vs-age, echo=TRUE, fig.align="center", fig.width=10, fig.height=4, fig.cap="The evolution of income, number of trips and satisfaction level with age.", out.width="100%"}
 par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 3))
 plot_num_vs_x_grouped(students, "income", x = "age", legend_placement = "topleft")
 plot_num_vs_x_grouped(students, "ntrips", x = "age", legend_placement = "topleft")
 plot_cat_vs_x_grouped(students, "satisfaction", x = "age")
 ```
-
 Figure \@ref(fig:students-outcome-vs-age) shows that in general there is an increasing trend in the numerical outcome `income`. 
 Though not clear how, the number of trips seems to evolve in time. 
-The proportions of levels of satisfaction do not seem to change through time.  
-However, 
+The proportions of levels of satisfaction do not seem to change through time. 
+
+However, the true generating mechanism was driven by three different groups with different evolution profiles in time.
+We will demonstrate that our model is able to reveal the true clusters. 
 
 
 ```{r students-income-vs-age, echo = FALSE, eval = FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="The evolution of income with age blinded (left) and with grouping (right).", out.width="100%"}
@@ -349,8 +349,6 @@ par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 2))
 plot_cat_vs_x_grouped(students, "satisfaction", x = "age", g = "g0")
 plot_cat_vs_x_grouped(students, "satisfaction", x = "age", g = "g")
 ```
-
-
 
 
 
@@ -383,9 +381,12 @@ for (y in Ys) {
 }
 ```
 
-In this example, we use the same formula / regression model specification for all three outcomes. In principle, however, the formulas could be different among outcomes (e.g., only a slope term could be included for the ordinal variable).
+In this example, we use the same formula / regression model specification for all three outcomes. 
+In principle, however, the formulas could be different among outcomes (e.g., only a slope term could be included for the ordinal variable).
 
-When generating the numeric outcome `income`, the same standard deviation for the error was used across groups. By default group-specific standard deviations are fitted for the error, i.e., `prec_num` in `varying` is set to `TRUE`. Hence, one has to change `prec_num` to `FALSE` in `varying` to ensure that the fitted model corresponds to the true data generating process and fix the precision of the error to be identical across groups.
+When generating the numeric outcome `income`, the same standard deviation for the error was used across groups. 
+By default group-specific standard deviations are fitted for the error, i.e., `prec_num` in `varying` is set to `TRUE`. 
+Hence, we have to change `prec_num` to `FALSE` in `varying` to ensure that the fitted model corresponds to the true data generating process and fix the precision of the error to be identical across groups.
 
 ```{r students-defaults, echo = TRUE}
 varying <- default_varying()
@@ -417,15 +418,16 @@ mcmc_burnin <- clustGLMM(formula = formula, id = id, family = family, data = stu
 
 Function `clustGLMM()` initializes the MCMC by uniformly random partition and estimating the model parameters by equivalent independent regression models. The sampling alone is implemented in C to speed up the computations. Finally, an object of class `"clustglmm"` is returned which contains information on the fitted model, posterior draws, list of the last sampled values and much more. The MCMC draws returned consist of all draws without omitting any iterations as burn-in. Suitable trace plots of drawn or inferred quantities during MCMC sampling allow to assess convergence. In particular, inspecting the evolution of the cluster occupancy numbers `ng` is primarily of interest in this context. We can use the `plot` method for this. We can easily assess how `ng` changes separately for each cluster by setting `ng_trace_chain_split = FALSE`.
 
-```{r students-mcmc-plot, echo=TRUE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Traceplots - initial cluster occupancy numbers.", fig.pos="H", out.width="100%"}
+```{r students-mcmc-burnin-plot-ng, echo=TRUE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Traceplots - initial cluster occupancy numbers.", fig.pos="H", out.width="100%"}
 plot(mcmc_burnin, ng_trace_chain_split = FALSE)
 ```
 
-Figure \@ref(fig:students-mcmc-ng) clearly shows that some of the `r mcmc_burnin$G[1]` clusters are immediately emptied and that `r length(unique(mcmc_burnin$last[[1]]$U))` non-empty clusters remain in the end. 
+Figure \@ref(fig:students-mcmc-burnin-plot-ng) clearly shows that some of the `r mcmc_burnin$G[1]` clusters are immediately emptied and that `r length(unique(mcmc_burnin$last[[1]]$U))` non-empty clusters remain in the end. 
 
 One can continue sampling from the last iteration using:
 
 ```{r students-mcmc, echo=TRUE, results=FALSE}
+# TODO ?!? What about update() function?!?
 set.seed(1234)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
                   inits = mcmc_burnin$last,
@@ -449,17 +451,21 @@ This overview is based on the sampled allocation indicators, without taking pote
 
 The default plot for objects returned by `clustGLMM()` combines the trace plots of cluster occupancy numbers `ng` for each chain into one plot.
 
-```{r students-mcmc-ng, echo=TRUE, results=FALSE, fig.align="center", fig.width=5, fig.height=3.5, fig.cap="Trace plots - cluster occupancy numbers.", fig.pos="H", out.width="65%"}
+```{r students-mcmc-ng-prec-num, echo=FALSE, eval = TRUE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Trace plots - cluster occupancy numbers (left) and precision of the errors for income.", fig.pos="H", out.width="100%"}
+par(mfrow = c(1,2), mar = c(4,4,0.5,0.5))
+plot(mcmc, setparmfrow = FALSE)
+plot(mcmc, "prec_num", setparmfrow = FALSE)
+```
+
+```{r students-mcmc-ng-prec-num-code, echo=TRUE, eval=FALSE}
+layout(matrix(1:2, byrow = T, ncol = 2))
 plot(mcmc)
+plot(mcmc, "prec_num")
 ```
 
 The three clusters slightly change in size over the iterations, but in general their size is rather stable. If still strong changes in size were observable and, in particular, if the emptying of some clusters was discernible, one should consider to continue sampling and dropping iterations where not all superfluous clusters have been emptied yet. 
 
-Even if one has obtained stationary looking trace plots in the cluster sizes, this might not be the case for other model parameters. One can check the trace plots for all model parameters by specifying the `what` argument in a suitable way. Figure \@ref(fig:students-mcmc-prec-num) showcases this output for the precision parameter of the error for the numeric outcome.
-
-```{r students-mcmc-prec-num, echo=TRUE, results=FALSE, fig.align="center", fig.width=5, fig.height=3.5, fig.cap="Trace plots - precision parameter for income.", fig.pos="H", out.width="65%"}
-plot(mcmc, "prec_num")
-```
+Even if one has obtained stationary looking trace plots in the cluster sizes, this might not be the case for other model parameters. One can check the trace plots for all model parameters by specifying the `what` argument in a suitable way. Figure \@ref(fig:students-mcmc-ng-prec-num) showcases this output for the precision parameter of the error for the numeric outcome.
 
 One might also be interested in focusing on a single specific scalar model parameter and inspect all four implemented plot types: trace plot, kernel density estimate, ECDF and ACF. These plots can be obtained with function `plot_diagnostics()`. This function also has the option to add a line for the true value of the parameters, if known (e.g., with a simulated dataset). Note that we specify the outcome to which it belongs (`yspec`), but neither group (`gspec` empty, precision is not considered group-specific) nor dimension (`dimspec` empty, scalar parameter). Moreover, every plotting function is equipped with an option to trim burn-in phase and thinning the remaining samples to reduce auto-correlation.
 

@@ -86,7 +86,4 @@ function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, rever
     legend("bottom", legend = 0:(ncat-1), pt.bg = mCOL[,1], pch = 22, ncol = ncat, bty = "n")
   }
   
-  if(!identical(opar, par(no.readonly = TRUE))){
-    on.exit(par(opar))
-  }
 }

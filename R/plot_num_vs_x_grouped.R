@@ -100,7 +100,4 @@ function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
   }
   legend(legend_placement, names(dCOL), col = dCOL, lty=1, bty="n", lwd = 2)
   
-  if(!identical(opar, par(no.readonly = TRUE))){
-    on.exit(par(opar))
-  }
 }
