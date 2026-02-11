@@ -69,40 +69,48 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
       cat("-----------------------------------------------------------------------\n")
 
       if(is.element("inv_param", which)){
-        fnames <- intersect(x$fnames[[ch]], rownames(s))
-        fnames <- fnames[grep(pattern, fnames)]
-        if(length(fnames) > 0){
-          cat("\nCluster-invariant parameters:\n")
-          print(s[fnames,,drop=FALSE])
+        if(length(x$fnames) > 0){
+          fnames <- intersect(x$fnames[[ch]], rownames(s))
+          fnames <- fnames[grep(pattern, fnames)]
+          if(length(fnames) > 0){
+            cat("\nCluster-invariant parameters:\n")
+            print(s[fnames,,drop=FALSE])
+          }
         }
       }
       
       if(is.element("clust_param", which)){
-        cnames <- intersect(x$cnames[[ch]], rownames(s))
-        cnames <- cnames[grep(pattern, cnames)]
-        if(length(cnames) > 0){
-          cat("\nClustering-related parameters:\n")
-          print(s[cnames,,drop=FALSE])
+        if(length(x$cnames) > 0){
+          cnames <- intersect(x$cnames[[ch]], rownames(s))
+          cnames <- cnames[grep(pattern, cnames)]
+          if(length(cnames) > 0){
+            cat("\nClustering-related parameters:\n")
+            print(s[cnames,,drop=FALSE])
+          }
         }
       }
       
       if(is.element("latent_param", which)){
-        lnames <- intersect(x$lnames[[ch]], rownames(s))
-        lnames <- lnames[grep(pattern, lnames)]
-        if(length(lnames) > 0){
-          cat("\nLatent variables:\n")
-          print(s[lnames,,drop=FALSE])
+        if(length(x$lnames) > 0){
+          lnames <- intersect(x$lnames[[ch]], rownames(s))
+          lnames <- lnames[grep(pattern, lnames)]
+          if(length(lnames) > 0){
+            cat("\nLatent variables:\n")
+            print(s[lnames,,drop=FALSE])
+          }
         }
       }
       
       if(is.element("group_param", which)){
-        gnames <- intersect(x$gnames[[ch]], rownames(s))
-        gnames <- gnames[grep(pattern, gnames)]
-        if(length(gnames) > 0){
-          for(g in clusters[[ch]]){
-            ggnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), gnames)
-            cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
-            print(s[ggnames,,drop=FALSE])
+        if(length(x$gnames) > 0){
+          gnames <- intersect(x$gnames[[ch]], rownames(s))
+          gnames <- gnames[grep(pattern, gnames)]
+          if(length(gnames) > 0){
+            for(g in clusters[[ch]]){
+              ggnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), gnames)
+              cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
+              print(s[ggnames,,drop=FALSE])
+            }
           }
         }
       }

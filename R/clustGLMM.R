@@ -1584,6 +1584,23 @@ Change the save settings if you want to calculate these probabilities afterwards
                                        yspecd1 = yspecd1[[p]],
                                        yspecd2 = yspecd2[[p]],
                                        family = sorted_family)
+          if((p == "naY") & (length(Cats) > 0)){
+            # C function believes that the last category is the baseline
+            for(y in Cats){
+              if(lsettings[[ch]][p,"gspec"]){
+                # group specific
+                for(g in 1:mcmc$G[ch]){
+                  aux <- chain[[p]][[g]][[y]] + 1
+                  aux[aux == Kcat[y]+1] <- 0
+                  chain[[p]][[g]][[y]] <- aux
+                }
+              }else{
+                aux <- chain[[p]][[y]] + 1
+                aux[aux == Kcat[y]+1] <- 0
+                chain[[p]][[y]] <- aux
+              }
+            }
+          }
         }
       }
       if(standardize){
@@ -1610,6 +1627,14 @@ Change the save settings if you want to calculate these probabilities afterwards
                                  yspecd1 = yspecd1[[p]],
                                  yspecd2 = yspecd2[[p]],
                                  family = sorted_family)
+          if((p == "naY") & (length(Cats) > 0)){
+            # C function believes that the last category is the baseline
+            for(y in Cats){
+              naycols <- grep(paste0("^naY_",y), colnames(aux))
+              aux[,naycols] <- aux[,naycols] + 1
+              aux[aux == Kcat[y]+1, naycols] <- 0
+            }
+          }
           mcmc$draws[[ch]][, colnames(aux)] <- aux
         }
 

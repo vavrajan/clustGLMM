@@ -543,7 +543,7 @@ Change the settings and use clustGLMM() again.")
   # TODO remain unclustered with label 0
   
   # res$modeGplus <- modeGplus # keep it the same or make it the number of non-empty clusters after classification?
-  res$clusters <- clusters
+  # res$clusters <- clusters
   res$clustering <- clustering
   res$certainty <- certainty
   
