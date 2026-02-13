@@ -35,8 +35,6 @@ author:
   - 186 75 Praha 8
 date: "2024-10-07"
 draft: true
-abstract: |
-  An abstract of less than 150 words.
 bibliography: "RJ-clustGLMM.bib"
 type: package
 preamble: |
@@ -57,10 +55,6 @@ output:
 always_allow_html: true
 -->
 
-<!--
-
--->
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = "figure-latex/")
 options(tinytex.verbose = TRUE, width = 90, digits = 4)
@@ -75,6 +69,7 @@ library("splines")
 library("MASS")
 library("coda")
 library("lcmm")
+library("clustGLMM")
 
 combine <- function(x, sep, width) {
   cs <- cumsum(nchar(x))
@@ -87,85 +82,6 @@ prettyPrint <- function(x, sep = " ", linebreak = "\n\t", width = getOption("wid
 }  
 ```
 
-# Back transformations with standardization {#subsec:standardize-back .unnumbered}
-
-Standardization of the numeric outcome and non-intercept regressors is performed to unify the scale so that priors have comparable strength for all effects. In this section, we detail how to obtain again the original interpretation of the reparameterized model parameters. 
-
-First, consider the current parameterization of a numeric outcome $Y_{ijr}$:
-$$
-Y_{ijr} = \beta_{r,0}^{(g)} + \mathbf{F}_{ij}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + b_{i,0}^r+ \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r + \varepsilon_{ijr}.
-$$
-where we explicitly separated the group-specific intercept parameter $\beta_{r,0}^{(g)}$ as well as the random intercepts $b_{ir,0}$, and added the noise $\varepsilon_{ijr}$. Instead of this model we pursue an equivalent version with standardized regressors (and numeric outcome) by corresponding means $m^\bullet_\bullet$ and scales $S^\bullet_\bullet$:
-\begin{multline*}
-\dfrac{Y_{ijr} - m_r^Y}{S_r^Y} = \widetilde{\beta}_{r,0}^{(g)} 
-+ 
-\sum\limits_{l\neq 0}\dfrac{F_{ijr,l} - m_{r,l}^F}{S_{r,l}^{F}}\widetilde{\beta}_{r,l}^F 
-+ 
-\sum\limits_{l\neq 0}\dfrac{X_{ijr,l} - m_{r,l}^X}{S_{r,l}^{X}}\widetilde{\beta}_{r,l}^{(g)} 
-+ % \\ +
-\widetilde{b}_{i,0}^r 
-+ 
-\sum\limits_{l\neq 0}\dfrac{Z_{ijr,l} - m_{r,l}^Z}{S_{r,l}^{Z}}\widetilde{b}_{i,l}^r 
-+ 
-\widetilde{\varepsilon}_{ijr}.
-\end{multline*}
-This changes not only the effects but the precision $\tau_r$ as well as the covariance matrix $\boldsymbol{\Sigma}$. Similar decomposition of the linear predictor is performed for the other types of outcomes as well, however, naturally $m_r^Y = 0$ and $S_r^Y = 1$. The goal is to obtain the original interpretation of model parameters (without $\sim$) from the model fitted with standardized regressors (with $\sim$).
-
-The following transformations (performed in this order) then provide the original model parameters:
-\begin{align}
-\widetilde{\beta}_{r,l}^F
-&\;\rightsquigarrow\; 
-\beta_{r,l}^F = \dfrac{S_r^Y}{S_{r,l}^F} \widetilde{\beta}_{r,l},
-\\
-\widetilde{\beta}_{r,l}^{(g)} 
-&\;\rightsquigarrow\;
-\beta_{r,l}^{(g)} = \dfrac{S_r^Y}{S_{r,l}^X} \widetilde{\beta}_{r,l}^{(g)},
-\\
-\widetilde{\beta}_{r,0}^{(g)} 
-&\;\rightsquigarrow\; 
-\beta_{r,0}^{(g)} = m_r^Y + S_r^Y \widetilde{\beta}_{r,0}^{(g)} 
-- \sum\limits_{l\neq 0} m_{r,l}^F \beta_{r,l}^F 
-- \sum\limits_{l\neq 0} m_{r,l}^X \beta_{r,l}^{(g)},
-\\
-\widetilde{b}_{i,l}^r 
-&\;\rightsquigarrow\; 
-b_{i,l}^r = \dfrac{S_r^Y}{S_{r,l}^Z} \widetilde{b}_{i,l}^r,
-\\
-\widetilde{b}_{i,0}^r 
-&\;\rightsquigarrow\; 
-b_{i,0}^r = S_r^Y \widetilde{b}_{i,0}^r 
-- \sum\limits_{l\neq 0} m_{r,l}^Z b_{i,k}^r,
-\\
-\widetilde{\tau}_r^{(g)}
-&\;\rightsquigarrow\; 
-\tau_r^{(g)} = \dfrac{\widetilde{\tau}_r^{(g)}}{\left(S_r^Y\right)^2},
-\\
-\widetilde{\mathbf{c}}_r^{(g)}
-&\;\rightsquigarrow\; 
-c_{r,k}^{(g)} = \widetilde{c}_{r,k}^{(g)} 
-+ \sum\limits_{l} m_{r,l}^F \beta_{r,l}^F 
-+ \sum\limits_{l} m_{r,l}^X \beta_{r,l}^{(g)},
-\\
-L_r &\;=\;
-\begin{pmatrix}
-  1 & -\dfrac{m_{r,1}^Z}{S_{r,l}^Z} & -\dfrac{m^Z_{\ldots}}{S^Z_{\ldots}} \\
-  0 & \dfrac{1}{S_{r,1}^Z} & 0 \\
-  0 & 0 & \dfrac{1}{S^Z_{\ldots}}
-\end{pmatrix},
-\\
-L &\;=\; \diag
-\left\{S_r^Y
-  L_{\mathsf{Num}}, L_{\mathsf{Poi}}, L_{\mathsf{Bin}}, L_{\mathsf{Ord}}, L_{\mathsf{Cat}} 
-\right\},
-\\
-\widetilde{\boldsymbol{\Sigma}}^{(g)}
-&\;\rightsquigarrow\; 
-\boldsymbol{\Sigma}^{(g)} = 
-L \widetilde{\boldsymbol{\Sigma}}^{(g)} L^\top,
-\end{align}
-where we considered exactly one outcome for each available type for simplification of the notation on how to correct the $\boldsymbol{\Sigma}$ matrix by a block diagonal matrix $L$. All formula above are under the full generality of group-specificity of all model parameters. The intercept and ordered intercepts have to be group-specific in order to make the transformation possible if there is at least one group-specific effect. If there is no group-specific effect, then the intercept is allowed to be common to all groups. Effects for the categorical outcome are transformed in the same manner, but require an additional index for each non-baseline category level.
-
-<!-- What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? E.g., splines with intercept? -->
 
 # Priors
 
@@ -374,7 +290,8 @@ Next, initial values are determined if the argument `inits` is missing. First, a
 
 The model contains a lot of parameters of very different nature (outcome-specific, group-specific, varying dimension). In order to cope with these differences, a matrix `settings` is created for each chain where each row contains all necessary information to properly handle one of the model parameters. Since the number of clusters could be different for different chains, a list of such matrices for each chain is returned. The most important columns of this matrix provide information on the dimension size (with or without group-specificity). This information is crucial to store the sampled values of the parameters. For outcome-specific parameters (e.g., regression coefficients), the lists `yspecd1` and `yspecd2` contain the total dimension sizes per each outcome.
 
-The MCMC sampling is by far the most time-consuming part of this function. The pure R implementation was painfully slow and, therefore, C routines were implemented to do the heavy lifting. This requires additional preparation steps, since only vectors of integers or doubles can be passed down via `.C()`. During this preparation, for example, IDs and cluster allocation indicators are shifted to start from 0 and not 1, the labels for the categorical outcomes of the first and last category are switched (as the C functions assume the last category to be the baseline), `NA` values are replaced with zeros. Moreover, the initial values are concatenated in the order expected by the C function. These values are duplicated into a vector of the same length representing the current parameter values. Both vectors are accompanied by a structure of pointers pointing to the starts of each of the parameters. When a new value of the parameter is sampled (and accepted), the corresponding cells are overwritten. Simultaneously, these new values are saved into storage vectors which were prepared separately for each model parameter including also the transformed ones (standard deviations, correlations, ...). The C code regularly prints the percentage of sampled iterations so that the user may estimate the remaining time to finish the sampling step. After the sampling, the vector containing the last values is transformed back into the R format. In this way, the last sampled values can be used again as initial values. Depending on the save format indicated in `howsave`, the stored values are processed into the final `$draws` output with the help of `from_C_to_...` functions. 
+The MCMC sampling is by far the most time-consuming part of this function. The pure R implementation was painfully slow and, therefore, C routines were implemented to do the heavy lifting. This requires additional preparation steps, since only vectors of integers or doubles can be passed down via `.C()`. During this preparation, for example, IDs and cluster allocation indicators are shifted to start from 0 and not 1, the labels for the categorical outcomes of the first and last category are switched (as the C functions assume the last category to be the baseline), `NA` values are replaced with zeros. Moreover, the initial values are concatenated in the order expected by the C function. These values are duplicated into a vector of the same length representing the current parameter values. Both vectors are accompanied by a structure of pointers pointing to the starts of each of the parameters. When a new value of the parameter is sampled (and accepted), the corresponding cells are overwritten. Simultaneously, these new values are saved into storage vectors which were prepared separately for each model parameter including also the transformed ones (standard deviations, correlations, ...). The C code regularly prints the percentage of sampled iterations so that the user may estimate the remaining time to finish the sampling step. After the sampling, the vector containing the last values is transformed back into the R format. In this way, the last sampled values `$last` can be used again as initial values. Depending on the save format indicated in `howsave`, the stored values are processed into the final `$draws` output with the help of `from_C_to_...` functions. If standardization was applied, then the `$draws` (but not `$last`) are transformed back into original parameter interpretation. The details about this back-transformation can be found in \@ref(sec:standardize-back).
+
 
 This sampling is performed sequentially for all chains. In case this very time-consuming, parallelization across chains might be attempted. This can be achieved by writing a function that calls `clustGLMM()` with the same settings for `nchains = 1` in parallel and then combines the results into one object. In addition, high memory demands might be caused, not only by the vast number of parameters of large dimension sizes but also due to auxiliary variables. For example, the C functions use a 4-component predictor dedicated to the fixed, group, random and offset part, and the final predictor is the sum of these four components. When some of the effects are updated, only the corresponding part of the predictor gets updated and the rest remains untouched. This approach is even more expensive for categorical outcomes where a separate predictor is kept for every non-baseline category. To reduce the memory demands, all operations with symmetric matrices are handled using only the upper triangle.
 
@@ -420,7 +337,49 @@ These functions are wrapped by the `plot` method for `"clustglmm"` objects that 
 
 By default, `plot(mcmc)` produces the trace plots of cluster occupancy numbers with the use of `plot_ng_trace_chain_split()`. In this case, separate plots are created for each chain and each plot contains the trace plots for all clusters within one chain. For all other specifications, the  `plot` method for `"clustglmm"` objects plots all chains together into one plot but only for a single model parameter. If this is desired for `what = "ng"`, set `ng_trace_chain_split = FALSE`. Such a plot allows to easily identify which clusters are empty (or in the process of emptying). <!-- In addition, the `plot` method is also able to arrange plots for parameters of the same purpose, e.g., all regression coefficients for certain type of outcome. -->
 
-In case a univariate parameter is of interest, `plot_diagnostics()` displays the four plots consisting of ACF, ECDF, kernel density and trace plot on a $2 \times 2$ grid. To select the univariate parameter properly, one needs to provide (if applicable) `what` (the name of the parameter), `yspec` (to which outcome it belongs), `gspec` (to which group it corresponds) and `dimspec` (the specific dimension). The `settings` matrix provides the information on what has to be supplied for which parameter. There is also the possibility to include a line in the plot indicating the true value of the parameter, if known.
+In case a univariate parameter is of interest, `plot_diagnostics()` displays the four plots consisting of ACF, ECDF, kernel density and trace plot on a $2 \times 2$ grid. To select the univariate parameter properly, one needs to provide (if applicable) `what` (the name of the parameter), `yspec` (to which outcome it belongs), `gspec` (to which group it corresponds) and `dimspec` (the specific dimension). The `settings` matrix provides the information on what has to be supplied for which parameter. There is also the possibility to include a line in the plot indicating the true value of the parameter, if known. 
+Table xx summarizes the key parameter attributes.
+
+```{r get-some-mcmc, echo = FALSE, results = FALSE, eval = TRUE, message = FALSE}
+data("longitudinal_mixed_type_data")
+id <- "i"
+
+family <- c("num", "poi", "bin", "ord", "cat")
+names(family) <- Ys <- c("ynum", "ypoi", "ybin", "yord", "ycat")
+
+## Create list of formulae for each outcome
+formula <- list()
+for(y in Ys){
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- ~ f
+  formula[[y]]$group <- ~ x
+  formula[[y]]$random <- ~ 1
+  formula[[y]]$offset <- ""
+}
+
+Gmax <- 5     # maximal number of mixture components to be considered
+nchains <- 2  # number of chains to be sampled 
+
+## No inits specified
+set.seed(123456789)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, 
+                  data = longitudinal_mixed_type_data, 
+                  G = Gmax, iter = 10, nchains = nchains)
+```
+
+
+```{r settings-table, echo = FALSE, tab.cap = "Overview of the model parameters, their group-specificity, dimension dependency on outcomes, their types. D=0 is scalar, D=1 is vector, D=2 is matrix. g is group-specificity (? depends on choice). y is specificity to an outcome. yd1, yd2 are specificity to an outcome in the first or second dimension. N, P, B, O, C declare to which types of outcomes are they specific. sym and diag declare whether the matrix is symmetric and whether it contains diagonal. "}
+m <-mcmc$settings[[1]][c("D", "gspec", "isy", "ydepd1", "ydepd2", "ynums", "ypois", "ybins", "yords", "ycats", "sym", "diag")]
+m[c("prec_num", "var_num", "sd_num", "c_ord", "a_ord", "pi_ord", "InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma", "InvQ", "Q", "detInvQ", "naY"), "gspec"] <- "?"
+for(col in c("gspec", "isy", "ydepd1", "ydepd2", "ynums", "ypois", "ybins", "yords", "ycats", "sym", "diag")){
+  m[m[,col] == TRUE, col] <- "T"
+  m[m[,col] == FALSE, col] <- "F"
+}
+colnames(m) <- c("D", "g", "y", "yd1", "yd2", "N", "P", "B", "O", "C", "sym", "diag")
+# rownames(m) <- paste0("$\\mathtt{", rownames(m), "}$")
+kable(m)
+```
+
 
 If the visual diagnostic tools suggest that the MCMC sampling has not converged to the stationary distribution yet, sampling can be continued by calling `clustGLMM()` with the same input arguments and `inits = ...$last`. If the results seem not suitable, for example, from a clustering perspective, it could be helpful to adjust the input arguments or start sampling with a different seed. 
 
@@ -482,3 +441,84 @@ The returned object is of class `"clustglmm"` and contains the following additio
 * `deviance` - a scalar value corresponding to the sum of all individual contributions. To be correspond to the deviance of the model, the data specified in the `data` has to include all observations, on which the model has been fitted.
 
 Moreover, `clustering` and `certainty` of the returned `"clustglmm"` object are now based on the posterior mean of the clustering probabilities. Also, the `call` argument has been changed to inform about the use of `clustering_probabilities_and_deviance()`. 
+
+# Back transformations with standardization {#sec:standardize-back}
+
+Standardization of the numeric outcome and non-intercept regressors is performed to unify the scale so that priors have comparable strength for all effects. In this section, we detail how to obtain again the original interpretation of the reparameterized model parameters. 
+
+First, consider the current parameterization of a numeric outcome $Y_{ijr}$:
+$$
+Y_{ijr} = \beta_{r,0}^{(g)} + \mathbf{F}_{ij}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + b_{i,0}^r+ \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r + \varepsilon_{ijr}.
+$$
+where we explicitly separated the group-specific intercept parameter $\beta_{r,0}^{(g)}$ as well as the random intercepts $b_{ir,0}$, and added the noise $\varepsilon_{ijr}$. Instead of this model we pursue an equivalent version with standardized regressors (and numeric outcome) by corresponding means $m^\bullet_\bullet$ and scales $S^\bullet_\bullet$:
+\begin{multline*}
+\dfrac{Y_{ijr} - m_r^Y}{S_r^Y} = \widetilde{\beta}_{r,0}^{(g)} 
++ 
+\sum\limits_{l\neq 0}\dfrac{F_{ijr,l} - m_{r,l}^F}{S_{r,l}^{F}}\widetilde{\beta}_{r,l}^F 
++ 
+\sum\limits_{l\neq 0}\dfrac{X_{ijr,l} - m_{r,l}^X}{S_{r,l}^{X}}\widetilde{\beta}_{r,l}^{(g)} 
++ % \\ +
+\widetilde{b}_{i,0}^r 
++ 
+\sum\limits_{l\neq 0}\dfrac{Z_{ijr,l} - m_{r,l}^Z}{S_{r,l}^{Z}}\widetilde{b}_{i,l}^r 
++ 
+\widetilde{\varepsilon}_{ijr}.
+\end{multline*}
+This changes not only the effects but the precision $\tau_r$ as well as the covariance matrix $\boldsymbol{\Sigma}$. Similar decomposition of the linear predictor is performed for the other types of outcomes as well, however, naturally $m_r^Y = 0$ and $S_r^Y = 1$. The goal is to obtain the original interpretation of model parameters (without $\sim$) from the model fitted with standardized regressors (with $\sim$).
+
+The following transformations (performed in this order) then provide the original model parameters:
+\begin{align}
+\widetilde{\beta}_{r,l}^F
+&\;\rightsquigarrow\; 
+\beta_{r,l}^F = \dfrac{S_r^Y}{S_{r,l}^F} \widetilde{\beta}_{r,l},
+\\
+\widetilde{\beta}_{r,l}^{(g)} 
+&\;\rightsquigarrow\;
+\beta_{r,l}^{(g)} = \dfrac{S_r^Y}{S_{r,l}^X} \widetilde{\beta}_{r,l}^{(g)},
+\\
+\widetilde{\beta}_{r,0}^{(g)} 
+&\;\rightsquigarrow\; 
+\beta_{r,0}^{(g)} = m_r^Y + S_r^Y \widetilde{\beta}_{r,0}^{(g)} 
+- \sum\limits_{l\neq 0} m_{r,l}^F \beta_{r,l}^F 
+- \sum\limits_{l\neq 0} m_{r,l}^X \beta_{r,l}^{(g)},
+\\
+\widetilde{b}_{i,l}^r 
+&\;\rightsquigarrow\; 
+b_{i,l}^r = \dfrac{S_r^Y}{S_{r,l}^Z} \widetilde{b}_{i,l}^r,
+\\
+\widetilde{b}_{i,0}^r 
+&\;\rightsquigarrow\; 
+b_{i,0}^r = S_r^Y \widetilde{b}_{i,0}^r 
+- \sum\limits_{l\neq 0} m_{r,l}^Z b_{i,k}^r,
+\\
+\widetilde{\tau}_r^{(g)}
+&\;\rightsquigarrow\; 
+\tau_r^{(g)} = \dfrac{\widetilde{\tau}_r^{(g)}}{\left(S_r^Y\right)^2},
+\\
+\widetilde{\mathbf{c}}_r^{(g)}
+&\;\rightsquigarrow\; 
+c_{r,k}^{(g)} = \widetilde{c}_{r,k}^{(g)} 
++ \sum\limits_{l} m_{r,l}^F \beta_{r,l}^F 
++ \sum\limits_{l} m_{r,l}^X \beta_{r,l}^{(g)},
+\\
+L_r &\;=\;
+\begin{pmatrix}
+  1 & -\dfrac{m_{r,1}^Z}{S_{r,l}^Z} & -\dfrac{m^Z_{\ldots}}{S^Z_{\ldots}} \\
+  0 & \dfrac{1}{S_{r,1}^Z} & 0 \\
+  0 & 0 & \dfrac{1}{S^Z_{\ldots}}
+\end{pmatrix},
+\\
+L &\;=\; \diag
+\left\{S_r^Y
+  L_{\mathsf{Num}}, L_{\mathsf{Poi}}, L_{\mathsf{Bin}}, L_{\mathsf{Ord}}, L_{\mathsf{Cat}} 
+\right\},
+\\
+\widetilde{\boldsymbol{\Sigma}}^{(g)}
+&\;\rightsquigarrow\; 
+\boldsymbol{\Sigma}^{(g)} = 
+L \widetilde{\boldsymbol{\Sigma}}^{(g)} L^\top,
+\end{align}
+where we considered exactly one outcome for each available type for simplification of the notation on how to correct the $\boldsymbol{\Sigma}$ matrix by a block diagonal matrix $L$. All formula above are under the full generality of group-specificity of all model parameters. The intercept and ordered intercepts have to be group-specific in order to make the transformation possible if there is at least one group-specific effect. If there is no group-specific effect, then the intercept is allowed to be common to all groups. Effects for the categorical outcome are transformed in the same manner, but require an additional index for each non-baseline category level.
+
+<!-- What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? E.g., splines with intercept? -->
+
