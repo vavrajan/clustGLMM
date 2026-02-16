@@ -206,7 +206,7 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family,
 ###-----------------------------------------------------------------------------
 
 # By default, predicts the first outcome in mcmc$family
-predict(mcmc, newdata = subset(longitudinal_mixed_type_data, i %in% 1:3), type = "link")
+predict(mcmc, newdata = subset(longitudinal_mixed_type_data, i \%in\% 1:3), type = "link")
 # result is list of fit, lwr, upr matrices
 
 # Predict the evolution in time for covariate f=0
