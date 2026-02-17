@@ -83,6 +83,86 @@ prettyPrint <- function(x, sep = " ", linebreak = "\n\t", width = getOption("wid
 ```
 
 
+# Back transformations with standardization {#sec:standardize-back}
+
+Standardization of the numeric outcome and non-intercept regressors is performed to unify the scale so that priors have comparable strength for all effects. In this section, we detail how to obtain again the original interpretation of the reparameterized model parameters. 
+
+First, consider the current parameterization of a numeric outcome $Y_{ijr}$:
+$$
+Y_{ijr} = \beta_{r,0}^{(g)} + \mathbf{F}_{ij}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + b_{i,0}^r+ \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r + \varepsilon_{ijr}.
+$$
+where we explicitly separated the group-specific intercept parameter $\beta_{r,0}^{(g)}$ as well as the random intercepts $b_{ir,0}$, and added the noise $\varepsilon_{ijr}$. Instead of this model we pursue an equivalent version with standardized regressors (and numeric outcome) by corresponding means $m^\bullet_\bullet$ and scales $S^\bullet_\bullet$:
+\begin{multline*}
+\dfrac{Y_{ijr} - m_r^Y}{S_r^Y} = \widetilde{\beta}_{r,0}^{(g)} 
++ 
+\sum\limits_{l\neq 0}\dfrac{F_{ijr,l} - m_{r,l}^F}{S_{r,l}^{F}}\widetilde{\beta}_{r,l}^F 
++ 
+\sum\limits_{l\neq 0}\dfrac{X_{ijr,l} - m_{r,l}^X}{S_{r,l}^{X}}\widetilde{\beta}_{r,l}^{(g)} 
++ % \\ +
+\widetilde{b}_{i,0}^r 
++ 
+\sum\limits_{l\neq 0}\dfrac{Z_{ijr,l} - m_{r,l}^Z}{S_{r,l}^{Z}}\widetilde{b}_{i,l}^r 
++ 
+\widetilde{\varepsilon}_{ijr}.
+\end{multline*}
+This changes not only the effects but the precision $\tau_r$ as well as the covariance matrix $\boldsymbol{\Sigma}$. Similar decomposition of the linear predictor is performed for the other types of outcomes as well, however, naturally $m_r^Y = 0$ and $S_r^Y = 1$. The goal is to obtain the original interpretation of model parameters (without $\sim$) from the model fitted with standardized regressors (with $\sim$).
+
+The following transformations (performed in this order) then provide the original model parameters:
+\begin{align}
+\widetilde{\beta}_{r,l}^F
+&\;\rightsquigarrow\; 
+\beta_{r,l}^F = \dfrac{S_r^Y}{S_{r,l}^F} \widetilde{\beta}_{r,l},
+\\
+\widetilde{\beta}_{r,l}^{(g)} 
+&\;\rightsquigarrow\;
+\beta_{r,l}^{(g)} = \dfrac{S_r^Y}{S_{r,l}^X} \widetilde{\beta}_{r,l}^{(g)},
+\\
+\widetilde{\beta}_{r,0}^{(g)} 
+&\;\rightsquigarrow\; 
+\beta_{r,0}^{(g)} = m_r^Y + S_r^Y \widetilde{\beta}_{r,0}^{(g)} 
+- \sum\limits_{l\neq 0} m_{r,l}^F \beta_{r,l}^F 
+- \sum\limits_{l\neq 0} m_{r,l}^X \beta_{r,l}^{(g)},
+\\
+\widetilde{b}_{i,l}^r 
+&\;\rightsquigarrow\; 
+b_{i,l}^r = \dfrac{S_r^Y}{S_{r,l}^Z} \widetilde{b}_{i,l}^r,
+\\
+\widetilde{b}_{i,0}^r 
+&\;\rightsquigarrow\; 
+b_{i,0}^r = S_r^Y \widetilde{b}_{i,0}^r 
+- \sum\limits_{l\neq 0} m_{r,l}^Z b_{i,k}^r,
+\\
+\widetilde{\tau}_r^{(g)}
+&\;\rightsquigarrow\; 
+\tau_r^{(g)} = \dfrac{\widetilde{\tau}_r^{(g)}}{\left(S_r^Y\right)^2},
+\\
+\widetilde{\mathbf{c}}_r^{(g)}
+&\;\rightsquigarrow\; 
+c_{r,k}^{(g)} = \widetilde{c}_{r,k}^{(g)} 
++ \sum\limits_{l} m_{r,l}^F \beta_{r,l}^F 
++ \sum\limits_{l} m_{r,l}^X \beta_{r,l}^{(g)},
+\\
+L_r &\;=\;
+\begin{pmatrix}
+  1 & -\dfrac{m_{r,1}^Z}{S_{r,l}^Z} & -\dfrac{m^Z_{\ldots}}{S^Z_{\ldots}} \\
+  0 & \dfrac{1}{S_{r,1}^Z} & 0 \\
+  0 & 0 & \dfrac{1}{S^Z_{\ldots}}
+\end{pmatrix},
+\\
+L &\;=\; \diag
+\left\{S_r^Y
+  L_{\mathsf{Num}}, L_{\mathsf{Poi}}, L_{\mathsf{Bin}}, L_{\mathsf{Ord}}, L_{\mathsf{Cat}} 
+\right\},
+\\
+\widetilde{\boldsymbol{\Sigma}}^{(g)}
+&\;\rightsquigarrow\; 
+\boldsymbol{\Sigma}^{(g)} = 
+L \widetilde{\boldsymbol{\Sigma}}^{(g)} L^\top,
+\end{align}
+where we considered exactly one outcome for each available type for simplification of the notation on how to correct the $\boldsymbol{\Sigma}$ matrix by a block diagonal matrix $L$. All formula above are under the full generality of group-specificity of all model parameters. The intercept and ordered intercepts have to be group-specific in order to make the transformation possible if there is at least one group-specific effect. If there is no group-specific effect, then the intercept is allowed to be common to all groups. Effects for the categorical outcome are transformed in the same manner, but require an additional index for each non-baseline category level.
+
+<!-- What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? E.g., splines with intercept? -->
+
 # Priors
 
 We summarize our choices for the prior distributions in Table \@ref(tab:prior-table). This table also includes the default choices for the hyperparameters and links them to the corresponding elements in the \pkg{clustGLMM} package. 
@@ -221,7 +301,7 @@ First, we discuss the arguments which need to be specified for the main fitting 
 cat(prettyPrint(prompt(clustGLMM::clustGLMM, 
                        filename = NA)$usage[[2]], sep = ", ", 
                 linebreak = paste("\n", paste(rep(" ", 2), collapse = ""), sep= ""),
-                width = 70))
+                width = 60))
 ```
 
 The outcomes with their types, i.e., their distributions, are specified in the `family` argument. This argument is provided as a named vector indicating the outcome types named by the outcome names matching the column name in `data`. The following types are available:
@@ -368,7 +448,7 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family,
 ```
 
 
-```{r settings-table, echo = FALSE, tab.cap = "Overview of the model parameters, their group-specificity, dimension dependency on outcomes, their types. D=0 is scalar, D=1 is vector, D=2 is matrix. g is group-specificity (? depends on choice). y is specificity to an outcome. yd1, yd2 are specificity to an outcome in the first or second dimension. N, P, B, O, C declare to which types of outcomes are they specific. sym and diag declare whether the matrix is symmetric and whether it contains diagonal. "}
+```{r settings-table, echo = FALSE, tab.cap = "Information on the model parameters stored in \\texttt{settings}: D = 0 indicates scalar, D = 1 vector, D = 2 matrix. g indicates group-specificity (? depends on choice). y indicates if specific to an outcome. yd1, yd2 indicates if specific to an outcome in the first or second dimension. N, P, B, O, C indicate the outcome type. sym indicates whether the matrix is symmetric and diag whether it contains the diagonal. "}
 m <-mcmc$settings[[1]][c("D", "gspec", "isy", "ydepd1", "ydepd2", "ynums", "ypois", "ybins", "yords", "ycats", "sym", "diag")]
 m[c("prec_num", "var_num", "sd_num", "c_ord", "a_ord", "pi_ord", "InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma", "InvQ", "Q", "detInvQ", "naY"), "gspec"] <- "?"
 for(col in c("gspec", "isy", "ydepd1", "ydepd2", "ynums", "ypois", "ybins", "yords", "ycats", "sym", "diag")){
@@ -376,10 +456,8 @@ for(col in c("gspec", "isy", "ydepd1", "ydepd2", "ynums", "ypois", "ybins", "yor
   m[m[,col] == FALSE, col] <- "F"
 }
 colnames(m) <- c("D", "g", "y", "yd1", "yd2", "N", "P", "B", "O", "C", "sym", "diag")
-# rownames(m) <- paste0("$\\mathtt{", rownames(m), "}$")
 kable(m)
 ```
-
 
 If the visual diagnostic tools suggest that the MCMC sampling has not converged to the stationary distribution yet, sampling can be continued by calling `clustGLMM()` with the same input arguments and `inits = ...$last`. If the results seem not suitable, for example, from a clustering perspective, it could be helpful to adjust the input arguments or start sampling with a different seed. 
 
@@ -442,83 +520,4 @@ The returned object is of class `"clustglmm"` and contains the following additio
 
 Moreover, `clustering` and `certainty` of the returned `"clustglmm"` object are now based on the posterior mean of the clustering probabilities. Also, the `call` argument has been changed to inform about the use of `clustering_probabilities_and_deviance()`. 
 
-# Back transformations with standardization {#sec:standardize-back}
-
-Standardization of the numeric outcome and non-intercept regressors is performed to unify the scale so that priors have comparable strength for all effects. In this section, we detail how to obtain again the original interpretation of the reparameterized model parameters. 
-
-First, consider the current parameterization of a numeric outcome $Y_{ijr}$:
-$$
-Y_{ijr} = \beta_{r,0}^{(g)} + \mathbf{F}_{ij}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + b_{i,0}^r+ \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r + \varepsilon_{ijr}.
-$$
-where we explicitly separated the group-specific intercept parameter $\beta_{r,0}^{(g)}$ as well as the random intercepts $b_{ir,0}$, and added the noise $\varepsilon_{ijr}$. Instead of this model we pursue an equivalent version with standardized regressors (and numeric outcome) by corresponding means $m^\bullet_\bullet$ and scales $S^\bullet_\bullet$:
-\begin{multline*}
-\dfrac{Y_{ijr} - m_r^Y}{S_r^Y} = \widetilde{\beta}_{r,0}^{(g)} 
-+ 
-\sum\limits_{l\neq 0}\dfrac{F_{ijr,l} - m_{r,l}^F}{S_{r,l}^{F}}\widetilde{\beta}_{r,l}^F 
-+ 
-\sum\limits_{l\neq 0}\dfrac{X_{ijr,l} - m_{r,l}^X}{S_{r,l}^{X}}\widetilde{\beta}_{r,l}^{(g)} 
-+ % \\ +
-\widetilde{b}_{i,0}^r 
-+ 
-\sum\limits_{l\neq 0}\dfrac{Z_{ijr,l} - m_{r,l}^Z}{S_{r,l}^{Z}}\widetilde{b}_{i,l}^r 
-+ 
-\widetilde{\varepsilon}_{ijr}.
-\end{multline*}
-This changes not only the effects but the precision $\tau_r$ as well as the covariance matrix $\boldsymbol{\Sigma}$. Similar decomposition of the linear predictor is performed for the other types of outcomes as well, however, naturally $m_r^Y = 0$ and $S_r^Y = 1$. The goal is to obtain the original interpretation of model parameters (without $\sim$) from the model fitted with standardized regressors (with $\sim$).
-
-The following transformations (performed in this order) then provide the original model parameters:
-\begin{align}
-\widetilde{\beta}_{r,l}^F
-&\;\rightsquigarrow\; 
-\beta_{r,l}^F = \dfrac{S_r^Y}{S_{r,l}^F} \widetilde{\beta}_{r,l},
-\\
-\widetilde{\beta}_{r,l}^{(g)} 
-&\;\rightsquigarrow\;
-\beta_{r,l}^{(g)} = \dfrac{S_r^Y}{S_{r,l}^X} \widetilde{\beta}_{r,l}^{(g)},
-\\
-\widetilde{\beta}_{r,0}^{(g)} 
-&\;\rightsquigarrow\; 
-\beta_{r,0}^{(g)} = m_r^Y + S_r^Y \widetilde{\beta}_{r,0}^{(g)} 
-- \sum\limits_{l\neq 0} m_{r,l}^F \beta_{r,l}^F 
-- \sum\limits_{l\neq 0} m_{r,l}^X \beta_{r,l}^{(g)},
-\\
-\widetilde{b}_{i,l}^r 
-&\;\rightsquigarrow\; 
-b_{i,l}^r = \dfrac{S_r^Y}{S_{r,l}^Z} \widetilde{b}_{i,l}^r,
-\\
-\widetilde{b}_{i,0}^r 
-&\;\rightsquigarrow\; 
-b_{i,0}^r = S_r^Y \widetilde{b}_{i,0}^r 
-- \sum\limits_{l\neq 0} m_{r,l}^Z b_{i,k}^r,
-\\
-\widetilde{\tau}_r^{(g)}
-&\;\rightsquigarrow\; 
-\tau_r^{(g)} = \dfrac{\widetilde{\tau}_r^{(g)}}{\left(S_r^Y\right)^2},
-\\
-\widetilde{\mathbf{c}}_r^{(g)}
-&\;\rightsquigarrow\; 
-c_{r,k}^{(g)} = \widetilde{c}_{r,k}^{(g)} 
-+ \sum\limits_{l} m_{r,l}^F \beta_{r,l}^F 
-+ \sum\limits_{l} m_{r,l}^X \beta_{r,l}^{(g)},
-\\
-L_r &\;=\;
-\begin{pmatrix}
-  1 & -\dfrac{m_{r,1}^Z}{S_{r,l}^Z} & -\dfrac{m^Z_{\ldots}}{S^Z_{\ldots}} \\
-  0 & \dfrac{1}{S_{r,1}^Z} & 0 \\
-  0 & 0 & \dfrac{1}{S^Z_{\ldots}}
-\end{pmatrix},
-\\
-L &\;=\; \diag
-\left\{S_r^Y
-  L_{\mathsf{Num}}, L_{\mathsf{Poi}}, L_{\mathsf{Bin}}, L_{\mathsf{Ord}}, L_{\mathsf{Cat}} 
-\right\},
-\\
-\widetilde{\boldsymbol{\Sigma}}^{(g)}
-&\;\rightsquigarrow\; 
-\boldsymbol{\Sigma}^{(g)} = 
-L \widetilde{\boldsymbol{\Sigma}}^{(g)} L^\top,
-\end{align}
-where we considered exactly one outcome for each available type for simplification of the notation on how to correct the $\boldsymbol{\Sigma}$ matrix by a block diagonal matrix $L$. All formula above are under the full generality of group-specificity of all model parameters. The intercept and ordered intercepts have to be group-specific in order to make the transformation possible if there is at least one group-specific effect. If there is no group-specific effect, then the intercept is allowed to be common to all groups. Effects for the categorical outcome are transformed in the same manner, but require an additional index for each non-baseline category level.
-
-<!-- What if intercept is not explicitly included within the formula but a certain linear combination of regressors leads to intercept? E.g., splines with intercept? -->
 
