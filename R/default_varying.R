@@ -1,7 +1,6 @@
 default_varying <- function(){
-  varying <- c(T, T, 
-               F, F, # common covariance matrix of random effects
-               F) 
-  names(varying) <- c("prec_num", "c_ord", "InvSigma", "InvQ", "naY")
+  varying <- c(prec_num = TRUE, c_ord = TRUE,
+               InvSigma = FALSE, InvQ = FALSE,
+               naY = FALSE)
   return(varying)
 }

@@ -12,14 +12,14 @@ function(draws,
   # "pUig"
   # also careful about p = "b" and "beta"
   
-  cols <- grep(paste0("^",p), colnames(draws), value = T)
+  cols <- grep(paste0("^",p), colnames(draws), value = TRUE)
   # These cols begin with parameter p,
   # but we need to exclude those which might be confused with other parameter
   otherp <- setdiff(rownames(settings), p)
   for(op in otherp){
     if(length(grep(p, op))>0){ # p is contained in op
       # --> draws op must be deleted from this list of columns
-      cols <- setdiff(cols, grep(paste0("^",op), cols, value = T))
+      cols <- setdiff(cols, grep(paste0("^",op), cols, value = TRUE))
     }
   }
   
