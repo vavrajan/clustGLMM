@@ -1832,7 +1832,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")
   mcmc$call <- paste0(mcmc$call, ifelse(initsgiven, 
                                         "Initialized with given values.", 
-                                        "Initialized by uniformly random partition."),
+                                        "Initialized by a random partition."),
                       "\n")
   
 
