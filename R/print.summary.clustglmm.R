@@ -2,6 +2,11 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
                                     chains = 1L, 
                                     clusters,
                                     pattern = "", ...){
+  stopifnot(length(which) >= 1,
+            is.character(which),
+            all(which %in% c("mcmc", "clustering",
+                             "inv_param", "clust_param",
+                             "latent_param", "group_param")))
   # what clusters to print
   if(missing(clusters)){
     clusters <- x$clusters
@@ -35,7 +40,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
   for(ch in chains){
     ss <- as.matrix(x$coda_summary[[ch]]$statistics)
     sq <- as.matrix(x$coda_summary[[ch]]$quantiles)
-    s <- cbind(sq[,c("2.5%", "25%", "50%")], ss[,"Mean",drop=F], sq[,c("75%", "97.5%")])
+    s <- cbind(sq[,c("2.5%", "25%", "50%")], ss[,"Mean",drop=FALSE], sq[,c("75%", "97.5%")])
     cat("-----------------------------------------------------------------------\n")
     cat(paste0("Chain ", ch, "\n"))
     cat("-----------------------------------------------------------------------\n")
@@ -65,8 +70,8 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
     if(length(intersect(which, 
                         c("inv_param", "clust_param", "latent_param", "group_param"))
               ) > 0){
-      cat("\nSummary of the key parameter estimates\n")
-      cat("-----------------------------------------------------------------------\n")
+      cat("\nSummary of the parameter estimates")
+      cat("\n-----------------------------------------------------------------------")
 
       if(is.element("inv_param", which)){
         if(length(x$fnames) > 0){
