@@ -1,11 +1,11 @@
 plot_ng_trace_chain_split <- function(mcmc, 
                                       burnin = 0, thin = 1, iterations, chains,
                                       setparmfrow = TRUE){
-  opar <- par(no.readonly = TRUE)
   if(missing(chains)){chains = mcmc$chains}
   if(setparmfrow){
-    par(mfrow = nice_nrow_ncol(length(chains)))
+    opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
+    par(mfrow = nice_nrow_ncol(length(chains)))
   }
   
   COL <- diverge_hcl(mcmc$nchains, c = 80, l = 70)
@@ -31,7 +31,9 @@ plot_ng_trace_chain_split <- function(mcmc,
   MAX <- max(sapply(chains, 
                     function(ch){max(ngdraws[[ch]], na.rm = TRUE)}))
   
-  par(mar = c(4,4,0.5,0.5))
+  opar0 <- par(mar = c(4, 4, 0.5, 0.5))
+  on.exit(par(opar0), add = setparmfrow)
+  
   for(ch in chains){
     plot(0, 0, type = "n", 
          xlim = range(iters[[ch]]), ylim = c(MIN, MAX),

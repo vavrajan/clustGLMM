@@ -1,9 +1,6 @@
 plot_num_vs_x_grouped <- 
 function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
          add_lowess = TRUE, alpha = 0.7, legend_placement = "topright"){
-  opar <- par(no.readonly = TRUE)
-  # on.exit(par(opar))
-  
   if(missing(group)){
     group <- "g"
     data[,group] <- rep(0, dim(data)[1])

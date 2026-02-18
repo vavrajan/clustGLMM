@@ -1,9 +1,11 @@
 plot_clusters_ECDF_param <-
   function(mcmc, what, whichg, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE){
-    opar <- par(no.readonly = TRUE)
-    if(setparmfrow){
-      on.exit(par(opar))
+
+    if (setparmfrow) {
+        opar <- par(no.readonly = TRUE)
+        on.exit(par(opar))
     }
+    
     if(missing(chains)){chains = mcmc$chains}
     if(!is.element(what, rownames(mcmc$settings[[chains[1]]]))){
       stop(paste0("Parameter ", what, " does not exist, check spelling or the rows of setting matrix for possible values."))
@@ -28,7 +30,8 @@ plot_clusters_ECDF_param <-
         }
       }
     }
-    par(mar = c(4,4,1,1))
+    opar0 <- par(mar = c(4, 4, 1, 1))
+    on.exit(par(opar0), add = setparmfrow)
     
     if(v$dims > 0){  
       if(v$sym){

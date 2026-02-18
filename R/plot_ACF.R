@@ -3,8 +3,9 @@ function(mcmc, scalar_samples,
          what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains,
          COL, move.width = 0.3, labcex = 1, whatLAB){
-  opar <- par(mar = c(3.5,3.5,0.8,0.8))
-  on.exit(opar)
+  opar <- par(mar = c(3.5, 3.5, 0.8, 0.8))
+  on.exit(par(opar))
+  
   if(missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
   if(!missing(yspec)){if(!is.element(yspec, names(mcmc$family))){stop("Unexisting response variable specified.")}}

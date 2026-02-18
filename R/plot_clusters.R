@@ -5,9 +5,8 @@ function(mcmc,
          setparmfrow = TRUE, doKern = TRUE, doECDF = TRUE,
          COL, labcex = 0.8, whatLAB, wherelegend = "topright"){
   if(setparmfrow){
-    opar <- par(no.readonly = TRUE)
+    opar <- par(mfrow = c(1, sum(c(doKern, doECDF))))
     on.exit(par(opar))
-    par(mfrow = c(1,sum(c(doKern, doECDF))))
   }
   if(is.element(what,names(mcmc$varying))){
     if(!mcmc$varying[what]){stop("This parameter wasn't considered as cluster-specific.")}

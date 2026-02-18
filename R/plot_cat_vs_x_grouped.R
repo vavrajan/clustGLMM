@@ -1,7 +1,5 @@
 plot_cat_vs_x_grouped <-
 function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, reverse = FALSE){
-  opar <- par(no.readonly = TRUE)
-  # on.exit(par(opar))
   if(missing(group)){
     group <- "g"
     data[,group] <- rep(0, dim(data)[1])

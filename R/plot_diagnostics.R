@@ -4,10 +4,9 @@ function(mcmc, scalar_samples,
          burnin = 0, thin = 1, lag.max = 30, iterations,
          chains, trueval, setparmfrow = TRUE,
          COL, move.width = 0.3, whatLAB){
-  opar <- par(no.readonly = TRUE)
   if(setparmfrow){
-    par(mfrow = c(2,2))
-    on.exit(par(opar))
+      opar <- par(mfrow = c(2, 2))
+      on.exit(par(opar))
   }
   if(missing(chains)){chains = mcmc$chains}
   #if (missing(gspec)){gspec <- 1}
