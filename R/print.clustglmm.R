@@ -1,6 +1,8 @@
 print.clustglmm <- function(x, which = "call", ...){
+  stopifnot(length(which) >= 1,
+            is.character(which),
+            all(which %in% c("call", "clustering")))
   if(is.element("call", which)){
-    cat("Call:\n\n")
     cat(x$call)
   }
   
