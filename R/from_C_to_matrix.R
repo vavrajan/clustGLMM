@@ -53,8 +53,10 @@ function(values,
             dimy = 0
             for(y in 1:length(Ys)){
               d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
-              colnames(RET)[(k-1)*sumd1 + dimy + 1:d1] <- paste0(p,"_",Ys[y],"(",k,")[",1:d1,"]")
-              dimy = dimy + d1
+              if(d1 > 0){
+                colnames(RET)[(k-1)*sumd1 + dimy + 1:d1] <- paste0(p,"_",Ys[y],"(",k,")[",1:d1,"]")
+                dimy = dimy + d1
+              }
             }
           }
         } # end of D==1
@@ -176,8 +178,10 @@ function(values,
           dimy = 0
           for(y in 1:length(Ys)){
             d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
-            colnames(RET)[dimy + 1:d1] <- paste0(p,"_",Ys[y],"[",1:d1,"]")
-            dimy = dimy + d1
+            if(d1 > 0){
+              colnames(RET)[dimy + 1:d1] <- paste0(p,"_",Ys[y],"[",1:d1,"]")
+              dimy = dimy + d1
+            }
           }
         } # end of D==1
         

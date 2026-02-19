@@ -57,10 +57,12 @@ function(values,
               d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
               #d1 = v$d1
               RET[[k]][[Ys[y]]] <- matrix(NA, nrow = niter, ncol = d1)
-              for(m in 1:niter){
-                RET[[k]][[Ys[y]]][m, ] <- values[(m-1)*v$G*sumd1 + (k-1)*sumd1 + dimy + 1:d1]
+              if(d1 > 0){
+                for(m in 1:niter){
+                  RET[[k]][[Ys[y]]][m, ] <- values[(m-1)*v$G*sumd1 + (k-1)*sumd1 + dimy + 1:d1]
+                }
+                dimy = dimy + d1
               }
-              dimy = dimy + d1
             }
           }
         } # end of D==1
@@ -227,10 +229,12 @@ function(values,
           for(y in 1:length(Ys)){
             d1 = ifelse(v$ydepd1, yspecd1[Ys[y]], v$d1)
             RET[[Ys[y]]] <- matrix(NA, nrow = niter, ncol = d1)
-            for(m in 1:niter){
-              RET[[Ys[y]]][m, ] <- values[(m-1)*dimtot + dimy + 1:d1]
+            if(d1 > 0){
+              for(m in 1:niter){
+                RET[[Ys[y]]][m, ] <- values[(m-1)*dimtot + dimy + 1:d1]
+              }
+              dimy = dimy + d1
             }
-            dimy = dimy + d1
           }
         } # end of D==1
         
