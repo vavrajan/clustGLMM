@@ -4,7 +4,7 @@
 Evaluate Clustering Probabilities and Deviance of Output of \code{clustGLMM}
 }
 \description{
-To evaluate the clustering probabilities, all latent variables need to be integrated out. No analytic closed form solution is available for the integral in case of joint random effects for mixed-type outcomes. Numerica approximations are obtained using Laplace's approximation or Adaptive Gaussian Quadrature (AGQ). The samples of the model parameters from \code{clustGLMM} are sent to C for faster evaluation.
+To evaluate the clustering probabilities, all latent variables need to be integrated out. No analytic closed form solution is available for the integral in case of joint random effects for mixed-type outcomes. Numerical approximations are obtained using Laplace's approximation or Adaptive Gaussian Quadrature (AGQ). The samples of the model parameters from \code{\link{clustGLMM}} are sent to C for faster evaluation.
 }
 \usage{
 clustering_probabilities_and_deviance(mcmc, id, data, dynamic_prob = FALSE, 
@@ -23,10 +23,10 @@ an object of class \code{"clustglmm"} (as returned by function \code{\link{clust
 a string, name of the column containing the unit ID. New units not used in MCMC sampling may be used here.
 }
   \item{data}{
-data.frame containing outcomes and regressors including the unit ID variable \code{id}.
+a data.frame containing outcomes and regressors including the unit ID variable \code{id}.
 }
   \item{dynamic_prob}{
-a Boolean; indicates if the clustering probabilities are computed dynamically? That is, if unit \code{i} is observed \code{ni} times, then compute \code{ni} different probabilities, each based on the first \code{j} observations for \code{j in 1:ni}.
+a Boolean; indicates if the clustering probabilities are computed dynamically. That is, if unit \code{i} is observed \code{ni} times, then \code{ni} different probabilities are computed, each based on the first \code{j} observations for \code{j in 1:ni}.
 }
   \item{start}{
 an iteration number where to start.
@@ -45,33 +45,33 @@ a string declaring how the sampled chains should be returned as \code{draws}. On
 \describe{
 \item{\code{"list"}}{\code{draws} is a list indexed by chain numbers, parameters will be saved in a structured list in which it is easy to orient,}
 \item{\code{"matrix"}}{\code{draws} is a large matrix, where one row corresponds to one iteration of one specific chain and columns are all model parameters,}
-\item{\code{"cmcmc"}}{\code{draws} is a list indexed by chain numbers and contains the condensed output of inner C function (not recommended!).}
+\item{\code{"cmcmc"}}{\code{draws} is a list indexed by chain numbers and contains the condensed output of the inner C function (not recommended!).}
 }}
   \item{tolerance}{
-tolerance when computing the norm of the shift within Newton-Raphson.
+tolerance used when computing the norm of the shift within Newton-Raphson.
 }
   \item{maxiter}{
-maximum iterations allowed during Newton-Raphson.
+maximum number of iterations allowed during Newton-Raphson.
 }
   \item{maxnrep}{
 maximum number of repetitions of Newton-Raphson from different starting points.
 }
   \item{NGQ}{
-number of points for Adaptive Gaussian Quadrature; if \code{NGQ = 1}, then simple Laplace's approximation is used. Do not use values higher than 7, since there are \code{NGQ^totnran} summands.
+number of points for Adaptive Gaussian Quadrature; if \code{NGQ = 1}, then simple Laplace's approximation is used. Do not use values higher than 7, since there are \code{NGQ^totnran} summands with \code{totnran} denoting the dimension of the random effects.
 }
 }
 \details{
-An object of class \code{"clustglmm"} can be used regardless of the format \code{howsave = "list"} or \code{howsave = "matrix"}.
+An object of class \code{"clustglmm"} can be used regardless of the format, i.e.,  \code{howsave = "list"} or \code{howsave = "matrix"}.
 
 The data.frame \code{data} containing the outcomes and regressors does not have to be the same as used for MCMC sampling. Even completely new units are allowed here. However, keep in mind that IDs in \code{id} are aligned with numbers from 1 to number of unique IDs within the current version. For simplicity, the names of output variables are indexed by these numbers and not the original ID. 
 
 The indexing of probabilities is more complicated when \code{dynamic_prob = TRUE}. In this case, for one unit there will be as many probabilities as observations belong to this unit. If unit \code{i} is observed 3 times, there will be 3 probabilities: one where only the first observation is used, a second where the first two observations are used and a third where all observations are used. With more available data the classification towards one of the clusters should be more pronounced. In the end, there will be as many probabilities as rows of \code{data}. However, it does not mean that the rows correspond to each other, e.g., when \code{data} is not ordered by unit IDs. The reason is that we use a \code{for} cycle that goes through all units and then for a specific unit through all its observations. 
 
-The code can handle unsorted rows of \code{data} by ID. However, for one specific unit the data are assumed to be ordered in time. This is internally used as ordering for the dynamic probability calculation. However, we recommend to insert ordered matrices so that pairing rows with the probabilities under \code{dynamic_prob = TRUE} is easier. 
+The code can handle the case where \code{data} is not sorted by ID. However, for one specific unit the data are assumed to be ordered in time. This is internally used as ordering for the dynamic probability calculation. However, we recommend to insert data also sorted by ID so that pairing rows with the probabilities obtained with \code{dynamic_prob = TRUE} is easier. 
 
-Computations are usually expensive and a division of the workload into several jobs where different chains or even subsamples are processed simultaneously might be useful. This can be achieved by setting \code{start}, \code{end} and \code{thin} differently for different jobs. However, you need to divide this on your own just as gathering the results back together. To do this properly keep in mind that the used iteration numbers are created by \code{seq(start, end, by = thin)}.
+Computations are usually expensive and a division of the workload into several jobs where different chains or even subsamples are processed simultaneously might be useful. This can be achieved by setting \code{start}, \code{end} and \code{thin} differently for different jobs. However, you need to divide this on your own als also gather the results back together. To do this properly keep in mind that the used iteration numbers are created by \code{seq(start, end, by = thin)}.
 
-To approximate the \code{totnran}-dimensional integral over the random effects, we use Adaptive Gaussian Quadrature. First, Newton-Raphson method is used to find the Taylor expansion of the log-pdf as a function of random effects. If \code{NGQ = 1} then the integral is approximated by evaluation only in the central point found by Newton-Raphson, which is just simple Laplace's approximation. If \code{NGQ = 2, 3, ..., 7} then \code{hermite.he.quadrature.rules(n = NGQ, normalized = FALSE)} from package \pkg{gaussquad} is used to find the roots and weights of Hermite quadrature rules. These are combined for every dimension of random effects, which yields \code{NGQ^totnran} points at which the log-pdf needs to be evaluated. So, think carefully whether higher approximation precision with high \code{NGQ} is worth the expensive evaluation.
+To approximate the \code{totnran}-dimensional integral over the random effects, we use Adaptive Gaussian Quadrature. First, the Newton-Raphson method is used to find the Taylor expansion of the log-pdf as a function of random effects. If \code{NGQ = 1} then the integral is approximated by evaluation only in the central point found by Newton-Raphson, which corresponds to simple Laplace's approximation. If \code{NGQ = 2, 3, ..., 7} then \code{hermite.he.quadrature.rules(n = NGQ, normalized = FALSE)} from package \pkg{gaussquad} is used to find the roots and weights of the Hermite quadrature rules. These are combined for every dimension of random effects, which yields \code{NGQ^totnran} points at which the log-pdf needs to be evaluated. So, think carefully whether higher approximation precision with high \code{NGQ} is worth the expensive evaluation.
 }
 \value{
   An object of class \code{"clustglmm"} is returned so that already existing methods are applicable. Most of the outputs are taken from the given \code{mcmc} object.
