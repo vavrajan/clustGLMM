@@ -43,7 +43,7 @@ plot_traceplots(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                 COL, labcex = 1, whatLAB)
 plot_ng_trace_chain_split(mcmc, 
                           burnin = 0, thin = 1, iterations, chains,
-                          setparmfrow = TRUE)
+                          COL, labcex = 1, setparmfrow = TRUE)
 plot_diagnostics(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                  burnin = 0, thin = 1, lag.max = 30, iterations, chains, trueval, 
                  setparmfrow = TRUE, COL, move.width = 0.3, whatLAB)
