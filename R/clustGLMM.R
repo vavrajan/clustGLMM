@@ -625,7 +625,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           }else{
             if(is.null(auxpolr$zeta)){
               # can happen if rank-deficient (e.g. some category is not represented)
-              dowitall <- TRUE
+              dowithall <- TRUE
             }else{
               logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
               sdlogits <- sd(logits)
