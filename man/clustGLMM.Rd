@@ -4,7 +4,7 @@
 Sample MCMC for a Mixture of GLMMs of Mixed-type
 }
 \description{
-First, initial values are set based on separate univariate GLMMs for each individual outcome. Then, an inner \code{C} function is called to do the hard work of sampling (Metropolis within Gibbs sampling). Outputs are processed and returned in required format (either in nicely organized lists or one huge \code{all} matrix).
+First, initial values are set based on separate univariate GLMMs for each individual outcome. Then, an inner \code{C} function is called to do the hard work of MCMC sampling (Metropolis within Gibbs sampling). Outputs are processed and returned in required format (either in nicely organized lists or one huge matrix).
 }
 \usage{
 clustGLMM(formula, id, family, data, G,  
@@ -19,20 +19,20 @@ a structured list containing formulae for all modelled outcomes. Let \code{y} be
 \item{\code{$fixed}}{\code{formula} for effects common to all clusters,}
 \item{\code{$group}}{\code{formula} for cluster-specific effects,}
 \item{\code{$random}}{\code{formula} for \code{id}-specific effects,}
-\item{\code{$offset}}{a column name from \code{data} to be used as an offset; by default it is set to empty "", which means no offset.}
+\item{\code{$offset}}{a column name from \code{data} to be used as an offset; by default it is set to an empty string, i.e., "", which means no offset.}
 }}
   \item{id}{
-a string, name of the column containing unit ID.
+a string, the name of the column containing the unit ID.
 }
   \item{family}{
-a vector of distributional families named by the outcome name in \code{data}; see below implemented options.
+a vector of distributional families named by the outcome name in \code{data}; see below for implemented options.
 }
   \item{data}{
-matrix of outcomes, regressors including id-variable \code{id}. 
+a data.frame containing the outcomes, regressors, and the unit ID variable indicated in \code{id}. 
 }
   \item{G}{
-an integer, number of mixture components (maximal number of clusters). 
-Can be a vector of integers for each chain (of length \code{nchains}).
+an integer, the number of mixture components (maximal number of clusters). 
+Can be a vector of integers (of length \code{nchains}) to provide a different value for each chain.
 }
   \item{varying}{
 a named vector of boolean values; declares which parameters should be group-specific (\code{TRUE}) with the following names: \code{"prec_num"}, \code{"c_ord"}, \code{"InvSigma"}, \code{"InvQ"}, \code{"naY"}.
@@ -47,7 +47,7 @@ a named list of hyperparameters for prior distributions. See also 'Details'.
 a list of integer valued and double-valued tuning parameters. See also 'Details'.
 }
   \item{inits}{
-a structured list of initial values; ideally last generated values from previous iteration. If \code{missing}, units are randomly assigned to clusters and parameters are initiated by estimated values by univariate models. See also 'Details'.
+a structured list of initial values; ideally the last generated values from a previous run. If \code{missing}, units are randomly assigned to clusters and parameters are initiated using values obtained based on separately estimated univariate models. See also 'Details'.
 }
   \item{iter}{
 length of each sampled chain.
@@ -63,13 +63,13 @@ a string declaring how the sampled chains should be returned as \code{draws}. On
 \describe{
 \item{\code{"list"}}{\code{draws} is a list indexed by chain numbers, parameters will be saved in a structured list in which it is easy to orient,}
 \item{\code{"matrix"}}{\code{draws} is a large matrix, where one row corresponds to one iteration of one specific chain and columns are all model parameters,}
-\item{\code{"cmcmc"}}{\code{draws} is a list indexed by chain numbers and contains the condensed output of inner C function (not recommended!).}
+\item{\code{"cmcmc"}}{\code{draws} is a list indexed by chain numbers and contains the condensed output of the inner C function (not recommended!).}
 }}
 }
 \details{
-Column \code{id} in \code{data} matrix contains different IDs. For simplicity, these IDs are tied with numbers from 1 to total number of unique IDs. Then, unit-specific quantities are referred to by these integers instead of full IDs. 
+Column \code{id} in the \code{data} data.frame contains different IDs. For simplicity, these IDs are tied with numbers from 1 to total number of unique IDs. Then, unit-specific quantities are referred to by these integers instead of full IDs. 
 
-Outcomes in matrix \code{data} are expected to be of the following families:
+Outcomes in \code{data} are expected to belong to one of the following families:
 \describe{
   \item{numeric}{\code{"num"} or \code{"gaussian"}; double values without any restriction,}
   \item{count}{\code{"poi"} or \code{"poisson"}; integer values 0, 1, 2, \ldots,}
@@ -77,48 +77,47 @@ Outcomes in matrix \code{data} are expected to be of the following families:
   \item{ordinal}{\code{"ord"} or \code{"cumulative"}; (ordered) factor of at least 3 levels, if not apriori ordered, ordering will correspond to the one by \code{factor(, ordered = TRUE)},}
   \item{categorical}{\code{"cat"} or \code{"categorical"}; factor of at least 3 levels, first category will be baseline.}
 }
-Only these 5 types of outcomes and families are supported. You cannot change the link functions!
-\code{family} is internally relabeled to contain only \code{"num"}, \code{"poi"}, \code{"bin"}, \code{"ord"}, \code{"cat"} and reordered to follow this order of types. The same ordering of outcomes is applied to covariance matrix \code{Sigma} of random effects.     
+Only these 5 types of outcome families are supported. The link functions cannot be changed.
+\code{family} is internally relabeled to contain only \code{"num"}, \code{"poi"}, \code{"bin"}, \code{"ord"}, \code{"cat"} and reordered to follow this order of types. The same ordering of outcomes is applied to the covariance matrix \code{Sigma} of random effects.     
 
 A named vector \code{varying} contains a boolean for each model parameter that may be considered cluster-specific. The defaults are set by \code{\link{default_varying}}.
 
-A named vector \code{save} contains a boolean for each model parameter including some transformed parameters. For introduction of all the model parameter including the default \code{save} setting see \code{\link{default_save}}.
+A named vector \code{save} contains a boolean for each model parameter including some transformed parameters. For an overview on all model parameters including the default values used, see \code{\link{default_save}}.
+ 
+A named list \code{param} contains the values of the hyperparameters needed to set up the priors. The default values are set up by \code{\link{default_param}}. By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is, the sparser the results expected.  
 
-A named list \code{param} contains values of the hyperparameters needed to set up the priors. The default values are set up by \code{\link{default_param}}. By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is the more sparse results are expected.  
-
-List of initial values \code{inits} is convenient for continuing in sampling from the last sampled values if the chains have not yet reached stable distribution. However, if \code{missing(inits)}, then completely new set of initial values for each of the sampled chains is generated in the following way:
+The list of initial values \code{inits} is convenient to supply in case one is intereseted in continuing the sampling using the last sampled values as initialization, e.g., if the chains have not yet converged. If \code{inits} is missing, then a completely new set of initial values for each of the sampled chains is generated in the following way:
 
 1. Units are randomly (uniformly) distributed to \code{G} clusters and \code{w} is initiated with \code{1/G} for all clusters.
 
-2. For each numeric outcome, a regression model with combined \code{fixed} and \code{group} formula is fit to set up initial values for fixed parameters \code{beta_num_fixed}. Then, the model is fitted again (if possible) for each cluster separately to determine the initial values for group-specific effects \code{beta_num}. Depending on the choice of group-specificity for \code{prec_num} the initial values are chosen as \code{1/MSe} of the corresponding model. 
+2. For each numeric outcome, a regression model with combined \code{fixed} and \code{group} formula is fit to set up initial values for fixed parameters \code{beta_num_fixed}. Then, the model is fitted  again (if possible) for each cluster separately to determine the initial values for group-specific effects \code{beta_num}. Depending on the choice of group-specificity for \code{prec_num} the initial values are chosen as the inverse of the error variance estimate of the corresponding model. 
 
 3. Effects for count outcomes are initialized in a similar way using \code{glm(, family = poisson(link = "log"))} instead. 
 
 4. Effects for binary outcomes are initialized in a similar way using \code{glm(, family = binomial(link = "logit"))} instead. 
 
-5. Effects and ordered intercepts for ordinal outcomes are initialized in a similar way using \code{polr(, Hess = TRUE)} from \code{library("MASS")} instead. 
+5. Effects and ordered intercepts for ordinal outcomes are initialized in a similar way using \code{polr(, Hess = TRUE)} from \pkg{MASS} instead. 
 
-6. Effects for general categorical outcomes are initialized in a similar way using \code{multinom()} from \code{library("nnet")} instead.
+6. Effects for general categorical outcomes are initialized in a similar way using \code{multinom()} from \pkg{nnet} instead.
 
 7. Matrix \code{InvSigma} is initialized by diagonal matrices with gamma distributed (\code{rate = 1/init_sd_b^2}) diagonal. 
 
-8. Matrix \code{InvQ} is initialized by inverse of (averaged and scaled) \code{InvSigma}.
+8. Matrix \code{InvQ} is initialized as inverse of (averaged and scaled) \code{InvSigma}.
 
-9. Random effects are sampled randomly from centered normal distribution with \code{sd = param$init_sd_b}.
+9. Random effects are sampled randomly from a centered normal distribution with \code{sd = param$init_sd_b}.
 
-The algorithm also requires a set \code{tuning} of parameters that tune the sampling. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). If \code{missing(tuning)}, then the following default values are set by \code{\link{default_tuning}}.
-
+The algorithm also requires a set of tuning parameters in \code{tuning} that tune the sampling. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). If \code{tuning} is missing, then the default values are set by \code{\link{default_tuning}}.
 }
 \value{
-The most important output:
-\item{draws}{a list indexed by chain with generated samples saved either in large matrix (\code{howsave = "matrix"}) or a carefully structured list (\code{howsave = "list"}).}
-\item{param_names}{individual parameter (column) names in structured list by general parameter name.}
+ An object of class \code{"clustglmm"} where the most important elements contained are:
+\item{draws}{a list indexed by chain with generated samples saved either in a large matrix (\code{howsave = "matrix"}) or a carefully structured list (\code{howsave = "list"}).}
+\item{param_names}{individual parameter (column) names in a structured list by general parameter name.}
 
-Inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}, \code{standardize}.
+In addition the object contains the inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}, \code{standardize}.
 
-Other newly defined quantities included in the output are:
-\item{iterations}{a list per each chain containing iterations available, \code{\link{post_processing}} can create NA values if k-means does not result in permutation, then these iterations are omitted,}
-\item{modeGplus}{a vector of the most frequent number of non-empty clusters, one per each chain,}
+Furthermore elements consisting of newly defined quantities are:
+\item{iterations}{a list per each chain containing iterations available,}
+\item{modeGplus}{a vector of the most frequent number of non-empty clusters per chain,}
 \item{sameclusters}{a boolean declaring whether the cluster labels in all sampled chains are the same (useful for plotting),}
 \item{clusters}{a list of ordered non-empty clusters for each sampled chain (\code{modeGplus} most frequently appearing cluster labels),}
 \item{clustering}{a matrix containing estimated cluster labels based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
@@ -165,7 +164,7 @@ Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate
 Jan Vávra
 }
 \seealso{
-\code{\link{generate_longitudinal_mixed_type_data}}, \code{\link{plot.clustglmm}}, \code{\link{default_varying}}
+\code{\link{generate_longitudinal_mixed_type_data}}, \code{\link{plot.clustglmm}}, \code{\link{default_varying}}, \code{\link{default_save}}, \code{\link{default_param}}, \code{\link{default_tuning}}
 }
 \examples{
 
