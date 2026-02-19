@@ -123,7 +123,6 @@ for(y in Ys){
   formula[[y]]$random <- ~ 1
   formula[[y]]$offset <- ""
 }
-formula
 # intercept term will be group-specific 
 # since it appears in $group which has a preference over $fixed
 
@@ -209,7 +208,7 @@ certainty <- probs$certainty
 clustering <- probs$clustering
 # To be classified in the cluster with maximal clustering probability,
 # it has to overcome the given threshold, otherwise remains unclassified.
-threshold <- 0.5
+threshold <- 0.8
 clustering[certainty < threshold] <- 0
 
 ch <- 1
