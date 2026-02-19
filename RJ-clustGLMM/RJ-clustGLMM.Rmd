@@ -675,7 +675,7 @@ table(students1[, c("g", "Uclustering")])
 ```
 
 After suitable relabeling, the misclassification error is indeed very low.
-To permute the labels and align them with the true lables function `permute_cluster_labels()` can be used. This function can also be used to align the cluster labels across multiple chains. 
+To permute the labels and align them with the true labels function `permute_cluster_labels()` can be used. This function can also be used to align the cluster labels across multiple chains. 
 
 ```{r students-permuting-labels, echo = TRUE, eval = TRUE}
 perm <- list()

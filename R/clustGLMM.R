@@ -623,13 +623,18 @@ Change the save settings if you want to calculate these probabilities afterwards
           if(is(auxpolr,"error")){
             dowithall <- TRUE
           }else{
-            logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
-            sdlogits <- sd(logits)
-            if(is.na(sdlogits)){
-              dowithall <- TRUE
+            if(is.null(auxpolr$zeta)){
+              # can happen if rank-deficient (e.g. some category is not represented)
+              dowitall <- TRUE
             }else{
-              if(auxpolr$convergence || sdlogits < 1e-14 || (sum(is.na(auxpolr$coefficients[gc]))>0)){
+              logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
+              sdlogits <- sd(logits)
+              if(is.na(sdlogits)){
                 dowithall <- TRUE
+              }else{
+                if(auxpolr$convergence || sdlogits < 1e-14 || (sum(is.na(auxpolr$coefficients[gc]))>0)){
+                  dowithall <- TRUE
+                }
               }
             }
           }
