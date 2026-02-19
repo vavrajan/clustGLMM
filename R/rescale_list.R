@@ -386,29 +386,6 @@ rescale_list <- function(draws, settings,
         if(settings["InvSigma","gspec"]){
           for(g in 1:settings["InvSigma","G"]){
             Sigma <- get_Sigma(draws, m, settings, g = g, howsave = "list")
-            # if(settings["Sigma","save"]){
-            #   Sigma <- draws$Sigma[[g]][m,,]
-            #   # InvSigma <- solve(Sigma)
-            #   # sdSigma <- sqrt(diag(Sigma))
-            #   # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-            # }else{
-            #   if(settings["InvSigma","save"]){
-            #     InvSigma <- draws$InvSigma[[g]][m,,]
-            #     Sigma <- solve(InvSigma)
-            #     # sdSigma <- sqrt(diag(Sigma))
-            #     # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-            #   }else{
-            #     if(settings["sdSigma","save"] & settings["corSigma","save"]){
-            #       sdSigma <- draws$sdSigma[[g]][m,]
-            #       corSigma <- draws$corSigma[[g]][m,,]
-            #       Sigma <- diag(sdSigma, nrow=totnran) %*% corSigma %*% diag(sdSigma, nrow=totnran)
-            #       # InvSigma <- solve(Sigma)
-            #     }else{
-            #       # message("None of InvSigma, Sigma, (sdSigma, corSigma) is saved.")
-            #       Sigma <- diag(totnran)
-            #     }
-            #   }
-            # }
             # perform rescaling and save new values
             newSigma <- L %*% Sigma %*% t(L)
             if(settings["Sigma","save"]){
@@ -435,29 +412,6 @@ rescale_list <- function(draws, settings,
         }else{
           # First get Sigma matrix for iteration m
           Sigma <- get_Sigma(draws, m, settings, howsave = "list")
-          # if(settings["Sigma","save"]){
-          #   Sigma <- draws$Sigma[m,,]
-          #   # InvSigma <- solve(Sigma)
-          #   # sdSigma <- sqrt(diag(Sigma))
-          #   # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-          # }else{
-          #   if(settings["InvSigma","save"]){
-          #     InvSigma <- draws$InvSigma[m,,]
-          #     Sigma <- solve(InvSigma)
-          #     # sdSigma <- sqrt(diag(Sigma))
-          #     # corSigma <- diag(1/sdSigma) %*% Sigma %*% diag(1/sdSigma)
-          #   }else{
-          #     if(settings["sdSigma","save"] & settings["corSigma","save"]){
-          #       sdSigma <- draws$sdSigma[m,]
-          #       corSigma <- draws$corSigma[m,,]
-          #       Sigma <- diag(sdSigma, nrow=totnran) %*% corSigma %*% diag(sdSigma, nrow=totnran)
-          #       # InvSigma <- solve(Sigma)
-          #     }else{
-          #       # message("None of InvSigma, Sigma, (sdSigma, corSigma) is saved.")
-          #       Sigma <- diag(totnran)
-          #     }
-          #   }
-          # }
           # perform rescaling and save new values
           newSigma <- L %*% Sigma %*% t(L)
           if(settings["Sigma","save"]){
