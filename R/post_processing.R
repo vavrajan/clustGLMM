@@ -651,7 +651,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
               last[[ch]][[p]] <- list()
               for(g in 1:mcmc$modeGplus[ch]){
                 pommatrix <- matrix(0, mcmc$totnran, mcmc$totnran)
-                pomvec <- values[grepl(paste0("^",p,"(",g,")"),names(values))]
+                pomvec <- values[grepl(paste0("^",p,"\\(",g,"\\)"),names(values))]
                 pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
                 pommatrix <- t(pommatrix)
                 pommatrix[upper.tri(pommatrix, diag = TRUE)] <- pomvec
