@@ -159,7 +159,7 @@ nchains <- 2  # number of chains to be sampled
 set.seed(123456789)
 mcmc <- clustGLMM(formula = formula, id = id, family = family, 
                   data = longitudinal_mixed_type_data, 
-                  G = Gmax, iter = 100, nchains = nchains)
+                  G = Gmax, iter = 200, nchains = nchains)
 
 ###-----------------------------------------------------------------------------
 ###     Post-processing the sampled chains
