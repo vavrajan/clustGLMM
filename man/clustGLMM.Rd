@@ -35,10 +35,10 @@ an integer, the number of mixture components (maximal number of clusters).
 Can be a vector of integers (of length \code{nchains}) to provide a different value for each chain.
 }
   \item{varying}{
-a named vector of boolean values; declares which parameters should be group-specific (\code{TRUE}) with the following names: \code{"prec_num"}, \code{"c_ord"}, \code{"InvSigma"}, \code{"InvQ"}, \code{"naY"}.
+a named vector of Boolean values; declares which parameters should be group-specific (\code{TRUE}) with the following names: \code{"prec_num"}, \code{"c_ord"}, \code{"InvSigma"}, \code{"InvQ"}, \code{"naY"}.
 }
   \item{save}{
-a named vector of boolean values; declares which model parameters should be returned (\code{TRUE}) and which should be dropped (\code{FALSE}). See also 'Details'.
+a named vector of Boolean values; declares which model parameters should be returned (\code{TRUE}) and which should be dropped (\code{FALSE}). See also 'Details'.
 }
   \item{param}{
 a named list of hyperparameters for prior distributions. See also 'Details'.  
@@ -56,7 +56,7 @@ length of each sampled chain.
 number of chains to be sampled.
 }
   \item{standardize}{
-a boolean whether the numeric outcome and regressors should be scaled.
+a Boolean whether the numeric outcome and regressors should be scaled.
 }
   \item{howsave}{
 a string declaring how the sampled chains should be returned as \code{draws}. One of:
@@ -80,9 +80,9 @@ Outcomes in \code{data} are expected to belong to one of the following families:
 Only these 5 types of outcome families are supported. The link functions cannot be changed.
 \code{family} is internally relabeled to contain only \code{"num"}, \code{"poi"}, \code{"bin"}, \code{"ord"}, \code{"cat"} and reordered to follow this order of types. The same ordering of outcomes is applied to the covariance matrix \code{Sigma} of random effects.     
 
-A named vector \code{varying} contains a boolean for each model parameter that may be considered cluster-specific. The defaults are set by \code{\link{default_varying}}.
+A named vector \code{varying} contains a Boolean for each model parameter that may be considered cluster-specific. The defaults are set by \code{\link{default_varying}}.
 
-A named vector \code{save} contains a boolean for each model parameter including some transformed parameters. For an overview on all model parameters including the default values used, see \code{\link{default_save}}.
+A named vector \code{save} contains a Boolean for each model parameter including some transformed parameters. For an overview on all model parameters including the default values used, see \code{\link{default_save}}.
  
 A named list \code{param} contains the values of the hyperparameters needed to set up the priors. The default values are set up by \code{\link{default_param}}. By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is, the sparser the results expected.  
 
@@ -118,7 +118,7 @@ In addition the object contains the inputs given to the function: \code{iter}, \
 Furthermore elements consisting of newly defined quantities are:
 \item{iterations}{a list per each chain containing iterations available,}
 \item{modeGplus}{a vector of the most frequent number of non-empty clusters per chain,}
-\item{sameclusters}{a boolean declaring whether the cluster labels in all sampled chains are the same (useful for plotting),}
+\item{sameclusters}{a Boolean declaring whether the cluster labels in all sampled chains are the same (useful for plotting),}
 \item{clusters}{a list of ordered non-empty clusters for each sampled chain (\code{modeGplus} most frequently appearing cluster labels),}
 \item{clustering}{a matrix containing estimated cluster labels based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
 \item{certainty}{a matrix containing the probability of clustering into the assigned cluster in \code{clustering} based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
@@ -153,7 +153,7 @@ Furthermore elements consisting of newly defined quantities are:
 \item{settings}{a list (for each chain) of matrices where each row belongs to one model parameter and describes its properties such as: 1. is it saved?, 2. is it group-specific?, 3. is any dimension size dependent on outcome?, 4. on which type of outcome it depends?, 5. is it point, vector or matrix? 5. what are the dimension sizes?, 6. is the matrix symmetric?, 7. does the matrix contain diagonal?, 8. what is the total size of the parameter (including group-specificity)?; very useful matrix for organizing the samples and writing automated plotting functions, }
 \item{yspecd1}{a list of model parameters, which have their first dimension size dependent on outcomes and how large it is, e,g, fixed-effects \code{beta_num_fix} are vectors that can be of different size among outcomes under different formulae,}
 \item{yspecd2}{a list of matrix-valued model parameters, which have their second dimension size dependent on outcomes and how large it is, e.g. fixed-effects \code{beta_cat_fix} for categorical outcome \code{y in Cats} are matrices (\code{Kcat[y]} * \code{nfix[y]}) with both dimensions dependent on the outcome \code{y},}
-\item{isYna}{a vector of booleans that determine which outcome values are not observed, outcomes are ordered by \code{Ys = c(Nums, Pois, Bins, Ords, Cats)}.}
+\item{isYna}{a vector of Booleans that determine which outcome values are not observed, outcomes are ordered by \code{Ys = c(Nums, Pois, Bins, Ords, Cats)}.}
 \item{centers}{a named vector of centers of numeric outcomes and regressors.}
 \item{scales}{a named vector of scales of numeric outcomes and regressors.}
 }

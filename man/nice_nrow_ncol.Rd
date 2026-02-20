@@ -14,7 +14,7 @@ nice_nrow_ncol(n, increasing = TRUE, maxsteps = 20, maxratio = 3)
 number of cells to be covered.
 }
   \item{increasing}{
-a boolean, if TRUE then the values are returned in increasing (non-decreasing) order, if FALSE then \code{nrow >= ncol}.
+a Boolean, if TRUE then the values are returned in increasing (non-decreasing) order, if FALSE then \code{nrow >= ncol}.
 }
   \item{maxsteps}{
 how many integers away from \code{sqrt{n}} to try.

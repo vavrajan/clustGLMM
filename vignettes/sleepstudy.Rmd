@@ -88,8 +88,8 @@ for(y in Ys){       # this creates the same formula for all outcomes (but in gen
 
 Many input parameters for function `clustGLMM` are set up by `default_...` functions:
 
-* `varying` - booleans declaring other model parameters to be group-specific,
-* `save` - booleans declaring which model parameters should be saved,
+* `varying` - Booleans declaring other model parameters to be group-specific,
+* `save` - Booleans declaring which model parameters should be saved,
 * `param` - hyperparameter values for the prior distribution,
 * `tuning` - set of parameters that can adjust the sampling algorithm.
 

@@ -120,16 +120,16 @@ the label for the parameter; default corresponds to the label for that parameter
 \code{cex} value for label of plots. 
 }
   \item{dolegend}{
-a boolean declaring whether legend should be added to the plot.  
+a Boolean declaring whether legend should be added to the plot.  
 }
   \item{whichg}{
 a set of cluster labels to be compared in \code{plot_clusters}. By default \code{mcmc$clusters} is taken under consistency among selected chains. Can be a list in \code{plot_clusters_kerneldensity_param} and \code{plot_clusters_ECDF_param}.  
 }
   \item{doKern}{
-a boolean declaring whether kernel density estimates should be plotted for comparing different clusters.
+a Boolean declaring whether kernel density estimates should be plotted for comparing different clusters.
 }
   \item{doECDF}{
-a boolean declaring whether ECDFs should be plotted for comparing different clusters.
+a Boolean declaring whether ECDFs should be plotted for comparing different clusters.
 }
   \item{wherelegend}{
   a string that declares where the legend should be placed.

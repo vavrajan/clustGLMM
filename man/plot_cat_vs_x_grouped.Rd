@@ -38,7 +38,7 @@ a vector of unit ids to be plotted, if missing all ids are plotted.
 a set of breaks along which to cut regressor \code{x}, if missing \code{x} is divided equidistantly into 10 categories.
 }
   \item{add_lowess}{
-a boolean whether to add lowess curves for each group label.
+a Boolean whether to add lowess curves for each group label.
 }
   \item{alpha}{
 a color transparency factor; applied only for overlapping boxplots if covariate \code{x} is \code{factor}. 
@@ -50,7 +50,7 @@ plot title to be printed above the plot.
 how far from each other should different groups be displayed.
 }
   \item{reverse}{
-a boolean whether to reverse the order of ordinal categories; if \code{TRUE} 0 on top, if \code{FALSE} 0 at the bottom.
+a Boolean whether to reverse the order of ordinal categories; if \code{TRUE} 0 on top, if \code{FALSE} 0 at the bottom.
 }
   \item{legend_placement}{
 a string describing the position of legend, see \code{\link{legend}}.
