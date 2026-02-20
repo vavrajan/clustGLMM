@@ -7,7 +7,7 @@
 Setting Default Values in \code{clustGLMM}
 }
 \description{
-The following functions are used for setting default values for the hyperparameters of the priors \code{default_param}, indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
+Sets default values for the hyperparameters of the priors \code{default_param}, indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
 }
 \usage{
 default_param(sparse = TRUE)
@@ -16,13 +16,14 @@ default_tuning(experience = FALSE)
 default_varying()
 }
 \arguments{
+  \item{sparse}{a logical, if \code{TRUE} the rate and shape hyperparameters of \code{e0} are set to values encouraging sparsity in the weights}
   \item{experience}{a logical, indicating if the default values are changed to values proven suitable from empirical experience}
 }
 \details{
-If the corresponding lists or vectors are not given as arguments to \code{\link{clustGLMM}}, these functions are used to create the default values. You can use them to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} arguments and then adjust them.
+If arguments \code{param}, \code{save}, \code{tuning} and \code{varying} of \code{\link{clustGLMM}} are not specified, these functions are used to create the default values. They can also be used to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} argument specifications and then adjust them.
 }
 \value{
-The output of \code{default_varying} is a named vector \code{varying} that contains a Boolean for each model parameter that may be considered group-specific. The defaults are
+The output of \code{default_varying} is a named vector that contains a Boolean for each model parameter that may be considered group-specific. The default values are:
 \describe{
   \item{\code{varying["prec_num"] = TRUE}}{group-specific precisions for numeric outcomes,}
   \item{\code{varying["c_ord"] = TRUE}}{group-specific ordered intercepts for ordinal outcomes,}
@@ -31,7 +32,7 @@ The output of \code{default_varying} is a named vector \code{varying} that conta
   \item{\code{varying["naY"] = FALSE}}{group-invariant imputed missing outcome values.}
 }
 
-The output of \code{default_save} is a named vector \code{save} that contains a Boolean for each model parameter including some transformed parameters indicating if they are saved and included in the return object. The defaults are
+The output of \code{default_save} is a named vector that contains a Boolean for each model parameter including some transformed parameters indicating if they are saved and included in the return object. The default values are:
 \describe{
   \item{\code{save["beta_num_fix"] = TRUE}}{fixed effects for numeric outcomes,}
   \item{\code{save["beta_num"] = TRUE}}{group-specific effects for numeric outcomes,}
@@ -68,7 +69,7 @@ The output of \code{default_save} is a named vector \code{save} that contains a 
   \item{\code{save["naY"] = FALSE}}{imputed missing outcome values.}
 }
 
-The output of \code{default_param} is a named list \code{param} that contains values of the hyperparameters needed to set up the priors. The default values are:
+The output of \code{default_param} is a named list that contains values of the hyperparameters needed to set up the priors. The default values are:
 \describe{
 \item{\code{param[["InvSigma_df"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvSigma} (dimension of this matrix is automatically added to this value),}
 \item{\code{param[["InvQ_df"]] = 1}}{prior degrees of freedom for Wishart prior for \code{InvQ} (dimension of this matrix is automatically added to this value),}
@@ -91,11 +92,11 @@ The output of \code{default_param} is a named list \code{param} that contains va
 \item{\code{param[["InvV"]] = 0.01}}{diagonal element of the prior inverse scale matrix for \code{InvQ}.}
 }
 By adjusting the values of \code{e0_shp} and \code{e0_rte} different levels of sparsity can be achieved. 
-The lower \code{e0_shp/e0_rte} is the more sparse results are expected.  
-With \code{sparse = TRUE} the prior distribution is gamma distribution with \code{e0_shp} = 1 and \code{e0_rte} = 100.
+The lower \code{e0_shp/e0_rte} is, the more sparse results are expected.  
+With \code{sparse = TRUE} the prior distribution is a gamma distribution with \code{e0_shp} = 1 and \code{e0_rte} = 100.
 Otherwise \code{e0_shp} = 4 and \code{e0_rte} = 1 will be used, which prefers non-sparse solutions. 
 
-The output of \code{default_tuning} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
+The output of \code{default_tuning} is a named list of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). The default values are:
 \describe{
 \item{\code{$integer$freq_proposal_update = 10}}{every \code{freq_proposal_update} iterations change the proposal distributions for Metropolis steps,}
 \item{\code{$integer$times_proposal = 1}}{how many times a new state is proposed within one Metropolis step,}
