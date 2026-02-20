@@ -13,7 +13,7 @@ The following functions are used for setting default values for the hyperparamet
 default_param()
 default_save()
 default_tuning(experience = FALSE)
-default_varying()
+default_varying(sparse = TRUE)
 }
 \arguments{
   \item{experience}{a logical, indicating if the default values are changed to values proven suitable from empirical experience}
@@ -113,6 +113,9 @@ The output of \code{default_tuning} is a named list \code{tuning} of parameters 
 \item{\code{$double$tolerance = 1e-07}}{tolerance when computing the norm of the shift within Newton-Raphson.}
 }
 With \code{experience = TRUE} the chosen values will be set to those proven suitable from empirical experience.
+
+With \code{sparse = TRUE} the prior distribution for \code{e0} will result in sparse cluster solutions, which is gamma distribution with shape 1 and rate 100.
+Otherwise shape 1 and rate 0.25 will be used, which prefers non-sparse solutions. 
 
 }
 \references{

@@ -1,7 +1,8 @@
-default_param <- function(){
+default_param <- function(sparse = TRUE){
   param <- list(InvSigma_df = 1,
                 InvQ_df = 1,
-                prec_num_shp=1, prec_num_rte=10,
+                prec_num_shp=1, 
+                prec_num_rte=10,
                 beta_num_fix_sd = 1,
                 beta_num_sd = 1,
                 beta_poi_fix_sd = 1,
@@ -14,7 +15,8 @@ default_param <- function(){
                 beta_cat_fix_sd = 1,
                 beta_cat_sd = 1,
                 init_b_sd = 0.01,
-                e0_shp = 1, e0_rte = 100,
+                e0_shp = 1, 
+                e0_rte = ifelse(sparse, 100, 1/4),
                 InvV = 0.01)
   return(param)
 }
