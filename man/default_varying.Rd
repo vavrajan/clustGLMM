@@ -93,7 +93,7 @@ The output of \code{default_param} is a named list \code{param} that contains va
 By adjusting the values of \code{e0_shp} and \code{e0_rte} different levels of sparsity can be achieved. 
 The lower \code{e0_shp/e0_rte} is the more sparse results are expected.  
 With \code{sparse = TRUE} the prior distribution is gamma distribution with \code{e0_shp} = 1 and \code{e0_rte} = 100.
-Otherwise \code{e0_shp} = 1 and \code{e0_rte} = 0.25 will be used, which prefers non-sparse solutions. 
+Otherwise \code{e0_shp} = 4 and \code{e0_rte} = 1 will be used, which prefers non-sparse solutions. 
 
 The output of \code{default_tuning} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
 \describe{

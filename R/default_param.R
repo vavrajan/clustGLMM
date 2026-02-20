@@ -15,8 +15,8 @@ default_param <- function(sparse = TRUE){
                 beta_cat_fix_sd = 1,
                 beta_cat_sd = 1,
                 init_b_sd = 0.01,
-                e0_shp = 1, 
-                e0_rte = ifelse(sparse, 100, 1/4),
+                e0_shp = ifelse(sparse, 4, 1), 
+                e0_rte = ifelse(sparse, 100, 1),
                 InvV = 0.01)
   return(param)
 }
