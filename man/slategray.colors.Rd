@@ -8,8 +8,8 @@ Slategray Color Palette
 Creates a vector of \code{n} slategray colors.
 }
 \usage{
-slategray.colors(n, start=0.3, end=0.9)
-slategrey.colors(n, start=0.3, end=0.9)
+slategray.colors(n, start = 0.3, end = 0.9)
+slategrey.colors(n, start = 0.3, end = 0.9)
 }
 \arguments{
   \item{n}{
@@ -34,6 +34,6 @@ A vector of \code{n} slategray colors.
 Jan Vávra
 }
 \examples{
-slategray.colors(5, start=0.3, end=0.9)
-slategrey.colors(5, start=0.1, end=0.7)
+slategray.colors(5, start = 0.3, end = 0.9)
+slategrey.colors(5, start = 0.1, end = 0.7)
 }
