@@ -10,10 +10,10 @@ Setting Default Values in \code{clustGLMM}
 The following functions are used for setting default values for the hyperparameters of the priors \code{default_param}, indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
 }
 \usage{
-default_param()
+default_param(sparse = TRUE)
 default_save()
 default_tuning(experience = FALSE)
-default_varying(sparse = TRUE)
+default_varying()
 }
 \arguments{
   \item{experience}{a logical, indicating if the default values are changed to values proven suitable from empirical experience}
@@ -90,7 +90,10 @@ The output of \code{default_param} is a named list \code{param} that contains va
 \item{\code{param[["e0_rte"]] = 100}}{prior rate of \code{e0},}
 \item{\code{param[["InvV"]] = 0.01}}{diagonal element of the prior inverse scale matrix for \code{InvQ}.}
 }
-By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is the more sparse results are expected.  
+By adjusting the values of \code{e0_shp} and \code{e0_rte} different levels of sparsity can be achieved. 
+The lower \code{e0_shp/e0_rte} is the more sparse results are expected.  
+With \code{sparse = TRUE} the prior distribution is gamma distribution with \code{e0_shp} = 1 and \code{e0_rte} = 100.
+Otherwise \code{e0_shp} = 1 and \code{e0_rte} = 0.25 will be used, which prefers non-sparse solutions. 
 
 The output of \code{default_tuning} is a named list \code{tuning} of parameters that tune the sampling algorithm. For clarity, the parameters are split into two sublists depending on the expected type (\code{integer} or \code{double}). These are the default values:
 \describe{
@@ -114,8 +117,6 @@ The output of \code{default_tuning} is a named list \code{tuning} of parameters 
 }
 With \code{experience = TRUE} the chosen values will be set to those proven suitable from empirical experience.
 
-With \code{sparse = TRUE} the prior distribution for \code{e0} will result in sparse cluster solutions, which is gamma distribution with shape 1 and rate 100.
-Otherwise shape 1 and rate 0.25 will be used, which prefers non-sparse solutions. 
 
 }
 \references{
@@ -129,6 +130,7 @@ Jan Vávra
 }
 \examples{
 (param <- default_param())
+(param <- default_param(sparse = FALSE))
 (save <- default_save())
 (tuning <- default_tuning())
 (tuning <- default_tuning(experience = TRUE))
