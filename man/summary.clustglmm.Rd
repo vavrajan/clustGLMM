@@ -5,7 +5,7 @@
 Compute the Summary Statistics of \code{clustGLMM} Output
 }
 \description{
-A method for computing and printing the summary statistics for objects of class \code{"clustglmm"}, the output from function \code{\link{clustGLMM}}.
+Computes and prints the summary statistics for objects of class \code{"clustglmm"}, the output from function \code{\link{clustGLMM}}.
 }
 \usage{
 \method{summary}{clustglmm}(object, ...)
@@ -20,7 +20,7 @@ an object of class \code{"clustglmm"} (as returned by function \code{\link{clust
 an object of class \code{"summary.clustglmm"} (as returned by the \code{summary} method for \code{"clustglmm"} objects) .
 }
   \item{which}{
-a character vector that indicate which summaries should be printed.
+a character vector that indicates which summaries should be printed.
 }
   \item{chains}{
 a vector of chain numbers to print summary results for.
@@ -29,7 +29,9 @@ a vector of chain numbers to print summary results for.
 a list of cluster labels for which group-specific parameters are printed for each chain; if missing \code{x$clusters} is used.
 }
   \item{pattern}{
-a pattern to be used for \code{grep} search among parameter names to include within the summary, empty by default (all from the selected category).
+a pattern to be used for matching with \code{\link[base]{grep}} among
+parameter names to include in the summary, an empty string by default
+(i.e., matches all names from the selected category).
 }
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
@@ -43,26 +45,35 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
     \item{clustering}{a summary of the clustering,}
     \item{inv_param}{cluster-invariant parameters,}
     \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w}),}
-    \item{latent_param}{latent parameters (random effects \code{b}, allocation indicators \code{U}, missing outcome values \code{naY},}
+    \item{latent_param}{latent parameters (random effects \code{b}, allocation indicators \code{U}, missing outcome values \code{naY}),}
     \item{group_param}{group-specific parameters.}
   }
-  Regarding \code{clustering} option, raw output of \code{clustGLMM} is based on sampled allocation indicators, output of \code{clustering_probabilities_and_deviance} provides summary of clustering based on approximated clustering probabilities. 
-  When printing the summary of the parameters, there is possibility to use \code{pattern} to shorten the list of printed parameters if needed.
-  Group-specific parameters are printed only for the cluster labels in \code{clusters}. 
-  By default, only parameters for non-empty clusters are printed. 
-  The output of \code{summary} contains both \code{coda}-like tables (\code{"statistics"} and \code{"quantiles"}), 
-  but only a combination of these two is printed (all quantiles and Mean). 
+
+  Regarding the \code{clustering} option it has to be noted that the
+  summary is based on the sampled allocation indicators when using the
+  raw output of \code{\link{clustGLMM}}, while it is based on the
+  approximated clustering probabilities for the output of
+  \code{\link{clustering_probabilities_and_deviance}}.
+
+  When printing the summary of the parameters, the argument
+  \code{pattern} allows to reduce the list of printed parameters.
+  Group-specific parameters are printed only for the cluster labels in
+  \code{clusters}.  By default, only parameters for non-empty clusters
+  are printed.  The output of \code{summary} contains both
+  \code{coda}-like tables (\code{"statistics"} and \code{"quantiles"}),
+  but only a combination of these two is printed (all quantiles and the
+  mean).
 }
 \value{
   \code{summary} returns a list of:
   \item{call}{a string describing the model defined to be estimated,}
-  \item{G}{maximal number of underlying clusters,}
+  \item{G}{maximal number of clusters,}
   \item{modeGplus}{the most frequent number of non-empty clusters per each chain,}
   \item{clustering}{matrix of assigned clusters for each unit based on sampled indicators,}
   \item{certainty}{matrix of certainties (the highest clustering probability among G other) for each unit based on sampled indicators,}
   \item{clusters}{labels of non-empty clusters for each chain separately,}
   \item{coda_summary}{output of \code{coda} summary for each chain separately,}
-  \item{output}{the type of output that is summarized: \code{mcmc} samples from \code{clustGLMM}, \code{probs} approximation of clustering probabilities and deviance,}
+  \item{output}{the type of output that is summarized: \code{mcmc} samples for \code{\link{clustGLMM}}, \code{probs} approximation of clustering probabilities and deviance for \code{\link{clustering_probabilities_and_deviance}},}
   \item{fnames}{vector of parameter names invariant to clustering,}
   \item{gnames}{cluster-specific parameter names only for cluster 1,}
   \item{lnames}{latent variable names (allocation indicators, random effects, missing values),}

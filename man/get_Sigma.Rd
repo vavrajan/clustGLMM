@@ -54,7 +54,7 @@ If \code{Sigma} is not saved among draws, then it is reconstructed from \code{In
 If neither of \code{Sigma} and \code{InvSigma} is saved among draws, then it is reconstructed from standard deviations \code{sdSigma} or \code{corSigma}.
 If none of the above, a warning is triggered and diagonal unit matrix is returned. 
 
-The columns where the results are stored are found through \code{grep} function with pattern composed of the name of the parameter and the cluster label if given.
+The columns where the results are stored are found through function \code{\link[base]{grep}} with pattern composed of the name of the parameter and the cluster label if given.
 This could be time-consuming, especially, when repeating over many \code{m} values.
 Hence, there is an opportunity to supply the columns via \code{Sigmacols}, \code{InvSigmacols}, \code{sdSigmacols} and \code{corSigmacols}.
 
