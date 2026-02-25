@@ -69,8 +69,9 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
   int shift_nY = 0;
   double* ptau;
   double* pc;
-  double etak, etak_1, qk;
-  double pk, pk_1;
+  double qk;
+  // double etak, etak_1;
+  // double pk, pk_1;
   int add_to_c;
   int maxKcat = 0;
   for(y = 0; y < nY[4]; y++){
@@ -224,6 +225,7 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
       **/
       
       // Numerically stable version
+      /*
       if(k == 0){
         pk_1 = 0.0;                      // complementary probability
         etak = eta - pc[add_to_c + k];
@@ -250,6 +252,8 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
           }
         }
       }
+      */
+      qk = ord_qk(k, eta, pc + add_to_c, Kord + y);
       *value += log(qk);
       
       shift_nY++;

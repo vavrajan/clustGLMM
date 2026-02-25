@@ -64,8 +64,10 @@ void logpYapi_ord(struct str_state* last,  // IN last known values of generated 
   // Auxiliary variables
   int i, j, k, l;
   int coord;
-  double etak, etak_1, qk;
-  double pk, pk_1;
+  double qk;
+  double etak;
+  // double etak, etak_1;
+  // double pk, pk_1;
   double pcum, mcum;
   double* ea;
   ea = (double*)malloc(*Kord * sizeof(double));
@@ -127,6 +129,7 @@ void logpYapi_ord(struct str_state* last,  // IN last known values of generated 
       */
       
       // Numerically stable version
+      /*
       if(k == 0){
         pk_1 = 0.0;                      // complementary probability
         etak -= c[k];
@@ -153,6 +156,8 @@ void logpYapi_ord(struct str_state* last,  // IN last known values of generated 
           }
         }
       }
+      */
+      qk = ord_qk(k, etak, c, Kord);
       *value += log(qk);
     }
   }

@@ -57,8 +57,9 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
   int coord;
   double eta, auxY;
   int shift_nY = 0;
-  double etak, etak_1, qk;
-  double pk, pk_1;
+  double qk;
+  // double etak, etak_1;
+  // double pk, pk_1;
   int add_to_c;
   int maxKcat = 0;
   for(y = 0; y < nY[4]; y++){
@@ -295,6 +296,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
         */
         
         // Numerically stable version
+        /*
         if(k == 0){
           pk_1 = 0.0;                      // complementary probability
           etak = eta - pc_ord[add_to_c + k];
@@ -321,6 +323,8 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
             }
           }
         }
+        */
+        qk = ord_qk(k, eta, pc_ord, Kord + y);
         *value += log(qk);
         //if(*print){printf("\nlogpYi Ord: i = %d, j = %d, y = %d, eta = %f, pk_1 = %f, pk = %f, qk = %f, value = %f", 
         //   *i, j, y, eta, pk_1, pk, qk, *value);}

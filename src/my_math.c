@@ -37,3 +37,36 @@ double safe_log1pexp(double x) {
     return log1p(exp(x));
   }
 }
+
+double ord_qk(int k, double eta, double* c, int* Kord) {
+  double etak, etak_1;
+  double pk, pk_1, qk;
+  
+  if(k == 0){
+    pk_1 = 0.0;                      // complementary probability
+    etak = eta - c[k];
+    pk = 1.0 / (1.0 + exp(etak));    // complementary probability
+    qk = pk - pk_1;
+  }else{
+    if(k == *Kord){
+      pk = 0.0;
+      etak_1 = eta - c[k-1];
+      pk_1 = 1.0 / (1.0 + exp(-etak_1));
+      qk = pk_1 - pk;
+    }else{
+      etak = eta - c[k];
+      etak_1 = eta - c[k-1];
+      
+      if(etak > 0){
+        pk = 1.0 / (1.0 + exp(etak));     // complementary probability
+        pk_1 = 1.0 / (1.0 + exp(etak_1)); // complementary probability
+        qk = pk - pk_1;
+      }else{
+        pk = 1.0 / (1.0 + exp(-etak));
+        pk_1 = 1.0 / (1.0 + exp(-etak_1));
+        qk = pk_1 - pk;
+      }
+    }
+  }
+  return qk;
+}

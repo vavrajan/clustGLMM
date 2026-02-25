@@ -68,8 +68,10 @@ void logpYord(struct str_state* last,  // IN last known values of generated para
   // Auxiliary variables
   int i, j, k, l;
   int coord;
-  double etak, etak_1, qk;
-  double pk, pk_1;
+  double qk;
+  double etak;
+  // double etak_1;
+  // double pk, pk_1;
   int add = *totnfix; // not totnfix, but corresponding cumKord is sent through this pointer
   int gi = *g;
   double* pc;
@@ -134,6 +136,7 @@ void logpYord(struct str_state* last,  // IN last known values of generated para
       */
       
       // Numerically stable version
+      /*
       if(k == 0){
         pk_1 = 0.0;                      // complementary probability
         etak -= pc[k];
@@ -160,6 +163,8 @@ void logpYord(struct str_state* last,  // IN last known values of generated para
           }
         }
       }
+      */
+      qk = ord_qk(k, etak, pc, Kord);
       *value += log(qk);
     }
   }
