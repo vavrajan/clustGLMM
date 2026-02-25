@@ -100,7 +100,7 @@ void logpYpoi(struct str_state* last,  // IN last known values of generated para
       }
       //fflush(stdout);
       
-      *value += Y[coord]*eta - exp(eta);
+      *value += Y[coord]*eta - exp(eta); // - lgamma(Y[coord] + 1);
     }
   }
   

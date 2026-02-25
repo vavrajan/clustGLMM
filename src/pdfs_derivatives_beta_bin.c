@@ -100,7 +100,7 @@ void logpYbin(struct str_state* last,  // IN last known values of generated para
       }
       //fflush(stdout);
       
-      *value += Y[coord]*eta - log(1+exp(eta));
+      *value += Y[coord]*eta - safe_log1pexp(eta);
     }
   }
   

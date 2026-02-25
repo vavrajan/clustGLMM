@@ -168,7 +168,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
           eta += X[coord + *N * FormulaO[l + cumnoff[shift_nY]]]; 
         }
         
-        *value += Y[coord + *N * shift_nY]*eta - exp(eta);
+        *value += Y[coord + *N * shift_nY]*eta - exp(eta); // - lgamma(Y[coord + *N * shift_nY] + 1);
         //if(*print){printf("\nlogpYi Poi: i = %d, j = %d, y = %d, eta = %f, value = %f", *i, j, y, eta, *value);}
       }
       shift_nY++;
@@ -209,7 +209,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
           eta += X[coord + *N * FormulaO[l + cumnoff[shift_nY]]]; 
         }
         
-        *value += Y[coord + *N * shift_nY] * eta - log(1+exp(eta));
+        *value += Y[coord + *N * shift_nY] * eta - safe_log1pexp(eta); // log(1+exp(eta));
         //if(*print){printf("\nlogpYi Bin: i = %d, j = %d, y = %d, eta = %f, value = %f", *i, j, y, eta, *value);}
       }
       shift_nY++;
