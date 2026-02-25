@@ -458,15 +458,15 @@ Change the save settings if you want to calculate these probabilities afterwards
         auxglm0 <- glm(aux_form, data = ydata, family = poisson(link = "log"))
         coefs <- auxglm0$coefficients
         beta_fix <- coefs[fcols[[y]]]
-        if(standardize){
-          # scale to the transformed scale
-          notintercept <- setdiff(fcols[[y]], "(Intercept)")
-          beta_fix[notintercept] <- beta_fix[notintercept] * scales[notintercept]
-          if(is.element("(Intercept)", fcols[[y]])){
-            # then gcols has to be empty
-            beta_fix["(Intercept)"] <- beta_fix["(Intercept)"] + sum(beta_fix[notintercept]*centers[notintercept])
-          }
-        }
+        # if(standardize){
+        #   # scale to the transformed scale
+        #   notintercept <- setdiff(fcols[[y]], "(Intercept)")
+        #   beta_fix[notintercept] <- beta_fix[notintercept] * scales[notintercept]
+        #   if(is.element("(Intercept)", fcols[[y]])){
+        #     # then gcols has to be empty
+        #     beta_fix["(Intercept)"] <- beta_fix["(Intercept)"] + sum(beta_fix[notintercept]*centers[notintercept])
+        #   }
+        # }
         inits[[ch]]$beta_poi_fix[[y]] <- beta_fix
         
         inits[[ch]]$beta_poi[[y]] <- list()
@@ -488,14 +488,14 @@ Change the save settings if you want to calculate these probabilities afterwards
             coefs <- auxglm0$coefficients
           }
           beta <- coefs[gcols[[y]]]
-          if(standardize){
-            # scale to the transformed scale
-            notintercept <- setdiff(gcols[[y]], "(Intercept)")
-            beta[notintercept] <- beta[notintercept] * scales[notintercept]
-            if(is.element("(Intercept)", gcols[[y]])){
-              beta["(Intercept)"] <- beta["(Intercept)"] + sum(beta_fix[fcols[[y]]]*centers[fcols[[y]]]) + sum(beta[notintercept]*centers[notintercept])
-            }
-          }
+          # if(standardize){
+          #   # scale to the transformed scale
+          #   notintercept <- setdiff(gcols[[y]], "(Intercept)")
+          #   beta[notintercept] <- beta[notintercept] * scales[notintercept]
+          #   if(is.element("(Intercept)", gcols[[y]])){
+          #     beta["(Intercept)"] <- beta["(Intercept)"] + sum(beta_fix[fcols[[y]]]*centers[fcols[[y]]]) + sum(beta[notintercept]*centers[notintercept])
+          #   }
+          # }
           inits[[ch]]$beta_poi[[y]][[g]] <- beta
         }
       } # end for y in Pois
@@ -516,15 +516,15 @@ Change the save settings if you want to calculate these probabilities afterwards
         auxglm0 <- glm(aux_form, data = ydata, family = binomial(link = "logit"))
         coefs <- auxglm0$coefficients
         beta_fix <- coefs[fcols[[y]]]
-        if(standardize){
-          # scale to the transformed scale
-          notintercept <- setdiff(fcols[[y]], "(Intercept)")
-          beta_fix[notintercept] <- beta_fix[notintercept] * scales[notintercept]
-          if(is.element("(Intercept)", fcols[[y]])){
-            # then gcols has to be empty
-            beta_fix["(Intercept)"] <- beta_fix["(Intercept)"] + sum(beta_fix[notintercept]*centers[notintercept])
-          }
-        }
+        # if(standardize){
+        #   # scale to the transformed scale
+        #   notintercept <- setdiff(fcols[[y]], "(Intercept)")
+        #   beta_fix[notintercept] <- beta_fix[notintercept] * scales[notintercept]
+        #   if(is.element("(Intercept)", fcols[[y]])){
+        #     # then gcols has to be empty
+        #     beta_fix["(Intercept)"] <- beta_fix["(Intercept)"] + sum(beta_fix[notintercept]*centers[notintercept])
+        #   }
+        # }
         inits[[ch]]$beta_bin_fix[[y]] <- beta_fix
         
         inits[[ch]]$beta_bin[[y]] <- list()
@@ -546,14 +546,14 @@ Change the save settings if you want to calculate these probabilities afterwards
             coefs <- auxglm0$coefficients
           }
           beta <- coefs[gcols[[y]]]
-          if(standardize){
-            # scale to the transformed scale
-            notintercept <- setdiff(gcols[[y]], "(Intercept)")
-            beta[notintercept] <- beta[notintercept] * scales[notintercept]
-            if(is.element("(Intercept)", gcols[[y]])){
-              beta["(Intercept)"] <- beta["(Intercept)"] + sum(beta_fix[fcols[[y]]]*centers[fcols[[y]]]) + sum(beta[notintercept]*centers[notintercept])
-            }
-          }
+          # if(standardize){
+          #   # scale to the transformed scale
+          #   notintercept <- setdiff(gcols[[y]], "(Intercept)")
+          #   beta[notintercept] <- beta[notintercept] * scales[notintercept]
+          #   if(is.element("(Intercept)", gcols[[y]])){
+          #     beta["(Intercept)"] <- beta["(Intercept)"] + sum(beta_fix[fcols[[y]]]*centers[fcols[[y]]]) + sum(beta[notintercept]*centers[notintercept])
+          #   }
+          # }
           inits[[ch]]$beta_bin[[y]][[g]] <- beta
         }
       } # end for y in Bins

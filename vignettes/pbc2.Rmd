@@ -1,0 +1,284 @@
+---
+title: "PBC analysis using clustGLMM"
+author: "Jan Vávra"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+bibliography: "../RJ-clustGLMM/RJ-clustGLMM.bib"
+vignette: >
+  %\VignetteIndexEntry{PBC analysis using clustGLMM}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      fig.path = "figure-pbc/", fig.align = "center", 
+                      fig.width = 7, fig.height = 4,
+                      collapse = TRUE, comment = "#>")
+options(width = 104, digits = 4)
+```
+
+
+The goal of this vignette is to replicate the analysis of PBC data performed by [@Vavra-etal2024] with the use of `clustGLMM` package. 
+This is the list of packages required for the analysis:
+
+```{r library}
+library(survival)
+library(mixAK)
+library(clustGLMM)
+```
+
+
+## PBC910
+
+The sequential PBC data can be found in `pbcseq` from library `survival`. 
+We restrict ourselves only to patients who survived the first 910 days (2.5 years) similarly as [@KomarekKomarkovaJSS14mixAK], who created `PBC910` data in library `mixAK`.
+However, we need more columns than `PBC910` provides so we create our `data` from `pbcseq` by taking the same rows as `PBC910`. 
+
+```{r pbc-data}
+data(PBC910, package = "mixAK")
+data(pbcseq, package = "survival")
+data <- merge(PBC910, pbcseq, by = c("id", "day", "platelet", "spiders"))
+dim(data)
+(n <- length(unique(data$id)))      # number of subjects in the data
+```
+
+Next we prepare the outcomes for analysis:
+```{r data-transformations}
+data$ord_edema <- factor(data$edema, ordered = TRUE)
+data$lalbumin <- log(data$albumin)
+data$time <- data$day/365.24
+```
+```{r data-transforms-additional, echo = FALSE, eval = FALSE}
+# Appeared in the old R file, only if needed
+data$ord_stage <- factor(data$stage, ordered = TRUE)
+data$lalk.phos <- log(data$alk.phos)
+data$lplatelet <- log(data$platelet)
+data$lchol <- log(data$chol)
+data$fage <- cut(data$age, breaks = c(0, 40, 50, 60, 80))
+data$fage2 <- cut(data$age, breaks = c(0, 35, 40, 45, 50, 55, 60, 65, 80))
+```
+
+The analysis in the paper consisted of 
+
+* numeric serum bilirubin and albumin (both on log-scales), 
+* binary indicators of blood vessel malformations in the skin (`spiders`) and presence of hepatomegaly or enlarged liver (`hepato`),
+* ordinal `edema` (0 = no edema, 0.5 = untreated or succesfully treated, 1 = edema despite diuretic therapy).
+
+We create `family` argument to declare the type of the considered outcomes for `clustGLMM` analysis:
+```{r family}
+family <- c(lbili = "num", platelet = "poi", spiders = "bin")
+```
+
+The formulas for analysis will be the same for all outcomes.
+The fixed effects part will be an additive model with linear effect of `time` and `age` adjusted for different `sex`.
+All these effects are assumed to be group-specific.
+Finally, outcomes are joined via random intercepts.
+```{r formula}
+formula <- list()
+for (y in names(family)) {
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- ~ 1 # will become ~ 0
+  formula[[y]]$group <- ~ time + age + sex
+  formula[[y]]$random <- ~ 1
+}
+```
+
+Below we show the summary of the variables considered within this analysis:
+```{r data-summary}
+summary(data[, c("time", "age", "sex", names(family))])
+```
+We see that some of the binary outcome values are missing.
+However, for `clustGLMM` there is no need for omitting the rows from the analysis as long as the missing values are among modelled outcomes. 
+
+Now we examine how does the outcome evolve in time:
+```{r plot-pbc-vs-time}
+par(mfrow = c(1,3))
+par(mar = c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, y = "lbili", x = "time", id = "id")
+plot_num_vs_x_grouped(data, y = "platelet", x = "time", id = "id")
+plot_cat_vs_x_grouped(data, y = "spiders", x = "time", main = "spiders")
+```
+
+
+## Sampling MCMC using `clustGLMM`
+
+Some of the key inputs for `clustGLMM` are already prepared (`family`, `formula`), 
+but there still some key settings to be discussed. 
+Non-effects parameters of the model may also be set to be group-specific.
+The default setting is provided by
+```{r varying}
+(varying <- default_varying())
+```
+Only precision of the errors of numeric outcomes and ordered intercepts are considered to be group-specific parameters by default.
+We set the precision matrix (`InvSigma`) of the vector of random intercepts to be group-specific as well,
+but keep its Wishart prior scale matrix `InvQ` common to all groups. 
+Missing outcome values will be always predicted for the current cluster the individual is assigned to. 
+```{r varying-InvSigma}
+varying["prec_num"] <- FALSE
+varying["InvSigma"] <- FALSE
+```
+
+
+Next, we can choose which parameters are returned. 
+We make just one change compared to the default setting and that is to save the predicted missing values.
+```{r save}
+save <- default_save()
+save["naY"] <- TRUE
+```
+
+For `tuning` we will use settings that and `param` will be kept without any changes. 
+```{r tuning}
+tuning <- default_tuning(experience = TRUE)
+param <- default_param(sparse = TRUE)
+# data$platelet <- round(data$platelet / 100)
+```
+
+
+Since we do not know the number of underlying clusters in advance, 
+we set the maximal number of clusters `G` to 5.
+We also apply standardization of covariates and outcomes to ensure that priors are truly non-informative. 
+We run a couple of randomly initialized chains for initial 1000 iterations.
+
+```{r clustGLMM-burnin}
+set.seed(123456789)
+mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
+                         G = 10, nchains = 2, iter = 1000, 
+                         varying = varying, save = save, tuning = tuning, param = param,
+                         standardize = TRUE)
+```
+
+The default `plot` output informs us about the evolution of number of patients within each cluster separately for all chains:
+```{r plot-mcmc-burnin}
+plot(mcmc_burnin)
+```
+
+Apparently the number of non-empty groups is decreasing in time. 
+Moreover, it seems to differ between chains: 
+```{r plot-mcmc-burnin-Gplus}
+plot(mcmc_burnin, "Gplus")
+```
+
+The current chains cannot be used for inference.
+We continue to sample from initial values set to `mcmc_burnin$last`:
+
+```{r clustGLMM-burnin2}
+mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
+                         G = 10, nchains = 2, iter = 1000, 
+                         inits = mcmc_burnin$last,
+                         varying = varying, save = save, tuning = tuning, param = param,
+                         standardize = TRUE)
+```
+
+And we plot the same plots again to see that one chains prefers the two-cluster solution while the other still keeps 3 clusters while one of the clusters is rather sparse. 
+
+```{r plot-mcmc-burnin2}
+plot(mcmc_burnin)
+```
+
+Now we sample next $10\,000$ iterations.
+
+```{r clustGLMM}
+mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
+                  G = 10, nchains = 2, iter = 10000, 
+                  inits = mcmc_burnin$last,
+                  varying = varying, save = save, tuning = tuning, param = param, 
+                  standardize = TRUE)
+```
+
+```{r plot-mcmc}
+plot(mcmc)
+```
+
+```{r plot-mcmc-clusters-kde}
+ch <- 1
+plot(mcmc, "beta_num", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "beta_bin", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "beta_ord", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "c_ord", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "sdSigma", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "corSigma", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "w", "clusters_kerneldensity", chain = ch)
+```
+
+```{r post-processing}
+mcmc_pp <- post_processing(mcmc)
+```
+
+
+```{r Uclustering}
+data[,paste0("Uclustering", ch)] <- mcmc_pp$clustering[as.character(data$id),ch]
+```
+
+
+
+```{r plot-pbc-vs-time-clustered, fig.height = 6}
+par(mfrow = c(1,3))
+par(mar = c(4,4,1,0.5))
+plot_num_vs_x_grouped(data, y = "lbili", x = "time", group = "Uclustering1", id = "id")
+plot_num_vs_x_grouped(data, y = "platelet", x = "time", group = "Uclustering1", id = "id")
+plot_cat_vs_x_grouped(data, y = "spiders", x = "time", group = "Uclustering1", main = "spiders")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+<br><br><br><br><br><br><br><br><br><br>
+
+## Vignette tutorial 
+
+Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+
+- Never uses retina figures
+- Has a smaller default figure size
+- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+
+### Vignette Info
+
+Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+
+### Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+### Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+### More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
