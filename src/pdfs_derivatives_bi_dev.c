@@ -276,6 +276,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
         // Subtract the intercept for the category within
         //printf("\nlogpYi_dev: k = %d, add_to_c = %d, pc_ord k-1 = %f, pc_ord k = %f", 
         //       k, add_to_c, pc_ord[add_to_c + k-1], pc_ord[add_to_c + k]);
+        /*
         if(k == 0){
           pk_1 = 1.0;
         }else{
@@ -289,7 +290,37 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
           pk = logit_inv(etak);
         }
         //printf("\nlogpYi_dev: Ords: y = %d, pk_1 = %f, pk = %f, qk = %f", y, pk_1, pk, qk);
-        qk = pk_1 - pk;
+        qk = pk_1 - pk + 0.00000001;
+        *value += log(qk);
+        */
+        
+        // Numerically stable version
+        if(k == 0){
+          pk_1 = 0.0;                      // complementary probability
+          etak = eta - pc_ord[add_to_c + k];
+          pk = 1.0 / (1.0 + exp(etak));    // complementary probability
+          qk = pk - pk_1;
+        }else{
+          if(k == Kord[y]){
+            pk = 0.0;
+            etak_1 = eta - pc_ord[add_to_c + k-1];
+            pk_1 = 1.0 / (1.0 + exp(-etak_1));
+            qk = pk_1 - pk;
+          }else{
+            etak = eta - pc_ord[add_to_c + k];
+            etak_1 = eta - pc_ord[add_to_c + k-1];
+            
+            if(etak > 0){
+              pk = 1.0 / (1.0 + exp(etak));     // complementary probability
+              pk_1 = 1.0 / (1.0 + exp(etak_1)); // complementary probability
+              qk = pk - pk_1;
+            }else{
+              pk = 1.0 / (1.0 + exp(-etak));
+              pk_1 = 1.0 / (1.0 + exp(-etak_1));
+              qk = pk_1 - pk;
+            }
+          }
+        }
         *value += log(qk);
         //if(*print){printf("\nlogpYi Ord: i = %d, j = %d, y = %d, eta = %f, pk_1 = %f, pk = %f, qk = %f, value = %f", 
         //   *i, j, y, eta, pk_1, pk, qk, *value);}
@@ -795,7 +826,7 @@ void d_d2_logpbi_dev(double* Y,             // IN [totnY*N]
           ppk = pk * (1-pk);
         }
         pp1 = 1.0 - pk_1 - pk;
-        pp = ppk + ppk_1;
+        pp = ppk + ppk_1 + 0.00000001;
         
         for(l1 = 0; l1 < nran[shift_nY]; l1++){
           // gradient

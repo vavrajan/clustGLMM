@@ -108,6 +108,7 @@ void logpYapi_ord(struct str_state* last,  // IN last known values of generated 
       k = Y[coord]; // double to int, requires values in {0, ..., Kord[y]}
       
       // Subtract the intercept for the category within
+      /*
       if(k == 0){
         pk_1 = 1.0;
       }else{
@@ -120,9 +121,38 @@ void logpYapi_ord(struct str_state* last,  // IN last known values of generated 
         etak -= c[k];
         pk = logit_inv(etak);
       }
-      qk = pk_1 - pk;
-      
+      qk = pk_1 - pk + 0.00000001;
       //printf("[%d]: k=%d, c=%f, pk_1=%f, pk=%f, qk=%f, ", coord, k, c[k], pk_1, pk, qk);
+      *value += log(qk);
+      */
+      
+      // Numerically stable version
+      if(k == 0){
+        pk_1 = 0.0;                      // complementary probability
+        etak -= c[k];
+        pk = 1.0 / (1.0 + exp(etak));    // complementary probability
+        qk = pk - pk_1;
+      }else{
+        if(k == *Kord){
+          pk = 0.0;
+          etak_1 = etak - c[k-1];
+          pk_1 = 1.0 / (1.0 + exp(-etak_1));
+          qk = pk_1 - pk;
+        }else{
+          etak_1 = etak - c[k-1];
+          etak -= c[k];
+          
+          if(etak > 0){
+            pk = 1.0 / (1.0 + exp(etak));     // complementary probability
+            pk_1 = 1.0 / (1.0 + exp(etak_1)); // complementary probability
+            qk = pk - pk_1;
+          }else{
+            pk = 1.0 / (1.0 + exp(-etak));
+            pk_1 = 1.0 / (1.0 + exp(-etak_1));
+            qk = pk_1 - pk;
+          }
+        }
+      }
       *value += log(qk);
     }
   }

@@ -116,6 +116,7 @@ void logpYord(struct str_state* last,  // IN last known values of generated para
       
       k = Y[coord]; // double to int, requires values in {0, ..., Kord[y]}
       // Subtract the intercept for the category within
+      /*
       if(k == 0){
         pk_1 = 1.0;
       }else{
@@ -128,8 +129,37 @@ void logpYord(struct str_state* last,  // IN last known values of generated para
         etak -= pc[k];
         pk = logit_inv(etak);
       }
-      qk = pk_1 - pk;
+      qk = pk_1 - pk + 0.00000001;
+      *value += log(qk);
+      */
       
+      // Numerically stable version
+      if(k == 0){
+        pk_1 = 0.0;                      // complementary probability
+        etak -= pc[k];
+        pk = 1.0 / (1.0 + exp(etak));    // complementary probability
+        qk = pk - pk_1;
+      }else{
+        if(k == *Kord){
+          pk = 0.0;
+          etak_1 = etak - pc[k-1];
+          pk_1 = 1.0 / (1.0 + exp(-etak_1));
+          qk = pk_1 - pk;
+        }else{
+          etak_1 = etak - pc[k-1];
+          etak -= pc[k];
+          
+          if(etak > 0){
+            pk = 1.0 / (1.0 + exp(etak));     // complementary probability
+            pk_1 = 1.0 / (1.0 + exp(etak_1)); // complementary probability
+            qk = pk - pk_1;
+          }else{
+            pk = 1.0 / (1.0 + exp(-etak));
+            pk_1 = 1.0 / (1.0 + exp(-etak_1));
+            qk = pk_1 - pk;
+          }
+        }
+      }
       *value += log(qk);
     }
   }
@@ -333,7 +363,7 @@ void d_d2_logpbeta_ord(struct str_state* last,  // IN last known values of gener
         pk = logit_inv(etak);
         ppk = pk * (1-pk);
       }
-      pp = ppk + ppk_1;
+      pp = ppk + ppk_1 + 0.00000001;
       pp1 = 1.0 - pk_1 - pk;
       
       //if(l < 3){

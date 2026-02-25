@@ -241,6 +241,7 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
       }
 
       // Subtract the intercept for the category within
+      /*
       if(k == 0){
         pk_1 = 1.0;
       }else{
@@ -254,6 +255,36 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
         pk = logit_inv(etak);
       }
       qk = pk_1 - pk;
+      *value += log(qk);
+      */
+      
+      // Numerically stable version
+      if(k == 0){
+        pk_1 = 0.0;                      // complementary probability
+        etak = eta - pc[add_to_c + k];
+        pk = 1.0 / (1.0 + exp(etak));    // complementary probability
+        qk = pk - pk_1;
+      }else{
+        if(k == Kord[y]){
+          pk = 0.0;
+          etak_1 = eta - pc[add_to_c + k-1];
+          pk_1 = 1.0 / (1.0 + exp(-etak_1));
+          qk = pk_1 - pk;
+        }else{
+          etak = eta - pc[add_to_c + k];
+          etak_1 = eta - pc[add_to_c + k-1];
+          
+          if(etak > 0){
+            pk = 1.0 / (1.0 + exp(etak));     // complementary probability
+            pk_1 = 1.0 / (1.0 + exp(etak_1)); // complementary probability
+            qk = pk - pk_1;
+          }else{
+            pk = 1.0 / (1.0 + exp(-etak));
+            pk_1 = 1.0 / (1.0 + exp(-etak_1));
+            qk = pk_1 - pk;
+          }
+        }
+      }
       *value += log(qk);
       
       if(*print){

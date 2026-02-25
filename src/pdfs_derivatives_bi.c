@@ -64,7 +64,7 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
 ){
   // Auxiliary variables
   int j, k, l, g, y, t, tstart;
-  int coord;
+  int coord, auxcoord;
   double eta, auxY;
   int shift_nY = 0;
   double* ptau;
@@ -112,9 +112,10 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
     t = 0;          // index within b_i
     for(y = 0; y < nY[0]; y++){
       // Update predictor
-      eta  = predictor_num[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_num[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_num[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_num[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_num[1 + auxcoord]; // group-specific part
+      eta += predictor_num[3 + auxcoord]; // offset part
       
       for(l = 0; l < nran[shift_nY]; l++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -138,9 +139,10 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
     // Poisson outcomes
     for(y = 0; y < nY[1]; y++){
       // Update predictor
-      eta  = predictor_poi[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_poi[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_poi[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_poi[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_poi[1 + auxcoord]; // group-specific part
+      eta += predictor_poi[3 + auxcoord]; // offset part
       
       for(l = 0; l < nran[shift_nY]; l++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -159,9 +161,10 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
     // Binary variables
     for(y = 0; y < nY[2]; y++){
       // Update predictor
-      eta  = predictor_bin[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_bin[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_bin[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_bin[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_bin[1 + auxcoord]; // group-specific part
+      eta += predictor_bin[3 + auxcoord]; // offset part
       
       for(l = 0; l < nran[shift_nY]; l++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -180,9 +183,10 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
     add_to_c = 0;
     for(y = 0; y < nY[3]; y++){
       // Update predictor
-      eta  = predictor_ord[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_ord[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_ord[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_ord[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_ord[1 + auxcoord]; // group-specific part
+      eta += predictor_ord[3 + auxcoord]; // offset part
       
       for(l = 0; l < nran[shift_nY]; l++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -194,6 +198,7 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
       // Subtract the intercept for the category within
       //if(*i < 5){printf("\nlogpYi Ord: i=%d, j=%d, y=%d, k=%d, eta=%f", 
       //   *i, j, y, k, eta);}
+      /*
       if(k == 0){
         pk_1 = 1.0;
       }else{
@@ -212,9 +217,39 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
       }
       //if(*i < 5){printf("\nlogpYi Ord: i=%d, j=%d, y=%d, k=%d, etak=%f, etak_1=%f, pk=%f, pk_1=%f", 
       //   *i, j, y, k, etak, etak_1, pk, pk_1);}
-      qk = pk_1 - pk;
+      qk = pk_1 - pk + 0.00000001;
       //if(*i < 5){printf("\nlogpYi Ord: i=%d, j=%d, y=%d, k=%d, qk=%f, logqk=%f", 
       //   *i, j, y, k, qk, log(qk));}
+      *value += log(qk);
+      **/
+      
+      // Numerically stable version
+      if(k == 0){
+        pk_1 = 0.0;                      // complementary probability
+        etak = eta - pc[add_to_c + k];
+        pk = 1.0 / (1.0 + exp(etak));    // complementary probability
+        qk = pk - pk_1;
+      }else{
+        if(k == Kord[y]){
+          pk = 0.0;
+          etak_1 = eta - pc[add_to_c + k-1];
+          pk_1 = 1.0 / (1.0 + exp(-etak_1));
+          qk = pk_1 - pk;
+        }else{
+          etak = eta - pc[add_to_c + k];
+          etak_1 = eta - pc[add_to_c + k-1];
+          
+          if(etak > 0){
+            pk = 1.0 / (1.0 + exp(etak));     // complementary probability
+            pk_1 = 1.0 / (1.0 + exp(etak_1)); // complementary probability
+            qk = pk - pk_1;
+          }else{
+            pk = 1.0 / (1.0 + exp(-etak));
+            pk_1 = 1.0 / (1.0 + exp(-etak_1));
+            qk = pk_1 - pk;
+          }
+        }
+      }
       *value += log(qk);
       
       shift_nY++;
@@ -231,9 +266,10 @@ void logpYi(struct str_state* last,  // IN last known values of generated parame
       maxeta = 0.0;
       tstart = t;
       for(k = 0; k < Kcat[y]; k++){
-        etas[k]  = predictor_cat[4*(coord + *N * cumKcat)];     // fixed part of predictor, which is stable
-        etas[k] += predictor_cat[1 + 4*(coord + *N * cumKcat)]; // group-specific part
-        etas[k] += predictor_cat[3 + 4*(coord + *N * cumKcat)]; // offset part
+        auxcoord = 4*(coord + *N * cumKcat);
+        etas[k]  = predictor_cat[auxcoord ];     // fixed part of predictor, which is stable
+        etas[k] += predictor_cat[1 + auxcoord ]; // group-specific part
+        etas[k] += predictor_cat[3 + auxcoord ]; // offset part
         
         if(*kspec_bi_cat){ //k-specific bi
           // continue in increasing t
@@ -407,7 +443,7 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
 ){
   // Auxiliary variables
   int j, k, k1, k2, l1, l2, g, y, t, t2, tstart;
-  int coord, row, col;
+  int coord, auxcoord, row, col;
   double eta, auxY, auxZ;
   double expeta, Yminee;
   double logitinv_eta, dli_eta;
@@ -480,9 +516,10 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
       tstart = t2 = t;
       //printf("\nd_d2_logpbi: Nums[%d]", y);
       // Update predictor
-      eta  = predictor_num[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_num[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_num[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_num[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_num[1 + auxcoord]; // group-specific part
+      eta += predictor_num[3 + auxcoord]; // offset part
       
       for(l1 = 0; l1 < nran[shift_nY]; l1++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -512,9 +549,10 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
     for(y = 0; y < nY[1]; y++){
       tstart = t2 = t;
       // Update predictor
-      eta  = predictor_poi[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_poi[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_poi[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_poi[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_poi[1 + auxcoord]; // group-specific part
+      eta += predictor_poi[3 + auxcoord]; // offset part
       
       for(l1 = 0; l1 < nran[shift_nY]; l1++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -542,9 +580,10 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
       tstart = t2 = t;
       //printf("\nd_d2_logpbi: Bins[%d]", y);
       // Update predictor
-      eta  = predictor_bin[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_bin[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_bin[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_bin[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_bin[1 + auxcoord]; // group-specific part
+      eta += predictor_bin[3 + auxcoord]; // offset part
       
       for(l1 = 0; l1 < nran[shift_nY]; l1++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -578,9 +617,10 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
       tstart = t2 = t;
       //printf("\nd_d2_logpbi: Ords[%d]", y);
       // Update predictor
-      eta  = predictor_ord[4*(coord + *N * y)];     // fixed part of predictor, which is stable
-      eta += predictor_ord[1 + 4*(coord + *N * y)]; // group-specific part
-      eta += predictor_ord[3 + 4*(coord + *N * y)]; // offset part
+      auxcoord = 4*(coord + *N * y);
+      eta  = predictor_ord[auxcoord];     // fixed part of predictor, which is stable
+      eta += predictor_ord[1 + auxcoord]; // group-specific part
+      eta += predictor_ord[3 + auxcoord]; // offset part
       
       for(l1 = 0; l1 < nran[shift_nY]; l1++){
         // random part of predictor, that needs to be updated wrt new b_i
@@ -606,9 +646,8 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
         pk = logit_inv(etak);
         ppk = pk * (1-pk);
       }
-      //pp1 = 1.0 - pk_1 - pk;
-      pp1 = - pk_1 - pk + 1.0;
-      pp = ppk + ppk_1;
+      pp1 = 1.0 - pk_1 - pk;
+      pp = ppk + ppk_1 + 0.00000001;
       
       for(l1 = 0; l1 < nran[shift_nY]; l1++){
         // gradient
@@ -637,9 +676,10 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
       // Update predictor
       maxeta = 0.0;
       for(k = 0; k < Kcat[y]; k++){
-        etas[k]  = predictor_cat[4*(coord + *N * cumKcat)];     // fixed part of predictor, which is stable
-        etas[k] += predictor_cat[1 + 4*(coord + *N * cumKcat)]; // group-specific part
-        etas[k] += predictor_cat[3 + 4*(coord + *N * cumKcat)]; // offset part
+        auxcoord = 4*(coord + *N * cumKcat);
+        etas[k]  = predictor_cat[auxcoord];     // fixed part of predictor, which is stable
+        etas[k] += predictor_cat[1 + auxcoord]; // group-specific part
+        etas[k] += predictor_cat[3 + auxcoord]; // offset part
         
         if(!(*kspec_bi_cat)){ // not k-specific bi
           t = tstart; // get back where starts bi for this y
