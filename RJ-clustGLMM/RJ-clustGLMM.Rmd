@@ -409,10 +409,10 @@ mcmc <- clustGLMM(formula = formula, id = "i", family = family, data = students,
 
 Note that sampling the chains can take several seconds or minutes, depending on the size of the dataset, the complexity of the model, the number of chains and the number of iterations.
 
-The `print` method without specifying any arguments provides an overview on the dataset used for fitting the model, the model definition and the specification used for MCMC sampling. 
-```{r students-mcmc-print, echo=TRUE, results=FALSE}
+```{r students-mcmc-print, echo=FALSE, results=FALSE}
 mcmc
 ```
+The `print` method without specifying any arguments provides an overview on the dataset used for fitting the model, the model definition and the specification used for MCMC sampling. 
 Due to its length, we do not show the `print` output here. We show, however, how the default `print` method can be modified using argument `which` to also provide insights into preliminary results on the clustering obtained.
 
 ```{r students-mcmc-print-clusteringU, echo=TRUE, results=TRUE}
@@ -679,7 +679,7 @@ To permute the labels and align them with the true labels function `permute_clus
 
 ```{r students-permuting-labels, echo = TRUE, eval = TRUE}
 perm <- list()
-perm[[1]] <- c(2, 3, 1)               # permutation for the first chain
+perm[[1]] <- c(3, 1, 2)               # permutation for the first chain
 mcmc_perm <- permute_cluster_labels(mcmc_pp, perm = perm)
 ```
 

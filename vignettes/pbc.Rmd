@@ -135,6 +135,7 @@ For `tuning` we will use settings that and `param` will be kept without any chan
 ```{r tuning}
 tuning <- default_tuning(experience = TRUE)
 param <- default_param(sparse = TRUE)
+# change prior settings
 ```
 
 

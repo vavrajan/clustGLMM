@@ -1,5 +1,9 @@
 post_processing <-
 function(mcmc, cols, iter.max = 200, nstart = 30){
+  if(class(mcmc) != "clustglmm"){
+    stop("mcmc is not 'clustglmm' object")
+  }
+  
   
   ### 0) The type of saving results has to be "matrix" for the code below
   backtolist <- FALSE

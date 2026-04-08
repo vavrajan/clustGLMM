@@ -63,7 +63,7 @@ The analysis in the paper consisted of
 
 * numeric serum bilirubin and albumin (both on log-scales), 
 * binary indicators of blood vessel malformations in the skin (`spiders`) and presence of hepatomegaly or enlarged liver (`hepato`),
-* ordinal `edema` (0 = no edema, 0.5 = untreated or succesfully treated, 1 = edema despite diuretic therapy).
+* ordinal `edema` (0 = no edema, 0.5 = untreated or successfully treated, 1 = edema despite diuretic therapy).
 
 We create `family` argument to declare the type of the considered outcomes for `clustGLMM` analysis:
 ```{r family}
@@ -79,9 +79,13 @@ formula <- list()
 for (y in names(family)) {
   formula[[y]] <- list()
   formula[[y]]$fixed <- ~ 1 # will become ~ 0
-  formula[[y]]$group <- ~ time + age + sex
-  formula[[y]]$random <- ~ 1
+  formula[[y]]$group <- ~ time # + age + sex
+  formula[[y]]$random <- ~ 1 + time
 }
+
+formula$spiders$fixed <- ~ time
+formula$spiders$group <- ~ 1
+formula$spiders$random <- ~ 1
 ```
 
 Below we show the summary of the variables considered within this analysis:
@@ -115,8 +119,8 @@ We set the precision matrix (`InvSigma`) of the vector of random intercepts to b
 but keep its Wishart prior scale matrix `InvQ` common to all groups. 
 Missing outcome values will be always predicted for the current cluster the individual is assigned to. 
 ```{r varying-InvSigma}
-varying["prec_num"] <- FALSE
-varying["InvSigma"] <- FALSE
+varying["prec_num"] <- TRUE
+varying["InvSigma"] <- TRUE
 ```
 
 
@@ -131,6 +135,11 @@ For `tuning` we will use settings that and `param` will be kept without any chan
 ```{r tuning}
 tuning <- default_tuning(experience = TRUE)
 param <- default_param(sparse = TRUE)
+# param[["prec_num_shp"]] <- 0.001
+# param[["prec_num_rte"]] <- 1
+# param$InvV <- 0.00000001
+# param[["beta_num_fix_sd"]] <- 10
+# param[["beta_num_sd"]] <- 10
 # data$platelet <- round(data$platelet / 100)
 ```
 
@@ -145,7 +154,7 @@ set.seed(123456789)
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
                          G = 10, nchains = 2, iter = 1000, 
                          varying = varying, save = save, tuning = tuning, param = param,
-                         standardize = TRUE)
+                         standardize = FALSE)
 ```
 
 The default `plot` output informs us about the evolution of number of patients within each cluster separately for all chains:
@@ -207,7 +216,7 @@ mcmc_pp <- post_processing(mcmc)
 
 
 ```{r Uclustering}
-data[,paste0("Uclustering", ch)] <- mcmc_pp$clustering[as.character(data$id),ch]
+data[,paste0("Uclustering", ch)] <- mcmc$clustering[as.character(data$id),ch]
 ```
 
 

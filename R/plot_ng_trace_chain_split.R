@@ -1,6 +1,10 @@
 plot_ng_trace_chain_split <- function(mcmc, 
                                       burnin = 0, thin = 1, iterations, chains,
                                       COL, labcex = 1, setparmfrow = TRUE){
+  if(class(mcmc) != "clustglmm"){
+    stop("mcmc is not 'clustglmm' object")
+  }
+  
   if(missing(chains)){chains = mcmc$chains}
   if(setparmfrow){
     opar <- par(no.readonly = TRUE)

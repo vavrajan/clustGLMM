@@ -105,6 +105,7 @@ We load the dataset and inspect the first few entries:
 
 ```{r students-load, echo = TRUE}
 data("students", package = "clustGLMM")
+data("students_latent", package = "clustGLMM")
 head(students)
 ```
 
@@ -117,6 +118,7 @@ The dataset contains in total observations for $n = `r n`$ individuals. Column `
 We use `plot_num_vs_x_grouped()` and `plot_cat_vs_x_grouped()` to inspect how the outcomes depend on age. For each of these functions two plots are created, where one does not take the true grouping into account, while the other includes the true grouping information.
 
 ```{r students-income-vs-age, echo=TRUE, fig.align="center", fig.width=10, fig.height=4, fig.cap="The evolution of income with age blinded (left) and with grouping (right).", out.width="100%"}
+students$g <- students_latent$g
 students$g0 <- rep(0, dim(students)[1])
 par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 2))
 plot_num_vs_x_grouped(students, "income", x = "age", g = "g0",
@@ -140,8 +142,9 @@ plot_cat_vs_x_grouped(students, "satisfaction", x = "age", g = "g0")
 plot_cat_vs_x_grouped(students, "satisfaction", x = "age", g = "g")
 ```
 
+To be able to show that package \pkg{clustGLMM} can also be used when there are missing values in the outcome variables, we insert `r nmis` missing values for each outcome:
 
-```{r students-NAs, echo = FALSE, eval = TRUE}
+```{r, students-NAs, echo = TRUE, eval = FALSE}
 set.seed(31415)
 nmis <- 6
 na_indices <- na_true_vals <- list()
@@ -150,11 +153,6 @@ for (y in c("income", "ntrips", "satisfaction")) {
   na_true_vals[[y]] <- students[na_indices[[y]], y]
   is.na(students[na_indices[[y]], y]) <- TRUE
 }
-```
-
-To be able to show that package \pkg{clustGLMM} can also be used when there are missing values in the outcome variables, we insert `r nmis` missing values for each outcome:
-
-```{r, students-NAs, echo = TRUE, eval = FALSE}
 ```
 
 In the following, we follow the steps outlined in [Implementation](#sec:implementation) to illustrate the general workflow depicted in Figure \@ref(fig:workflow-diagram).
