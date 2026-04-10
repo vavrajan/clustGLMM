@@ -18,69 +18,90 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
 options(width = 104, digits = 4)
 ```
 
-
-The goal of this vignette is to replicate the analysis of PBC data performed by [@Vavra-etal2024] with the use of `clustGLMM` package. 
+The goal of this vignette is to replicate the analysis of PBC data
+performed by [@KomarekKomarkovaJSS14mixAK] using package **clustGLMM**.
 This is the list of packages required for the analysis:
 
-```{r library}
-library(survival)
-library(mixAK)
-library(clustGLMM)
+```{r packages}
+library("mixAK")
+library("clustGLMM")
 ```
 
 
 ## PBC910
 
-The sequential PBC data can be found in `pbcseq` from library `survival`. 
-We restrict ourselves only to patients who survived the first 910 days (2.5 years) similarly as [@KomarekKomarkovaJSS14mixAK], who created `PBC910` data in library `mixAK`.
-However, we need more columns than `PBC910` provides so we create our `data` from `pbcseq` by taking the same rows as `PBC910`. 
+We use the dataset from package **mixAk**.
 
 ```{r pbc-data}
-data(PBC910, package = "mixAK")
-data(pbcseq, package = "survival")
-data <- merge(PBC910, pbcseq, by = c("id", "day", "platelet", "spiders"))
+data("PBC910", package = "mixAK")
+data <- PBC910
 dim(data)
 (n <- length(unique(data$id)))      # number of subjects in the data
 ```
 
-Next we prepare the outcomes for analysis:
+@KomarekKomarkovaJSS14mixAK used the following analysis:
+
+```{r}
+set.seed(20042007)
+mod <- GLMM_MCMC(y = PBC910[, c("lbili", "platelet", "spiders")], 
+    dist = c("gaussian", "poisson(log)", "binomial(logit)"), 
+    id = PBC910[, "id"],
+    x = list(lbili    = "empty", 
+             platelet = "empty", 
+             spiders  = PBC910[, "month"]),
+    z = list(lbili    = PBC910[, "month"], 
+             platelet = PBC910[, "month"], 
+             spiders  = "empty"),
+    random.intercept = rep(TRUE, 3),
+    prior.b = list(Kmax = 1), 
+    nMCMC = c(burn = 100, keep = 1000, thin = 10, info = 100),
+    parallel = FALSE)
+mod <- NMixRelabel(mod, type = "stephens", keep.comp.prob = TRUE)
+```
+
+```{r}
+library("coda")
+name.Eb <- paste("b.Mean.", 1:5, sep = "")
+RegrChain1 <- mcmc(with(mod[[1]], 
+                        cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
+RegrChain2 <- mcmc(with(mod[[2]], 
+  cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
+colnames(RegrChain1) <- colnames(RegrChain2) <- 
+    c(paste(rep(c("lbili", "platelet", "spiders"), each = 2), 
+            ":", rep(c("Intcpt", "Slope"), 3), sep = ""),
+      "lbili:res_std_dev")
+summary(mcmc.list(RegrChain1, RegrChain2))
+```
+
+
+We try to replicate this analysis using package **clustGLMM*. We prepare the data:
+
 ```{r data-transformations}
-data$ord_edema <- factor(data$edema, ordered = TRUE)
-data$lalbumin <- log(data$albumin)
-data$time <- data$day/365.24
-```
-```{r data-transforms-additional, echo = FALSE, eval = FALSE}
-# Appeared in the old R file, only if needed
-data$ord_stage <- factor(data$stage, ordered = TRUE)
-data$lalk.phos <- log(data$alk.phos)
-data$lplatelet <- log(data$platelet)
-data$lchol <- log(data$chol)
-data$fage <- cut(data$age, breaks = c(0, 40, 50, 60, 80))
-data$fage2 <- cut(data$age, breaks = c(0, 35, 40, 45, 50, 55, 60, 65, 80))
+data$time <- data$month
 ```
 
-The analysis in the paper consisted of 
+The analysis in the paper used as outcome variables:
 
-* numeric serum bilirubin and albumin (both on log-scales), 
-* binary indicators of blood vessel malformations in the skin (`spiders`) and presence of hepatomegaly or enlarged liver (`hepato`),
-* ordinal `edema` (0 = no edema, 0.5 = untreated or successfully treated, 1 = edema despite diuretic therapy).
+* numeric serum bilirubin (on log-scale), 
+* count variable platelet, 
+* binary indicators of blood vessel malformations in the skin (`spiders`).
 
-We create `family` argument to declare the type of the considered outcomes for `clustGLMM` analysis:
+We create the `family` argument to declare the type of the considered
+outcomes for `clustGLMM` analysis:
+
 ```{r family}
 family <- c(lbili = "num", platelet = "poi", spiders = "bin")
 ```
 
-The formulas for analysis will be the same for all outcomes.
-The fixed effects part will be an additive model with linear effect of `time` and `age` adjusted for different `sex`.
-All these effects are assumed to be group-specific.
-Finally, outcomes are joined via random intercepts.
+We create `formula` to specify the regression model:
+
 ```{r formula}
 formula <- list()
 for (y in names(family)) {
   formula[[y]] <- list()
-  formula[[y]]$fixed <- ~ 1 # will become ~ 0
-  formula[[y]]$group <- ~ time # + age + sex
-  formula[[y]]$random <- ~ 1 + time
+  formula[[y]]$fixed <- ~ 1
+  formula[[y]]$group <- ~ time 
+  formula[[y]]$random <- ~ 1
 }
 
 formula$spiders$fixed <- ~ time
@@ -88,50 +109,61 @@ formula$spiders$group <- ~ 1
 formula$spiders$random <- ~ 1
 ```
 
-Below we show the summary of the variables considered within this analysis:
+Below we show the summary of the variables considered within this
+analysis:
+
 ```{r data-summary}
-summary(data[, c("time", "age", "sex", names(family))])
+summary(data[, c("time", names(family))])
 ```
-We see that some of the binary outcome values are missing.
-However, for `clustGLMM` there is no need for omitting the rows from the analysis as long as the missing values are among modelled outcomes. 
+
+We see that some of the outcome values are missing.  However, for
+`clustGLMM` there is no need for to omit the rows from the analysis as
+long as the missing values are among modelled outcomes.
 
 Now we examine how does the outcome evolve in time:
 ```{r plot-pbc-vs-time}
-par(mfrow = c(1,3))
-par(mar = c(4,4,1,0.5))
+par(mfrow = c(1, 3), mar = c(4, 4, 1, 0.5))
 plot_num_vs_x_grouped(data, y = "lbili", x = "time", id = "id")
 plot_num_vs_x_grouped(data, y = "platelet", x = "time", id = "id")
 plot_cat_vs_x_grouped(data, y = "spiders", x = "time", main = "spiders")
 ```
 
-
 ## Sampling MCMC using `clustGLMM`
 
-Some of the key inputs for `clustGLMM` are already prepared (`family`, `formula`), 
-but there still some key settings to be discussed. 
-Non-effects parameters of the model may also be set to be group-specific.
-The default setting is provided by
+Some of the key inputs for `clustGLMM` are already prepared (`family`,
+`formula`), but there still some key settings to be discussed.
+Non-effects parameters of the model may also be set to be
+group-specific.  The default setting is provided by
+
 ```{r varying}
 (varying <- default_varying())
 ```
-Only precision of the errors of numeric outcomes and ordered intercepts are considered to be group-specific parameters by default.
-We set the precision matrix (`InvSigma`) of the vector of random intercepts to be group-specific as well,
-but keep its Wishart prior scale matrix `InvQ` common to all groups. 
-Missing outcome values will be always predicted for the current cluster the individual is assigned to. 
+
+Only precision of the errors of numeric outcomes and ordered
+intercepts are considered to be group-specific parameters by default.
+We set the precision matrix (`InvSigma`) of the vector of random
+intercepts to be group-specific as well, but keep its Wishart prior
+scale matrix `InvQ` common to all groups.  Missing outcome values will
+be always predicted for the current cluster the individual is assigned
+to.
+
 ```{r varying-InvSigma}
 varying["prec_num"] <- FALSE
 varying["InvSigma"] <- TRUE
 ```
 
+Next, we can choose which parameters are returned.  We make just one
+change compared to the default setting and that is to save the
+predicted missing values.
 
-Next, we can choose which parameters are returned. 
-We make just one change compared to the default setting and that is to save the predicted missing values.
 ```{r save}
 save <- default_save()
 save["naY"] <- TRUE
 ```
 
-For `tuning` we will use settings that and `param` will be kept without any changes. 
+For `tuning` we will use settings that and `param` will be kept
+without any changes.
+
 ```{r tuning}
 tuning <- default_tuning(experience = TRUE)
 param <- default_param(sparse = TRUE)
@@ -143,11 +175,11 @@ param <- default_param(sparse = TRUE)
 # data$platelet <- round(data$platelet / 100)
 ```
 
-
-Since we do not know the number of underlying clusters in advance, 
-we set the maximal number of clusters `G` to 5.
-We also apply standardization of covariates and outcomes to ensure that priors are truly non-informative. 
-We run a couple of randomly initialized chains for initial 1000 iterations.
+Since we do not know the number of underlying clusters in advance, we
+set the maximal number of clusters `G` to 10.  We also apply
+standardization of covariates and outcomes to ensure that priors are
+truly non-informative.  We run a couple of randomly initialized chains
+for initial 1000 iterations.
 
 ```{r clustGLMM-burnin}
 set.seed(123456789)
@@ -157,13 +189,16 @@ mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = d
                          standardize = TRUE)
 ```
 
-The default `plot` output informs us about the evolution of number of patients within each cluster separately for all chains:
+The default `plot` output informs us about the evolution of number of
+patients within each cluster separately for all chains:
+
 ```{r plot-mcmc-burnin}
 plot(mcmc_burnin)
 ```
 
 Apparently the number of non-empty groups is decreasing in time. 
 Moreover, it seems to differ between chains: 
+
 ```{r plot-mcmc-burnin-Gplus}
 plot(mcmc_burnin, "Gplus")
 ```
@@ -179,7 +214,9 @@ mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = d
                          standardize = TRUE)
 ```
 
-And we plot the same plots again to see that one chains prefers the two-cluster solution while the other still keeps 3 clusters while one of the clusters is rather sparse. 
+And we plot the same plots again to see that one chains prefers the
+two-cluster solution while the other still keeps 3 clusters while one
+of the clusters is rather sparse.
 
 ```{r plot-mcmc-burnin2}
 plot(mcmc_burnin)
@@ -215,80 +252,14 @@ plot(mcmc, "w", "clusters_kerneldensity", chain = ch)
 mcmc_pp <- post_processing(mcmc)
 ```
 
-
 ```{r Uclustering}
-data[,paste0("Uclustering", ch)] <- mcmc$clustering[as.character(data$id),ch]
+data[, paste0("Uclustering", ch)] <- mcmc$clustering[as.character(data$id), ch]
 ```
 
-
-
 ```{r plot-pbc-vs-time-clustered, fig.height = 6}
-par(mfrow = c(1,3))
-par(mar = c(4,4,1,0.5))
+par(mfrow = c(1, 3), mar = c(4, 4, 1, 0. 5))
 plot_num_vs_x_grouped(data, y = "lbili", x = "time", group = "Uclustering1", id = "id")
 plot_num_vs_x_grouped(data, y = "platelet", x = "time", group = "Uclustering1", id = "id")
 plot_cat_vs_x_grouped(data, y = "spiders", x = "time", group = "Uclustering1", main = "spiders")
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-<br><br><br><br><br><br><br><br><br><br>
-
-## Vignette tutorial 
-
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
-
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
-
-### Vignette Info
-
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-### Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-### Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-### More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
