@@ -119,7 +119,7 @@ We set the precision matrix (`InvSigma`) of the vector of random intercepts to b
 but keep its Wishart prior scale matrix `InvQ` common to all groups. 
 Missing outcome values will be always predicted for the current cluster the individual is assigned to. 
 ```{r varying-InvSigma}
-varying["prec_num"] <- TRUE
+varying["prec_num"] <- FALSE
 varying["InvSigma"] <- TRUE
 ```
 
@@ -152,9 +152,9 @@ We run a couple of randomly initialized chains for initial 1000 iterations.
 ```{r clustGLMM-burnin}
 set.seed(123456789)
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-                         G = 10, nchains = 2, iter = 1000, 
+                         G = 2, nchains = 2, iter = 1000, 
                          varying = varying, save = save, tuning = tuning, param = param,
-                         standardize = FALSE)
+                         standardize = TRUE)
 ```
 
 The default `plot` output informs us about the evolution of number of patients within each cluster separately for all chains:
@@ -173,7 +173,7 @@ We continue to sample from initial values set to `mcmc_burnin$last`:
 
 ```{r clustGLMM-burnin2}
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-                         G = 10, nchains = 2, iter = 1000, 
+                         G = 2, nchains = 2, iter = 1000, 
                          inits = mcmc_burnin$last,
                          varying = varying, save = save, tuning = tuning, param = param,
                          standardize = TRUE)
@@ -189,7 +189,7 @@ Now we sample next $10\,000$ iterations.
 
 ```{r clustGLMM}
 mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-                  G = 10, nchains = 2, iter = 10000, 
+                  G = 2, nchains = 2, iter = 10000, 
                   inits = mcmc_burnin$last,
                   varying = varying, save = save, tuning = tuning, param = param, 
                   standardize = TRUE)
@@ -202,6 +202,7 @@ plot(mcmc)
 ```{r plot-mcmc-clusters-kde}
 ch <- 1
 plot(mcmc, "beta_num", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "beta_poi", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "beta_bin", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "beta_ord", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "c_ord", "clusters_kerneldensity", chain = ch)
