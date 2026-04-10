@@ -2,9 +2,6 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
                                     chains = 1L, 
                                     clusters,
                                     pattern = "", ...){
-  if(class(x) != "summary.clustglmm"){
-    stop("x is not 'summary.clustglmm' object")
-  }
   
   stopifnot(length(which) >= 1,
             is.character(which),

@@ -1,7 +1,4 @@
 summary.clustglmm <- function(object, ...) {
-  if(class(object) != "clustglmm"){
-    stop("not 'clustglmm' object")
-  }
   
   coda <- as_coda(object, ...)
   

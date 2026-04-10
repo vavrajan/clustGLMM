@@ -683,6 +683,8 @@ perm[[1]] <- c(3, 1, 2)               # permutation for the first chain
 mcmc_perm <- permute_cluster_labels(mcmc_pp, perm = perm)
 ```
 
+TODO explain that we continue with the original `mcmc_pp` labelling (also do not use `mcmc_perm` below)
+
 So far we considered the classification of individuals based on the
 sampled indicators. Alternatively, the posterior distribution of the
 clustering probabilities $u_{i,g}$ could be determined and used to
@@ -722,7 +724,7 @@ for (i in order(pmcmc$certainty[, 1])[1:8]) {
         side = 3, line = 0.5, font = 2, cex = 0.8)
 }
 ```
-```{r students-clust-probs-posterior-ECDF, echo=TRUE, eval=TRUE, results=FALSE, fig.align="center", fig.width=8, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H", out.width="100%"}
+```{r students-clust-probs-posterior-ECDF, echo=TRUE, eval=TRUE, results=FALSE, fig.align="center", fig.width=8, fig.height=4, fig.cap="Posterior cumulative distribution function of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H", out.width="100%"}
 par(mar = c(4, 4, 2.5, 0.5), mfrow = c(2, 4))
 for (i in order(pmcmc$certainty[, 1])[1:8]) {
   plot_clusters(pmcmc, what = "pUig_int", dimspec = i, 
