@@ -1,5 +1,5 @@
 as_coda <- function(mcmc, burnin=0, thin=1){
-  if(class(mcmc) != "clustglmm"){
+  if(!inherits(mcmc, "clustglmm")){
     stop("mcmc is not 'clustglmm' object")
   }
   

@@ -1,7 +1,7 @@
 plot_ng_trace_chain_split <- function(mcmc, 
                                       burnin = 0, thin = 1, iterations, chains,
                                       COL, labcex = 1, setparmfrow = TRUE){
-  if(class(mcmc) != "clustglmm"){
+  if(!inherits(mcmc, "clustglmm")){
     stop("mcmc is not 'clustglmm' object")
   }
   

@@ -20,7 +20,7 @@ function(mcmc,      # MCMC generated parameters
   ### Every auxiliary values are stored within mcmc output
   # Such as save, calc, varying, ...
   # message("\nR function pUig_dev succesfully called.\n")
-  if(class(mcmc) != "clustglmm"){
+  if(!inherits(mcmc, "clustglmm")){
     stop("mcmc is not 'clustglmm' object")
   }
   

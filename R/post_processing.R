@@ -1,6 +1,6 @@
 post_processing <-
 function(mcmc, cols, iter.max = 200, nstart = 30){
-  if(class(mcmc) != "clustglmm"){
+  if(!inherits(mcmc, "clustglmm")){
     stop("mcmc is not 'clustglmm' object")
   }
   
