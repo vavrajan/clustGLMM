@@ -1692,7 +1692,8 @@ Change the save settings if you want to calculate these probabilities afterwards
     # TAB <- TAB[order(TAB, decreasing = TRUE)]
     # clusters[[ch]] <- sort(as.numeric(names(TAB)[1:modeGplus[ch]]))
     # Matrix indicating which cluster in which iteration is nonempty
-    nonempties <- apply(Usamples[[ch]], 1, fun0, ch=ch)
+    nonempties <- matrix(apply(Usamples[[ch]], 1, fun0, ch=ch),
+                         nrow = G[ch])
     # Only the top modeGplus in non-empty frequency are considered
     sumnonempt <- apply(nonempties, 1, sum)
     names(sumnonempt) <- as.character(1:G[ch])
