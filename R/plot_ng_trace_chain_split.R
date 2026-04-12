@@ -30,7 +30,7 @@ plot_ng_trace_chain_split <- function(mcmc,
       iters[[ch]] <- iterations
     }
     if(mcmc$howsave == "matrix"){
-      ngdraws[[ch]] <- mcmc$draws[[ch]][iterations,paste0("ng(", 1:mcmc$G[ch], ")")]
+      ngdraws[[ch]] <- mcmc$draws[[ch]][iterations, paste0("ng(", 1:mcmc$G[ch], ")"), drop = FALSE]
     }
     if(mcmc$howsave == "list"){
       ngdraws[[ch]] <- mcmc$draws[[ch]]$ng[iterations,]
