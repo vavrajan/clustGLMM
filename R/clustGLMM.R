@@ -405,9 +405,9 @@ Change the save settings if you want to calculate these probabilities afterwards
         nonna <- (!is.na(ydata[,y]))
         pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
         boldX <- as.matrix(finX[nonna,Xvars,drop=FALSE])
-        coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
-        names(coefs) <- Xvars
-        MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
+        fit <- lm.fit(boldX, pomY)
+        coefs <- coef(fit)
+        MSe <- sum(residuals(fit)^2) / fit$df.residual
         init_prec_num <- 1/MSe
         inits[[ch]]$beta_num_fix[[y]] <- coefs[fcols[[y]]]
         
