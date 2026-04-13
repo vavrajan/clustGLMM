@@ -422,19 +422,15 @@ Change the save settings if you want to calculate these probabilities afterwards
           inds <- selection[[g]] & !is.na(ydata[,y])
           pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]]], 1, sum)
           boldX <- as.matrix(finX[inds, Xvars, drop=FALSE])
-          XtX <- t(boldX) %*% boldX
-          coefs <- try(as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY)), silent = TRUE)
-          if(is(coefs, "try-error")){
-            nonna <- !is.na(ydata[,y])
-            pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
-            boldX <- as.matrix(finX[nonna,Xvars])
-            coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
-            names(coefs) <- Xvars
-            MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
-          }else{
-            names(coefs) <- Xvars
-            MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
+          fit <- try(lm.fit(boldX, pomY))
+          if(is(try, "try-error")){
+              nonna <- !is.na(ydata[,y])
+              pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
+              boldX <- as.matrix(finX[nonna,Xvars])
+              fit <- lm.fit(boldX, pomY)
           }
+          coefs <- coef(fit)
+          MSe <- sum(residuals(fit)^2) / fit$df.residual
           if(varying["prec_num"]){
             inits[[ch]]$prec_num[[y]][[g]] <- 1/MSe
           }
