@@ -133,7 +133,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       if(!is.numeric(yval)){
         stop(paste0("Outcome ", y, " is not numeric!"))
       }
-      if(any(is.infinite(yval), na.rm = TRUE)){
+      if(any(is.infinite(yval))){
         stop(paste0("There are infinite values for outcome ", y, "!"))
       }
       if(standardize){
@@ -331,7 +331,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     rannames <- c(rannames, lrannames[[y]])
     offnames <- c(offnames, loffnames[[y]])
   }
-  if(any(is.na(finX))){
+  if(anyNA(finX)){
     stop("There are NA values among regressors, which is not supported.")
   }
   # Scale regressors in finX
@@ -795,7 +795,7 @@ Change the save settings if you want to calculate these probabilities afterwards
                          BYROW = TRUE,
                          sym = FALSE,
                          diag = FALSE,
-                         diagval = NA,
+                         diagval = NA_real_,
                          D = 0)
   
   rownames(settings) <- params
@@ -1056,7 +1056,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$draws <- list()
   for(ch in 1:nchains){
     if(howsave == "matrix"){
-      mcmc$draws[[ch]] <- matrix(NA, nrow = iter, ncol = 1+nparams[ch])
+      mcmc$draws[[ch]] <- matrix(NA_integer_, nrow = iter, ncol = 1+nparams[ch])
       mcmc$draws[[ch]][,1] = 1:iter
       colnames(mcmc$draws[[ch]]) <- cnames[[ch]]
       mcmc$draws[[ch]] = as.data.frame(mcmc$draws[[ch]])
@@ -1653,26 +1653,21 @@ Change the save settings if you want to calculate these probabilities afterwards
 
   ## U-based clustering
   fun0 <- function(U, ch){
-    tab = table(U)
-    as.numeric(is.element(as.character(1:G[ch]), names(tab)))
+    as.numeric(tabulate(U, G[ch]) > 0)
   }
 
   fun1 <- function(U, ch){
-    tab = table(U)
-    tab <- tab[as.character(clusters[[ch]])]
-    as.numeric(names(which.max(tab)))
+    which.max(tabulate(U, G[ch]))
   }
 
   fun2 <- function(U, ch){
-    tab = table(U)
-    tab <- tab[as.character(clusters[[ch]])]
-    max(tab, na.rm=TRUE)/iter
+    max(tabulate(U), na.rm = TRUE) / iter
   }
 
   clusters <- iterations <- list()
   modeGplus <- numeric(nchains)
-  clusteringU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
-  certaintyU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
+  clusteringU <- matrix(NA_integer_, nrow = as.numeric(n), ncol = nchains)
+  certaintyU <- matrix(NA_real_, nrow = as.numeric(n), ncol = nchains)
   for(ch in 1:nchains){
     iterations[[ch]] <- mcmc$draws[[ch]]$m
     # find modeGplus - the most common Gplus value
