@@ -1,14 +1,13 @@
 from_list_to_matrix <- function(mcmc){
   params <- names(mcmc$save[mcmc$save])
-  draws = mcmc$draws
-  cmcmc <- list()
+  draws <- mcmc$draws
   retmcmc <- mcmc
   
   # insert the samples 
   for(ch in mcmc$chains){
-    iters = draws[[ch]]$m
+    iters <- draws[[ch]]$m
     nparams <- sum(mcmc$settings[[ch]][mcmc$settings[[ch]]$save, "dimswithG"])
-    retmcmc$draws[[ch]] <- matrix(NA, nrow = length(iters), ncol = 1+nparams)
+    retmcmc$draws[[ch]] <- matrix(NA_real_, nrow = length(iters), ncol = 1+nparams)
     retmcmc$draws[[ch]][,1] <- iters
     colnames(retmcmc$draws[[ch]]) <- c("m", unlist(mcmc$param_names[[ch]]))
     retmcmc$draws[[ch]] <- as.data.frame(retmcmc$draws[[ch]])
@@ -16,21 +15,21 @@ from_list_to_matrix <- function(mcmc){
   
     for(p in params){
       # transfer from list to C
-      cmcmc[[p]] <- from_list_to_C(draws = draws[[ch]],
-                                   p = p,
-                                   settings = mcmc$settings[[ch]],
-                                   yspecd1 = mcmc$yspecd1[[p]],
-                                   yspecd2 = mcmc$yspecd2[[p]],
-                                   d2spec = mcmc$d2spec[[p]],
-                                   family = mcmc$family)
+      cmcmc <- from_list_to_C(draws = draws[[ch]],
+                              p = p,
+                              settings = mcmc$settings[[ch]],
+                              yspecd1 = mcmc$yspecd1[[p]],
+                              yspecd2 = mcmc$yspecd2[[p]],
+                              d2spec = mcmc$d2spec[[p]],
+                              family = mcmc$family)
       # transfer from C to matrix
-      aux = from_C_to_matrix(values = cmcmc[[p]],
-                             p = p,
-                             settings = mcmc$settings[[ch]],
-                             yspecd1 = mcmc$yspecd1[[p]],
-                             yspecd2 = mcmc$yspecd2[[p]],
-                             d2spec = mcmc$d2spec[[p]],
-                             family = mcmc$family)
+      aux <- from_C_to_matrix(values = cmcmc,
+                              p = p,
+                              settings = mcmc$settings[[ch]],
+                              yspecd1 = mcmc$yspecd1[[p]],
+                              yspecd2 = mcmc$yspecd2[[p]],
+                              d2spec = mcmc$d2spec[[p]],
+                              family = mcmc$family)
       retmcmc$draws[[ch]][, colnames(aux)] <- aux
     }
     # chain ch completed
