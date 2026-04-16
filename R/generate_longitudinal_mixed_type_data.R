@@ -11,22 +11,9 @@ function(
   # require(splines)
   
   ### Some functions to be used
-  logit <- function(p){log(p/(1-p))}
-  
-  logit_inv <- function(x){
-    if(x == -Inf){
-      return(0)
-    }else{
-      if(x == Inf){
-        return(1)
-      }else{
-        return(exp(x)/(1+exp(x)))
-      }
-    }
-  }
-  
   softmax <- function(x){
-    return(as.numeric(exp(x)/sum(exp(x))))
+    exp_x <- exp(x - max(x))
+    return(as.numeric(exp_x / sum(exp_x)))
   }
   
   ### Preparation
@@ -597,13 +584,13 @@ function(
   
   # Binary
   data$ybin <- rbinom(N, size = 1,
-                      prob = sapply(data$pred_bin, logit_inv))
+                      prob = plogis(data$pred_bin))
   # Ordinal
   probs <- matrix(0, nrow = N, ncol = Kord)
   for(i in 1:N){
     g <- data$g[i]
     # response sampled by probabilities
-    loginvs <- sapply(data$pred_ord[i]-c_ord[[g]], logit_inv)
+    loginvs <- plogis(data$pred_ord[i]-c_ord[[g]])
     probs[i,] <- loginvs[1:Kord] - loginvs[2:(Kord+1)]
     data$yord[i] <- sample(0:(Kord-1), 1, prob = probs[i,])
   }
