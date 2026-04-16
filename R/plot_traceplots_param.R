@@ -10,6 +10,9 @@ plot_traceplots_param <-
   if(!is.element(what, rownames(mcmc$settings[[chains[1]]]))){
     stop(paste0("Parameter ", what, " does not exist, check spelling or the rows of setting matrix for possible values."))
   }
+  if(!is.element(what, rownames(mcmc$settings[[chains[1]]])[mcmc$settings[[chains[1]]]$save])){
+    stop(paste0("Parameter ", what, " is not saved."))
+  }
   v <- c(mcmc$settings[[chains[1]]][what, ])
   # assuming all settings are the same for all chains... (G and dimswithG not used here)
   Ys <- c()

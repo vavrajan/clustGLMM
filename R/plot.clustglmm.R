@@ -1,7 +1,7 @@
 plot.clustglmm <- function(x, what="ng", which="traceplots", ng_trace_chain_split=TRUE, ...){
 
   if(missing(what)){
-    adepts <- c("ng", "Gplus", "w", "pUig_int", "deviance")
+    adepts <- c("ng", "Gplus", "w", "deviance", "pUig_int")
     availables <- intersect(adepts, rownames(x$settings[[x$chains[1]]][x$settings[[x$chains[1]]]$save, ]))
     what <- availables[1]
   }

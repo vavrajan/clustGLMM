@@ -9,6 +9,8 @@ predict.clustglmm <-
            interval=c("ET", "HPD"),
            chain=1, burnin=0, thin=1, gs=object$clusters[[chain]], ...){
     
+  #TODO offset
+    
   # we rather work with "matrix" format here
   if(object$howsave == "list"){
     object <- from_list_to_matrix(object)
@@ -138,15 +140,15 @@ predict.clustglmm <-
     if(type == "response"){
       # Depending on type of outcome:
       if(object$family[y] == "num"){
-        samples[["response"]] <- samples[["fg"]] # ? + samples[["o"]]
+        samples[["response"]] <- samples[["fg"]] # ? + samples[["o"]], sweep? or find alternative for working with multiple dimensions
       }
       
       if(object$family[y] == "poi"){
-        samples[["response"]] <- exp(samples[["fg"]]) # ? # + samples[["o"]]
+        samples[["response"]] <- exp(samples[["fg"]]) # ? + samples[["o"]] 
       }
       
       if(object$family[y] == "bin"){
-        exp_eta <- exp(samples[["fg"]]) # ? # + samples[["o"]]
+        exp_eta <- exp(samples[["fg"]] + samples[["o"]])
         samples[["response"]][, , , 2] <- exp_eta / (1 + exp_eta)
         samples[["response"]][, , , 1] <- 1 - samples[["response"]][, , , 2]
       }
@@ -154,7 +156,7 @@ predict.clustglmm <-
       if(object$family[y] == "ord"){
         for(m in 1:dim(draws)[1]){
           for(ig in 1:length(gs)){
-            exp_eta <- exp(samples[["fg"]][, ig, m, ]) # ? # + samples[["o"]]
+            exp_eta <- exp(samples[["fg"]][, ig, m, ]) # ? + samples[["o"]] 
             pk <- cbind(rep(1, dim(newdata)[1]), 
                         exp_eta / (1 + exp_eta),
                         rep(0, dim(newdata)[1]))

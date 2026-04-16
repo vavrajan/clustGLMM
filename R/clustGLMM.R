@@ -129,7 +129,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   # Numeric
   if(nY["Nums"] > 0){
     for(y in Nums){
-      yval <- data[,y]
+      yval <- data[,y] #TODO subtract offset here
       if(!is.numeric(yval)){
         stop(paste0("Outcome ", y, " is not numeric!"))
       }
@@ -219,6 +219,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       # Later for C function changed to the last one
       ydata[,y] <- as.numeric(fy)-1 # 0, 1, ..., Kcat[y]
       Kcat[y] <- nlevels(fy)-1
+      #TODO prohibit offset here (possibly even numeric)
     }
   }else{
     Kcat <- NULL
@@ -334,7 +335,10 @@ Change the save settings if you want to calculate these probabilities afterwards
     stop("There are NA values among regressors, which is not supported.")
   }
   # Scale regressors in finX
-  std_cols <- setdiff(colnames(finX), c("id", "(Intercept)"))
+  if(length(intersection(offnames, c(grpnames, fixnames, rannames))) > 0){
+    stop("Offset variables are not allowed be used as predictor variables, please, rename.")
+  }
+  std_cols <- setdiff(colnames(finX), c("id", "(Intercept)", offnames))
   if(standardize){
     finX_scaled <- scale(finX[,std_cols,drop=FALSE], center = TRUE, scale = TRUE)
     finX[,std_cols] <- ydata[,std_cols] <- finX_scaled
@@ -1294,265 +1298,263 @@ Change the save settings if you want to calculate these probabilities afterwards
     # order of construction of inits: "w","U","pUig","prec_num",
     #  "beta_num","beta_bin","beta_ord","c_ord","a_ord","beta_cat"
     #  "InvSigma","InvQ","b"
-    if(howsave != "cmcmc"){
-      # all last values are returned on the scale used in C --> no rescaling needed
-      last[[ch]]$w <- cmcmc$veclast[1:(lastcopied <- dimswithG["w",ch])]
-      last[[ch]]$e0 <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
-      last[[ch]]$U <- 1+cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n)]
-      last[[ch]]$pUig <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n*G[ch])],
-                                n, G[ch], byrow = lsettings[[ch]]["pUig", "BYROW"])
+    # all last values are returned on the scale used in C --> no rescaling needed
+    last[[ch]]$w <- cmcmc$veclast[1:(lastcopied <- dimswithG["w",ch])]
+    last[[ch]]$e0 <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
+    last[[ch]]$U <- 1+cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n)]
+    last[[ch]]$pUig <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + n*G[ch])],
+                              n, G[ch], byrow = lsettings[[ch]]["pUig", "BYROW"])
 
-     # prec_num
-      last[[ch]]$prec_num <- list()
-      if(varying["prec_num"]){
-        for(y in Nums){
-          last[[ch]]$prec_num[[y]] <- list()
-        }
-        for(g in 1:G[ch]){
-          for(y in Nums){
-            last[[ch]]$prec_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
-          }
-        }
-      }else{
-        for(y in Nums){
-          last[[ch]]$prec_num[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
-        }
-      }
-
-      # beta_num
-      last[[ch]]$beta_num_fix <- list()
+   # prec_num
+    last[[ch]]$prec_num <- list()
+    if(varying["prec_num"]){
       for(y in Nums){
-        if(nfix[y]>0){
-          last[[ch]]$beta_num_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
-        }else{
-          last[[ch]]$beta_num_fix[[y]] <- numeric()
-        }
-      }
-      last[[ch]]$beta_num <- list()
-      for(y in Nums){
-        last[[ch]]$beta_num[[y]] <- list()
+        last[[ch]]$prec_num[[y]] <- list()
       }
       for(g in 1:G[ch]){
         for(y in Nums){
-          if(ngrp[y]>0){
-            last[[ch]]$beta_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
-          }else{
-            last[[ch]]$beta_num[[y]][[g]] <- numeric()
-          }
+          last[[ch]]$prec_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
         }
       }
+    }else{
+      for(y in Nums){
+        last[[ch]]$prec_num[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + 1)]
+      }
+    }
 
-      # beta_poi
-      last[[ch]]$beta_poi_fix <- list()
+    # beta_num
+    last[[ch]]$beta_num_fix <- list()
+    for(y in Nums){
+      if(nfix[y]>0){
+        last[[ch]]$beta_num_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+      }else{
+        last[[ch]]$beta_num_fix[[y]] <- numeric()
+      }
+    }
+    last[[ch]]$beta_num <- list()
+    for(y in Nums){
+      last[[ch]]$beta_num[[y]] <- list()
+    }
+    for(g in 1:G[ch]){
+      for(y in Nums){
+        if(ngrp[y]>0){
+          last[[ch]]$beta_num[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
+        }else{
+          last[[ch]]$beta_num[[y]][[g]] <- numeric()
+        }
+      }
+    }
+
+    # beta_poi
+    last[[ch]]$beta_poi_fix <- list()
+    for(y in Pois){
+      if(nfix[y]>0){
+        last[[ch]]$beta_poi_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+      }else{
+        last[[ch]]$beta_poi_fix[[y]] <- numeric()
+      }
+    }
+    last[[ch]]$beta_poi <- list()
+    for(y in Pois){
+      last[[ch]]$beta_poi[[y]] <- list()
+    }
+    for(g in 1:G[ch]){
       for(y in Pois){
-        if(nfix[y]>0){
-          last[[ch]]$beta_poi_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+        if(ngrp[y]>0){
+          last[[ch]]$beta_poi[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
         }else{
-          last[[ch]]$beta_poi_fix[[y]] <- numeric()
+          last[[ch]]$beta_poi[[y]][[g]] <- numeric()
         }
       }
-      last[[ch]]$beta_poi <- list()
-      for(y in Pois){
-        last[[ch]]$beta_poi[[y]] <- list()
-      }
-      for(g in 1:G[ch]){
-        for(y in Pois){
-          if(ngrp[y]>0){
-            last[[ch]]$beta_poi[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
-          }else{
-            last[[ch]]$beta_poi[[y]][[g]] <- numeric()
-          }
-        }
-      }
+    }
 
-      # beta_bin
-      last[[ch]]$beta_bin_fix <- list()
+    # beta_bin
+    last[[ch]]$beta_bin_fix <- list()
+    for(y in Bins){
+      if(nfix[y]>0){
+        last[[ch]]$beta_bin_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+      }else{
+        last[[ch]]$beta_bin_fix[[y]] <- numeric()
+      }
+    }
+    last[[ch]]$beta_bin <- list()
+    for(y in Bins){
+      last[[ch]]$beta_bin[[y]] <- list()
+    }
+    for(g in 1:G[ch]){
       for(y in Bins){
-        if(nfix[y]>0){
-          last[[ch]]$beta_bin_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+        if(ngrp[y]>0){
+          last[[ch]]$beta_bin[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
         }else{
-          last[[ch]]$beta_bin_fix[[y]] <- numeric()
+          last[[ch]]$beta_bin[[y]][[g]] <- numeric()
         }
       }
-      last[[ch]]$beta_bin <- list()
-      for(y in Bins){
-        last[[ch]]$beta_bin[[y]] <- list()
-      }
-      for(g in 1:G[ch]){
-        for(y in Bins){
-          if(ngrp[y]>0){
-            last[[ch]]$beta_bin[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
-          }else{
-            last[[ch]]$beta_bin[[y]][[g]] <- numeric()
-          }
-        }
-      }
+    }
 
-      # beta_ord
-      last[[ch]]$beta_ord_fix <- list()
+    # beta_ord
+    last[[ch]]$beta_ord_fix <- list()
+    for(y in Ords){
+      if(nfix[y]>0){
+        last[[ch]]$beta_ord_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+      }else{
+        last[[ch]]$beta_ord_fix[[y]] <- numeric()
+      }
+    }
+    last[[ch]]$beta_ord <- list()
+    for(y in Ords){
+      last[[ch]]$beta_ord[[y]] <- list()
+    }
+    for(g in 1:G[ch]){
       for(y in Ords){
-        if(nfix[y]>0){
-          last[[ch]]$beta_ord_fix[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y])]
+        if(ngrp[y]>0){
+          last[[ch]]$beta_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
         }else{
-          last[[ch]]$beta_ord_fix[[y]] <- numeric()
+          last[[ch]]$beta_ord[[y]][[g]] <- numeric()
         }
       }
-      last[[ch]]$beta_ord <- list()
+    }
+
+    # c_ord
+    if(varying["c_ord"]){
+      last[[ch]]$c_ord <- list()
       for(y in Ords){
-        last[[ch]]$beta_ord[[y]] <- list()
+        last[[ch]]$c_ord[[y]] <- list()
       }
       for(g in 1:G[ch]){
         for(y in Ords){
-          if(ngrp[y]>0){
-            last[[ch]]$beta_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y])]
-          }else{
-            last[[ch]]$beta_ord[[y]][[g]] <- numeric()
-          }
+          last[[ch]]$c_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
         }
       }
-
-      # c_ord
-      if(varying["c_ord"]){
-        last[[ch]]$c_ord <- list()
-        for(y in Ords){
-          last[[ch]]$c_ord[[y]] <- list()
-        }
-        for(g in 1:G[ch]){
-          for(y in Ords){
-            last[[ch]]$c_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
-          }
-        }
-      }else{
-        last[[ch]]$c_ord <- list()
-        for(y in Ords){
-          last[[ch]]$c_ord[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
-        }
+    }else{
+      last[[ch]]$c_ord <- list()
+      for(y in Ords){
+        last[[ch]]$c_ord[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
       }
-      # a_ord
-      if(varying["c_ord"]){
-        last[[ch]]$a_ord <- list()
-        for(y in Ords){
-          last[[ch]]$a_ord[[y]] <- list()
-        }
-        for(g in 1:G[ch]){
-          for(y in Ords){
-            last[[ch]]$a_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
-          }
-        }
-      }else{
-        last[[ch]]$a_ord <- list()
-        for(y in Ords){
-          last[[ch]]$a_ord[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
-        }
-      }
-      # pi_ord
-      if(varying["c_ord"]){
-        last[[ch]]$pi_ord <- list()
-        for(y in Ords){
-          last[[ch]]$pi_ord[[y]] <- list()
-        }
-        for(g in 1:G[ch]){
-          for(y in Ords){
-            last[[ch]]$pi_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y]+1)]
-          }
-        }
-      }else{
-        last[[ch]]$pi_ord <- list()
-        for(y in Ords){
-          last[[ch]]$pi_ord[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y]+1)]
-        }
-      }
-
-      # beta_cat
-      last[[ch]]$beta_cat_fix <- list()
-      for(y in Cats){
-        if(nfix[y]>0){
-          last[[ch]]$beta_cat_fix[[y]] <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y]*Kcat[y])],
-                                                 nrow = nfix[y])
-        }else{
-          last[[ch]]$beta_cat_fix[[y]] <- numeric()
-        }
-      }
-      last[[ch]]$beta_cat <- list()
-      for(y in Cats){
-        last[[ch]]$beta_cat[[y]] <- list()
+    }
+    # a_ord
+    if(varying["c_ord"]){
+      last[[ch]]$a_ord <- list()
+      for(y in Ords){
+        last[[ch]]$a_ord[[y]] <- list()
       }
       for(g in 1:G[ch]){
-        for(y in Cats){
-          if(ngrp[y]>0){
-            last[[ch]]$beta_cat[[y]][[g]] <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y]*Kcat[y])],
-                                                    nrow = ngrp[y])
-          }else{
-            last[[ch]]$beta_cat[[y]][[g]] <- numeric()
-          }
+        for(y in Ords){
+          last[[ch]]$a_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
         }
       }
+    }else{
+      last[[ch]]$a_ord <- list()
+      for(y in Ords){
+        last[[ch]]$a_ord[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y])]
+      }
+    }
+    # pi_ord
+    if(varying["c_ord"]){
+      last[[ch]]$pi_ord <- list()
+      for(y in Ords){
+        last[[ch]]$pi_ord[[y]] <- list()
+      }
+      for(g in 1:G[ch]){
+        for(y in Ords){
+          last[[ch]]$pi_ord[[y]][[g]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y]+1)]
+        }
+      }
+    }else{
+      last[[ch]]$pi_ord <- list()
+      for(y in Ords){
+        last[[ch]]$pi_ord[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + Kord[y]+1)]
+      }
+    }
 
-      # random-effects related parameters (only if random effects are present)
-      if(totnran > 0){
-        # InvSigma
-        if(varying["InvSigma"]){
-          last[[ch]]$InvSigma <- list()
-          for(g in 1:G[ch]){
-            auxmatrix <- matrix(0, totnran, totnran)
-            pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
-            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
-            auxmatrix <- t(auxmatrix)
-            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
-            last[[ch]]$InvSigma[[g]] <- auxmatrix
-          }
+    # beta_cat
+    last[[ch]]$beta_cat_fix <- list()
+    for(y in Cats){
+      if(nfix[y]>0){
+        last[[ch]]$beta_cat_fix[[y]] <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + nfix[y]*Kcat[y])],
+                                               nrow = nfix[y])
+      }else{
+        last[[ch]]$beta_cat_fix[[y]] <- numeric()
+      }
+    }
+    last[[ch]]$beta_cat <- list()
+    for(y in Cats){
+      last[[ch]]$beta_cat[[y]] <- list()
+    }
+    for(g in 1:G[ch]){
+      for(y in Cats){
+        if(ngrp[y]>0){
+          last[[ch]]$beta_cat[[y]][[g]] <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + ngrp[y]*Kcat[y])],
+                                                  nrow = ngrp[y])
         }else{
+          last[[ch]]$beta_cat[[y]][[g]] <- numeric()
+        }
+      }
+    }
+
+    # random-effects related parameters (only if random effects are present)
+    if(totnran > 0){
+      # InvSigma
+      if(varying["InvSigma"]){
+        last[[ch]]$InvSigma <- list()
+        for(g in 1:G[ch]){
           auxmatrix <- matrix(0, totnran, totnran)
           pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
           auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
           auxmatrix <- t(auxmatrix)
           auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
-          last[[ch]]$InvSigma <- auxmatrix
+          last[[ch]]$InvSigma[[g]] <- auxmatrix
         }
-        # InvQ
-        if(varying["InvQ"]){
-          last[[ch]]$InvQ <- list()
-          for(g in 1:G[ch]){
-            auxmatrix <- matrix(0, totnran, totnran)
-            pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
-            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
-            auxmatrix <- t(auxmatrix)
-            auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
-            last[[ch]]$InvQ[[g]] <- auxmatrix
-          }
-        }else{
+      }else{
+        auxmatrix <- matrix(0, totnran, totnran)
+        pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvSigma"])]
+        auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+        auxmatrix <- t(auxmatrix)
+        auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+        last[[ch]]$InvSigma <- auxmatrix
+      }
+      # InvQ
+      if(varying["InvQ"]){
+        last[[ch]]$InvQ <- list()
+        for(g in 1:G[ch]){
           auxmatrix <- matrix(0, totnran, totnran)
           pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
           auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
           auxmatrix <- t(auxmatrix)
           auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
-          last[[ch]]$InvQ <- auxmatrix
+          last[[ch]]$InvQ[[g]] <- auxmatrix
         }
-        # b
-        last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + dimswithG["b",ch])],
-                               n, totnran, byrow = TRUE)
+      }else{
+        auxmatrix <- matrix(0, totnran, totnran)
+        pomvec <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + cdims["InvQ"])]
+        auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+        auxmatrix <- t(auxmatrix)
+        auxmatrix[upper.tri(auxmatrix, diag = TRUE)] <- pomvec
+        last[[ch]]$InvQ <- auxmatrix
       }
+      # b
+      last[[ch]]$b <- matrix(cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + dimswithG["b",ch])],
+                             n, totnran, byrow = TRUE)
+    }
 
-      if(cdims["naY"]>0){
-        last[[ch]]$naY <- list()
-        if(varying["naY"]){
-          for(g in 1:G[ch]){
-            last[[ch]]$naY[[g]] <- list()
-            for(y in Ys){
-              if(yspecd1$naY[y]>0){
-                last[[ch]]$naY[[g]][[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + yspecd1$naY[y])]
-              }else{
-                last[[ch]]$naY[[g]][[y]] <- numeric()
-              }
-            }
-          }
-        }else{
+    if(cdims["naY"]>0){
+      last[[ch]]$naY <- list()
+      if(varying["naY"]){
+        for(g in 1:G[ch]){
+          last[[ch]]$naY[[g]] <- list()
           for(y in Ys){
             if(yspecd1$naY[y]>0){
-              last[[ch]]$naY[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + yspecd1$naY[y])]
+              last[[ch]]$naY[[g]][[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + yspecd1$naY[y])]
             }else{
-              last[[ch]]$naY[[y]] <- numeric()
+              last[[ch]]$naY[[g]][[y]] <- numeric()
             }
+          }
+        }
+      }else{
+        for(y in Ys){
+          if(yspecd1$naY[y]>0){
+            last[[ch]]$naY[[y]] <- cmcmc$veclast[(lastcopied + 1):(lastcopied <- lastcopied + yspecd1$naY[y])]
+          }else{
+            last[[ch]]$naY[[y]] <- numeric()
           }
         }
       }
