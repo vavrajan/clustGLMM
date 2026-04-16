@@ -563,7 +563,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
         # possibly standardized regressors
         auxdata0[,y] <- factor(ydata[,y])
-        auxpolr0 <- polr(aux_form, data = auxdata0, Hess = TRUE)
+        auxpolr0 <- polr(aux_form, data = auxdata0)
         if(length(fcols[[y]]) > 0){
           fc <- sapply(fcols[[y]], function(x){
             xdash <- paste0("`", x, "`")
@@ -607,7 +607,7 @@ Change the save settings if you want to calculate these probabilities afterwards
             auxdata <- auxdata0
           }
           auxdata[,y] <- factor(auxdata[,y])
-          auxpolr <- tryCatch(polr(aux_form, data = auxdata, Hess = TRUE), 
+          auxpolr <- tryCatch(polr(aux_form, data = auxdata), 
                               error=function(e) e, warning=function(w) w)
           # dowithall <- TRUE
           dowithall <- FALSE
