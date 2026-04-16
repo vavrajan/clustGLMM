@@ -208,9 +208,8 @@ rescale_list <- function(draws, settings,
     if(length(notint_fix) > 0){
       shift_fix <- as.matrix(draws$beta_ord_fix[[y]][,notint_fix,drop=FALSE]) %*% centers[lfixnames[[y]][notint_fix]]
     }else{
-      shift_fix <- data.frame(x = rep(0, length(draws$m))) # irrelevant
+      shift_fix <- matrix(0, nrow = length(draws$m), ncol = 1)
     }
-    
     # For ordinal outcomes we have ordered intercepts c_ord
     if(settings["c_ord","gspec"]){
       for(g in 1:settings["c_ord", "G"]){
