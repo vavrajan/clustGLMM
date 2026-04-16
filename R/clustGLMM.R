@@ -403,7 +403,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         Xvars <- c(fcols[[y]], gcols[[y]])
         # Using all data
         nonna <- (!is.na(ydata[,y]))
-        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
+        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]],drop=FALSE], 1, sum)
         boldX <- as.matrix(finX[nonna,Xvars,drop=FALSE])
         coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
         names(coefs) <- Xvars
@@ -420,13 +420,13 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_num[[y]] <- list()
         for(g in 1:G[ch]){
           inds <- selection[[g]] & !is.na(ydata[,y])
-          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]]], 1, sum)
+          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]],drop=FALSE], 1, sum)
           boldX <- as.matrix(finX[inds, Xvars, drop=FALSE])
           XtX <- t(boldX) %*% boldX
           coefs <- try(as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY)), silent = TRUE)
           if(is(coefs, "try-error")){
             nonna <- !is.na(ydata[,y])
-            pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
+            pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]],drop=FALSE], 1, sum)
             boldX <- as.matrix(finX[nonna,Xvars])
             coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
             names(coefs) <- Xvars
