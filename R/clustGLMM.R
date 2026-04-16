@@ -582,7 +582,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           inits[[ch]]$c_ord[[y]] <- inits[[ch]]$a_ord[[y]] <- inits[[ch]]$pi_ord[[y]] <- list()
         }else{
           inits[[ch]]$c_ord[[y]] <- auxpolr0$zeta
-          logits <- c(0, exp(inits[[ch]]$c_ord[[y]])/(1+exp(inits[[ch]]$c_ord[[y]])))
+          logits <- c(0, plogis(inits[[ch]]$c_ord[[y]]))
           inits[[ch]]$a_ord[[y]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
           inits[[ch]]$pi_ord[[y]] <- exp(c(inits[[ch]]$a_ord[[y]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]], 0))))
         }
@@ -619,7 +619,7 @@ Change the save settings if you want to calculate these probabilities afterwards
               # can happen if rank-deficient (e.g. some category is not represented)
               dowithall <- TRUE
             }else{
-              logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
+              logits <- plogis(auxpolr$zeta)
               sdlogits <- sd(logits)
               if(is.na(sdlogits)){
                 dowithall <- TRUE
@@ -638,7 +638,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           
           if(varying["c_ord"]){
             inits[[ch]]$c_ord[[y]][[g]] <- auxpolr$zeta 
-            logits <- c(0, exp(inits[[ch]]$c_ord[[y]][[g]])/(1+exp(inits[[ch]]$c_ord[[y]][[g]])))
+            logits <- c(0, plogis(inits[[ch]]$c_ord[[y]][[g]]))
             inits[[ch]]$a_ord[[y]][[g]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
             inits[[ch]]$pi_ord[[y]][[g]] <- exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))))
           }
