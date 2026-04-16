@@ -221,7 +221,7 @@ rescale_list <- function(draws, settings,
         logits <- matrix(0, nrow = length(draws$m), ncol = Kord[y] + 2)
         logits[,Kord[y]+2] <- 1
         for(k in 1:Kord[y]){
-          logits[,k+1] <- exp(draws$c_ord[[g]][[y]][,k]) / (1+exp(draws$c_ord[[g]][[y]][,k]))
+          logits[,k+1] <- plogis(draws$c_ord[[g]][[y]][,k])
         }
         # a_ord
         if(settings["a_ord", "save"]){
@@ -245,8 +245,8 @@ rescale_list <- function(draws, settings,
       # logits
       logits <- matrix(0, nrow = length(draws$m), ncol = Kord[y] + 2)
       logits[,Kord[y]+2] <- 1
-      for(k in 1:Kord[y]){
-        logits[,k+1] <- exp(draws$c_ord[[y]][,k]) / (1+exp(draws$c_ord[[y]][,k]))
+        for(k in 1:Kord[y]){
+          logits[,k+1] <- plogis(draws$c_ord[[y]][,k])
       }
       # a_ord
       if(settings["a_ord", "save"]){
