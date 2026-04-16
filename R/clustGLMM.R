@@ -133,7 +133,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       if(!is.numeric(yval)){
         stop(paste0("Outcome ", y, " is not numeric!"))
       }
-      if(any(is.infinite(yval), na.rm = TRUE)){
+      if(any(is.infinite(yval))){
         stop(paste0("There are infinite values for outcome ", y, "!"))
       }
       if(standardize){
@@ -227,7 +227,6 @@ Change the save settings if you want to calculate these probabilities afterwards
   if(length(unique(Ys)) != length(Ys)){
     stop("Some outcome names are being repeated.")
   }
-  
   
  
   nfix <- ngrp <- nran <- noff <- numeric(sum(nY))
@@ -331,7 +330,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     rannames <- c(rannames, lrannames[[y]])
     offnames <- c(offnames, loffnames[[y]])
   }
-  if(any(is.na(finX))){
+  if(anyNA(finX)){
     stop("There are NA values among regressors, which is not supported.")
   }
   # Scale regressors in finX
@@ -403,11 +402,11 @@ Change the save settings if you want to calculate these probabilities afterwards
         Xvars <- c(fcols[[y]], gcols[[y]])
         # Using all data
         nonna <- (!is.na(ydata[,y]))
-        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]],drop=FALSE], 1, sum)
-        boldX <- as.matrix(finX[nonna,Xvars,drop=FALSE])
-        coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
-        names(coefs) <- Xvars
-        MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
+        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]], drop = FALSE], 1, sum)
+        boldX <- as.matrix(finX[nonna, Xvars, drop=FALSE])
+        fit0 <- lm.fit(boldX, pomY)
+        coefs <- coef(fit0)
+        MSe <- sum(residuals(fit0)^2) / fit0$df.residual
         init_prec_num <- 1/MSe
         inits[[ch]]$beta_num_fix[[y]] <- coefs[fcols[[y]]]
         
@@ -420,21 +419,14 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_num[[y]] <- list()
         for(g in 1:G[ch]){
           inds <- selection[[g]] & !is.na(ydata[,y])
-          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]],drop=FALSE], 1, sum)
+          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]], drop = FALSE], 1, sum)
           boldX <- as.matrix(finX[inds, Xvars, drop=FALSE])
-          XtX <- t(boldX) %*% boldX
-          coefs <- try(as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY)), silent = TRUE)
-          if(is(coefs, "try-error")){
-            nonna <- !is.na(ydata[,y])
-            pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]],drop=FALSE], 1, sum)
-            boldX <- as.matrix(finX[nonna,Xvars])
-            coefs <- as.numeric(solve(t(boldX) %*% boldX, t(boldX) %*% pomY))
-            names(coefs) <- Xvars
-            MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
-          }else{
-            names(coefs) <- Xvars
-            MSe <- sum((pomY - boldX %*% matrix(coefs, ncol = 1))^2)/(length(pomY) - length(Xvars))
+          fit <- try(lm.fit(boldX, pomY))
+          if (is(fit, "try-error") || anyNA(coef(fit))) {
+              fit <- fit0
           }
+          coefs <- coef(fit)
+          MSe <- sum(residuals(fit)^2) / fit$df.residual
           if(varying["prec_num"]){
             inits[[ch]]$prec_num[[y]][[g]] <- 1/MSe
           }
@@ -590,7 +582,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           inits[[ch]]$c_ord[[y]] <- inits[[ch]]$a_ord[[y]] <- inits[[ch]]$pi_ord[[y]] <- list()
         }else{
           inits[[ch]]$c_ord[[y]] <- auxpolr0$zeta
-          logits <- c(0, exp(inits[[ch]]$c_ord[[y]])/(1+exp(inits[[ch]]$c_ord[[y]])))
+          logits <- c(0, plogis(inits[[ch]]$c_ord[[y]]))
           inits[[ch]]$a_ord[[y]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
           inits[[ch]]$pi_ord[[y]] <- exp(c(inits[[ch]]$a_ord[[y]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]], 0))))
         }
@@ -627,7 +619,7 @@ Change the save settings if you want to calculate these probabilities afterwards
               # can happen if rank-deficient (e.g. some category is not represented)
               dowithall <- TRUE
             }else{
-              logits <- exp(auxpolr$zeta)/(1+exp(auxpolr$zeta))
+              logits <- plogis(auxpolr$zeta)
               sdlogits <- sd(logits)
               if(is.na(sdlogits)){
                 dowithall <- TRUE
@@ -646,7 +638,7 @@ Change the save settings if you want to calculate these probabilities afterwards
           
           if(varying["c_ord"]){
             inits[[ch]]$c_ord[[y]][[g]] <- auxpolr$zeta 
-            logits <- c(0, exp(inits[[ch]]$c_ord[[y]][[g]])/(1+exp(inits[[ch]]$c_ord[[y]][[g]])))
+            logits <- c(0, plogis(inits[[ch]]$c_ord[[y]][[g]]))
             inits[[ch]]$a_ord[[y]][[g]] <- log((logits[2:length(logits)] - logits[1:(length(logits)-1)])/(1-logits[length(logits)]))
             inits[[ch]]$pi_ord[[y]][[g]] <- exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))/(sum(exp(c(inits[[ch]]$a_ord[[y]][[g]], 0))))
           }
@@ -799,7 +791,7 @@ Change the save settings if you want to calculate these probabilities afterwards
                          BYROW = TRUE,
                          sym = FALSE,
                          diag = FALSE,
-                         diagval = NA,
+                         diagval = NA_real_,
                          D = 0)
   
   rownames(settings) <- params
@@ -1060,7 +1052,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   mcmc$draws <- list()
   for(ch in 1:nchains){
     if(howsave == "matrix"){
-      mcmc$draws[[ch]] <- matrix(NA, nrow = iter, ncol = 1+nparams[ch])
+      mcmc$draws[[ch]] <- matrix(NA_integer_, nrow = iter, ncol = 1+nparams[ch])
       mcmc$draws[[ch]][,1] = 1:iter
       colnames(mcmc$draws[[ch]]) <- cnames[[ch]]
       mcmc$draws[[ch]] = as.data.frame(mcmc$draws[[ch]])
@@ -1657,26 +1649,21 @@ Change the save settings if you want to calculate these probabilities afterwards
 
   ## U-based clustering
   fun0 <- function(U, ch){
-    tab = table(U)
-    as.numeric(is.element(as.character(1:G[ch]), names(tab)))
+    as.numeric(tabulate(U, G[ch]) > 0)
   }
 
   fun1 <- function(U, ch){
-    tab = table(U)
-    tab <- tab[as.character(clusters[[ch]])]
-    as.numeric(names(which.max(tab)))
+    which.max(tabulate(U, G[ch]))
   }
 
   fun2 <- function(U, ch){
-    tab = table(U)
-    tab <- tab[as.character(clusters[[ch]])]
-    max(tab, na.rm=TRUE)/iter
+    max(tabulate(U), na.rm = TRUE) / iter
   }
 
   clusters <- iterations <- list()
   modeGplus <- numeric(nchains)
-  clusteringU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
-  certaintyU <- matrix(NA, nrow = as.numeric(n), ncol = nchains)
+  clusteringU <- matrix(NA_integer_, nrow = as.numeric(n), ncol = nchains)
+  certaintyU <- matrix(NA_real_, nrow = as.numeric(n), ncol = nchains)
   for(ch in 1:nchains){
     iterations[[ch]] <- mcmc$draws[[ch]]$m
     # find modeGplus - the most common Gplus value

@@ -58,7 +58,6 @@ Change the settings and use clustGLMM() again.")
   # Calculation will be done by C function, to speed up calculation
   # parameters need to be given to C function in a similar way to Metropolis_within_Gibbs_MBC_NumBinOrdCat
   
-  n <- length(unique(data[,id]))
   N <- dim(data)[1]
   unique_ids <- unique(data[,id])
   n <- length(unique_ids)

@@ -63,7 +63,7 @@ importFrom("nnet", "multinom")
 importFrom("RcppHungarian", "HungarianSolver")
 importFrom("splines", "bs")
 importFrom("stats", "acf", "as.formula", "binomial", "coef", "density", "ecdf",
-           "glm", "kmeans", "lowess", "loess.smooth", "median", "model.matrix", "na.pass",
-           "plogis", "poisson", "quantile", "rbinom", "rgamma", "rnorm", "rpois", "runif",
-           "sd")
+           "lm.fit", "glm", "kmeans", "lowess", "loess.smooth", "median",
+           "model.matrix", "na.pass", "plogis", "poisson", "quantile", "rbinom",
+           "residuals", "rgamma", "rnorm", "rpois", "runif", "sd")
 importFrom("utils", "head")
