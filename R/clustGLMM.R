@@ -228,7 +228,6 @@ Change the save settings if you want to calculate these probabilities afterwards
     stop("Some outcome names are being repeated.")
   }
   
-  
  
   nfix <- ngrp <- nran <- noff <- numeric(sum(nY))
   names(nfix) <- names(ngrp) <- names(nran) <- names(noff) <- Ys
@@ -403,11 +402,11 @@ Change the save settings if you want to calculate these probabilities afterwards
         Xvars <- c(fcols[[y]], gcols[[y]])
         # Using all data
         nonna <- (!is.na(ydata[,y]))
-        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
-        boldX <- as.matrix(finX[nonna,Xvars,drop=FALSE])
-        fit <- lm.fit(boldX, pomY)
-        coefs <- coef(fit)
-        MSe <- sum(residuals(fit)^2) / fit$df.residual
+        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]], drop = FALSE], 1, sum)
+        boldX <- as.matrix(finX[nonna, Xvars, drop=FALSE])
+        fit0 <- lm.fit(boldX, pomY)
+        coefs <- coef(fit0)
+        MSe <- sum(residuals(fit0)^2) / fit0$df.residual
         init_prec_num <- 1/MSe
         inits[[ch]]$beta_num_fix[[y]] <- coefs[fcols[[y]]]
         
@@ -420,14 +419,11 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_num[[y]] <- list()
         for(g in 1:G[ch]){
           inds <- selection[[g]] & !is.na(ydata[,y])
-          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]]], 1, sum)
+          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]], drop = FALSE], 1, sum)
           boldX <- as.matrix(finX[inds, Xvars, drop=FALSE])
           fit <- try(lm.fit(boldX, pomY))
-          if(is(try, "try-error")){
-              nonna <- !is.na(ydata[,y])
-              pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]]], 1, sum)
-              boldX <- as.matrix(finX[nonna,Xvars])
-              fit <- lm.fit(boldX, pomY)
+          if (is(fit, "try-error") || anyNA(coef(fit))) {
+              fit <- fit0
           }
           coefs <- coef(fit)
           MSe <- sum(residuals(fit)^2) / fit$df.residual
