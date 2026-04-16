@@ -658,7 +658,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         }
         # possibly standardized regressors
         auxdata0[,y] <- factor(ydata[,y]) # the first category is the baseline
-        auxmult0 <- multinom(as.formula(aux_form), data = auxdata0)
+        auxmult0 <- multinom(as.formula(aux_form), data = auxdata0, trace = FALSE)
         sumauxmult0 <- summary(auxmult0)
         if(length(fcols[[y]]) > 0){
           fc <- sapply(fcols[[y]], function(x){
@@ -694,7 +694,7 @@ Change the save settings if you want to calculate these probabilities afterwards
             auxdata <- auxdata0
           }
           auxdata[,y] <- factor(auxdata[,y]) # the first category is the baseline
-          auxmult <- tryCatch(multinom(as.formula(aux_form), data = auxdata),
+          auxmult <- tryCatch(multinom(as.formula(aux_form), data = auxdata, trace = FALSE),
                               error=function(e) e, warning=function(w) w)
           # if(is(auxmult,"warning") || is(auxmult,"error")){
           if(is(auxmult,"error")){
