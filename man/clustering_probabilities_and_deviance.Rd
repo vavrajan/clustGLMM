@@ -63,7 +63,7 @@ number of points for Adaptive Gaussian Quadrature; if \code{NGQ = 1}, then simpl
 \details{
 An object of class \code{"clustglmm"} can be used regardless of the format, i.e.,  \code{howsave = "list"} or \code{howsave = "matrix"}.
 
-The data.frame \code{data} containing the outcomes and regressors does not have to be the same as used for MCMC sampling. Even completely new units are allowed here. However, keep in mind that IDs in \code{id} are aligned with numbers from 1 to number of unique IDs within the current version. For simplicity, the names of output variables are indexed by these numbers and not the original ID. 
+The data.frame \code{data} containing the outcomes and regressors does not have to be the same as used for MCMC sampling. Even completely new units are allowed here.  
 
 The indexing of probabilities is more complicated when \code{dynamic_prob = TRUE}. In this case, for one unit there will be as many probabilities as observations belong to this unit. If unit \code{i} is observed 3 times, there will be 3 probabilities: one where only the first observation is used, a second where the first two observations are used and a third where all observations are used. With more available data the classification towards one of the clusters should be more pronounced. In the end, there will be as many probabilities as rows of \code{data}. However, it does not mean that the rows correspond to each other, e.g., when \code{data} is not ordered by unit IDs. The reason is that we use a \code{for} cycle that goes through all units and then for a specific unit through all its observations. 
 
