@@ -122,3 +122,4 @@ for (ch in seq_len(nchains)) {
                      mcmc$Kord, mcmc$Kcat, mcmc$centers, mcmc$scales)
 }
 }
+\keyword{internal}

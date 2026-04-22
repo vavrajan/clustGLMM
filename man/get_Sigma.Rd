@@ -135,4 +135,4 @@ sd_num <- get_sd_num(mcmc$draws[[1]], mcmc$iter, mcmc$settings[[1]],
                      "ynum", howsave = mcmc$howsave)                  
 
 }
-
+\keyword{internal}
