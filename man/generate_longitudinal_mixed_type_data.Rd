@@ -79,9 +79,9 @@ Numerical outcome is sampled from normal distribution with group-specific standa
 
 Count outcome is sampled from Poisson distribution with rate made by \code{exp()} of the predictor.
 
-Binary outcome (0 or 1) is sampled with probability computed by \code{logit_inv} function; \code{logit_inv(x) = exp(x)/(1+exp(x))}.  
+Binary outcome (0 or 1) is sampled with probability computed by \code{\link[stats]{plogis}}.
 
-Ordinal outcome (ordered factor) is sampled by probabilities computed by sequential differences of \code{logit_inv} applied to shifted predictor.
+Ordinal outcome (ordered factor) is sampled by probabilities computed by sequential differences of \code{\link[stats]{plogis}} applied to shifted predictor.
 
 Categorical outcome (unordered factor) is sampled by probabilities computed by \code{softmax} function from several predictors specific for each category; \code{softmax(x) = exp(x) / sum(exp(x))} where \code{x} is \code{Kcat}-dimensional. By default, predictor for the first category is set to 0 for identifiability purposes.
 }
