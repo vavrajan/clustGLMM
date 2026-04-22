@@ -335,7 +335,7 @@ Change the save settings if you want to calculate these probabilities afterwards
     stop("There are NA values among regressors, which is not supported.")
   }
   # Scale regressors in finX
-  if(length(intersection(offnames, c(grpnames, fixnames, rannames))) > 0){
+  if(length(intersect(offnames, c(grpnames, fixnames, rannames))) > 0){
     stop("Offset variables are not allowed be used as predictor variables, please, rename.")
   }
   std_cols <- setdiff(colnames(finX), c("id", "(Intercept)", offnames))
