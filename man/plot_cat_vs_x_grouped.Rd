@@ -57,7 +57,7 @@ a string describing the position of legend, see \code{\link{legend}}.
 }
 }
 \details{
-Colors are created automatically by \code{rainbow_hcl} from library \code{colorspace}.
+Colors are created automatically by \code{rainbow_hcl} from package \code{colorspace}.
 \code{\link{slategray.colors}} are used for group 0 (unclassified).
 
 Output of \code{plot_num_vs_x_grouped} depends on the type of covariate \code{x}:
