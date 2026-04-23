@@ -12,9 +12,7 @@
 Change the Output Formats of \code{clustGLMM}
 }
 \description{
-These functions are used to process or rearrange data between different formats. 
-The main function \code{\link{as_coda}} converts the \code{draws} item of \code{clustglmm} class into \code{\link{mcmc.list}} object compatible with functions from \code{\link{coda}} package.
-Other functions (usually internally used) allow us to change between different saving formats (\code{mcnc$howsave="list"} or \code{mcmc$howsave="matrix"}). 
+These functions are used to process or rearrange data between different formats. The main function \code{\link{as_coda}} converts the \code{draws} item of the \code{clustglmm} class into a \code{\link[coda]{mcmc.list}} object compatible with functions from package \pkg{coda}. Other functions (usually internally used) allow us to change between different saving formats (\code{mcnc$howsave = "list"} or \code{mcmc$howsave = "matrix"}).
 }
 \usage{
 as_coda(mcmc, burnin=0, thin=1)
