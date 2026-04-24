@@ -82,10 +82,14 @@ rescale_list <- function(draws, settings,
     if(settings["naY","save"]){
       if(settings["naY","gspec"]){
         for(g in 1:settings["naY","G"]){
-          draws[[p]][[g]][[y]] <- draws[[p]][[g]][[y]] * scales[y] + centers[y]
+          if (!is.null(draws$naY[[g]][[y]])) {
+            draws$naY[[g]][[y]] <- draws$naY[[g]][[y]] * scales[y] + centers[y]
+          }
         }
       }else{
-        draws[[p]][[y]] <- draws[[p]][[y]] * scales[y] + centers[y]
+        if (!is.null(draws$naY[[y]])) {
+            draws$naY[[y]] <- draws$naY[[y]] * scales[y] + centers[y]
+        }
       }
     }
   } # end of for y in Nums
