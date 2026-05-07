@@ -563,7 +563,7 @@ Change the settings and use clustGLMM() again.")
   call <- paste0(call, "n = number of units: ", n, "\n")
   call <- paste0(call, "observations per unit (min | median | max): ", 
                  min(nsubj), " | ", median(nsubj), " | ", max(nsubj), " \n")
-  call <- paste0(call, "G = maximal number of clusters: ", paste(mcmc$G, collapse=", "), "\n")
+  call <- paste0(call, "G = maximal number of components: ", paste(mcmc$G, collapse=", "), "\n")
   
   saved_params <- rownames(res$settings[[chains[1]]])[res$settings[[chains[1]]]$save]
   call <- paste0(call, "\nList of saved parameters in $draws: ", 
