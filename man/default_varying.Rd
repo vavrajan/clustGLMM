@@ -10,14 +10,16 @@ Setting Default Values in \code{clustGLMM}
 Sets default values for the hyperparameters of the priors \code{default_param}, indicators of group-specificity \code{default_varying}, integer and double valued tuning parameters \code{default_tuning} and indicators of what variables should be saved \code{default_save}.
 }
 \usage{
-default_param(sparse = TRUE)
-default_save()
-default_tuning(experience = FALSE)
-default_varying()
+default_param(sparse = TRUE, ...)
+default_save(...)
+default_tuning(experience = FALSE, ...)
+default_varying(...)
 }
 \arguments{
   \item{sparse}{a logical, if \code{TRUE} the rate and shape hyperparameters of \code{e0} are set to values encouraging sparsity in the weights}
-  \item{experience}{a logical, indicating if the default values are changed to values proven suitable from empirical experience}
+  \item{experience}{a logical, indicating if the default values are
+    changed to values proven suitable from empirical experience}
+  \item{...}{named scalars to override default values}
 }
 \details{
 If arguments \code{param}, \code{save}, \code{tuning} and \code{varying} of \code{\link{clustGLMM}} are not specified, these functions are used to create the default values. They can also be used to create prototypical \code{param}, \code{varying}, \code{tuning} and \code{save} argument specifications and then adjust them.

@@ -1,4 +1,4 @@
-default_save <- function(){
+default_save <- function(...){
   save <-
       c(beta_num_fix = TRUE, beta_num = TRUE,
         prec_num = TRUE, sd_num = TRUE, var_num = TRUE,
@@ -16,5 +16,6 @@ default_save <- function(){
         Gplus = TRUE, e0 = TRUE,
         naY = FALSE
   )
+  save <- set_dots(save, ..., type = "logical")
   return(save)
 }
