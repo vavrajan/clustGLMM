@@ -344,7 +344,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     if(m == 0){
       # there is no iteration satisfying that condition --> do not change anything
     }else{
-      # m is the last iteration with modeGplus clusters that resulted in a permutation
+      # m is the last iteration with modeGplus filled components that resulted in a permutation
       values <- unlist(draws[[ch]][m, ])
       # w
       if(lsettings[[ch]]["w","save"]){
@@ -743,9 +743,9 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     call <- paste0(call, "-----------------------------------------------------------------------\n")
     call <- paste0(call, "Chain ", ch, "\n")
     call <- paste0(call, "-----------------------------------------------------------------------\n")
-    call <- paste0(call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
+    call <- paste0(call, "The new number of components for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
     
-    sentence <- paste0("We now have clusters: ", 
+    sentence <- paste0("We now have components: ", 
                        paste0(res$clusters[[ch]], collapse = ", "), ".")
     wsent <- strwrap(sentence, width = getOption("width"))
     for(l in 1:length(wsent)){
@@ -754,7 +754,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     
     sentence <- paste0("Number of iterations with ", 
                        mcmc$modeGplus[ch], 
-                       " clusters: ", 
+                       " components: ", 
                        iters[ch], 
                        " (", 
                        format(iters[ch] / orig_iters[ch] * 100, digits=2), 
