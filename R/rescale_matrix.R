@@ -444,7 +444,7 @@ rescale_matrix <- function(draws, settings,
           corSigmacols <- grep(paste0("^corSigma\\(", g, "\\)"), colnames(draws))
           detInvSigmacols <- paste0("detInvSigma\\(", g, "\\)")
           for (m in 1:nrow(draws)) {
-            Sigma <- get_Sigma(draws, m, settings, g = g, howsave = "matrix",
+            Sigma <- get_Sigma(draws, m, settings, g = g, howsave = "data.frame",
                                Sigmacols = Sigmacols, InvSigmacols = InvSigmacols, 
                                sdSigmacols = sdSigmacols, corSigmacols = corSigmacols)
             # perform rescaling and save new values
@@ -479,7 +479,7 @@ rescale_matrix <- function(draws, settings,
         corSigmacols <- grep("^corSigma", colnames(draws))
         for (m in 1:nrow(draws)) {
           # First get Sigma matrix for iteration m
-          Sigma <- get_Sigma(draws, m, settings, howsave = "matrix",
+          Sigma <- get_Sigma(draws, m, settings, howsave = "data.frame",
                              Sigmacols = Sigmacols, InvSigmacols = InvSigmacols, 
                              sdSigmacols = sdSigmacols, corSigmacols = corSigmacols)
           # perform rescaling and save new values

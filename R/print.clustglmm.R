@@ -13,11 +13,11 @@ print.clustglmm <- function(x, which = "call", ...){
       cat(paste0("Chain ", ch, "\n"))
       cat("-----------------------------------------------------------------------\n")
       if(x$G[ch] > 1){
-        cat(paste0("The most-frequent number of non-empty clusters: ", x$modeGplus[ch], "\n"))
-        cat(paste0("Empty clusters: ", paste0(setdiff(1:x$G[ch], x$clusters[[ch]]), collapse = ", "), "\n"))
-        cat(paste0("Non-empty clusters: ", paste0(x$clusters[[ch]], collapse = ", "), "\n"))
+        cat(paste0("The most-frequent number of non-empty components: ", x$modeGplus[ch], "\n"))
+        cat(paste0("Empty components: ", paste0(setdiff(1:x$G[ch], x$clusters[[ch]]), collapse = ", "), "\n"))
+        cat(paste0("Non-empty components: ", paste0(x$clusters[[ch]], collapse = ", "), "\n"))
         print(summary(factor(x$clustering[,ch])))
-        cat(paste0("Average certainty of clustering into a cluster: \n"))
+        cat(paste0("Average certainty of assignment to a component: \n"))
         print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
       }else{
         cat("This chain has G = 1.\n") 

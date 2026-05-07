@@ -150,7 +150,7 @@ function(mcmc, what, gspec, dimspec, yspec,
     } # end of if mcmc$howsave == list
   
     ### Draws are saved in large matrix
-    if(mcmc$howsave == "matrix"){
+    if(mcmc$howsave == "data.frame"){
       
       if(!is.element(whatLAB, colnames(mcmc$draws[[ch]]))){
         stop(paste("Wrong specification, column ", whatLAB, 
@@ -159,7 +159,7 @@ function(mcmc, what, gspec, dimspec, yspec,
       
       out$y = mcmc$draws[[ch]][ind_iterations, whatLAB]
       
-    } # end of if howsave="matrix"
+    } # end of if howsave="data.frame"
     scalar_samples$draws[[ch]] <- out
   }# end of for ch in chains
 

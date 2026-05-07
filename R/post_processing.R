@@ -5,12 +5,15 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
   }
   
   
-  ### 0) The type of saving results has to be "matrix" for the code below
+  ### 0) The type of saving results has to be "data.frame" for the code below
   backtolist <- FALSE
   if(mcmc$howsave=="list"){
-    # Then transfer to howsave="matrix" -- create mcmc$draws matrix
+    # Then transfer to howsave="data.frame" -- create mcmc$draws data.frame
     backtolist <- TRUE
     mcmc <- from_list_to_matrix(mcmc)
+  } else if (mcmc$howsave != "data.frame") {
+      stop("Not implemented for howsave = ", sQuote(mcmc$howsave),
+           " yet.")
   }
   
   ### 1) Find the posterior draws with Gplus = modeGplus
@@ -742,9 +745,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     call <- paste0(call, "-----------------------------------------------------------------------\n")
     call <- paste0(call, "The new number of clusters for this chain: $G[",ch,"] = ", res$G[ch], ".\n")
     
-    sentence <- paste0("Instead of clusters: ", 
-                       paste0(mcmc$clusters[[ch]], collapse = ", "),
-                       "; we now have clusters: ", 
+    sentence <- paste0("We now have clusters: ", 
                        paste0(res$clusters[[ch]], collapse = ", "), ".")
     wsent <- strwrap(sentence, width = getOption("width"))
     for(l in 1:length(wsent)){

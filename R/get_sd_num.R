@@ -1,7 +1,7 @@
-get_sd_num <- function(draws, m, settings, y = NA, howsave = "matrix") {
-  howsave <- match.arg(howsave, c("matrix", "list"))
+get_sd_num <- function(draws, m, settings, y = NA, howsave = "data.frame") {
+  howsave <- match.arg(howsave, c("data.frame", "list"))
   
-  if (howsave == "matrix") {
+  if (howsave == "data.frame") {
     if (settings["prec_num", "gspec"]) {
       if (settings["sd_num", "save"]) {
         sd_num <- draws[m, paste0("sd_num_", y, "(", 1:settings["sd_num", "G"], ")")]

@@ -35,7 +35,7 @@ from_list_to_matrix <- function(mcmc){
     # chain ch completed
   }
   
-  retmcmc$howsave <- "matrix"
+  retmcmc$howsave <- "data.frame"
   class(retmcmc) <- "clustglmm"
   
   return(retmcmc)

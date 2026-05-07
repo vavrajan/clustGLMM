@@ -11,10 +11,13 @@ predict.clustglmm <-
     
   #TODO offset
     
-  # we rather work with "matrix" format here
+  # we rather work with "data.frame" format here
   if(object$howsave == "list"){
     object <- from_list_to_matrix(object)
-  }  
+  } else if (object$howsave != "data.frame") {
+      stop("Not implemented for howsave = ", sQuote(mcmc$howsave),
+           " yet.")
+  }
   
   type <- match.arg(type, c("link", "response", "posterior_predictive_response"))
   method <- match.arg(method, c("samples", "plugin"))
@@ -213,15 +216,15 @@ predict.clustglmm <-
         if(settings["InvSigma","gspec"]){
           Sigma <- list()
           for(g in gs){
-            Sigma[[g]] <- get_Sigma(draws, m, settings, g = g, howsave = "matrix")
+            Sigma[[g]] <- get_Sigma(draws, m, settings, g = g, howsave = "data.frame")
           }
         }else{
-          Sigma <- get_Sigma(draws, m, settings, howsave = "matrix")
+          Sigma <- get_Sigma(draws, m, settings, howsave = "data.frame")
         }
         
         # get sd_num
         if(object$family[y] == "num"){
-          sd_num <- unlist(get_sd_num(draws, m, settings, y = y, howsave="matrix"))
+          sd_num <- unlist(get_sd_num(draws, m, settings, y = y, howsave="data.frame"))
         }
         
         ### Generate latent data - U and b

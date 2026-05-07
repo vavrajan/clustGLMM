@@ -4,13 +4,13 @@
 Sample MCMC for a Mixture of GLMMs of Mixed-type
 }
 \description{
-First, initial values are set based on separate univariate GLMMs for each individual outcome. Then, an inner \code{C} function is called to do the hard work of MCMC sampling (Metropolis within Gibbs sampling). Outputs are processed and returned in required format (either in nicely organized lists or one huge matrix).
+First, initial values are set based on separate univariate GLMMs for each individual outcome. Then, an inner \code{C} function is called to do the hard work of MCMC sampling (Metropolis within Gibbs sampling). Outputs are processed and returned in required format (either in nicely organized lists or one huge data.frame).
 }
 \usage{
 clustGLMM(formula, id, family, data, G,  
           varying, save, param, tuning, inits,
           iter = 1000, nchains = 1, standardize = TRUE,
-          howsave = "matrix")
+          howsave = c("data.frame", "list", "cmcmc"))
 }
 \arguments{
   \item{formula}{
@@ -47,7 +47,7 @@ a named list of hyperparameters for prior distributions. See also 'Details'.
 a list of integer valued and double-valued tuning parameters. See also 'Details'.
 }
   \item{inits}{
-a structured list of initial values; ideally the last generated values from a previous run. If \code{missing}, units are randomly assigned to clusters and parameters are initiated using values obtained based on separately estimated univariate models. See also 'Details'.
+a structured list of initial values; ideally the last generated values from a previous run. If \code{missing}, units are randomly assigned to components and parameters are initiated using values obtained based on separately estimated univariate models. See also 'Details'.
 }
   \item{iter}{
 length of each sampled chain.
@@ -62,7 +62,7 @@ a Boolean whether the numeric outcome and regressors should be scaled.
 a string declaring how the sampled chains should be returned as \code{draws}. One of:
 \describe{
 \item{\code{"list"}}{\code{draws} is a list indexed by chain numbers, parameters will be saved in a structured list in which it is easy to orient,}
-\item{\code{"matrix"}}{\code{draws} is a large matrix, where one row corresponds to one iteration of one specific chain and columns are all model parameters,}
+\item{\code{"data.frame"}}{\code{draws} is a large data.frame, where one row corresponds to one iteration of one specific chain and columns are all model parameters,}
 \item{\code{"cmcmc"}}{\code{draws} is a list indexed by chain numbers and contains the condensed output of the inner C function (not recommended!).}
 }}
 }
@@ -88,9 +88,9 @@ A named list \code{param} contains the values of the hyperparameters needed to s
 
 The list of initial values \code{inits} is convenient to supply in case one is intereseted in continuing the sampling using the last sampled values as initialization, e.g., if the chains have not yet converged. If \code{inits} is missing, then a completely new set of initial values for each of the sampled chains is generated in the following way:
 
-1. Units are randomly (uniformly) distributed to \code{G} clusters and \code{w} is initiated with \code{1/G} for all clusters.
+1. Units are randomly (uniformly) distributed to \code{G} components and \code{w} is initiated with \code{1/G} for all components.
 
-2. For each numeric outcome, a regression model with combined \code{fixed} and \code{group} formula is fit to set up initial values for fixed parameters \code{beta_num_fixed}. Then, the model is fitted  again (if possible) for each cluster separately to determine the initial values for group-specific effects \code{beta_num}. Depending on the choice of group-specificity for \code{prec_num} the initial values are chosen as the inverse of the error variance estimate of the corresponding model. 
+2. For each numeric outcome, a regression model with combined \code{fixed} and \code{group} formula is fit to set up initial values for fixed parameters \code{beta_num_fixed}. Then, the model is fitted  again (if possible) for each component separately to determine the initial values for group-specific effects \code{beta_num}. Depending on the choice of group-specificity for \code{prec_num} the initial values are chosen as the inverse of the error variance estimate of the corresponding model. 
 
 3. Effects for count outcomes are initialized in a similar way using \code{glm(, family = poisson(link = "log"))} instead. 
 
@@ -110,18 +110,18 @@ The algorithm also requires a set of tuning parameters in \code{tuning} that tun
 }
 \value{
  An object of class \code{"clustglmm"} where the most important elements contained are:
-\item{draws}{a list indexed by chain with generated samples saved either in a large matrix (\code{howsave = "matrix"}) or a carefully structured list (\code{howsave = "list"}).}
+\item{draws}{a list indexed by chain with generated samples saved either in a large data.frame (\code{howsave = "data.frame"}) or a carefully structured list (\code{howsave = "list"}).}
 \item{param_names}{individual parameter (column) names in a structured list by general parameter name.}
 
 In addition the object contains the inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}, \code{standardize}.
 
 Furthermore elements consisting of newly defined quantities are:
 \item{iterations}{a list per each chain containing iterations available,}
-\item{modeGplus}{a vector of the most frequent number of non-empty clusters per chain,}
+\item{modeGplus}{a vector of the most frequent number of non-empty components per chain,}
 \item{sameclusters}{a Boolean declaring whether the cluster labels in all sampled chains are the same (useful for plotting),}
-\item{clusters}{a list of ordered non-empty clusters for each sampled chain (\code{modeGplus} most frequently appearing cluster labels),}
+\item{clusters}{a list of ordered non-empty components for each sampled chain (\code{modeGplus} most frequently appearing cluster labels),}
 \item{clustering}{a matrix containing estimated cluster labels based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
-\item{certainty}{a matrix containing the probability of clustering into the assigned cluster in \code{clustering} based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
+\item{certainty}{a matrix containing the probability of assignment into   the cluster specified in \code{clustering} based on all sampled allocation indicators for each unit (row) and sampled chain (column),}
 \item{inits}{a structured list of parameter values used as initial values,}
 \item{last}{a structured list in the same format as \code{inits} to be used as initial values for additional sampling,}
 \item{InitType}{string describing whether the initial values were given or created,} 

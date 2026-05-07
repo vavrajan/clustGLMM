@@ -39,7 +39,7 @@ permute_cluster_labels <-
       
       
       ## permute everything in the original data  
-      if(mcmc$howsave == "matrix"){
+      if(mcmc$howsave == "data.frame"){
         # data are save in matrix format
         aux <- mcmc$draws[[ch]]
         

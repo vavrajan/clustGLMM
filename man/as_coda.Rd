@@ -12,7 +12,7 @@
 Change the Output Formats of \code{clustGLMM}
 }
 \description{
-These functions are used to process or rearrange data between different formats. The main function \code{\link{as_coda}} converts the \code{draws} item of the \code{clustglmm} class into a \code{\link[coda]{mcmc.list}} object compatible with functions from package \pkg{coda}. Other functions (usually internally used) allow us to change between different saving formats (\code{mcnc$howsave = "list"} or \code{mcmc$howsave = "matrix"}).
+These functions are used to process or rearrange data between different formats. The main function \code{\link{as_coda}} converts the \code{draws} item of the \code{clustglmm} class into a \code{\link[coda]{mcmc.list}} object compatible with functions from package \pkg{coda}. Other functions (usually internally used) allow us to change between different saving formats (\code{mcnc$howsave = "list"} or \code{mcmc$howsave = "data.frame"}).
 }
 \usage{
 as_coda(mcmc, burnin=0, thin=1)
@@ -69,7 +69,7 @@ Functions with \code{C} in the name are used internally in \code{\link{clustGLMM
 These functions only convert only draws from specific chain for a specific parameter, which explains the arguments \code{values}, \code{p} or \code{draws}.
 They do not convert the whole \code{clustglmm} object.
 
-The functions that change between \code{howsave = "list"}, \code{howsave = "matrix"} and \code{coda} output go through every chain and every saved parameter, thus, convert the whole \code{clustglmm} object.
+The functions that change between \code{howsave = "list"}, \code{howsave = "data.frame"} and \code{coda} output go through every chain and every saved parameter, thus, convert the whole \code{clustglmm} object.
 
 Function \code{as_coda} is a wrapper function that triggers the respective function \code{from_..._to_coda} depending on the current value of \code{mcmc$howsave}.
 }
@@ -167,3 +167,4 @@ codamcmc <- from_matrix_to_coda(mcmc, burnin = 10, thin = 1)
 ## How to change from any howsave type to mcmc from 'coda' package
 codamcmc <- as_coda(mcmc, burnin = 10, thin = 1)
 }
+\keyword{internal}

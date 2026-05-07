@@ -348,7 +348,7 @@ Change the settings and use clustGLMM() again.")
       }
     }
     
-    if(mcmc$howsave == "matrix"){
+    if(mcmc$howsave == "data.frame"){
       for(p in params[1:14]){
         cparamvalues[[p]] <- from_matrix_to_C(mcmc$draws[[ch]], iters[[ch]], p, lsettings[[ch]])
       }
@@ -465,7 +465,7 @@ Change the settings and use clustGLMM() again.")
          maxnrep      = as.integer(maxnrep)
       )
     
-    if(howsave != "matrix"){
+    if(howsave != "data.frame"){
       # results will be returned as it was returned by C function
       chain <- list()
       for(p in c("deviance", "dev_i", "pUig_int")){
@@ -486,7 +486,7 @@ Change the settings and use clustGLMM() again.")
       output[[ch]] <- chain
     }
 
-    if(howsave == "matrix"){
+    if(howsave == "data.frame"){
       # results will be returned in matrix - the same way as original R function
       output[[ch]] <- matrix(NA, nrow = niter[ch], ncol = 1+nparams[ch])
       output[[ch]][,1] <- iters[[ch]]

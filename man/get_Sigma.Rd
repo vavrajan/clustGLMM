@@ -9,9 +9,9 @@ These two parameters are saved under different formats or tranformation.
 These functions return the m-th sample of the corresponding parameter even if it has to be transformed from another equivalent saved parameter.
 }
 \usage{
-get_Sigma(draws, m, settings, g = NA, howsave = "matrix", 
+get_Sigma(draws, m, settings, g = NA, howsave = "data.frame", 
           Sigmacols, InvSigmacols, sdSigmacols, corSigmacols)  
-get_sd_num(draws, m, settings, y = NA, howsave = "matrix") 
+get_sd_num(draws, m, settings, y = NA, howsave = "data.frame") 
 }
 \arguments{
   \item{draws}{

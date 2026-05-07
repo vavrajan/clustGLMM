@@ -4,7 +4,7 @@ function(
   id,        # column name of IDs declaring which observations come from the same unit
   family,    # named vector of family types 
   data,      # a data.frame object containing outcomes, regressors and id
-  G,         # total number of latent Groups=clusters (can be different for all chains)
+  G,         # total number of latent Groups=components (can be different for all chains)
   varying,   # which parameters should be class-specific
              # order: prec_num, c_ord, InvSigma, InvQ, naY
   save,      # what parameters should be saved, in order:
@@ -28,12 +28,13 @@ function(
   iter = 1000, # length of sampled chain
   nchains = 1, # number of chains
   standardize = TRUE, # should the numeric outcomes and regressors be standardized?
-  howsave = "matrix"  # how should be the output MCMC chains returned?
-             # matrix - in a matrix with special column names
+  howsave = c("data.frame", "list", "cmcmc")  # how should be the output MCMC chains returned?
+             # data.frame - in a data.frame with special column names
              # list - in lists of lists of parameters...
 ){
   # TODO make these function parameters
-  
+  howsave <- match.arg(howsave)
+    
   # require("MASS")
   # require("nnet")
   
@@ -46,7 +47,7 @@ function(
     }else{
       if(length(G) != nchains){
         stop("You have given several G values but a different number of chains. 
-             Declare precisely with how many clusters G should each chain be estimated.")
+             Declare precisely with how many components G should each chain be estimated.")
       }
     }
   }
@@ -1055,7 +1056,7 @@ Change the save settings if you want to calculate these probabilities afterwards
 
   mcmc$draws <- list()
   for(ch in 1:nchains){
-    if(howsave == "matrix"){
+    if(howsave == "data.frame"){
       mcmc$draws[[ch]] <- matrix(NA_integer_, nrow = iter, ncol = 1+nparams[ch])
       mcmc$draws[[ch]][,1] = 1:iter
       colnames(mcmc$draws[[ch]]) <- cnames[[ch]]
@@ -1234,7 +1235,7 @@ Change the save settings if you want to calculate these probabilities afterwards
          veclast   = double(length(cinits)), # passed as vector of double values (except U)
          # parameters describing dimensions
          chain     = as.integer(ch), # number of the chain
-         G         = as.integer(G[ch]), # number of clusters for the current chain
+         G         = as.integer(G[ch]), # number of components for the current chain
          iter      = as.integer(iter), # total number of generated states
          N         = as.integer(N), # total number of observations
          n         = as.integer(n), # total number of subjects (different ids in the dataset)
@@ -1612,8 +1613,8 @@ Change the save settings if you want to calculate these probabilities afterwards
       message(paste0("Saving chain ", ch, " into lists is completed.\n"))
     }
 
-    if(howsave == "matrix"){
-      # results will be returned in matrix (row = state number, col = variable)
+    if(howsave == "data.frame"){
+      # results will be returned in data.frame (row = state number, col = variable)
       # each chain will be saved in different list
       for(p in params){
         if(p == "U"){
@@ -1740,7 +1741,7 @@ Change the save settings if you want to calculate these probabilities afterwards
   charG <- ifelse(length(unique(G)) == 1, 
                   G[1],
                   paste0(G, collapse = ", "))
-  mcmc$call <- paste0(mcmc$call, "G = maximal number of clusters: ", charG, "\n")
+  mcmc$call <- paste0(mcmc$call, "G = maximal number of components: ", charG, "\n")
   mcmc$call <- paste0(mcmc$call, "\nOverview of outcomes: \n")
   if(length(Nums) > 0){mcmc$call <- paste0(mcmc$call, "num: ", paste0(Nums, collapse = ", "), "\n")}
   if(length(Pois) > 0){mcmc$call <- paste0(mcmc$call, "poi: ", paste0(Pois, collapse = ", "), "\n")}

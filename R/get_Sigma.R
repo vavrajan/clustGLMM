@@ -1,10 +1,10 @@
-get_Sigma <- function(draws, m, settings, g = NA, howsave = "matrix",
+get_Sigma <- function(draws, m, settings, g = NA, howsave = "data.frame",
                       Sigmacols, InvSigmacols, sdSigmacols, corSigmacols){
   
-  howsave <- match.arg(howsave, c("matrix", "list"))
+  howsave <- match.arg(howsave, c("data.frame", "list"))
   totnran <- settings["Sigma", "d1"]
   
-  if(howsave == "matrix"){
+  if(howsave == "data.frame"){
   
     if(settings["InvSigma", "gspec"]){
       if(missing(g) || is.na(g) || !is.element(g, 1:settings["InvSigma", "G"])){
