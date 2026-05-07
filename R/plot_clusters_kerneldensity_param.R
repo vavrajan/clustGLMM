@@ -1,5 +1,5 @@
 plot_clusters_kerneldensity_param <-
-  function(mcmc, what, whichg, burnin = 0, thin = 1, iterations, chains, setparmfrow=TRUE){
+  function(mcmc, what, whichg, yspec, burnin = 0, thin = 1, iterations, chains, setparmfrow=TRUE){
 
     if (setparmfrow) {  
         opar <- par(no.readonly = TRUE)
@@ -12,12 +12,17 @@ plot_clusters_kerneldensity_param <-
     }
     v <- c(mcmc$settings[[chains[1]]][what, ])
     # assuming all settings are the same for all chains... (G and dimswithG not used here)
-    Ys <- c()
-    if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
-    if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
-    if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
-    if(v$yords){Ys <- c(Ys, mcmc$Ords)}
-    if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
+
+    if (missing(yspec)) {
+        Ys <- c()
+        if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
+        if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
+        if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
+        if(v$yords){Ys <- c(Ys, mcmc$Ords)}
+        if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
+    } else {
+        Ys <- yspec
+    }
     
     if(missing(whichg)){
       whichg <- mcmc$clusters

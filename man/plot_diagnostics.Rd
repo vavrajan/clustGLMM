@@ -53,15 +53,15 @@ plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains,
                 setparmfrow = TRUE, allclusters = FALSE)
 plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, 
                          setparmfrow = TRUE, allclusters = FALSE)
-plot_traceplots_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, 
+plot_traceplots_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
                       setparmfrow = TRUE, allclusters = FALSE)
 plot_clusters(mcmc, what, dimspec, yspec, whichg,
               burnin = 0, thin = 1, iterations, chains,
               setparmfrow = TRUE, doKern = TRUE, doECDF = TRUE,
               COL, labcex = 0.8, whatLAB, wherelegend = "topright")
-plot_clusters_kerneldensity_param(mcmc, what, whichg, burnin = 0, thin = 1,
+plot_clusters_kerneldensity_param(mcmc, what, whichg, yspec, burnin = 0, thin = 1,
                                   iterations, chains, setparmfrow = TRUE)
-plot_clusters_ECDF_param(mcmc, what, whichg, burnin = 0, thin = 1, iterations,
+plot_clusters_ECDF_param(mcmc, what, whichg, yspec, burnin = 0, thin = 1, iterations,
                          chains, setparmfrow = TRUE)
 }
 \arguments{

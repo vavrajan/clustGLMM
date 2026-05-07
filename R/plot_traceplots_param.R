@@ -1,5 +1,5 @@
 plot_traceplots_param <-
-  function(mcmc, what = "ng", burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE, allclusters = FALSE){
+  function(mcmc, what = "ng", yspec, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE, allclusters = FALSE){
 
   if (setparmfrow) {
       opar <- par(no.readonly = TRUE)
@@ -15,12 +15,17 @@ plot_traceplots_param <-
   }
   v <- c(mcmc$settings[[chains[1]]][what, ])
   # assuming all settings are the same for all chains... (G and dimswithG not used here)
-  Ys <- c()
-  if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
-  if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
-  if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
-  if(v$yords){Ys <- c(Ys, mcmc$Ords)}
-  if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
+
+  if (missing(yspec)) {
+      Ys <- c()
+      if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
+      if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
+      if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
+      if(v$yords){Ys <- c(Ys, mcmc$Ords)}
+      if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
+  } else {
+      Ys <- yspec
+  }
   
   if(is.element(what, c("w", "ng")) | allclusters){
     nonempty <- list()
