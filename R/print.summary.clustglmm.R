@@ -71,7 +71,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
     if(length(intersect(which, 
                         c("inv_param", "clust_param", "latent_param", "group_param"))
               ) > 0){
-      cat("\nSummary of the parameter estimates")
+      cat("Summary of the parameter estimates")
       cat("\n-----------------------------------------------------------------------")
 
       if(is.element("inv_param", which)){

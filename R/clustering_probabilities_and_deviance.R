@@ -556,9 +556,9 @@ Change the settings and use clustGLMM() again.")
   res$sameclusters <- sameclusters
   
   # call
-  call <- c("###----------------------------------------------------------------------------------###\n")
+  call <- c("###-------------------------------------------------------------------------------###\n")
   call <- paste0(call, "### Approximation of posterior distribution of clustering probabilities and deviance ###\n")
-  call <- paste0(call, "###----------------------------------------------------------------------------------###\n")
+  call <- paste0(call, "###-------------------------------------------------------------------------------###\n")
   call <- paste0(call, "N = sample size: ", N, "\n")
   call <- paste0(call, "n = number of units: ", n, "\n")
   call <- paste0(call, "observations per unit (min | median | max): ", 

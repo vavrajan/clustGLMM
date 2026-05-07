@@ -167,4 +167,3 @@ codamcmc <- from_matrix_to_coda(mcmc, burnin = 10, thin = 1)
 ## How to change from any howsave type to mcmc from 'coda' package
 codamcmc <- as_coda(mcmc, burnin = 10, thin = 1)
 }
-\keyword{internal}
