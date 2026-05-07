@@ -1,10 +1,20 @@
 plot_num_vs_x_grouped <- 
 function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
          add_lowess = TRUE, alpha = 0.7, legend_placement = "topright"){
+  stopifnot(is.data.frame(data))
+  stopifnot(is.character(y), length(y) == 1)
+  stopifnot(is.character(x), length(x) == 1)
+  stopifnot(is.character(id), length(id) == 1)
+  stopifnot(is.logical(add_lowess), length(add_lowess) == 1, !is.na(add_lowess))
+    
   if(missing(group)){
     group <- "g"
     data[,group] <- rep(0, dim(data)[1])
+    if (missing(legend_placement)) legend_placement <- NULL
+  } else {
+    stopifnot(is.character(group), length(group) == 1)
   }
+  stopifnot(all(c(y, x, group, id) %in% colnames(data)))
   
   if(missing(units)){
     units <- unique(data[,id])
@@ -95,6 +105,7 @@ function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
       }
     }
   }
-  legend(legend_placement, names(dCOL), col = dCOL, lty=1, bty="n", lwd = 2)
-  
+  if (!is.null(legend_placement)) {
+      legend(legend_placement, names(dCOL), col = dCOL, lty=1, bty="n", lwd = 2)
+  }
 }

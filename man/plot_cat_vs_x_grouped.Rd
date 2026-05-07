@@ -26,7 +26,7 @@ a name of numeric or factor regressor.
 }
   \item{group}{
 a name of the clustering variable that divides different ids into groups.
-If missing, all observations are given label "0" plotted with \code{\link{slategray.colors}}.
+If missing, all observations are given the label "0" plotted with \code{\link{slategray.colors}} and \code{legend_placement} is set by default to \code{NULL}.
 }
   \item{id}{
 a name of the id variable.
@@ -53,7 +53,7 @@ how far from each other should different groups be displayed.
 a Boolean whether to reverse the order of ordinal categories; if \code{TRUE} 0 on top, if \code{FALSE} 0 at the bottom.
 }
   \item{legend_placement}{
-a string describing the position of legend, see \code{\link{legend}}.
+a string describing the position of legend (see \code{\link[graphics]{legend}}) or \code{NULL} to omit the legend.
 }
 }
 \details{

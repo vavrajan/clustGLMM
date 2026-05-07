@@ -1,9 +1,19 @@
 plot_cat_vs_x_grouped <-
 function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, reverse = FALSE){
+  stopifnot(is.data.frame(data))
+  stopifnot(is.character(y), length(y) == 1)
+  stopifnot(is.character(x), length(x) == 1)
+  stopifnot(is.logical(reverse), length(reverse) == 1, !is.na(reverse))
+    
+  YLAB <- "Group"
   if(missing(group)){
     group <- "g"
     data[,group] <- rep(0, dim(data)[1])
+    YLAB <- ""
+  } else {
+    stopifnot(is.character(group), length(group) == 1)
   }
+  stopifnot(all(c(y, x, group) %in% colnames(data)))
   
   gs = sort(unique(data[data[,group] != 0,group]))
   G = length(gs)
@@ -28,20 +38,20 @@ function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, rever
       mCOL[l,] <- rainbow_hcl(G, c = 80, l = seql[l])
     }
   }
-  
-  if(is.element("factor", class(data[,x]))){
+
+  if(is(data[, x], "factor")) {
     fx <- factor(data[,x])
     xbreaks <- 0:nlevels(fx) + 0.5
     plot(0, G0, type = "n",
          xlim = range(data[,x]), ylim = c(0-G0*0.03,G0), 
-         xlab = x, ylab = "Group",
+         xlab = x, ylab = YLAB,
          main = main,
          xaxt = "n", yaxt = "n")
     axis(1, at = 1:nlevels(fx))
   }else{
     plot(0, G0, type = "n",
          xlim = range(data[,x]), ylim = c(0-G0*0.03,G0), 
-         xlab = x, ylab = "Group",
+         xlab = x, ylab = YLAB,
          main = main,
          xaxt = ifelse(missing(xbreaks),"s","n"), yaxt = "n")
     if(missing(xbreaks)){
@@ -53,7 +63,9 @@ function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, rever
     }
     fx <- cut(data[,x], breaks = xbreaks)
   }
-  axis(2, 0:(G0-1)+0.5, labels = labels, las = 2)
+  if (YLAB != "") {
+      axis(2, 0:(G0-1)+0.5, labels = labels, las = 2)
+  }
   for(g in 1:G0){
     if(is0){
       gg <- ifelse(g==1, 0, gs[g-1])
