@@ -766,7 +766,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     
     sentence <- paste0("Out of them, ", Mrhos[ch], " (", 
                        format(Mrhos[ch] / iters[ch] * 100, digits=2), 
-                       " %) did not lead to permutation when using k-means, these g-specific parameters are replaced with NA.")
+                       " %) did not lead to a permutation when using k-means, these g-specific parameters are replaced with NA.")
     wsent <- strwrap(sentence, width = getOption("width"))
     for(l in 1:length(wsent)){
       call <- paste0(call, wsent[l], "\n")
