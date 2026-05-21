@@ -440,12 +440,20 @@ Change the save settings if you want to calculate these probabilities afterwards
       } # end of for y in Nums
       
       # parameters connected to binary variables --> use logistic regression
+      add_intercept <- function(formula) {
+          formula_str <- deparse(formula)
+          if (!grepl("(0|- 1)", formula_str)) {
+              formula <- as.formula(paste0(formula_str, "+ 1"),
+                                    environment(formula))
+          }
+          return(formula)
+      }
       inits[[ch]]$beta_poi <- inits[[ch]]$beta_poi_fix <- list()
       for(y in Pois){
         aux_form <- paste0(y, " ~ ",
                            formula[[y]]$fixed[2],
                            " + ",
-                           formula[[y]]$group[2]
+                           add_intercept(formula[[y]]$group)[2]
                            )
         if(noff[y] > 0){
           aux_form <- paste0(aux_form, "+ offset(",
@@ -503,7 +511,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         aux_form <- paste0(y, " ~ ",
                            formula[[y]]$fixed[2],
                            " + ", 
-                           formula[[y]]$group[2]
+                           add_intercept(formula[[y]]$group)[2]
         )
         if(noff[y] > 0){
           aux_form <- paste0(aux_form, "+ offset(",
