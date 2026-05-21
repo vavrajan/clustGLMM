@@ -1652,7 +1652,7 @@ Change the save settings if you want to calculate these probabilities afterwards
                                            lfixnames, lgrpnames, lrannames,
                                            Kord, Kcat, centers, scales)
       }
-      message(paste0("Saving chain ", ch, " into one big matrix is completed.\n"))
+      message(paste0("Saving chain ", ch, " is completed.\n"))
     }
   } # end of chain
   message("All chains have been sampled.\n")
