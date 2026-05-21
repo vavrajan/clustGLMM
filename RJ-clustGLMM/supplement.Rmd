@@ -75,12 +75,15 @@ prettyPrint <- function(x, sep = " ", linebreak = "\n\t", width = getOption("wid
 
 The supplementary materials provide more information on the prior
 settings including the hyperparameter values to complete the model
-specification in Section \@ref(sec:priors), the implementation in the
-R package in Section \@ref{sec:implementation) and the back
-transformation of the parameters in case of standardization in Section
-\@ref(sec:standardize-back).
+specification in 
+`r if (knitr::is_html_output()) "[the Priors section](#priors)" else "Section \\ref{priors}"`, 
+the implementation in the R package in 
+`r if (knitr::is_html_output()) "[the Implementation section](#implementation)" else "Section \\ref{implementation}"`, 
+and the back transformation of the parameters in case of
+standardization in 
+`r if (knitr::is_html_output()) "[the Back transformation after standardization section](#standardize-back)" else "Section \\ref{standardize-back}"`.
 
-# Priors {#sec:priors}
+# Priors {#priors}
 
 We summarize our choices for the prior distributions in Table
 \@ref(tab:prior-table). This table also includes the default choices
@@ -146,7 +149,7 @@ ptab <- data.frame(Notation = c("$\\beta_{lr}^F$, $\\beta_{lr}^{(g)}$",
 kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
 ```
 
-# Implementation {#sec:implementation}
+# Implementation {#implementation}
 
 In the following, we discuss the implementation of the methodology
 in package \pkg{clustGLMM} in more detail. An overview of the typical workflow and
@@ -220,7 +223,7 @@ rsvg::rsvg_png(charToRaw(svg_text), file = "workflow-diagram.png")
 knitr::include_graphics("workflow-diagram.png")
 ```
 
-## Prepare inputs {#subsec:impl-prepare-inputs}
+## Prepare inputs {#impl-prepare-inputs}
 
 First, we discuss the arguments which need to be specified for the main fitting function `clustGLMM()` and describe the expected format of the required inputs. The overview of the arguments of function `clustGLMM()` reads:
 
@@ -286,7 +289,7 @@ name, outcome name (for outcome-specific parameters), cluster (for
 cluster-specific parameters). The leaves of this structure are arrays
 (2D or 3D) depending on the subset of parameters.
 
-## Sample chains {#subsec:impl-sample-chains}
+## Sample chains {#impl-sample-chains}
 
 After careful preparation of all inputs, `clustGLMM()` can safely be
 called to samples the MCMC chains. In this section we describe each of
@@ -311,7 +314,7 @@ Next, initial values are determined if the argument `inits` is missing. First, a
 
 The model contains a lot of parameters of very different nature (outcome-specific, group-specific, varying dimension). In order to cope with these differences, a matrix `settings` is created for each chain where each row contains all necessary information to properly handle one of the model parameters. Since the number of components could be different for different chains, a list of such matrices for each chain is returned. The most important columns of this matrix provide information on the dimension size (with or without group-specificity). This information is crucial to store the sampled values of the parameters. For outcome-specific parameters (e.g., regression coefficients), the lists `yspecd1` and `yspecd2` contain the total dimension sizes per each outcome.
 
-The MCMC sampling is by far the most time-consuming part of this function. The pure R implementation was painfully slow and, therefore, C routines were implemented to do the heavy lifting. This requires additional preparation steps, since only vectors of integers or doubles can be passed down via `.C()`. During this preparation, for example, IDs and cluster allocation indicators are shifted to start from 0 and not 1, the labels for the categorical outcomes of the first and last category are switched (as the C functions assume the last category to be the baseline), `NA` values are replaced with zeros. Moreover, the initial values are concatenated in the order expected by the C function. These values are duplicated into a vector of the same length representing the current parameter values. Both vectors are accompanied by a structure of pointers pointing to the starts of each of the parameters. When a new value of the parameter is sampled (and accepted), the corresponding cells are overwritten. Simultaneously, these new values are saved into storage vectors which were prepared separately for each model parameter including also the transformed ones (standard deviations, correlations, ...). The C code regularly prints the percentage of sampled iterations so that the user may estimate the remaining time to finish the sampling step. After the sampling, the vector containing the last values is transformed back into the R format. In this way, the last sampled values `$last` can be used again as initial values. Depending on the save format indicated in `howsave`, the stored values are processed into the final `$draws` output with the help of `from_C_to_...` functions. If standardization was applied, then the `$draws` (but not `$last`) are transformed back to enable the interpretation on the original scale. The details about this back-transformation are given in Section \@ref(sec:standardize-back).
+The MCMC sampling is by far the most time-consuming part of this function. The pure R implementation was painfully slow and, therefore, C routines were implemented to do the heavy lifting. This requires additional preparation steps, since only vectors of integers or doubles can be passed down via `.C()`. During this preparation, for example, IDs and cluster allocation indicators are shifted to start from 0 and not 1, the labels for the categorical outcomes of the first and last category are switched (as the C functions assume the last category to be the baseline), `NA` values are replaced with zeros. Moreover, the initial values are concatenated in the order expected by the C function. These values are duplicated into a vector of the same length representing the current parameter values. Both vectors are accompanied by a structure of pointers pointing to the starts of each of the parameters. When a new value of the parameter is sampled (and accepted), the corresponding cells are overwritten. Simultaneously, these new values are saved into storage vectors which were prepared separately for each model parameter including also the transformed ones (standard deviations, correlations, ...). The C code regularly prints the percentage of sampled iterations so that the user may estimate the remaining time to finish the sampling step. After the sampling, the vector containing the last values is transformed back into the R format. In this way, the last sampled values `$last` can be used again as initial values. Depending on the save format indicated in `howsave`, the stored values are processed into the final `$draws` output with the help of `from_C_to_...` functions. If standardization was applied, then the `$draws` (but not `$last`) are transformed back to enable the interpretation on the original scale. The details about this back-transformation are given in `r if (knitr::is_html_output()) "[the Back transformation after standardization section](#standardize-back)" else "Section \\ref{standardize-back}"`.
 
 This sampling is performed sequentially for all chains. In case this is very time-consuming, parallelization across chains might be attempted. This can be achieved by writing a function that calls `clustGLMM()` with the same settings for `nchains = 1` in parallel and then combines the results into one object. In addition, high memory demands might be caused, not only by the vast number of parameters of large dimension sizes but also due to auxiliary variables. For example, the C functions use a 4-component predictor dedicated to the fixed, group, random and offset part, and the final predictor is the sum of these four components. When some of the effects are updated, only the corresponding part of the predictor gets updated and the rest remains untouched. This approach is even more expensive for categorical outcomes where a separate predictor is kept for every non-baseline category. To reduce the memory demands, all operations with symmetric matrices are handled using only the upper triangle.
 
@@ -340,7 +343,7 @@ Before all the outputs of `clustGLMM()` are returned in a list, a crude clusteri
 
 Finally, `call` summarizes the sample sizes as well as the formulas specified for all outcomes: first, the fixed effects, then the random effects (in the order assumed by `InvSigma`) and finally the group-specific effects. Printing objects of class `"clustglmm"` prints the content of `call` followed by the summary of the crude clustering for each chain separately.
 
-## Visual diagnostics {#subsec:impl-visual-diagnostics}
+## Visual diagnostics {#impl-visual-diagnostics}
 
 Given that some users may already be familiar with already established diagnostic tools for assessing convergence of a MCMC chain, we provide function `as_coda()` to convert an object of class `"clustglmm"` to a `"mcmc.list"` object as defined in package \CRANpkg{coda} [@Plummer06coda]. This enables easy use of all diagnostic tools available in that package.
 
@@ -359,7 +362,7 @@ By default, `plot(mcmc)` produces trace plots of the cluster occupancy numbers w
 For all other specifications, the  `plot` method for `"clustglmm"` objects plots all chains together into one plot but using only a single model parameter. If this is also desired for `what = "ng"`, set `ng_trace_chain_split = FALSE`. <!-- In addition, the `plot` method is also able to arrange plots for parameters of the same purpose, e.g., all regression coefficients for certain type of outcome. -->
 
 In case a univariate parameter is of interest, `plot_diagnostics()` displays the four plots consisting of ACF, ECDF, kernel density and trace plot on a $2 \times 2$ grid. To select the univariate parameter properly, one needs to provide (if applicable) `what` (the name of the parameter), `yspec` (to which outcome it belongs), `gspec` (to which group it corresponds) and `dimspec` (the specific dimension). The `settings` matrix provides the information on what has to be supplied for which parameter. There is also the possibility to include a line in the plot indicating the true value of the parameter, if known. 
-Table \@ref{tab:settings-table} summarizes the key parameter attributes.
+Table \@ref(tab:settings-table) summarizes the key parameter attributes.
 
 ```{r get-some-mcmc, echo = FALSE, results = FALSE, eval = TRUE, message = FALSE}
 data("longitudinal_mixed_type_data")
@@ -402,7 +405,7 @@ kable(m, booktabs = TRUE)
 
 If the visual diagnostic tools suggest that the MCMC sampling has not converged to the stationary distribution yet, sampling can be continued by calling `clustGLMM()` with the same input arguments and `inits = ...$last`. If the results seem not suitable, for example, from a clustering perspective, it could be helpful to adjust the input arguments or start sampling with a different seed. 
 
-## Within-chain post-processing {#subsec:impl-post-processing}
+## Within-chain post-processing {#impl-post-processing}
 
 In case of a clear clustering structure in the data and suitable model specification, one potentially may  skip this step. Otherwise, this step is necessary to resolve issues due to iterations recorded during sampling where the numbers of non-empty components differed within one chain or due to the meaning of the labels being ambiguous because of label switching between iterations. Function `post_processing()` allows to address these issues by implementing suggestions by @FruhwirthSchnatter11 and @Malsiner-Walli-etal2026clips. The function retains only iterations where the number of non-empty components corresponds to the most common number of non-empty components `Gplus` saved as `modeGplus` in the `"clustglmm"` object and resolves label-switching to enable inference about cluster-specific parameters to be based on an identified model. 
 
@@ -420,15 +423,15 @@ The function implements the following steps for each chain separately:
 
 The return value of this post-processing step is again of class `"clustglmm"` and all plotting functions should still work with the reduced set of iterations. 
 
-## Across-chain post-processing {#subsec:impl-permute-cluster-labels}
+## Across-chain post-processing {#impl-permute-cluster-labels}
 
 Even though label switching has been resolved in the previous step for each chain, the interpretation of the labels may still not match across multiple chains. This is one of the drawbacks of random initialization and not fixing the meaning of the clusters a-priori. <!-- One way to deal with it would be to take favorite chain and use its `last` state as initial value for every other chain and continue in sampling. -->  To resolve the label switching across chains, we provide function `permute_cluster_labels()`. The user can supply a list of permutations `perm` (one for each chain) and all quantities with a clustering index in the given `"clustglmm"` object are permuted. Suitable permutations could for example be determined by inspecting the plots for cluster-specific parameters across chains. If, however, the `perm` argument is not specified, the Hungarian algorithm is used to align cluster labels of all chains with the first chain. The cost matrix for the Hungarian algorithm is determined based on the root mean square error between cluster-specific parameters.
 
 Once the cluster labels are aligned across chains, inference may be based on the sampled values from all chains similarly to the usual behavior in the \pkg{coda} package. In some cases, such an alignment may not be possible, e.g.,  when the number of non-empty components does not match across chains. We recommend to then proceed performing inference for each chain separately, potentially focusing on the chain providing the most reasonable and the best interpretable results. 
 
-## Inference {#subsec:impl-inference}
+## Inference {#impl-inference}
 
-### Posterior description {#subsubsec:impl-summary}
+### Posterior description {#impl-summary}
 
 A first basic posterior exploration may be performed using the `summary` method for objects of class `"clustglmm"`. The outputs are obtained using the `summary` method for `"mcmc"` object with `na.rm = TRUE` after transforming the `"clustglmm"` object with `as_coda` for each chain separately. The `print` method automatically prints a `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. Since the list of model parameters can be long, we divided them into several groups: cluster-invariant parameters (`"inv_param"`), clustering-related parameters (`"clust_param"`, i.e., `Gplus`, `e0` and the component sizes), latent variables (`"latent_param"`) and group-specific parameters (`"group_param"`, i.e., the cluster-specific regression coefficients). Users can specify the groups of parameters which should be printed via argument `which`. Argument `which` may specify several groups and also include `"mcmc"` (to obtain a chain overview) and `"clustering"` (to obtain a clustering overview). The summary of the clustering is based on `clustering` and `certainty` in the `"clustglmm"` object where all subjects are classified into the cluster with the highest certainty. In addition, the posterior distribution of the model parameters can also be explored visually using the `plot` method.  <!-- If some subjects should remain unclassified (label 0) due to insufficient certainty level, this has to be done manually by the user. -->
 
@@ -441,13 +444,13 @@ With `plot_num_vs_x_grouped` the relationship of outcome and continuous covariat
 With `plot_cat_vs_x_grouped` the relationship of a factor outcome and a continuous covariate `x` is depicted by spineplots. For each cluster separately, stacked proportions of outcome labels are plotted for categories of `x` determined by `xbreaks`. By default, `x` is categorized using 11 equidistant points from minimum to maximum as breaks. If `x` is already a factor, then the spineplot is created using this categorization. 
 
 
-### Linear predictor {#subsubsec:impl-predict}
+### Linear predictor {#impl-predict}
 
 Function `plot_num_vs_x_grouped()` plots loess curves which are quick and easy to plot, yet do not represent the posterior estimates. Therefore, we also provide a `predict` method for `"clustglmm"` objects that constructs the linear predictor for given `newdata`. For example, the majority of covariates could be fixed at specific values and the remaining covariates may be systematically varied on a grid and then the `predict` method used to capture their effect. 
 
 Two methods are implemented to obtain a posterior linear predictor point estimate. The plug-in method takes the posterior point estimates of the regression coefficients and computes the corresponding linear combinations yielding a point estimate of the same type. The other method takes the posterior samples of the regression coefficients and computes linear combinations for all iterations. In this way, samples to approximate the full posterior are obtained, and, for example, credible intervals (for individual points, not the whole curve) could be computed.
 
-### Clustering probabilities and deviance {#subsubsec:impl-clust-prob-deviance}
+### Clustering probabilities and deviance {#impl-clust-prob-deviance}
 
 After MCMC sampling, estimates of the posterior probabilities for an observation to be assigned to each of the clusters might be obtained based on the sampled allocation indicators. In some cases, these estimates could be rather crude. An alternative approach, which potentially results in better estimates, builds on the fact that the posterior probability of a subject to belong to one of the clusters could be determined directly for specific parameter values, in case one integrates over the random effects. Function `clustering_probabilities_and_deviance()` provides this by resolving the integral using numerical approximation using Laplace approximation or Adaptive Gaussian Quadrature with Hermite polynomials. The `data` argument does not necessarily need to specify the same dataset, which was used to fit the model. It could potentially also contain newly observed data (for which we do not have estimates of cluster allocation indicators `U` or random effects `b`). To speed up the computation, parts of this functions are written in C, which requires similar internal preparation of inputs as for function `clustGLMM()`. 
 
@@ -461,7 +464,7 @@ The returned object is of class `"clustglmm"` and contains the following additio
 
 Moreover, `clustering` and `certainty` of the returned `"clustglmm"` object are now based on the posterior mean of the clustering probabilities. Also, the `call` argument has been changed to inform about the use of `clustering_probabilities_and_deviance()`. 
 
-# Back transformations with standardization {#sec:standardize-back}
+# Back transformation after standardization {#standardize-back}
 
 Standardization of the numeric outcome and non-intercept regressors is
 performed by default to ensure that the default settings of the
