@@ -322,8 +322,8 @@ Change the save settings if you want to calculate these probabilities afterwards
     
     ocols[[y]] <- formula[[y]]$offset
     loffnames[[y]] <- as.character(c())
-    noff[y] <- ifelse(formula[[y]]$offset == "", 0, 1)
-    if((noff[y] > 0) & (sorted_family[y] != "num")){
+    noff[y] <- ifelse((formula[[y]]$offset == "") || (sorted_family[y] == "num"), 0, 1)
+    if(noff[y] > 0){
       #if numeric --> will not be added to loffnames
       #but ocols and formula still remember that there has been some
       loffnames[[y]] <- ocols[[y]]
@@ -453,7 +453,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         } # end of for g in 1:G[ch]
       } # end of for y in Nums
       
-      # parameters connected to binary variables --> use logistic regression
+      # parameters connected to Poisson variables --> use log-linear model
       add_intercept <- function(formula) {
           formula_str <- deparse(formula)
           if (!grepl("(0|- 1)", formula_str)) {
