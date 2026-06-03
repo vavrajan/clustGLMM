@@ -13,15 +13,21 @@ plot_clusters_kerneldensity_param <-
     v <- c(mcmc$settings[[chains[1]]][what, ])
     # assuming all settings are the same for all chains... (G and dimswithG not used here)
 
-    if (missing(yspec)) {
-        Ys <- c()
-        if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
-        if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
-        if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
-        if(v$yords){Ys <- c(Ys, mcmc$Ords)}
-        if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
-    } else {
-        Ys <- yspec
+    Ys <- c()
+    if(v$ynums){Ys <- c(Ys, mcmc$Nums)}
+    if(v$ypois){Ys <- c(Ys, mcmc$Pois)}
+    if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
+    if(v$yords){Ys <- c(Ys, mcmc$Ords)}
+    if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
+    
+    if (!missing(yspec)) {
+      intYs <- intersect(yspec, Ys)
+      if(length(intYs) == 0){
+        warning(paste0("The given yspec does not contain any outcome names suitable for parameter ", what, ".  
+                       Continuing with all suitable ones. If smaller subset is desired, please, change yspec appropriately."))
+      }else{
+        Ys <- intYs
+      }
     }
     
     if(missing(whichg)){

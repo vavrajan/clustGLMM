@@ -757,7 +757,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
                        " components: ", 
                        iters[ch], 
                        " (", 
-                       format(iters[ch] / orig_iters[ch] * 100, digits=2), 
+                       format(iters[ch] / orig_iters[ch] * 100, digits=2, nsmall = 2), 
                        " %)")
     wsent <- strwrap(sentence, width = getOption("width"))
     for(l in 1:length(wsent)){
@@ -765,7 +765,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     }
     
     sentence <- paste0("Out of them, ", Mrhos[ch], " (", 
-                       format(Mrhos[ch] / iters[ch] * 100, digits=2), 
+                       format(Mrhos[ch] / iters[ch] * 100, digits=2, nsmall = 2), 
                        " %) did not lead to a permutation when using k-means, these g-specific parameters are replaced with NA.")
     wsent <- strwrap(sentence, width = getOption("width"))
     for(l in 1:length(wsent)){
@@ -773,7 +773,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     }
     
     sentence <- paste0("Therefore, ", iters[ch] - Mrhos[ch], " (",
-                       format((iters[ch] - Mrhos[ch]) / iters[ch] * 100, digits=2), 
+                       format((iters[ch] - Mrhos[ch]) / iters[ch] * 100, digits=2, nsmall = 2), 
                        " %) iterations have been permuted and aligned. These are now eligible for the analysis.")
     wsent <- strwrap(sentence, width = getOption("width"))
     for(l in 1:length(wsent)){

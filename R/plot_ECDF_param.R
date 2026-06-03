@@ -1,5 +1,5 @@
 plot_ECDF_param <-
-  function(mcmc, what = "ng", burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE, allclusters = FALSE){
+  function(mcmc, what = "ng", yspec, burnin = 0, thin = 1, iterations, chains, setparmfrow = TRUE, allclusters = FALSE){
         
     if (setparmfrow) {
         opar <- par(no.readonly = TRUE)
@@ -18,6 +18,17 @@ plot_ECDF_param <-
     if(v$ybins){Ys <- c(Ys, mcmc$Bins)}
     if(v$yords){Ys <- c(Ys, mcmc$Ords)}
     if(v$ycats){Ys <- c(Ys, mcmc$Cats)}
+    
+    if (!missing(yspec)) {
+      intYs <- intersect(yspec, Ys)
+      if(length(intYs) == 0){
+        warning(paste0("The given yspec does not contain any outcome names suitable for parameter ", what, ".  
+                       Continuing with all suitable ones. If smaller subset is desired, please, change yspec appropriately."))
+      }else{
+        Ys <- intYs
+      }
+    }
+    
     
     if(is.element(what, c("w", "ng")) | allclusters){
       nonempty <- list()

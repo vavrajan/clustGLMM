@@ -47,11 +47,11 @@ plot_ng_trace_chain_split(mcmc,
 plot_diagnostics(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                  burnin = 0, thin = 1, lag.max = 30, iterations, chains, trueval, 
                  setparmfrow = TRUE, COL, move.width = 0.3, whatLAB)
-plot_ACF_param(mcmc, what = "ng", burnin = 0, thin = 1, iterations, lag.max = 30, chains, 
+plot_ACF_param(mcmc, what = "ng", yspec, burnin = 0, thin = 1, iterations, lag.max = 30, chains, 
                setparmfrow = TRUE, allclusters = FALSE)
-plot_ECDF_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, 
+plot_ECDF_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
                 setparmfrow = TRUE, allclusters = FALSE)
-plot_kerneldensity_param(mcmc, what, burnin = 0, thin = 1, iterations, chains, 
+plot_kerneldensity_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
                          setparmfrow = TRUE, allclusters = FALSE)
 plot_traceplots_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
                       setparmfrow = TRUE, allclusters = FALSE)

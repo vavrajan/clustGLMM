@@ -81,7 +81,7 @@ Then one can select a specific parameter which may have even other sublists.
 For example, group-specific effects for a numeric outcome would be accessed by \code{mcmc$draws[[ch]]$beta_num[[g]][[mcmc$Nums[1]]]} where \code{g} is the group.  
 
 For functions \code{...to_matrix}, the output is a separate list for each chain. 
-Each element of this list is a matrix with carefully named columns. 
+Each element of this list is a matrix with carefully named columns forming a \code{data.frame}. 
 The first column is \code{m} and contains the iteration number to which the row belongs to. 
 Other columns are model parameters. 
 For example, the first effect specific for group 2 for numeric outcome called "ynum" would be named \code{"beta_num_ynum(2)[1]"}. 
@@ -155,13 +155,13 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family,
 ###     Changing formats
 ###-----------------------------------------------------------------------------
 
-## How to change from "matrix" to "list":
+## How to change from "data.frame"="matrix" to "list":
 mcmc <- from_matrix_to_list(mcmc)
 
-## How to change from "list" to "matrix":
+## How to change from "list" to "data.frame"="matrix":
 mcmc <- from_list_to_matrix(mcmc)
 
-## How to change from "matrix" to mcmc from 'coda' package
+## How to change from "data.frame"="matrix" to mcmc from 'coda' package
 codamcmc <- from_matrix_to_coda(mcmc, burnin = 10, thin = 1)
 
 ## How to change from any howsave type to mcmc from 'coda' package

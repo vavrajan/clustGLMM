@@ -15,7 +15,7 @@ get_sd_num(draws, m, settings, y = NA, howsave = "data.frame")
 }
 \arguments{
   \item{draws}{
-samples of model parameters in either list or matrix structure.
+samples of model parameters in either list or data.frame (matrix) structure.
 }
   \item{m}{
 an iteration to choose.

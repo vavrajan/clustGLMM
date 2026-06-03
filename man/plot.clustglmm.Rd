@@ -27,13 +27,24 @@ other arguments.
 \details{
 Depending on \code{which} the following functions are called:
 \describe{
-  \item{ACF}{creates auto-correlation function plot, calls \code{\link{plot_ACF_param}}.}
-  \item{ECDF}{creates empirical cumulative distribution function plot, calls \code{\link{plot_ECDF_param}}.}
-  \item{kerneldensity}{creates kernel density estimator plot, calls \code{\link{plot_kerneldensity_param}}.}
-  \item{traceplots}{creates traceplots (samples vs iteration), calls \code{\link{plot_traceplots_param}}.}
-  \item{clusters_ECDF}{creates empirical cumulative distribution function plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_ECDF_param}}.}
-  \item{clusters_kerneldensity}{creates kernel density estimator plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_kerneldensity_param}}.}
+  \item{ACF}{creates auto-correlation function plot, calls \code{\link{plot_ACF}} or \code{\link{plot_ACF_param}}.}
+  \item{ECDF}{creates empirical cumulative distribution function plot, calls \code{\link{plot_ECDF}} or \code{\link{plot_ECDF_param}}.}
+  \item{kerneldensity}{creates kernel density estimator plot, calls \code{\link{plot_kerneldensity}} or \code{\link{plot_kerneldensity_param}}.}
+  \item{traceplots}{creates traceplots (samples vs iteration), calls \code{\link{plot_traceplots}} or \code{\link{plot_traceplots_param}}.}
+  \item{clusters_ECDF}{creates empirical cumulative distribution function plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_ECDF}} or \code{\link{plot_clusters_ECDF_param}}.}
+  \item{clusters_kerneldensity}{creates kernel density estimator plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_kerneldensity}} or \code{\link{plot_clusters_kerneldensity_param}}.}
 }
+
+If the user tries to specify one of: \code{gspec} or \code{dimspec}, it is treated as an attempt to plot only a single scalar parameter (functions without \code{..._param}).
+Be careful to specify the dimensions appropriately (including \code{yspec}). 
+Inner function \code{\link{get_scalar_samples}} triggers a warning or even an error if misspecified.
+
+Otherwise if neither \code{gspec} nor \code{dimspec} are given, then \code{..._param} function is triggered.
+It is designed to create plots for all chains and all dimensions related to the given \code{what} model parameter.
+The output is organized into multiple carefully arranged layout.
+The only way to plot a smaller subset of parameters is via \code{yspec} argument, which accepts even multiple outcome values.
+However, only plots for an intersection of given and plausible outcomes for the given parameter are returned.
+
 
 These functions except also \code{burnin} (initial part of the chain to be ignored), \code{thin} (plot only every \code{thin}th sample) and \code{chains} (a vector of chain numbers to be plotted).
 }

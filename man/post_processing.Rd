@@ -16,7 +16,7 @@ permute_cluster_labels(mcmc, perm)
 }
 \arguments{
   \item{mcmc}{
-an output of \code{\link{clustGLMM}} accepted in both formats (list or matrix).
+an output of \code{\link{clustGLMM}} accepted in both formats (list or data.frame).
 }
   \item{cols}{
 a vector of column names of cluster-specific variables to be used for k-means clustering. 
@@ -38,7 +38,7 @@ If missing, the chains are aligned to chain 1 based on the Hungarian algorithm, 
 All post-processing is done separately for each chain, keep in mind that the results among chains may differ due to different initial conditions. 
 The procedure can be divided into several steps:
 
-0) The procedure works with \code{mcmc$draws} only under \code{howsave = "matrix"}, so if \code{howsave = "list"} then \code{mcmc} is converted to the \code{"matrix"} format, post-processed and converted back to "list".  
+0) The procedure works with \code{mcmc$draws} only under \code{howsave = "data.frame"}, so if \code{howsave = "list"} then \code{mcmc} is converted to the \code{"matrix"} format, post-processed and converted back to "list".  
 
 1) Take the most frequent \code{Gplus} value - \code{modeGplus} - the number of non-empty clusters across the sampled chain and find the posterior draws with \code{Gplus = modeGplus}. 
 The indices are stored in \code{inds} and their length is \code{iters}. 

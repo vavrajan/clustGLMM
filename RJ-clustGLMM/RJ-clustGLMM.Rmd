@@ -5,7 +5,7 @@ author:
   email: vavraj@karlin.mff.cuni.cz
   orcid: "0000-0003-0068-5356"
   url: https://www2.karlin.mff.cuni.cz/~vavraj/
-  affiliation: Charles University
+  affiliation: Charles University, Faculty of Mathematics and Physics
   address:
   - Sokolovská 49/83
   - 186 75 Praha 8
@@ -26,16 +26,16 @@ author:
   - Welthandelsplatz 1
   - 1020 Wien
 - name: Arnošt Komárek
-  email: arnost.komarek@mff.cuni.cz
+  email: komarek@karlin.mff.cuni.cz
   orcid: "0000-0001-8778-3762"
   url: https://msekce.karlin.mff.cuni.cz/~komarek/
-  affiliation: Charles University
+  affiliation: Charles University, Faculty of Mathematics and Physics
   address:
   - Sokolovská 49/83
   - 186 75 Praha 8
 date: "2024-10-07"
 draft: true
-abstract: Package \pkg{clustGLMM} provides tools for Bayesian estimation of finite mixtures of multivariate generalized linear mixed models to cluster longitudinal data. A multivariate regression setup with several dependent variables of mixed type (continuous, count, binary, ordinal and nominal) is covered where random effects have a joint distribution across all dependent variables. For each cluster, different regression coefficients and random effect distributions may be assumed to characterize and differentiate them. The package provides functionality to suitably specify the model using a formula interface, perform fully Bayesian estimation based on Markov chain Monte Carlo sampling with data augmentation and assess the fitted model using post-processing tools to investigate convergence, identify cluster distributions and classify (new) observations.
+abstract: Package \pkg{clustGLMM} provides tools for Bayesian estimation of finite mixtures of multivariate generalized linear mixed models to cluster longitudinal data. A multivariate regression setup with several dependent variables of mixed type (continuous, count, binary, ordinal and nominal) is covered where random effects have a\ joint distribution across all dependent variables. For each cluster, different regression coefficients and random effect distributions may be assumed to characterize and differentiate them. The package provides functionality to suitably specify the model using a\ formula interface, perform fully Bayesian estimation based on Markov chain Monte Carlo sampling with data augmentation and assess the fitted model using post-processing tools to investigate convergence, identify cluster distributions and classify (new) observations.
 bibliography: "RJ-clustGLMM.bib"
 type: package
 preamble: |
@@ -79,15 +79,15 @@ prettyPrint <- function(x, sep = " ", linebreak = "\n\t", width = getOption("wid
 
 # Introduction {#sec:introduction}
 
-Clustering longitudinal multivariate data is a key task in many fields, including medicine, psychology, and the social sciences, where repeated measurements of heterogeneous types are commonly collected for individuals. These data usually consist of a combination of continuous, count, binary, ordinal, and nominal outcome variables which are predicted through explanatory variables. Modeling such data structures in a clustering context using a multivariate regression setup requires the flexibility to jointly account for individual random effects and group-specific heterogeneity.
+Clustering longitudinal multivariate data is a\ key task in many fields, including medicine, psychology, and the social sciences, where repeated measurements of heterogeneous types are commonly collected for individuals. These data usually consist of a\ combination of continuous, count, binary, ordinal, and nominal outcome variables which are predicted through explanatory variables. Modeling such data structures in a\ clustering context using a\ multivariate regression setup requires the flexibility to jointly account for individual random effects and group-specific heterogeneity.
 
-This indicates the need for a unified, flexible, and extensible implementation for clustering mixed-type longitudinal data within a fully probabilistic framework based on a mixture model of multivariate generalized linear mixed models. Several R packages address only parts of this problem as they only allow to fit simplified versions of this model. Package \CRANpkg{lcmm} [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package \CRANpkg{flexmix} [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering the non-Gaussian case of a mixed model and a multivariate approach requiring the conditional independence assumption. Packages such as \CRANpkg{MCMCglmm} [@Hadfield10MCMCglmm] and \CRANpkg{mixAK} [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes.
+This indicates the need for a\ unified, flexible, and extensible implementation for clustering mixed-type longitudinal data within a\ fully probabilistic framework based on a\ mixture model of multivariate generalized linear mixed models. Several R packages address only parts of this problem as they only allow to fit simplified versions of this model. Package \CRANpkg{lcmm} [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package \CRANpkg{flexmix} [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering the non-Gaussian case of a\ mixed model and a\ multivariate approach requiring the conditional independence assumption. Packages such as \CRANpkg{MCMCglmm} [@Hadfield10MCMCglmm] and \CRANpkg{mixAK} [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes.
 
-To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a mixture of generalized linear mixed models (GLMMs), allowing for a flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, enabling a full posterior characterization of both, model parameters and latent cluster assignments.
+To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a\ Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a\ mixture of generalized linear mixed models (GLMMs), allowing for a\ flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, enabling a\ full posterior characterization of both, model parameters and latent cluster assignments.
 
-Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and \CRANpkg{coda} [@Plummer06coda] for MCMC output analysis. By focusing specifically on clustering, \pkg{clustGLMM} fills a gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a practical and extensible solution for researchers working with complex longitudinal data. In particular, a number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a convenient use in clustering applications. 
+Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a\ high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and \CRANpkg{coda} [@Plummer06coda] for MCMC output analysis. By focusing specifically on clustering, \pkg{clustGLMM} fills a\ gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a\ practical and extensible solution for researchers working with complex longitudinal data. In particular, a\ number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a\ convenient use in clustering applications. 
 
-All computations and graphics in this paper have been done with \pkg{clustGLMM} version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of \pkg{clustGLMM} is always available from the Comprehensive R Archive Network (CRAN) at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a package vignette.
+All computations and graphics in this paper have been done with \pkg{clustGLMM} version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of \pkg{clustGLMM} is always available from the Comprehensive R Archive Network (CRAN) at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a\ package vignette.
 
 # Methodology {#sec:methodology}
 
@@ -95,9 +95,9 @@ In this section, we briefly outline the model for clustering multivariate longit
 
 ## Modeling longitudinal mixed-type outcomes {#subsec:glmms}
 
-We start with explaining the necessary notation. We consider a multivariate regression setting where the indices for the outcomes are contained in the set $\mathcal{R}$. The index $r\in\mathcal{R}$ denotes one specific outcome variable and $\mathcal{R}$ is the union of five disjoint sets of indices: $\mathcal{R}^{\mathsf{Num}}$, $\mathcal{R}^{\mathsf{Poi}}$, $\mathcal{R}^{\mathsf{Bin}}$, $\mathcal{R}^{\mathsf{Ord}}$, $\mathcal{R}^{\mathsf{Cat}}$. Each set contains the indices for one of the five different outcome types considered: numeric, count, binary, ordinal and nominal. 
+We start with explaining the necessary notation. We consider a\ multivariate regression setting where the indices for the outcomes are contained in the set $\mathcal{R}$. The index $r\in\mathcal{R}$ denotes one specific outcome variable and $\mathcal{R}$ is the union of five disjoint sets of indices: $\mathcal{R}^{\mathsf{Num}}$, $\mathcal{R}^{\mathsf{Poi}}$, $\mathcal{R}^{\mathsf{Bin}}$, $\mathcal{R}^{\mathsf{Ord}}$, $\mathcal{R}^{\mathsf{Cat}}$. Each set contains the indices for one of the five different outcome types considered: numeric, count, binary, ordinal and nominal. 
 
-We assume that the data provided is collected for $n$ individuals with observations possibly made for each individual at different observation points resulting in a potentially different number of observations for each individual. We denote outcome $r\in\mathcal{R}$ of individual $i=1, \ldots, n$ from the $j$-th time point, $j = 1, \ldots, n_i$, by $Y_{ij}^r$. These observations are accompanied by explanatory variables which are split into two regression vectors $\mathbf{X}_{ijr}$ and $\mathbf{Z}_{ijr}$ to distinguish the model matrix for the fixed and random effects in the mixed-effects model, respectively. Note that each outcome $r$ is allowed to have a different set of regressors. Thus, the linear predictor 
+We assume that the data provided is collected for $n$ individuals with observations possibly made for each individual at different observation points resulting in a\ potentially different number of observations for each individual. We denote outcome $r\in\mathcal{R}$ of individual $i=1, \ldots, n$ from the $j$-th time point, $j = 1, \ldots, n_i$, by $Y_{ij}^r$, which together form a data set of $N = \sum_{i=1}^n n_i$ rows. These observations are accompanied by explanatory variables which are split into two regression vectors $\mathbf{X}_{ijr}$ and $\mathbf{Z}_{ijr}$ to distinguish the model matrix for the fixed and random effects in the mixed-effects model, respectively. Note that each outcome $r$ is allowed to have a\ different set of regressors. Thus, the linear predictor 
 $$
 \eta_{ijr} = \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r + \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r,
 $$
@@ -105,14 +105,14 @@ with fixed effects $\boldsymbol{\beta}_r$ and individual-specific random effects
 
 For each outcome we consider one of five different types of GLMMs, i.e., different specifications of the response distribution and the link function which relates the mean to the linear predictor. In particular, we distinguish the following regression models: 
 
-* We consider normal linear mixed-effects models for a quantitative (numeric) outcome $r\in\mathcal{R}^{\mathsf{Num}}$. This requires an additional dispersion parameter which captures the variability of the regression errors. As usual in Bayesian statistics, we parameterize the normal distribution via the precision parameter $\tau_r>0$. 
+* We consider normal linear mixed-effects models for a\ quantitative (numeric) outcome $r\in\mathcal{R}^{\mathsf{Num}}$. This requires an additional dispersion parameter which captures the variability of the regression errors. As usual in Bayesian statistics, we parameterize the normal distribution via the precision parameter $\tau_r>0$. 
 * For count outcomes, $r\in\mathcal{R}^{\mathsf{Poi}}$, we consider the Poisson distribution with the log link. This specification does not require any additional model parameter. 
-* Binary outcomes, $r\in\mathcal{R}^{\mathsf{Bin}}$, are modeled by a logistic regression with the logit link function $\mathsf{logit}(x) = \log (x/(1-x))$. 
+* Binary outcomes, $r\in\mathcal{R}^{\mathsf{Bin}}$, are modeled by a\ logistic regression with the logit link function $\mathsf{logit}(x) = \log (x/(1-x))$. 
 
 If the number of categories, $K^r$, is higher than 2, we consider the following two specifications:
 
-* If an ordering of the categories (labeled $0 < \ldots < K^r -1$) is possible, we apply the proportional odds assumption, i.e., the log-odds differ only in intercepts $c_{r,k}$. In this case the intercept is excluded and this effect is modeled through a separate parameter because the following ordering constraint needs to be satisfied: $-\infty = c_{r,-1} < c_{r,0} < \cdots < c_{r,K^r-1} = \infty$, which requires a special prior and sampling approach. 
-* If categories (labeled again as $0, \ldots, K^r -1$) cannot be ordered or the proportional odds assumption does not apply, then we create a linear predictor specific for each category, $\eta_{ijrk}$, with category-specific fixed effects $\boldsymbol{\beta}_{r,k}$. The random effects $\mathbf{b}_{ik}^r$ might also either be category-specific or alternatively common to all categories except the first. For identifiability, we fix the first category to zero: $\boldsymbol{\beta}_{r,0} = \mathbf{0}$ and $\mathbf{b}_{i0}^r$ leading to $\eta_{ijr0} = 0$.
+* If an ordering of the categories (labeled $0 < \ldots < K^r -1$) is possible, we apply the proportional odds assumption, i.e., the log-odds differ only in intercepts $c_{r,k}$. In this case the intercept is excluded and this effect is modeled through a\ separate parameter because the following ordering constraint needs to be satisfied: $-\infty = c_{r,-1} < c_{r,0} < \cdots < c_{r,K^r-1} = \infty$, which requires a\ special prior and sampling approach. 
+* If categories (labeled again as $0, \ldots, K^r -1$) cannot be ordered or the proportional odds assumption does not apply, then we create a\ linear predictor specific for each category, $\eta_{ijrk}$, with category-specific fixed effects $\boldsymbol{\beta}_{r,k}$. The random effects $\mathbf{b}_{ik}^r$ might also either be category-specific or alternatively common to all categories except the first. For identifiability, we fix the first category to zero: $\boldsymbol{\beta}_{r,0} = \mathbf{0}$ and $\mathbf{b}_{i0}^r$ leading to $\eta_{ijr0} = 0$.
 
 The probability distributions of the observed outcomes given the linear predictors and auxiliary model parameters can be summarized in the following way:
 \begin{align*}
@@ -142,19 +142,19 @@ The probability distributions of the observed outcomes given the linear predicto
   &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Cat}}.
 \end{align*}
 
-Assuming independence among the set of outcomes for the same individual is often unrealistic. Hence, we opt for a joint modeling approach which captures the dependency between the observations of the same individual. In particular, we stack the random effects for each individual $i$ into one vector $\mathbf{b}_{i} = \{\mathbf{b}_{i}^r, r\in\mathcal{R}\}$ with length denoted by $d^R$ and assume that they follow independently across individuals a multivariate normal distribution, $\mathbf{b}_{i} \sim \mathsf{N}_{d^R}(\mathbf{0}, \boldsymbol{\Sigma})$ where $\boldsymbol{\Sigma}$ is a positive definite matrix. This implies that the outcomes for the same individual are marginally dependent. However, they are still independent conditional on the random effects. 
+Assuming independence among the set of outcomes for the same individual is often unrealistic. Hence, we opt for a\ joint modeling approach which captures the dependency between the observations of the same individual. In particular, we stack the random effects for each individual $i$ into one vector $\mathbf{b}_{i} = \{\mathbf{b}_{i}^r, r\in\mathcal{R}\}$ with length denoted by $d^R$ and assume that they follow independently across individuals a\ multivariate normal distribution, $\mathbf{b}_{i} \sim \mathsf{N}_{d^R}(\mathbf{0}, \boldsymbol{\Sigma})$ where $\boldsymbol{\Sigma}$ is a\ positive definite matrix. This implies that the outcomes for the same individual are marginally dependent. However, they are still independent conditional on the random effects. 
 
 ## Model-based clustering of GLMMs {#subsec:mbc-glmms}
 
-The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach will fail. We thus extend our model and consider a model-based clustering approach where we assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regression parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups. 
+The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach will fail. We thus extend our model and consider a\ model-based clustering approach where we assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regression parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups. 
 
-The specification which parameters are group-specific and which are the same across all latent groups will usually depend on what is assumed to characterize the latent groups. In addition imposing the restriction that some of the effects are the same across groups simplifies the model and facilitates estimation and interpretation. In the following, we will denote group-specific parameters with a superscript $(g)$, e.g., $\tau_r^{(g)}$. Parameters without this superscript are parameters which are the same across groups or represent the set of the corresponding parameters across all groups depending on context. Turning group-specificity on or off will be made en bloc for auxiliary model parameters like $\tau_r$, $\mathbf{c}_r$ or $\boldsymbol{\Sigma}$. For the fixed effects, a more selective approach is usually pursued with some effects being assumed to be the same across all groups, while others differ across groups. I.e., we split the fixed-effects contribution to the linear predictor into two parts such that the linear predictor for group $g$ takes the form of 
+The specification which parameters are group-specific and which are the same across all latent groups will usually depend on what is assumed to characterize the latent groups. In addition imposing the restriction that some of the effects are the same across groups simplifies the model and facilitates estimation and interpretation. In the following, we will denote group-specific parameters with a\ superscript $(g)$, e.g., $\tau_r^{(g)}$. Parameters without this superscript are parameters which are the same across groups or represent the set of the corresponding parameters across all groups depending on context. Turning group-specificity on or off will be made en bloc for auxiliary model parameters like $\tau_r$, $\mathbf{c}_r$ or $\boldsymbol{\Sigma}$. For the fixed effects, a\ more selective approach is usually pursued with some effects being assumed to be the same across all groups, while others differ across groups. I.e., we split the fixed-effects contribution to the linear predictor into two parts such that the linear predictor for group $g$ takes the form of 
 $$
 \eta_{ijr}^{(g)} = \mathbf{F}_{ijr}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + \mathbf{Z}_{ijr}^\top \mathbf{b}_{ir},
 $$
 where $\boldsymbol{\beta}_r^F$ are the fixed effects shared among all groups  and $\boldsymbol{\beta}_r^{(g)}$ are the fixed effects specific to group $g$. Naturally, the sets of regressors $\mathbf{F}_{ijr}$ and $\mathbf{X}_{ijr}$ need to be mutually exclusive to avoid identifiability issues. 
 
-Each individual $i$ belongs to one of the groups. Group membership is assumed to be unobserved and given by the latent group allocation indicator $U_i \in \{1, \ldots, G\}$. The group size corresponds to the marginal group allocation probabilities $w_g = \mathsf{P}(U_i = g)$ that sum up to one over $g = 1, \ldots, G$. Marginalizing over the latent group allocation indicators, we obtain a mixture distribution where the components consist of multivariate generalized linear mixed models and the probability density function (pdf) is given by:
+Each individual $i$ belongs to one of the groups. Group membership is assumed to be unobserved and given by the latent group allocation indicator $U_i \in \{1, \ldots, G\}$. The group size corresponds to the marginal group allocation probabilities $w_g = \mathsf{P}(U_i = g)$ that sum up to one over $g = 1, \ldots, G$. Marginalizing over the latent group allocation indicators, we obtain a\ mixture distribution where the components consist of multivariate generalized linear mixed models and the probability density function (pdf) is given by:
 \begin{equation}
   p(\mathbb{Y}_i \,\vert\, \mathcal{C}_i)
   = \sum\limits_{g=1}^{G} 
@@ -164,26 +164,26 @@ Each individual $i$ belongs to one of the groups. Group membership is assumed to
   \mathrm{d} \mathbf{b}_i,
   (\#eq:pdf-int-bi-Ui)
 \end{equation}
-where $p(\,\vert\,)$ denotes the conditional pdf, $\mathbb{Y}_i = \{Y_{ij}^r, \, j = 1, \ldots, n_i, \, r \in\mathcal{R}\}$ gathers all outcome values observed for individual $i$ and $\mathcal{C}_i = \{\mathbb{F}_{i}, \mathbb{X}_{i}, \mathbb{Z}_{i}\}$ gathers the covariates for individual $i$. Due to the general model specification with different distributions for the dependent variables, the integral over the random effects $\mathbf{b}_i$ cannot be analytically evaluated. In Bayesian estimation using MCMC sampling, we avoid these integrals by not marginalizing over the random effects, but performing data augmentation and working with the conditional distributions. 
+where $p(\,\vert\,)$ denotes the conditional pdf, $\mathbb{Y}_i = \{Y_{ij}^r, \, j = 1, \ldots, n_i, \, r \in\mathcal{R}\}$ gathers all outcome values observed for individual $i$ and $\mathcal{C}_i = \{\mathbb{F}_{i}, \mathbb{X}_{i}, \mathbb{Z}_{i}\}$ gathers the covariates for individual $i$. Due to the general model specification with different distributions for the dependent variables, the integral over the random effects $\mathbf{b}_i$ cannot be analytically evaluated. In Bayesian estimation using MCMC sampling, we avoid these integrals by not marginalizing over the random effects, but performing Bayesian data augmentation and working with the conditional distributions. 
 
 ## Priors {#subsec:priors}
 
 Within the Bayesian context, we need to specify prior distributions for all model parameters. We choose conditionally conjugate priors whenever possible to obtain well known full-conditional distributions. We distinguish between selecting priors for the component-specific parameters and the component sizes. 
 
-In Bayesian mixture modeling, the priors on the group-specific parameters in the components need to be proper to obtain a proper posterior, and in general, hyperparameters inducing a certain regularization are preferable. We standardize numeric outcome variables and non-intercept regressors by  default to ensure that the priors with the default hyperparameters impose a comparable shrinkage on the regression coefficients, error precision and random effect covariance regardless of the specific scaling of the variables. This standardization does not only change the fixed and random effects (especially intercepts), but also the precision $\tau_r$, the ordered intercepts $\mathbf{c}_{r}$ as well as the covariance matrix $\boldsymbol{\Sigma}$. In order to be able to interpret the parameter estimates with respect to the original scaling, the back-transformed parameters are reported in the output.
+In Bayesian mixture modeling, the priors on the group-specific parameters in the components need to be proper to obtain a\ proper posterior, and in general, hyperparameters inducing a\ certain regularization are preferable. We standardize numeric outcome variables and non-intercept regressors by  default to ensure that the priors with the default hyperparameters impose a\ comparable shrinkage on the regression coefficients, error precision and random effect covariance regardless of the specific scaling of the variables. This standardization does not only change the fixed and random effects (especially intercepts), but also the precision $\tau_r$, the ordered intercepts $\mathbf{c}_{r}$ as well as the covariance matrix $\boldsymbol{\Sigma}$. In order to be able to interpret the parameter estimates with respect to the original scaling, the back-transformed parameters are reported in the output.
 
-All the fixed effects are given an independent centered normal prior, where the scale is adjusted depending on the outcome type. For numeric outcomes, the precision parameter $\tau_r$ is included within the normal prior for fixed effects $\boldsymbol{\beta}_r^F$ and $\boldsymbol{\beta}_r^{(g)}$. The precision $\tau_r$ is given a gamma prior to complete the normal-gamma prior family for linear regression models. For the ordered intercepts of ordinal outcomes, we use an implicit prior by imposing a symmetric Dirichlet prior on the induced category probabilities given the ordered intercepts and a zero effect of the linear predictor:
+All the fixed effects are given an independent centered normal prior, where the scale is adjusted depending on the outcome type. For numeric outcomes, the precision parameter $\tau_r$ is included within the normal prior for fixed effects $\boldsymbol{\beta}_r^F$ and $\boldsymbol{\beta}_r^{(g)}$. The precision $\tau_r$ is given a\ gamma prior to complete the normal-gamma prior family for linear regression models. For the ordered intercepts of ordinal outcomes, we use an implicit prior by imposing a\ symmetric Dirichlet prior on the induced category probabilities given the ordered intercepts and a\ zero effect of the linear predictor:
 \begin{align*}
 \pi_{r,k}^{(g)} 
 &= \mathsf{P}\left[Y_{ijr} = k \,\vert\, \eta_{ijr} = 0, U_i = g\right]
 = \mathsf{logit}^{-1}(c_{r,k-1}^{(g)}) - \mathsf{logit}^{-1}(c_{r,k}^{(g)}).
 \end{align*}
 
-Pursuing a conditional conjugate specification, we use the Inverse Wishart distribution as prior for the positive definite covariance matrix $\boldsymbol{\Sigma}$ (or group-specific $\boldsymbol{\Sigma}^{(g)}$). This is equivalent to assuming that $\boldsymbol{\Sigma}^{-1}$ follows a Wishart distribution with some scale matrix $\mathbb{Q}$. Since, this prior specification is very sensitive to the choice of $\mathbb{Q}$, we decided to use a hierarchical prior structure. I.e., $\mathbb{Q}$ also is a random parameter with an analogous inverse Wishart prior structure.
+Pursuing a\ conditional conjugate specification, we use the Inverse Wishart distribution as prior for the positive definite covariance matrix $\boldsymbol{\Sigma}$ (or group-specific $\boldsymbol{\Sigma}^{(g)}$). This is equivalent to assuming that $\boldsymbol{\Sigma}^{-1}$ follows a\ Wishart distribution with some scale matrix $\mathbb{Q}$. Since, this prior specification is very sensitive to the choice of $\mathbb{Q}$, we decided to use a\ hierarchical prior structure. I.e., $\mathbb{Q}$ also is a\ random parameter with an analogous inverse Wishart prior structure.
 
-We select the prior on the component sizes assuming that the number of clusters is not known and that a *sparse finite mixture* approach [@Malsiner-Walli-etal2016] is pursued to determine a suitable number of clusters. In particular, we specify an overfitting mixture, where the number of components is clearly larger than the assumed number of clusters in the data, and  assign a symmetric Dirichlet distribution to the component sizes with a small value for the parameter $e_0$. The lower the value of $e_0$, the higher the probability that only a few components get substantial weight while the remaining components have negligible size. We use this prior setting to determine the suitable number of clusters by focusing on the number of non-empty components. To reduce the impact of a specific choice of $e_0$, we  use a hierarchical prior specification imposing a gamma prior on $e_0$, still in line with our sparse approach, i.e., putting a lot of mass at small values of $e_0$. 
+We select the prior on the component sizes assuming that the number of clusters is not known and that a\ *sparse finite mixture* approach [@Malsiner-Walli-etal2016] is pursued to determine a\ suitable number of clusters. In particular, we specify an overfitting mixture, where the number of components is clearly larger than the foreseen number of clusters in the data, and assign a\ symmetric Dirichlet distribution to the component sizes with a\ small value for the parameter $e_0$. The lower the value of $e_0$, the higher the probability that only a\ few components get substantial weight while the remaining components have negligible size. We use this prior setting to determine the suitable number of clusters by focusing on the number of non-empty components. To reduce the impact of a\ specific choice of $e_0$, we  use a\ hierarchical prior specification imposing a\ gamma prior on $e_0$, still in line with our sparse approach, i.e., putting a\ lot of mass at small values of $e_0$. 
 
-An overview on the prior distributions with the default hyperparameter values is provided in a table in the supplementary materials. 
+An overview on the prior distributions with the default hyperparameter values is provided in a\ table in the supplementary materials. 
 
 # Inference {#sec:inference}
 
@@ -192,7 +192,7 @@ $$
 \boldsymbol{\theta} = \left\{ \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \boldsymbol{\Sigma}^{(g)}; \mathbf{w}, e_0, \mathbb{Q}; \mathbf{b}_i, U_i, 
 \;g=1,\ldots, G, i=1,\ldots,n   \right\}.
 $$
-The posterior distribution  of $\boldsymbol{\theta}$ given by
+The posterior distribution of $\boldsymbol{\theta}$ given by a\ usual Bayes formula
 $$
 p(\boldsymbol{\theta} \, | \, \mathbb{Y}, \mathcal{C}) 
 \propto 
@@ -201,11 +201,11 @@ p(\mathbb{Y} \, | \, \boldsymbol{\theta}, \mathcal{C})
 p(\boldsymbol{\theta} \, | \, \mathcal{C})
 $$
 is the target distribution, where $\mathbb{Y} = \{\mathbb{Y}_i, i = 1, \ldots, n\}$ and $\mathcal{C} = \{\mathcal{C}_i, i = 1, \ldots, n\}$ gather outcomes and covariates for all individuals.
-Pursuing an MCMC approach, we create a Markov chain consisting of samples of $\boldsymbol{\theta}$ that could eventually be considered as a dependent random sample from the target distribution. We use these samples for posterior inference about model parameters and transformations thereof. 
+Pursuing an MCMC approach, we create a\ Markov chain consisting of samples of $\boldsymbol{\theta}$ that could eventually be considered as a\ dependent random sample from the target distribution. We use these samples for posterior inference about model parameters and transformations thereof. 
 
 ## MCMC sampling {#subsec:mcmc}
 
-To create such a Markov chain, we pursue a Gibbs sampling approach where possible. We divide $\boldsymbol{\theta}$ into suitable smaller blocks $\boldsymbol{\theta}_l$ and iteratively sample every block from its full-conditional distribution:
+To create such a\ Markov chain, we pursue a\ Gibbs sampling approach where possible. We divide $\boldsymbol{\theta}$ into suitable smaller blocks $\boldsymbol{\theta}_l$ and iteratively sample every block from its full-conditional distribution:
 \begin{equation}
   p(\boldsymbol{\theta}_l \, | \cdots) :=  
   p(\boldsymbol{\theta}_l \, | \, \mathbb{Y}, \boldsymbol{\theta}_{-l}, \mathcal{C}),
@@ -215,10 +215,10 @@ To create such a Markov chain, we pursue a Gibbs sampling approach where possibl
 %  p(\boldsymbol{\theta} \, | \, \mathcal{C}), 
   (\#eq:pdf-full-cond)
 \end{equation}
-where the full-conditional distribution is viewed as a function of $\boldsymbol{\theta}_l$ and other parameter values $\boldsymbol{\theta}_{-l}  = \boldsymbol{\theta} \setminus \boldsymbol{\theta}_l$ are kept fixed. 
+where the full-conditional distribution is viewed as a\ function of $\boldsymbol{\theta}_l$ and other parameter values $\boldsymbol{\theta}_{-l}  = \boldsymbol{\theta} \setminus \boldsymbol{\theta}_l$ are kept fixed. 
 We carefully set up the prior distributions for the model parameters to ensure conditional conjugacy where possible. Therefore, many parameters can be directly sampled from well known distribution families and the only challenge is the efficient computation of the parameters of the full-conditional distributions. 
 
-However, not every full-conditional distribution falls into a known family of distributions. In this case, we use a Metropolis-Hastings (M-H) approach. In each M-H step, a move from the current value to a new value of the parameter is proposed and the new value is accepted with prescribed probability or alternatively the current value is retained. The challenge when implementing an M-H step is to find a suitable proposal distribution that sufficiently well resembles the full-conditional distribution in order to be able to obtain a suitable acceptance rate. Here, we only briefly outline the M-H approach pursued; more details on the implementation can be found in the supplementary material to @Vavra-etal2024. 
+However, not every full-conditional distribution falls into a\ known family of distributions. In this case, we use a\ Metropolis-Hastings (M-H) approach. In each M-H step, a\ move from the current value to a\ new value of the parameter is proposed and the new value is accepted with prescribed probability or alternatively the current value is retained. The challenge when implementing an M-H step is to find a\ suitable proposal distribution that sufficiently well resembles the full-conditional distribution in order to be able to obtain a\ suitable acceptance rate. Here, we only briefly outline the M-H approach pursued; more details on the implementation can be found in the supplementary material to @Vavra-etal2024. 
 
 The first step consists of transforming the block of interest $\boldsymbol{\theta}_l$ so that it has unbounded support, $\boldsymbol{\omega} = t(\boldsymbol{\theta_l}) \in \mathbb{R}^d$, e.g., we log-transform $e_0$ or transform the ordered intercepts to probabilities $\pi$ using the softmax function. Then, the log-pdf of the full-conditional distribution for the transformed parameter $\boldsymbol{\omega}$ is approximated by the Taylor expansion of the second order:
 $$
@@ -229,7 +229,7 @@ $$
 \left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]
 \left(\boldsymbol{\omega}-\widehat{\boldsymbol{\omega}}\right).
 $$
-This Taylor expansion reduces to a quadratic form with negative Hessian matrix in the middle if evaluated at the maximum point $\widehat{\boldsymbol{\omega}}$ found by the Newton-Raphson (N-R) method, i.e., where $\frac{\partial}{\partial \boldsymbol{\omega}} \ell(\widehat{\boldsymbol{\omega}}) = \mathbf{0}$. Locally, the log-pdf resembles the log-pdf of a centered multivariate normal distribution. Since the M-H step works best if the proposal distribution is close to the target distribution, we use the negative Hessian matrix (obtained as a by-product of the N-R method) as the precision matrix for the proposal distribution of direction in which to move from the current value of the transformed block $\boldsymbol{\theta}_l$. This distribution can be adjusted by a multiplicative constant $c_{\boldsymbol{\theta}_l}$ to increase or decrease the potential step size. Hence,
+This Taylor expansion reduces to a\ quadratic form with negative Hessian matrix in the middle if evaluated at the maximum point $\widehat{\boldsymbol{\omega}}$ found by the Newton-Raphson (N-R) method, i.e., where $\frac{\partial}{\partial \boldsymbol{\omega}} \ell(\widehat{\boldsymbol{\omega}}) = \mathbf{0}$. Locally, the log-pdf resembles the log-pdf of a\ centered multivariate normal distribution. Since the M-H step works best if the proposal distribution is close to the target distribution, we use the negative Hessian matrix (obtained as a\ by-product of the N-R method) as the precision matrix for the proposal distribution of direction in which to move from the current value of the transformed block $\boldsymbol{\theta}_l$. This distribution can be adjusted by a\ multiplicative constant $c_{\boldsymbol{\theta}_l}$ to increase or decrease the potential step size. Hence,
 $$
 \boldsymbol{\omega}^{\mathrm{proposal}} = \boldsymbol{\omega}^{\mathrm{current}} + \mathbf{s}, 
 \qquad \text{where} \quad 
@@ -254,22 +254,22 @@ p\left(\mathbb{Y}_i \,\left\vert\, U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F
 p\left(\mathbf{b}_i \,\left\vert\, U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right.\right)
 \mathrm{d} \mathbf{b}_i.
 \end{align*}
-We reformulate the integrand as a function $\exp\{h^{(g)}\}$ in variable $\mathbf{b}_i$, i.e., as $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, to apply an approximation method. The Laplace approximation relies on the Taylor expansion of the second order of the function $h^{(g)}$, assuming that it is differentiable and concave. Using the N-R method the maximum $\widehat{\mathbf{b}}_i^{(g)}$ and the negative Hessian matrix $H^{(g)}$ at the maximum are found. These are then used in the Laplace approximation:
+We reformulate the integrand as a\ function $\exp\{h^{(g)}\}$ in variable $\mathbf{b}_i$, i.e., as $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, to apply an approximation method. The Laplace approximation relies on the Taylor expansion of the second order of the function $h^{(g)}$, assuming that it is differentiable and concave. Using the N-R method the maximum $\widehat{\mathbf{b}}_i^{(g)}$ and the negative Hessian matrix $H^{(g)}$ at the maximum are found. These are then used in the Laplace approximation:
 \begin{equation}
   \int \exp\left\{h^{(g)}(\mathbf{b}_i)\right\} \mathrm{d} \mathbf{b}_i
   \approx 
   |H^{(g)}|^{-\frac{1}{2}} \exp\left\{h\left(\widehat{\mathbf{b}}_i^{(g)}\right)\right\}. 
   (\#eq:integral-bi-approx)
 \end{equation}
-We use these approximations to obtain estimates for the clustering probabilities $u_{i,g}$ defined above. The normalizing denominator for the proportionality is an approximation to $p(\mathbb{Y}_i \,|\, \mathcal{C}_i)$ given in \@ref(eq:pdf-int-bi-Ui), which can be used to determine the contribution of a single individual to the deviance defined as $-2\log p(\mathbb{Y}_i \,|\, \mathcal{C}_i)$.
+We use these approximations to obtain estimates for the clustering probabilities $u_{i,g}$ defined above. The normalizing denominator for the proportionality is an approximation to $p(\mathbb{Y}_i \,|\, \mathcal{C}_i)$ given in \@ref(eq:pdf-int-bi-Ui), which can be used to determine the contribution of a\ single individual to the deviance defined as $-2\log p(\mathbb{Y}_i \,|\, \mathcal{C}_i)$.
 
-In general, however, the Laplace approximation of the integral is rather crude. To reduce the approximation error, we also implemented Adaptive Gaussian Quadrature, a natural generalization of the Laplace approximation [@PinheiroChao06]. The idea is to evaluate the function $h^{(g)}$ on a suitable grid of $\mathbf{b}_i$ values determined by the maximal point $\widehat{\mathbf{b}}_i^{(g)}$ and $H^{(g)}$-scaled roots of the Hermite polynomial of prescribed order. The first order polynomial has only one root (0), thus yielding the Laplace approximation. The number of points where function $h^{(g)}$ needs to be evaluated increases exponentially with the order of the polynomial. Further details can be found in the supplementary material to @Vavra-etal2024.
+In general, however, the Laplace approximation of the integral is rather crude. To reduce the approximation error, we also implemented Adaptive Gaussian Quadrature, a\ natural generalization of the Laplace approximation [@PinheiroChao06]. The idea is to evaluate the function $h^{(g)}$ on a\ suitable grid of $\mathbf{b}_i$ values determined by the maximal point $\widehat{\mathbf{b}}_i^{(g)}$ and $H^{(g)}$-scaled roots of the Hermite polynomial of prescribed order. The first order polynomial has only one root (0), thus yielding the Laplace approximation. The number of points where function $h^{(g)}$ needs to be evaluated increases exponentially with the order of the polynomial. Further details can be found in the supplementary material to @Vavra-etal2024.
 
 These approximations have to be done for all considered cluster labels $g$ and for every sampled set of model parameters within the MCMC chain to explore the posterior distribution of $u_{i,g}$ properly. Moreover, the full deviance requires the separate evaluation for each individual within the dataset. This is usually computationally very expensive and, hence, one might either need to rely on crude approximations or make use of parallel computing for better approximations.
 
 # Illustrative use of the package {#sec:psurvey}
 
-We created an artificial longitudinal dataset `psurvey` and included it in package \pkg{clustGLMM}. We use this dataset to demonstrate the use of the package and illustrate a broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
+We created an artificial longitudinal dataset `psurvey` and included it in package \pkg{clustGLMM}. We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
 We observe three outcomes of different type:
 
@@ -294,7 +294,7 @@ The dataset contains in total observations for $n = `r n`$
 respondents.  Column `i` represents the id variable for the
 respondents and `j` gives the observation number (time point) for that
 respondent.  The three outcome variables are accompanied by the
-`age` of a person when interviewed, which is the only explanatory
+`age` of a\ person when interviewed, which is the only explanatory
 variable.
 
 The dataset `psurvey` does not contain any missing values. In order to
@@ -315,10 +315,10 @@ for (y in c("income", "ntrips", "satisfaction")) {
 
 We use functions `plot_num_vs_x_grouped()` and
 `plot_cat_vs_x_grouped()` from the package to inspect how the outcomes
-depend on age. The argument `add_lowess` adds a smoothing line to
+depend on age. The argument `add_lowess` adds a\ smoothing line to
 indicate the trend. Note that `_grouped` in the name of the plot
 function indicates that potentially an argument `group` could be
-specified which relates to a known classification of observations. We
+specified which relates to a\ known classification of observations. We
 assume that no classification is available and leave that argument
 unspecified which means that the default of no group assignment is
 used.
@@ -343,11 +343,11 @@ profiles of these underlying groups.
 ## Preparing inputs {#subsec:psurvey-prepare-inputs}
 
 We start by preparing all necessary input to call the main function
-`clustGLMM()`. In particular, we create a named vector `family` of
-length equal to the number of outcomes which specifies the family type
+`clustGLMM()`. In particular, we create a\ named vector `family` of
+length equal to the number of outcomes which specifies the asumed family type
 of each outcome. The family type names are not unique and one can for
 example either use `"num"` or `"gaussian"` to indicate that the
-outcome is numeric and a normal distribution should be used, i.e., the
+outcome is numeric and a\ normal distribution should be used, i.e., the
 following two specifications of `family` are equivalent for our example:
 
 ```{r psurvey-family, echo=TRUE}
@@ -355,25 +355,21 @@ family <- c(income = "num", ntrips = "poi", satisfaction = "ord")
 family <- c(income = "gaussian", ntrips = "poisson", satisfaction = "cumulative")
 ```
 
-Then, for each outcome a regression model is specified.  In
+Then, for each outcome a\ regression model is specified.  In
 particular, we assume no fixed effects and group-specific effects of
 age. We assume that `ntrips` and `satisfaction` depend linearly on
-`age`, while for `income` also a squared effect of `age` is
+`age`, while for `income` also a\ squared effect of `age` is
 included. We also include random intercepts using `random = ~ 1`.
 
 ```{r psurvey-splines, echo=TRUE}
 formula <- list()
-formula[["income"]] <- list(fixed = ~ 0,
-                            group = ~ age + I(age^2),
-                            random = ~ 1)
+formula[["income"]] <- list(fixed = ~ 0, group = ~ age + I(age^2), random = ~ 1)
 for (y in c("ntrips", "satisfaction")) {
-  formula[[y]] <- list(fixed = ~ 0, 
-                       group = ~ age, 
-                       random = ~ 1)
+  formula[[y]] <- list(fixed = ~ 0, group = ~ age, random = ~ 1)
 }
 ```
 
-Function `default_varying()` returns a named logical vector indicting
+Function `default_varying()` returns a\ named logical vector indicting
 for other parameters which could potentially be group-specified, whether they are to be
 fitted group-specific. The default values are:
 
@@ -382,7 +378,7 @@ varying <- default_varying()
 varying
 ```
 
-The standard deviation of the error of a numeric outcome thus is by
+The standard deviation of the error of a\ numeric outcome thus is by
 default estimated group-specific. In the following we change that and
 impose the restriction that the standard deviation is the same across
 groups.
@@ -391,9 +387,9 @@ groups.
 varying["prec_num"] <- FALSE
 ```
 
-Function `default_save()` returns a named logical vector which can be
-used to indicate for different parameters if they should be saved and
-returned. The default setting implies that the posterior estimates of
+Function `default_save()` returns a\ named logical vector which can be
+used to indicate for different parameters if their generated chains should be saved and
+returned. The default setting implies that both the chains and the posterior estimates of
 the missing values are not returned and this can be changed by setting
 the argument `naY` to `TRUE`.
 
@@ -437,7 +433,7 @@ settings in `param`. The parameters to save and return are indicated
 in `save`.  The argument `standardize` defines if the numeric outcomes
 and covariates are standardized before analysis. Argument `howsave`
 specifies how the MCMC draws are returned. We set `howsave = "data.frame"`
-to return them as a data frame which allows to easily access the draws of
+to return them as a\ data frame which allows to easily access the draws of
 the different parameters.
 
 If `inits` is not provided, function `clustGLMM()` initializes the
@@ -447,7 +443,7 @@ estimating the model parameters by separate regression models (without
 random effects). The sampling is then implemented in C to speed up
 computations. Finally, an object of class `"clustglmm"` is returned
 which contains among others information on the fitted model, the
-posterior draws, a list with the last sampled values. The MCMC draws
+posterior draws, a\ list with the last sampled values. The MCMC draws
 returned consist of all draws without omitting any iterations as
 burn-in. 
 
@@ -506,7 +502,7 @@ Figure \@ref(fig:psurvey-mcmc-ng-prec-num) contains the default output
 of the `plot` method on the left-hand side. The plot indicates that
 the three filled components slightly change in size over the
 iterations, but in general their size is rather stable. This indicates
-that the sampler has already converged to a specific clustering
+that the sampler has already converged to a\ specific clustering
 solution and this chain is suitable for cluster-specific
 inference. If, by contrast, still strong changes in size were
 observable or, in particular, if the emptying of some components was
@@ -516,27 +512,27 @@ dropping iterations where superfluous components are not emptied yet.
 Even if the trace plots of the component sizes indicate that the
 stationary distribution is obtained, this might not be the case for
 other model parameters. One can check the trace plot of each model
-parameter by specifying the `what` argument in a suitable way. Figure
+parameter by specifying the `what` argument in a\ suitable way. Figure
 \@ref(fig:psurvey-mcmc-ng-prec-num) on the right showcases this output
 for the precision parameter of the error for the numeric outcome
 `income`.  The possible parameter names are explained on the man page
 obtained using `help("default_save")`. See also Table 2 in the
 supplementary material.
 
-One might also be interested in focusing on a single specific scalar
+One might also be interested in focusing on a\ single specific scalar
 model parameter and inspect all four implemented plot types: trace
 plot, kernel density estimate, empirical cumulative distribution
 function (ECDF) and auto-correlation function (ACF). These plots can be
 obtained with function `plot_diagnostics()`. 
 <!-- This function also has -->
-<!-- the option to add a line for the true value of the parameters, if -->
+<!-- the option to add a\ line for the true value of the parameters, if -->
 <!-- known.  -->
 Note that we specify the outcome to which the parameter belongs
 (`yspec`), but neither group (`gspec` empty, precision is not
 considered group-specific) nor dimension (`dimspec` empty, scalar
 parameter). When in doubt about the specification, check
 `mcmc$settings[[1]]`. Moreover, every plotting function is equipped
-with an option to trim iterations from a burn-in phase and thin the
+with an option to trim iterations from a\ burn-in phase and thin the
 remaining samples to reduce auto-correlation.
 
 ```{r psurvey-mcmc-beta-3-num, echo=TRUE, results=FALSE, fig.align="center", fig.width=8, fig.height=5.6, fig.cap="The four implemented plots - regression coefficient for squared age for income.", fig.pos="t", out.width="80%"}
@@ -569,7 +565,7 @@ remaining draws are relabeled to
 `r paste(1:mcmc$modeGplus[1], collapse = ", ")`.
 In addition, the labels of each draw are - if possible - permuted
 according to the $k$-means clustering solution. Parameter draws where the
-$k$-means clustering solution does not induce a permutation are
+$k$-means clustering solution does not induce a\ permutation are
 replaced with `NA`.
 
 ```{r psurvey-post-processing, echo = TRUE, results = TRUE}
@@ -602,12 +598,12 @@ characterize the clusters. An overview can be obtained via the
 `summary()` method which applies the `summary()` method for `"mcmc"`
 objects as defined by the \pkg{coda} package for each chain separately
 and prints only posterior mean and quantiles. In addition, there is
-also the option to convert the draws into a `"mcmc.list"` object with
+also the option to convert the draws into a\ `"mcmc.list"` object with
 function `as_coda()` and utilize the framework for this kind of
 objects.
 
 Printing the posterior inference results for all model parameters
-would produce a very long output. Hence, we decided to split the
+would produce a\ very long output. Hence, we decided to split the
 summary into several parts.  We start with the subset of
 cluster-invariant model parameters where the name contains the pattern
 `"income"`:
@@ -633,7 +629,7 @@ print(sum_mcmc, which = "group_param", clusters = 1, pattern = "ntrips")
 
 The differences between posterior distributions of parameters across
 different clusters can also easily be visualized using the
-specification `"clusters_..."` for `which` in the `plot` method.
+specification `"clusters_..."` for `which` argument in the `plot` method.
 
 ```{r psurvey-mcmc-pp-beta-num-1, echo = TRUE, results=TRUE, fig.align="center", fig.width=10, fig.height=4, fig.cap="The regression coefficients of income - posterior kernel density estimates, clusters distinguished by color.", fig.pos="t", out.width="100%"}
 plot(mcmc_pp, what = "beta_num", yspec = "income", which = "clusters_kerneldensity")
@@ -658,7 +654,7 @@ print(sum_mcmc, which = "latent_param", pattern = "^naY_income")
 ```
 
 We also plot the kernel density estimates of the posterior
-distributions of the missing values. We add a dashed seegrean line
+distributions of the missing values. We add a\ dashed seegrean line
 indicating the true value to the plot as well as dotted black lines to
 indicate the 2.5% and the 97.5% quantiles of the posterior
 distributions. Figure \@ref(fig:psurvey-mcmc-naY-income) shows that the true values
@@ -677,9 +673,9 @@ for (j in seq_len(nmis)) {
 
 ## Extracting specific MCMC draws {#subsec:psurvey-return-object}
 
-It is also possile to extract specific draws from the rich MCMC output
+It is also possible to extract specific draws from the rich MCMC output
 included in the object returned by `clustGLMM()`. To understand how to
-select specific paramters, an overview over the sampled parameters and
+select specific parameters, an overview over the sampled parameters and
 how to address them is helpful. The names can be inspected using
 `str(mcmc$param_names)`:
 
@@ -694,7 +690,7 @@ regression formula for `income` in component 4, whereas
 outcome income. The occupation numbers of component 5 are stored in 
 `mcmc$draws[[1]][["ng(5)"]]`, while the allocations of the third
 observation are stored in `mcmc$draws[[1]][["U[3]"]]`.  The names can be
-used to access the draws directly and, e.g., plot a histogram.
+used to access the draws directly and, e.g., plot a\ histogram.
 
 Draws of specific parameters such as the latent cluster assignments
 $U$ of each respondent or the components sizes $w$ can easily be
@@ -703,6 +699,9 @@ the list element of the relevant chain, in this case chain 1, and the
 columns which start with `U` or `w`:
 
 ```{r, echo=TRUE}
+U <- mcmc$draws[[1]][, grep("^U", colnames(mcmc$draws[[1]]))]
+w <- mcmc$draws[[1]][, grep("^w", colnames(mcmc$draws[[1]]))]
+# or using dplyr
 library("dplyr")
 U <- mcmc$draws[[1]] |> select(starts_with("U"))
 w <- mcmc$draws[[1]] |> select(starts_with("w"))
@@ -724,7 +723,7 @@ interpret the clusters is to inspect and compare cluster-specific
 predictions. In our example, we are interested in how the predicted
 cluster-specific outcomes vary by age. The `predict` function is
 designed to follow the usual use of `predict` in R.  The functions
-expects as input `newdata` and a single outcome variable name `y`.  By
+expects as input `newdata` and a\ single outcome variable name `y`.  By
 default (`type = "link"`) the posterior distribution of the linear
 predictor consisting of both, fixed and group-specific, parameters is
 returned.
@@ -734,7 +733,7 @@ newdata <- data.frame(age = seq(18, 40, by = 0.2))
 pred1 <- predict(mcmc_pp, newdata, y = "ntrips", type = "link")
 ```
 
-The function returns a list of `fit`, `lwr` and `upr` containing the
+The function returns a\ list of `fit`, `lwr` and `upr` containing the
 posterior mean and equal-tailed credible intervals of prescribed level
 for each cluster separately. In addition, predictions of the mean on
 the response scale (`type = "response"`) as well as of the response
@@ -754,20 +753,22 @@ COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[1], c = 80, l = 50)
 
 plot(c(18, 40), c(0, 3), type = "n", xlab = "age", ylab = expression(x * beta))
 for (g in 1:mcmc_pp$modeGplus[1]) {
-  lines(newdata$age, pred1$fit[, g], col = COL[g])
+  lines(newdata$age, pred1$fit[, g], col = COL[g], lwd = 2)
 }  
+legend("topleft", legend = 1:mcmc_pp$modeGplus[1], title = "Cluster", 
+       col = COL, lty = 1, lwd = 2, bty = "n")
 plot(c(18, 40), c(0, 8), type = "n", xlab = "age", ylab = expression(exp(x * beta)))
 for (g in 1:mcmc_pp$modeGplus[1]) {
-  lines(newdata$age, pred2$fit[, g], col = COL[g])
-  lines(newdata$age, pred2$lwr[, g], col = COL[g], lty = 2)
-  lines(newdata$age, pred2$upr[, g], col = COL[g], lty = 2)
+  lines(newdata$age, pred2$fit[, g], col = COL[g], lwd = 2)
+  lines(newdata$age, pred2$lwr[, g], col = COL[g], lty = 2, lwd = 2)
+  lines(newdata$age, pred2$upr[, g], col = COL[g], lty = 2, lwd = 2)
 }
 plot(c(18, 40), c(0, 20), type = "n", xlab = "age",
      ylab = expression(Y ~ "~" ~ Pois(exp(x * beta))))
 for (g in 1:mcmc_pp$modeGplus[1]) {
-  lines(newdata$age, pred3$fit[, g], col = COL[g])
-  lines(newdata$age, pred3$lwr[, g], col = COL[g], lty = 2)
-  lines(newdata$age, pred3$upr[, g], col = COL[g], lty = 2)
+  lines(newdata$age, pred3$fit[, g], col = COL[g], lwd = 2)
+  lines(newdata$age, pred3$lwr[, g], col = COL[g], lty = 2, lwd = 2)
+  lines(newdata$age, pred3$upr[, g], col = COL[g], lty = 2, lwd = 2)
 }    
 ```
 
@@ -812,7 +813,7 @@ for (g in 1:mcmc_pp$modeGplus[1]) {
 <!-- For the ordinal response, we plot the posterior estimates of the -->
 <!-- specific linear predictors based on the mean as well as the lower and -->
 <!-- upper bound for the 95% credible interval. We complement this plot -->
-<!-- with a visualization of the induced cluster-specific posterior -->
+<!-- with a\ visualization of the induced cluster-specific posterior -->
 <!-- probabilities for each category of the ordinal response. Finally, we -->
 <!-- also visualize the observed data using spineplots by splitting them -->
 <!-- into groups given the cluster classifications obtained with the fitted -->
@@ -881,7 +882,7 @@ for (g in 1:mcmc_pp$modeGplus[1]) {
 
 
 The clustering of the observations is based on the sampled allocation
-indicators.  A quick summary of the clustering can be displayed by
+indicators.  A\ quick summary of the clustering can be displayed by
 adjusting the `print` statement:
 
 ```{r psurvey-mcmc-pp-clustering, echo = TRUE, results = TRUE}
@@ -944,27 +945,27 @@ essentially obtain the same differences up to label permutation.
 
 <!-- Overall, the results may be interpreted in the following way: Group 3 -->
 <!-- (blue) represents respondents who started to work earlier compared to -->
-<!-- members of the other groups, presumably because they did not pursue a -->
+<!-- members of the other groups, presumably because they did not pursue a\ -->
 <!-- university degree. That might explain their higher income at the age -->
 <!-- 18-23 years and the slower growth of their income later in their -->
 <!-- life. They start going on trips at an earlier age than other groups, -->
 <!-- but due to their lower income they cannot go as often at older age. -->
 
-<!-- Groups 1 (red) and also 2 (green) represent respondents who have a low -->
-<!-- income at young age but then have a steep increase in income after an -->
+<!-- Groups 1 (red) and also 2 (green) represent respondents who have a\ low -->
+<!-- income at young age but then have a\ steep increase in income after an -->
 <!-- age of 25 years. This might be due to them staying longer in education -->
-<!-- and earning a university degree. Comparing these two groups further -->
-<!-- indicates that respondents in group 1 travel a lot, in particular -->
+<!-- and earning a\ university degree. Comparing these two groups further -->
+<!-- indicates that respondents in group 1 travel a\ lot, in particular -->
 <!-- between 25 and 30 years and again after an age of 35 years while also -->
 <!-- showing an increase in satisfaction levels. By contrast, respondents -->
-<!-- in group 2 rarely go on trips after the age of 20 years and show a -->
+<!-- in group 2 rarely go on trips after the age of 20 years and show a\ -->
 <!-- reduction in level of satisfaction when they grow older. -->
 
 So far we considered the classification of respondents based on the
 sampled indicators. Alternatively, the posterior distribution of the
 clustering probabilities $u_{i,g}$ could be determined and used to
 obtain clustering probabilities for already observed or new
-respondents. $u_{i,g}$ is the probability that observation $i$ belongs
+respondents. $u_{i,g}$ is the probability induced by the model that observation $i$ belongs
 to component $g$ where the random effects are integrated out. <!-- E.g., -->
 <!-- the probabilities for observation $i=1$ to belong to component -->
 <!-- $g=1,2,3$ is stored in `pmcmc$draws[[1]][["pUig_int(1)[1]"]]`, -->
@@ -1015,17 +1016,20 @@ for (i in order(pmcmc$certainty[, 1])[1:4]) {
                 chains = 1, setparmfrow = FALSE, doKern = FALSE, thin = 10)
   mtext(paste0("true g=", perm[[1]][psurvey1$g[psurvey1$i == i]]), 
         side = 3, line = 0.5, font = 2, cex = 0.8)
+  legend("bottomright", legend = 1:mcmc_pp$modeGplus[1], title = "Cluster", 
+       col = COL, lty = 1, bty = "n")
 }
 ```
 
 The `clustering_probabilities_and_deviance()` function may also be
 used for out-of-sample predictions. It does not use any samples of the
 latent data specific for each respondent. Hence, it can be used to
-evaluate the clustering probabilities $u_{\mathsf{new},g}$ for a newly
+evaluate the clustering probabilities $u_{\mathsf{new},g}$ for a\ newly
 observed respondent with outcomes $\mathbb{Y}_{\mathsf{new}}$ and
 covariates $\mathcal{C}_{\mathsf{new}}$. Moreover, the probabilities
 could be estimated sequentially as the number of observations per
-respondent increases using `dynamic_prob = TRUE`:
+respondent increases using `dynamic_prob = TRUE`.
+In this case we use all samples and a\ better approximation with `NGQ = 3`:
 
 ```{r psurvey-probability-new-data, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, results = FALSE}
 newdata <- data.frame(i = 501, 
@@ -1037,7 +1041,6 @@ mcmc_new <- clustering_probabilities_and_deviance(
     mcmc_pp, data = newdata, id = "i", dynamic_prob = TRUE,
     start = 1, end = mcmc_pp$iter, thin = 1, NGQ = 3)                                              
 ```
-In this case we use all samples and a better approximation with `NGQ = 3`.
 
 We visualize the sequentially estimated clustering probabilities for
 this respondent to indicate how cluster assignment varies when more
@@ -1077,7 +1080,7 @@ effects as well as cluster memberships.
 
 In particular, the package allows to include five different types of
 outcomes in the regression models. Each outcome type may possibly be
-modeled with a different formula, and the user can specify which
+modeled with a\ different formula, and the user can specify which
 effects should differentiate the clusters. The functions provided do
 not only enable efficient MCMC sampling based on data augmentation,
 but also suitable post-processing and inspection of the fitted model
@@ -1097,11 +1100,11 @@ range of functionality covered on an artificial dataset.
 <!-- model parameters $\tau$ (the error precision of numeric outcomes) and -->
 <!-- $c$ (the ordered intercepts for ordered outcomes), their -->
 <!-- group-specificity is applied uniformly to all outcomes. Cluster -->
-<!-- identification could be also resolved with a semi-supervised approach -->
+<!-- identification could be also resolved with a\ semi-supervised approach -->
 <!-- where labels of some individuals are assumed to be known in -->
-<!-- advance. Finally, there is also a limitation in the parameterization -->
+<!-- advance. Finally, there is also a\ limitation in the parameterization -->
 <!-- of each outcome type: we do not allow for different link functions or -->
-<!-- families. However, we opted for these simplifications to obtain a -->
+<!-- families. However, we opted for these simplifications to obtain a\ -->
 <!-- suitable trade-off between flexibility and ease of use. -->
 
 
