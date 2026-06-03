@@ -161,21 +161,21 @@ predict.clustglmm <-
         samples[["response"]] <- samples[["fg"]] + samples[["o"]][, 
                                                                   rep(1, dim(samples[["fg"]])[2]), 
                                                                   rep(1, dim(samples[["fg"]])[3]),
-                                                                  rep(1, dim(samples[["fg"]])[4])]
+                                                                  rep(1, dim(samples[["fg"]])[4]), drop=FALSE]
       }
       
       if(object$family[y] == "poi"){
         samples[["response"]] <- exp(samples[["fg"]] + samples[["o"]][, 
                                                                       rep(1, dim(samples[["fg"]])[2]), 
                                                                       rep(1, dim(samples[["fg"]])[3]),
-                                                                      rep(1, dim(samples[["fg"]])[4])])
+                                                                      rep(1, dim(samples[["fg"]])[4]), drop=FALSE])
       }
       
       if(object$family[y] == "bin"){
         exp_eta <- exp(samples[["fg"]] + samples[["o"]][, 
                                                         rep(1, dim(samples[["fg"]])[2]), 
                                                         rep(1, dim(samples[["fg"]])[3]),
-                                                        rep(1, dim(samples[["fg"]])[4])])
+                                                        rep(1, dim(samples[["fg"]])[4]), drop=FALSE])
         samples[["response"]][, , , 2] <- exp_eta / (1 + exp_eta)
         samples[["response"]][, , , 1] <- 1 - samples[["response"]][, , , 2]
       }
@@ -183,7 +183,7 @@ predict.clustglmm <-
       if(object$family[y] == "ord"){
         for(m in 1:dim(draws)[1]){
           for(ig in 1:length(gs)){
-            exp_eta <- exp(samples[["fg"]][, ig, m, ]+ samples[["o"]][, 1, 1, rep(1, dim(samples[["fg"]])[4])]) 
+            exp_eta <- exp(samples[["fg"]][, ig, m, ]+ samples[["o"]][, 1, 1, rep(1, dim(samples[["fg"]])[4], drop=FALSE)]) 
             pk <- cbind(rep(1, dim(newdata)[1]), 
                         exp_eta / (1 + exp_eta),
                         rep(0, dim(newdata)[1]))
@@ -526,25 +526,25 @@ predict.clustglmm <-
       if(object$family[y] == "num"){
         samples[["response"]] <- samples[["fg"]] + samples[["o"]][, 
                                                                   rep(1, dim(samples[["fg"]])[2]), 
-                                                                  rep(1, dim(samples[["fg"]])[3])]
+                                                                  rep(1, dim(samples[["fg"]])[3]), drop=FALSE]
       }
       
       if(object$family[y] == "poi"){
         samples[["response"]] <- exp(samples[["fg"]] + samples[["o"]][, 
                                                                       rep(1, dim(samples[["fg"]])[2]), 
-                                                                      rep(1, dim(samples[["fg"]])[3])])
+                                                                      rep(1, dim(samples[["fg"]])[3]), drop=FALSE])
       }
       
       if(object$family[y] == "bin"){
         exp_eta <- exp(samples[["fg"]] + samples[["o"]][, 
                                                         rep(1, dim(samples[["fg"]])[2]), 
-                                                        rep(1, dim(samples[["fg"]])[3])]) 
+                                                        rep(1, dim(samples[["fg"]])[3]), drop=FALSE]) 
         samples[["response"]] <- exp_eta / (1 + exp_eta)
       }
       
       if(object$family[y] == "ord"){
         for(ig in 1:length(gs)){
-          exp_eta <- exp(samples[["fg"]][, ig, ] + samples[["o"]][, 1, rep(1, dim(samples[["fg"]])[3])])
+          exp_eta <- exp(samples[["fg"]][, ig, ] + samples[["o"]][, 1, rep(1, dim(samples[["fg"]])[3]), drop=FALSE])
           pk <- cbind(rep(1, dim(newdata)[1]), 
                       exp_eta / (1 + exp_eta),
                       rep(0, dim(newdata)[1]))
