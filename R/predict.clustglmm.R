@@ -9,8 +9,6 @@ predict.clustglmm <-
            interval=c("ET", "HPD"),
            chain=1, burnin=0, thin=1, gs=object$clusters[[chain]], ...){
     
-  #TODO offset
-    
   # we rather work with "data.frame" format here
   if(object$howsave == "list"){
     object <- from_list_to_matrix(object)
@@ -81,9 +79,26 @@ predict.clustglmm <-
                             paste0("k=",1:ifelse(is.element(object$family[y], c("num", "poi")),
                                                  1, maxK+1)))) # 1 more dimension for probs
     
-    samples[["o"]] <- array(0, dim = c(dim(newdata)[1], 1, 1))
-    if(length(object$loffnames[[y]]) == 1){
-      samples[["o"]][, 1, 1] <- newdata[, object$loffnames[[y]]]
+    samples[["o"]] <- array(0, dim = c(dim(newdata)[1], 1, 1, 1))
+    if(object$family[y] == "num"){
+      # loffnames does not contain the information about offseting numeric variables 
+      # it is contained in the original formula
+      # numeric are subtracted directly
+      if((length(object$formula[[y]]$offset) == 1) & (object$formula[[y]]$offset != "")){
+        offvar <- object$formula[[y]]$offset
+      }else{
+        offvar <- c()
+      }
+    }else{
+      offvar <- object$loffnames[[y]]
+    }
+    if(length(offvar) == 1){
+      if(is.element(offvar, colnames(newdata))){
+        samples[["o"]][, 1, 1, 1] <- newdata[, object$formula[[y]]$offset]
+      }else{
+        warning(paste0("Offset variable ", object$formula[[y]]$offset, 
+                       " not given in newdata, working with zero offset."))
+      }
     }
     
     for(k in 1:maxK){
@@ -143,11 +158,11 @@ predict.clustglmm <-
     if(type == "response"){
       # Depending on type of outcome:
       if(object$family[y] == "num"){
-        samples[["response"]] <- samples[["fg"]] # ? + samples[["o"]], sweep? or find alternative for working with multiple dimensions
+        samples[["response"]] <- samples[["fg"]] + samples[["o"]]
       }
       
       if(object$family[y] == "poi"){
-        samples[["response"]] <- exp(samples[["fg"]]) # ? + samples[["o"]] 
+        samples[["response"]] <- exp(samples[["fg"]] + samples[["o"]])
       }
       
       if(object$family[y] == "bin"){
@@ -159,7 +174,7 @@ predict.clustglmm <-
       if(object$family[y] == "ord"){
         for(m in 1:dim(draws)[1]){
           for(ig in 1:length(gs)){
-            exp_eta <- exp(samples[["fg"]][, ig, m, ]) # ? + samples[["o"]] 
+            exp_eta <- exp(samples[["fg"]][, ig, m, ]+ samples[["o"]][, 1, 1, ] ) 
             pk <- cbind(rep(1, dim(newdata)[1]), 
                         exp_eta / (1 + exp_eta),
                         rep(0, dim(newdata)[1]))
@@ -172,7 +187,7 @@ predict.clustglmm <-
         for(m in 1:dim(draws)[1]){
           for(ig in 1:length(gs)){
             exp_eta <- exp(cbind(rep(0,dim(newdata)[1]), # 0 for baseline
-                                 samples[["fg"]][, ig, m, ]))  # ? # + samples[["o"]]
+                                 samples[["fg"]][, ig, m, ])) # offset prohibited 
             softmax <- exp_eta / rowSums(exp_eta)
             samples[["response"]][, ig, m, ] <- softmax
           }
@@ -251,7 +266,7 @@ predict.clustglmm <-
             for(k in 1:maxK){
               for(j in 1:dim(newdata)[1]){
                 samples[["eta"]][j, ig, k] <- 
-                  samples[["fg"]][j, ig, m, k] + samples[["r"]][j, ig, 1] + samples[["o"]][j, 1, 1]
+                  samples[["fg"]][j, ig, m, k] + samples[["r"]][j, ig, 1] + samples[["o"]][j, 1, 1, 1]
               }
             }
           }
@@ -287,7 +302,7 @@ predict.clustglmm <-
           for(k in 1:maxK){
             for(j in 1:dim(newdata)[1]){
               samples[["eta"]][j, 1, k] <- 
-                samples[["fg"]][j, U[j], m, k] + samples[["r"]][j, 1, 1] + samples[["o"]][j, 1, 1]
+                samples[["fg"]][j, U[j], m, k] + samples[["r"]][j, 1, 1] + samples[["o"]][j, 1, 1, 1]
             }
           }
           
@@ -474,26 +489,48 @@ predict.clustglmm <-
       }
     }
     
+    samples[["o"]] <- array(0, dim = c(dim(newdata)[1], 1, 1))
+    if(object$family[y] == "num"){
+      # loffnames does not contain the information about offseting numeric variables 
+      # it is contained in the original formula
+      # numeric are subtracted directly
+      if((length(object$formula[[y]]$offset) == 1) & (object$formula[[y]]$offset != "")){
+        offvar <- object$formula[[y]]$offset
+      }else{
+        offvar <- c()
+      }
+    }else{
+      offvar <- object$loffnames[[y]]
+    }
+    if(length(offvar) == 1){
+      if(is.element(offvar, colnames(newdata))){
+        samples[["o"]][, 1, 1] <- newdata[, object$formula[[y]]$offset]
+      }else{
+        warning(paste0("Offset variable ", object$formula[[y]]$offset, 
+                       " not given in newdata, working with zero offset."))
+      }
+    }
+    
     # On outcome level
     if(type == "response"){
       # Depending on the type of outcome
       if(object$family[y] == "num"){
-        samples[["response"]] <- samples[["fg"]] # ? + samples[["o"]]
+        samples[["response"]] <- samples[["fg"]] + samples[["o"]]
       }
       
       if(object$family[y] == "poi"){
-        samples[["response"]] <- exp(samples[["fg"]]) # ? # + samples[["o"]]
+        samples[["response"]] <- exp(samples[["fg"]]+ samples[["o"]])
       }
       
       if(object$family[y] == "bin"){
-        exp_eta <- exp(samples[["fg"]]) # ? # + samples[["o"]]
+        exp_eta <- exp(samples[["fg"]] + samples[["o"]]) 
         samples[["response"]] <- exp_eta / (1 + exp_eta)
       }
       
       if(object$family[y] == "ord"){
         for(ig in 1:length(gs)){
           # TODO ordered intercepts c_ord? --> should already be in samples
-          exp_eta <- exp(samples[["fg"]][, ig, ]) # ? # + samples[["o"]]
+          exp_eta <- exp(samples[["fg"]][, ig, ] + samples[["o"]][, 1, ])
           pk <- cbind(rep(1, dim(newdata)[1]), 
                       exp_eta / (1 + exp_eta),
                       rep(0, dim(newdata)[1]))
@@ -504,7 +541,7 @@ predict.clustglmm <-
       if(object$family[y] == "cat"){
         for(ig in 1:length(gs)){
           exp_eta <- exp(cbind(rep(0,dim(newdata)[1]), # 0 for baseline
-                               samples[["fg"]][, ig, ]))  # ? # + samples[["o"]]
+                               samples[["fg"]][, ig, ]))  # offset prohibited
           softmax <- exp_eta / rowSums(exp_eta)
           samples[["response"]][, ig, ] <- softmax
         }

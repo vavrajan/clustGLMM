@@ -130,7 +130,16 @@ Change the save settings if you want to calculate these probabilities afterwards
   # Numeric
   if(nY["Nums"] > 0){
     for(y in Nums){
-      yval <- data[,y] #TODO subtract offset here
+      # subtract the offset immediately
+      if(is.null(formula[[y]]$offset) || (formula[[y]]$offset == "")){
+        yval <- data[,y]
+      }else{
+        if(is.element(formula[[y]]$offset, colnames(data))){
+          yval <- data[,y] - data[,formula[[y]]$offset]
+        }else{
+          stop(paste0("Data.frame data does not contain an offset ", formula[[y]]$offset, "."))
+        }
+      }
       if(!is.numeric(yval)){
         stop(paste0("Outcome ", y, " is not numeric!"))
       }
@@ -220,7 +229,10 @@ Change the save settings if you want to calculate these probabilities afterwards
       # Later for C function changed to the last one
       ydata[,y] <- as.numeric(fy)-1 # 0, 1, ..., Kcat[y]
       Kcat[y] <- nlevels(fy)-1
-      #TODO prohibit offset here (possibly even numeric)
+      if(!is.null(formula[[y]]$offset) && (formula[[y]]$offset != "")){
+        warning(paste0("Offsetting categorical variable is prohibited. Continuing without the offset for outcome ", y, "."))
+        formula[[y]]$offset <- ""
+      }
     }
   }else{
     Kcat <- NULL
@@ -253,6 +265,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       fcols[[y]] <- colnames(fauxX)
       gcols[[y]] <- colnames(gauxX)
     }
+    # Regressors are preferably group-specific
     fcols[[y]] <- setdiff(fcols[[y]], gcols[[y]])
     rcols[[y]] <- colnames(rauxX)
     
@@ -269,7 +282,7 @@ Change the save settings if you want to calculate these probabilities afterwards
       }else{
         if(!is.element("(Intercept)", union(fcols[[y]], gcols[[y]]))){
           stop("standardize = TRUE, but column (Intercept) not included in either fixed or group formula. 
-               Then, it would be difficult to transform betas back to original scale.")
+               Then, it would not be possible to transform betas back to original scale.")
         }
         if(length(gcols[[y]]) > 0){
           if(is.element("(Intercept)", fcols[[y]])){
@@ -310,14 +323,15 @@ Change the save settings if you want to calculate these probabilities afterwards
     ocols[[y]] <- formula[[y]]$offset
     loffnames[[y]] <- as.character(c())
     noff[y] <- ifelse(formula[[y]]$offset == "", 0, 1)
-    if(noff[y] > 0){
+    if((noff[y] > 0) & (sorted_family[y] != "num")){
+      #if numeric --> will not be added to loffnames
+      #but ocols and formula still remember that there has been some
       loffnames[[y]] <- ocols[[y]]
       noto <- setdiff(ocols[[y]], Xcolnames)
       Xcolnames <- c(Xcolnames, noto)
       addX <- data.frame(data[,noto])
       colnames(addX) <- noto
       finX <- cbind(finX, addX)
-      # TODO should the offset be also scaled?
     }
     
     nfix[y] <- length(fcols[[y]])
@@ -407,7 +421,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         Xvars <- c(fcols[[y]], gcols[[y]])
         # Using all data
         nonna <- (!is.na(ydata[,y]))
-        pomY <- ydata[nonna,y] - apply(finX[nonna, loffnames[[y]], drop = FALSE], 1, sum)
+        pomY <- ydata[nonna,y] # - apply(finX[nonna, loffnames[[y]], drop = FALSE], 1, sum)
         boldX <- as.matrix(finX[nonna, Xvars, drop=FALSE])
         fit0 <- lm.fit(boldX, pomY)
         coefs <- coef(fit0)
@@ -424,7 +438,7 @@ Change the save settings if you want to calculate these probabilities afterwards
         inits[[ch]]$beta_num[[y]] <- list()
         for(g in 1:G[ch]){
           inds <- selection[[g]] & !is.na(ydata[,y])
-          pomY <- ydata[inds,y] - apply(finX[inds, loffnames[[y]], drop = FALSE], 1, sum)
+          pomY <- ydata[inds,y] # - apply(finX[inds, loffnames[[y]], drop = FALSE], 1, sum)
           boldX <- as.matrix(finX[inds, Xvars, drop=FALSE])
           fit <- try(lm.fit(boldX, pomY))
           if (is(fit, "try-error") || anyNA(coef(fit))) {
@@ -663,12 +677,14 @@ Change the save settings if you want to calculate these probabilities afterwards
       inits[[ch]]$beta_cat <- inits[[ch]]$beta_cat_fix <- list()
       for(y in Cats){
         aux_form <- paste0(y, " ~ .")
-        if(noff[y] > 0){
-          aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
-          auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
-        }else{
+        # Offsets are prohibited for categorical variables 
+        # nnet requires multiple offsets (different for each category)
+        # if(noff[y] > 0){
+        #   aux_form <- paste0(aux_form, "+ offset(",formula[[y]]$offset,")")
+        #  auxdata0 <- finX[,union(fcols[[y]], union(gcols[[y]], ocols[[y]]))]
+        # }else{
           auxdata0 <- finX[,union(fcols[[y]], gcols[[y]])]
-        }
+        # }
         # possibly standardized regressors
         auxdata0[,y] <- factor(ydata[,y]) # the first category is the baseline
         auxmult0 <- multinom(as.formula(aux_form), data = auxdata0, trace = FALSE)

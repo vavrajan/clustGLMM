@@ -198,6 +198,14 @@ Change the settings and use clustGLMM() again.")
     ocols[[y]] <- mcmc$formula[[y]]$offset
     noff <- ifelse(mcmc$formula[[y]]$offset == "", 0, 1)
     if(noff > 0){
+      if(mcmc$family[y] != "num"){
+        if(is.element(mcmc$formula[[y]]$offset, colnames(data))){
+          ydata[,y] <- ydata[,y] - data[,mcmc$formula[[y]]$offset]
+        }else{
+          warning(paste0("Data.frame data does not contain an offset ", mcmc$formula[[y]]$offset, " for variable ", y, ".
+Working under zero offset."))
+        }
+      }
       noto <- setdiff(ocols[[y]], Xcolnames)
       Xcolnames <- c(Xcolnames, noto)
       addX <- data.frame(data[,noto])
@@ -227,7 +235,7 @@ Change the settings and use clustGLMM() again.")
   ## Data
   # First column is going to be the id variable (0-th column)
   cId <- numbered_unique_ids[as.character(data[,id])] - 1
-  # -1 is there for C which works better with number beggining with 0
+  # -1 is there for C which works better with number beginning with 0
   # other columns  (beginning with 1st column)
   cY <- numeric()
   for(y in Ys){
