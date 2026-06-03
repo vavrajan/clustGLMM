@@ -11,10 +11,12 @@ plot.clustglmm <- function(x, what="ng", which="traceplots", ng_trace_chain_spli
     }
   }
   
+  args <- names(list(...))
+  
   if((what == "ng") & (which == "traceplots") & ng_trace_chain_split){
     plot_ng_trace_chain_split(x, ...)
   }else{
-    if(any(!missing(yspec), !missing(dimspec), !missing(gspec))){
+    if(any(is.element("dimspec", args), is.element("gspec", args))){
       # User attempts to specify some specific subset of parameters
       # Plotting of subset larger than 1 is not supported (too flexible)
       switch(which,
