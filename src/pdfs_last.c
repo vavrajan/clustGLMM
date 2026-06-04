@@ -76,6 +76,8 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
   double* pbeta_cat;
   double* pc;
   double qk;
+  double* half_log_tau;
+  half_log_tau = (double *)R_alloc(nY[0], sizeof(double));
   // double etak, etak_1;
   // double pk, pk_1;
   int add_to_c;
@@ -101,6 +103,10 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
     ptau = (*last).prec_num + *g*dims[2];
   }else{
     ptau = (*last).prec_num;
+  }
+  
+  for(y = 0; y < nY[0]; y++){
+    half_log_tau[y] = 0.5 * log(ptau[y]);
   }
   
   // group-specific beta coeficients
@@ -143,7 +149,8 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
       }
       
       *value -= 0.5 * ptau[y] * auxY * auxY; // subtracting the square
-      *value += 0.5 * log(ptau[y]); // adding log of precision
+      *value += half_log_tau[y]; // adding log of precision
+      *value -= HALF_LOG_2PI; // normalizing constant log(1/sqrt(2pi))
       
       if(*print){
         Rprintf("\nlogpYi_g: Nums[%d], i = %d, j = %d, value = %f", y, *i, j, *value);
@@ -175,7 +182,8 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
         auxY = Y[Ycoord];
       }
       
-      *value += auxY*eta - exp(eta); // - lgamma(auxY + 1);
+      *value += auxY*eta - exp(eta);
+      *value -= lgamma(auxY + 1);    // including a constant
       
       if(*print){
         Rprintf("\nlogpYi_g: Pois[%d], i = %d, j = %d, value = %f", y, *i, j, *value);
@@ -346,5 +354,6 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
   } // end of for j in 1:n_i
   
   free(etas);
+  free(half_log_tau);
    
 }

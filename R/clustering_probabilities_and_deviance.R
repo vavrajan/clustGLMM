@@ -198,19 +198,20 @@ Change the settings and use clustGLMM() again.")
     ocols[[y]] <- mcmc$formula[[y]]$offset
     noff <- ifelse(mcmc$formula[[y]]$offset == "", 0, 1)
     if(noff > 0){
-      if(mcmc$family[y] != "num"){
+      if(mcmc$family[y] == "num"){
         if(is.element(mcmc$formula[[y]]$offset, colnames(data))){
           ydata[,y] <- ydata[,y] - data[,mcmc$formula[[y]]$offset]
         }else{
           warning(paste0("Data.frame data does not contain an offset ", mcmc$formula[[y]]$offset, " for variable ", y, ".
 Working under zero offset."))
         }
+      }else{
+        noto <- setdiff(ocols[[y]], Xcolnames)
+        Xcolnames <- c(Xcolnames, noto)
+        addX <- data.frame(data[,noto])
+        colnames(addX) <- noto
+        finX <- cbind(finX, addX)
       }
-      noto <- setdiff(ocols[[y]], Xcolnames)
-      Xcolnames <- c(Xcolnames, noto)
-      addX <- data.frame(data[,noto])
-      colnames(addX) <- noto
-      finX <- cbind(finX, addX)
     }
     
   }

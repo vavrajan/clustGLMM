@@ -77,6 +77,13 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
   double log_sum_exp;
   double maxeta;
   
+  double* half_log_prec;
+  half_log_prec = (double *)R_alloc(nY[0], sizeof(double));
+  
+  for(y = 0; y < nY[0]; y++){
+    half_log_prec[y] = 0.5 * log(pprec_num[y]);
+  }
+  
   
   *value = 0.0;
   
@@ -94,8 +101,11 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
         tg += ngrp[shift_nY];
         t += nran[shift_nY];
       }else{
+        // log-normalizing constant 
+        *value -= HALF_LOG_2PI;
+        
         // Do not forget on log tau!!!
-        *value += 0.5 * log(pprec_num[y]);
+        *value += half_log_prec[y];
         
         // Update predictor
         eta = 0.0; 
@@ -169,7 +179,9 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
           eta += X[coord + *N * FormulaO[l + cumnoff[shift_nY]]]; 
         }
         
-        *value += Y[coord + *N * shift_nY]*eta - exp(eta); // - lgamma(Y[coord + *N * shift_nY] + 1);
+        *value += Y[coord + *N * shift_nY]*eta - exp(eta); 
+        // normalizing constant -log(y!)
+        *value -= lgamma(Y[coord + *N * shift_nY] + 1);
         //if(*print){printf("\nlogpYi Poi: i = %d, j = %d, y = %d, eta = %f, value = %f", *i, j, y, eta, *value);}
       }
       shift_nY++;
@@ -444,6 +456,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
   
   free(etas);
   free(expetas);
+  free(half_log_prec);
 }
 
 void logpbi_dev(double* Y,              // IN [totnY*N]
@@ -515,6 +528,7 @@ void logpbi_dev(double* Y,              // IN [totnY*N]
   // Add the square of prior distribution -1/2 b_i * InvSigma * b_i
   aBa(theta, pInvSigma, &bISb, totnran);
   *value -= 0.5 * bISb;
+  *value -= *totnran * HALF_LOG_2PI; // normalizing constant
   //printf("\nlogpbi_dev: value = %f", *value);
   
 }

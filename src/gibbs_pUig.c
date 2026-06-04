@@ -152,6 +152,7 @@ void gibbs_pUig(struct str_state* last,  // IN last known values of generated pa
           logp[g] -= 0.5 * x;
           logp[g] += 0.5 * log((*last).detInvSigma[0]);
         }
+        logp[g] -= *totnran * HALF_LOG_2PI; // normalizing constant for totnran dimensional N distribution
       }
       
       if(isfinite(logp[g]) == 0){
@@ -222,7 +223,7 @@ void gibbs_pUig(struct str_state* last,  // IN last known values of generated pa
       lag_proposal_bi[i] = 0;
     }
     (*last).U[i] = newU;
-    *loglik += logp[newU];
+    *loglik += logp[newU]; // log-likelihood as if latent data observed at current values
     
     
     // update of nUg, ng and listUi
