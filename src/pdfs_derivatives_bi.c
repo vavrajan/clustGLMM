@@ -651,7 +651,7 @@ void d_d2_logpbi(struct str_state* last,  // IN last known values of generated p
         ppk = pk * (1-pk);
       }
       pp1 = 1.0 - pk_1 - pk;
-      pp = ppk + ppk_1 + 0.00000001;
+      pp = ppk + ppk_1;
       
       for(l1 = 0; l1 < nran[shift_nY]; l1++){
         // gradient

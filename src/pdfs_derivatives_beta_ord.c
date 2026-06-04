@@ -368,7 +368,7 @@ void d_d2_logpbeta_ord(struct str_state* last,  // IN last known values of gener
         pk = logit_inv(etak);
         ppk = pk * (1-pk);
       }
-      pp = ppk + ppk_1 + 0.00000001;
+      pp = ppk + ppk_1;
       pp1 = 1.0 - pk_1 - pk;
       
       //if(l < 3){

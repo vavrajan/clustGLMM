@@ -10,6 +10,7 @@
 
 #include "structures.h"
 
+
 double logit_inv(double x){
   double expx;
   
@@ -21,6 +22,17 @@ double logit_inv(double x){
     return(1.0/(1.0+expx));
   }
 }
+
+/*
+double logit_inv(double x){
+  
+  if(x < 0){
+    return 1.0 / (1.0 + exp(-x));
+  }else{
+    return 1.0 - 1.0 / (1.0 + exp(x));
+  }
+}
+ */
 
 double safe_log1pexp(double x) {
   if (x > 700) {
