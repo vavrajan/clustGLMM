@@ -31,8 +31,8 @@ Depending on \code{which} the following functions are called:
   \item{ECDF}{creates empirical cumulative distribution function plot, calls \code{\link{plot_ECDF}} or \code{\link{plot_ECDF_param}}.}
   \item{kerneldensity}{creates kernel density estimator plot, calls \code{\link{plot_kerneldensity}} or \code{\link{plot_kerneldensity_param}}.}
   \item{traceplots}{creates traceplots (samples vs iteration), calls \code{\link{plot_traceplots}} or \code{\link{plot_traceplots_param}}.}
-  \item{clusters_ECDF}{creates empirical cumulative distribution function plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_ECDF}} or \code{\link{plot_clusters_ECDF_param}}.}
-  \item{clusters_kerneldensity}{creates kernel density estimator plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters_kerneldensity}} or \code{\link{plot_clusters_kerneldensity_param}}.}
+  \item{clusters_ECDF}{creates empirical cumulative distribution function plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters}} or \code{\link{plot_clusters_ECDF_param}}.}
+  \item{clusters_kerneldensity}{creates kernel density estimator plot where different clusters are compared (\code{what} needs to be a cluster-specific parameter), calls \code{\link{plot_clusters}} or \code{\link{plot_clusters_kerneldensity_param}}.}
 }
 
 If the user tries to specify one of: \code{gspec} or \code{dimspec}, it is treated as an attempt to plot only a single scalar parameter (functions without \code{..._param}).

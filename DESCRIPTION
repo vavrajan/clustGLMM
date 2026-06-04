@@ -14,3 +14,5 @@ Description: Provides tools for Bayesian estimation and inference for modelling 
 License: GPL-2
 Imports: coda, colorspace, gaussquad, graphics, grDevices, HDInterval, MASS, methods, mvtnorm, nnet, RcppHungarian, splines, stats, utils
 Depends: R (>= 4.0.0)
+Suggests:
+    testthat (>= 3.0.0)

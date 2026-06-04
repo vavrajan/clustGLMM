@@ -1,6 +1,7 @@
 test_that("A zero offset is automatically added to formula if missing.", {
 
   expect_equal({
+    set.seed(123456789)
     form <- list(y = list(fixed = ~ 0, group = ~ x, random = ~ 1))
     mcmc <- suppressMessages(clustGLMM(
       formula = form, id = "id", family = c(y = "num"), 
@@ -18,6 +19,7 @@ test_that("A zero offset is automatically added to formula if missing.", {
 
 test_that("Even when not standardized, if intercept in both fixed and group, it becomes g-specific", {
   expect_equal({
+    set.seed(123456789)
     form <- list(y = list(fixed = ~ 1, group = ~ x, random = ~ 1))
     mcmc <- suppressMessages(clustGLMM(
       formula = form, id = "id", family = c(y = "num"), 
@@ -39,6 +41,7 @@ test_that("Even when not standardized, if intercept in both fixed and group, it 
 test_that("When not standardized, if intercept not group, it stays not group-specific.", {
   
   expect_equal({
+    set.seed(123456789)
     form <- list(y = list(fixed = ~ 1, group = ~ x+0, random = ~ 1))
     mcmc <- suppressMessages(clustGLMM(
       formula = form, id = "id", family = c(y = "num"), 
@@ -61,6 +64,7 @@ test_that("When standardized, if intercept not group, it becomes group-specific.
   
   expect_warning(
     expect_equal({
+      set.seed(123456789)
       form <- list(y = list(fixed = ~ 1, group = ~ x-1, random = ~ 1))
       mcmc <- suppressMessages(clustGLMM(
         formula = form, id = "id", family = c(y = "num"), 
@@ -83,6 +87,7 @@ test_that("When standardized, if intercept not group, it becomes group-specific.
 test_that("When standardized, if all fixed, remains fixed, even intercept does not change to group-specific.", {
 
     expect_equal({
+      set.seed(123456789)
       form <- list(y = list(fixed = ~ x, group = ~ 0, random = ~ 1))
       mcmc <- suppressMessages(clustGLMM(
         formula = form, id = "id", family = c(y = "num"), 

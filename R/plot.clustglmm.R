@@ -24,8 +24,8 @@ plot.clustglmm <- function(x, what="ng", which="traceplots", ng_trace_chain_spli
              "ECDF" = plot_ECDF(x, what, ...),
              "kerneldensity" = plot_kerneldensity(x, what, ...),
              "traceplots" = plot_traceplots(x, what, ...),
-             "clusters_ECDF" = plot_clusters_ECDF(x, what, ...),
-             "clusters_kerneldensity" = plot_clusters_kerneldensity(x, what, ...)
+             "clusters_ECDF" = plot_clusters(x, what, ...),
+             "clusters_kerneldensity" = plot_clusters(x, what, ...)
       )
       # If not a single scalar value, 
       # an error/warning is printed with an instruction to be more specific.
@@ -37,8 +37,8 @@ plot.clustglmm <- function(x, what="ng", which="traceplots", ng_trace_chain_spli
              "ECDF" = plot_ECDF_param(x, what, ...),
              "kerneldensity" = plot_kerneldensity_param(x, what, ...),
              "traceplots" = plot_traceplots_param(x, what, ...),
-             "clusters_ECDF" = plot_clusters_ECDF_param(x, what, ...),
-             "clusters_kerneldensity" = plot_clusters_kerneldensity_param(x, what, ...)
+             "clusters_ECDF" = plot_clusters_ECDF_param(x, what, doKern = FALSE, doECDF = TRUE, ...),
+             "clusters_kerneldensity" = plot_clusters_kerneldensity_param(x, what, doKern = TRUE, doECDF = FALSE, ...)
              )
     }
   }
