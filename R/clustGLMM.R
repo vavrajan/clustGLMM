@@ -378,9 +378,9 @@ Change the save settings if you want to calculate these probabilities afterwards
     save[c("InvSigma", "Sigma", "sdSigma", "corSigma", "detInvSigma",
            "InvQ", "Q", "detInvQ",
            "b")] <- FALSE
-    if(N>n){
-      warning("Some subjects have more than one observation. Therefore,
-              the assumption of independence is violated. ")
+    if((N > n) & (sum(nY) > 1)){
+      warning("Some subjects have more than one observation and no random effects are considered. 
+Therefore, the given outcomes are considered independent. ")
     }
   }
   
