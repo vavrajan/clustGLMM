@@ -78,7 +78,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
   double maxeta;
   
   double* half_log_prec;
-  half_log_prec = (double *)R_alloc(nY[0], sizeof(double));
+  half_log_prec = (double *)malloc(nY[0] * sizeof(double));
   
   for(y = 0; y < nY[0]; y++){
     half_log_prec[y] = 0.5 * log(pprec_num[y]);

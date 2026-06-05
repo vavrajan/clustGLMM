@@ -77,7 +77,7 @@ void logpYi_g(struct str_state* last,  // IN last known values of generated para
   double* pc;
   double qk;
   double* half_log_tau;
-  half_log_tau = (double *)R_alloc(nY[0], sizeof(double));
+  half_log_tau = (double *)malloc(nY[0] * sizeof(double));
   // double etak, etak_1;
   // double pk, pk_1;
   int add_to_c;
