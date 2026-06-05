@@ -87,15 +87,22 @@ Change the settings and use clustGLMM() again.")
   }
   
   # Poisson
+  is.wholenumber <- function(x, tol = .Machine$double.eps^0.5){abs(x - as.integer(x)) < tol}
   if(nY["Pois"] > 0){
     for(y in mcmc$Pois){
       yval <- data[,y]
-      if(!is.integer(yval)){
-        stop(paste0("Outcome ", y, " is not integer-valued!"))
-      }
+      # if(any(is.infinite(yval))){
+      #  stop(paste0("There are infinite values for outcome ", y, "!"))
+      #}
       if(sum(infs <- is.infinite(yval))>0){
         yval[infs] <- NA
         warning(paste0("Infinite values of outcome ", y, " have been converted to NAs."))
+      }
+      if(!all(is.wholenumber(yval), na.rm = TRUE)){
+        stop(paste0("Outcome ", y, " is not integer-valued!"))
+      }
+      if(!all(yval >= 0, na.rm = TRUE)){
+        stop(paste0("Outcome ", y, " has some negative values!"))
       }
       ydata[,y] <- yval # integer values
     }
