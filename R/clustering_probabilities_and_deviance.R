@@ -544,13 +544,13 @@ Working under zero offset."))
                               d2spec=d2spec[["pUig_int"]], family=mcmc$family)
     if(dynamic_prob){
       # keep only the clustering probabilities for all available observations
-      pnames <- paste0("pUig_int(", rep(1:mcmc$G, each=n), 
-                       ")[", rep(1:n, mcmc$G), ",", 
-                       rep(nsubj, mcmc$G), "]")
+      pnames <- paste0("pUig_int(", rep(1:mcmc$G[ch], each=n), 
+                       ")[", rep(1:n, mcmc$G[ch]), ",", 
+                       rep(nsubj, mcmc$G[ch]), "]")
       probs <- probs[,pnames]
     }
     psum <- apply(probs, 2, mean, na.rm=TRUE)
-    probmean <- matrix(psum, ncol = mcmc$G, nrow = n, byrow = FALSE)
+    probmean <- matrix(psum, ncol = mcmc$G[ch], nrow = n, byrow = FALSE)
     
     clustering[,ch] <- apply(probmean, 1, which.max)
     certainty[,ch] <- apply(probmean, 1, max)

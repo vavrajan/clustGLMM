@@ -142,11 +142,14 @@ plot_cat_vs_x_grouped(psurvey, "satisfaction", x = "age", g = "g0")
 plot_cat_vs_x_grouped(psurvey, "satisfaction", x = "age", g = "g")
 ```
 
-To be able to show that package \pkg{clustGLMM} can also be used when there are missing values in the outcome variables, we insert `r nmis` missing values for each outcome:
-
-```{r, psurvey-NAs, echo = TRUE, eval = FALSE}
-set.seed(31415)
+```{r nmis, echo = FALSE, eval = TRUE}
 nmis <- 6
+```
+
+To be able to show that package \pkg{clustGLMM} can also be used when there are missing values in the outcome variables, we insert `nmis = ` `r nmis` missing values for each outcome:
+
+```{r, psurvey-NAs, echo = TRUE, eval = TRUE}
+set.seed(31415)
 na_indices <- na_true_vals <- list()
 for (y in c("income", "ntrips", "satisfaction")) {
   na_indices[[y]] <- sort(sample(seq_len(nrow(psurvey)), nmis))
@@ -201,8 +204,7 @@ varying["prec_num"] <- FALSE
 The posterior estimates of the missing values are not returned by default. One has to set `save["naY"]` to `TRUE` to also obtain them.
 
 ```{r psurvey-defaults-2, echo = TRUE}
-(save <- default_save())
-save["naY"] <- TRUE
+(save <- default_save(naY = TRUE))
 ```
 
 In the following, we use the default options for arguments `param` and `tuning` when calling `clustGLMM()`.
@@ -536,13 +538,14 @@ We compare the resulting clustering to the true one:
 
 ```{r psurvey-clustering-probabilities-confusion, echo=TRUE}
 psurvey[, paste0("clustering", ch)] <- pmcmc$clustering[psurvey$i, ch]
-table(psurvey[psurvey$j == 1, c("g", paste0("clustering", ch))])
+psurvey1 <- psurvey[psurvey$j == 1, ]
+table(psurvey1[, c("g", paste0("clustering", ch))])
 ```
 
 In addition, we also compare the resulting clustering to the clustering obtained based on the sampled indicators:
 
 ```{r psurvey-clustering-probabilities-confusion-2, echo=TRUE}
-table(psurvey[psurvey$j == 1, c(paste0("Uclustering", ch), paste0("clustering", ch))])
+table(psurvey1[, c(paste0("Uclustering", ch), paste0("clustering", ch))])
 ```
 
 In the following, we visualize the posterior distributions of the clustering probabilities. We focus on subjects where the uncertainty is high. 
@@ -588,9 +591,9 @@ newdata <- data.frame(i = 501,
                       income = seq(110, 180, length.out = 10),
                       ntrips = 0:9,
                       satisfaction = c(0, 0, 0, 1, 1, 1, 1, 2, 2, 2))
-mcmc_new <- clustering_probabilities_and_deviance(mcmc_perm,
+mcmc_new <- clustering_probabilities_and_deviance(mcmc_pp,
   data = newdata, id = "i", dynamic_prob = TRUE,         # newdata, dynamically
-  start = 1, end = mcmc_perm$iter, thin = 1, chains = 1,   # all samples
+  start = 1, end = mcmc_pp$iter, thin = 1, chains = 1,   # all samples
   NGQ = 3)                                               # better approximation
 ```
 

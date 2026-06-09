@@ -455,7 +455,7 @@ Therefore, the given outcomes are considered independent. ")
       
       # parameters connected to Poisson variables --> use log-linear model
       add_intercept <- function(formula) {
-          formula_str <- deparse(formula)
+          formula_str <- paste0(deparse(formula), collapse = "")
           if (!grepl("(0|- 1)", formula_str)) {
               formula <- as.formula(paste0(formula_str, "+ 1"),
                                     environment(formula))
