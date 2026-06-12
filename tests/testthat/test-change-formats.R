@@ -7,7 +7,7 @@ test_that("clustglmm object can be flawlessly changed to the different howsave f
       id = "id", family = c(y = "num"), 
       data = data.frame(id = 1:10,
                         y = 1:10,
-                        x = rep(c(0,1), each = 5)),
+                        x = rep(c(0, 1), each = 5)),
       G = 1, nchains = 1, iter = 10, standardize = TRUE,
       howsave = "list")
     )}, {
@@ -17,7 +17,7 @@ test_that("clustglmm object can be flawlessly changed to the different howsave f
       id = "id", family = c(y = "num"), 
       data = data.frame(id = 1:10,
                         y = 1:10,
-                        x = rep(c(0,1), each = 5)),
+                        x = rep(c(0, 1), each = 5)),
       G = 1, nchains = 1, iter = 10, standardize = TRUE,
       howsave = "data.frame"))
     from_matrix_to_list(mcmc)  
@@ -30,7 +30,7 @@ test_that("clustglmm object can be flawlessly changed to the different howsave f
       id = "id", family = c(y = "num"), 
       data = data.frame(id = 1:10,
                         y = 1:10,
-                        x = rep(c(0,1), each = 5)),
+                        x = rep(c(0, 1), each = 5)),
       G = 1, nchains = 1, iter = 10, standardize = TRUE,
       howsave = "data.frame")
     )}, {
@@ -40,7 +40,7 @@ test_that("clustglmm object can be flawlessly changed to the different howsave f
         id = "id", family = c(y = "num"), 
         data = data.frame(id = 1:10,
                           y = 1:10,
-                          x = rep(c(0,1), each = 5)),
+                          x = rep(c(0, 1), each = 5)),
         G = 1, nchains = 1, iter = 10, standardize = TRUE,
         howsave = "list"))
       from_list_to_matrix(mcmc)  

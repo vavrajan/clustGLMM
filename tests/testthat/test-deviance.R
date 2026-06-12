@@ -7,11 +7,11 @@ test_that("deviance is computed correctly", {
       id = "id", family = c(y = "num"), 
       data = data.frame(id = 1:10,
                         y = 1:10,
-                        x = rep(c(0,1), each = 5)),
+                        x = rep(c(0, 1), each = 5)),
       G = 1, nchains = 1, iter = 10, standardize = TRUE))
     pmcmc <- suppressMessages(clustering_probabilities_and_deviance(
       mcmc, id = "id", 
-      data = data.frame(id = 11:12, y = c(4.5, 5.5), x = c(0,1))
+      data = data.frame(id = 11:12, y = c(4.5, 5.5), x = c(0, 1))
     ))
     # mcmc$draws[[1]]
     c(pmcmc$draws[[1]]$`dev_i[1]`, pmcmc$draws[[1]]$`dev_i[2]`)
@@ -32,11 +32,11 @@ test_that("deviance is computed correctly", {
       id = "id", family = c(y = "poi"), 
       data = data.frame(id = 1:10,
                         y = 0:9,
-                        x = rep(c(0,1), each = 5)),
+                        x = rep(c(0, 1), each = 5)),
       G = 1, nchains = 1, iter = 10, standardize = TRUE))
     pmcmc <- suppressMessages(clustering_probabilities_and_deviance(
       mcmc, id = "id", 
-      data = data.frame(id = 11:12, y = c(4, 5), x = c(0,1))
+      data = data.frame(id = 11:12, y = c(4, 5), x = c(0, 1))
     ))
     # mcmc$draws[[1]]
     c(pmcmc$draws[[1]]$`dev_i[1]`, pmcmc$draws[[1]]$`dev_i[2]`)
