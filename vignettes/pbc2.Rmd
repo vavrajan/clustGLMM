@@ -41,7 +41,7 @@ dim(data)
 
 @KomarekKomarkovaJSS14mixAK used the following analysis:
 
-```{r}
+```{r GLMM-MCMC-from-mixAK}
 set.seed(20042007)
 mod <- GLMM_MCMC(y = PBC910[, c("lbili", "platelet", "spiders")], 
     dist = c("gaussian", "poisson(log)", "binomial(logit)"), 
@@ -53,28 +53,60 @@ mod <- GLMM_MCMC(y = PBC910[, c("lbili", "platelet", "spiders")],
              platelet = PBC910[, "month"], 
              spiders  = "empty"),
     random.intercept = rep(TRUE, 3),
-    prior.b = list(Kmax = 1), 
+    prior.b = list(Kmax = 2), 
     nMCMC = c(burn = 100, keep = 1000, thin = 10, info = 100),
     parallel = FALSE)
 mod <- NMixRelabel(mod, type = "stephens", keep.comp.prob = TRUE)
 ```
 
-```{r}
+```{r coda-mcmc-output}
 library("coda")
+colnames(mod[[1]]$mixture_b)
 name.Eb <- paste("b.Mean.", 1:5, sep = "")
 RegrChain1 <- mcmc(with(mod[[1]], 
                         cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
 RegrChain2 <- mcmc(with(mod[[2]], 
-  cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
+                        cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
 colnames(RegrChain1) <- colnames(RegrChain2) <- 
     c(paste(rep(c("lbili", "platelet", "spiders"), each = 2), 
             ":", rep(c("Intcpt", "Slope"), 3), sep = ""),
       "lbili:res_std_dev")
 summary(mcmc.list(RegrChain1, RegrChain2))
+
+ip <- getProfiles(t = "month",
+                  y = c("lbili", "platelet", "spiders", "jspiders"),
+                  id = "id", data = PBC910)
+delta <- 0.3
+tpred <- seq(0, 30, by = delta)
+fit <- fitted(mod[[1]], x =list("empty", "empty", tpred),
+              z =list(tpred, tpred, "empty"),
+              glmer = TRUE)
+names(fit) <- c("lbili", "platelet", "spiders")
+
+
+K <- mod[[1]]$prior.b$Kmax
+clCOL <- c("darkgreen", "red3")
+obsCOL <- "azure3"
+
+layout(autolayout(3))
+plotProfiles(ip = ip, data = PBC910, var = "lbili", tvar = "month",
+             auto.layout = FALSE, main = "Log(bilirubin)",
+             xlab = "Time (months)", ylab = "Log(bilirubin)", col = obsCOL)
+for (k in 1:K) lines(tpred, fit[["lbili"]][, k], col = clCOL[k], lwd = 2)
+plotProfiles(ip = ip, data = PBC910, var = "platelet", tvar = "month",
+             auto.layout = FALSE, main = "Platelet count",
+             xlab = "Time (months)", ylab = "Platelet count", col = obsCOL)
+for (k in 1:K) lines(tpred, fit[["platelet"]][, k], col = clCOL[k], lwd = 2)
+plotProfiles(ip = ip, data = PBC910, var = "jspiders", tvar = "month",
+             lines = FALSE, points = TRUE,
+             auto.layout = FALSE, main = "Blood vessel malform.",
+             xlab = "Time (months)", ylab = "Blood vessel malform. (jittered)",
+             bg = obsCOL, col = "grey70")
+for (k in 1:K) lines(tpred, fit[["spiders"]][, k], col = clCOL[k], lwd = 2)
 ```
 
 
-We try to replicate this analysis using package **clustGLMM*. We prepare the data:
+We try to replicate this analysis using package **clustGLMM**. We prepare the data:
 
 ```{r data-transformations}
 data$time <- data$month
@@ -136,7 +168,7 @@ Non-effects parameters of the model may also be set to be
 group-specific.  The default setting is provided by
 
 ```{r varying}
-(varying <- default_varying())
+(varying <- default_varying(prec_num = TRUE, InvSigma = TRUE))
 ```
 
 Only precision of the errors of numeric outcomes and ordered
@@ -147,18 +179,12 @@ scale matrix `InvQ` common to all groups.  Missing outcome values will
 be always predicted for the current cluster the individual is assigned
 to.
 
-```{r varying-InvSigma}
-varying["prec_num"] <- FALSE
-varying["InvSigma"] <- TRUE
-```
-
 Next, we can choose which parameters are returned.  We make just one
 change compared to the default setting and that is to save the
 predicted missing values.
 
 ```{r save}
-save <- default_save()
-save["naY"] <- TRUE
+save <- default_save(naY = TRUE)
 ```
 
 For `tuning` we will use settings that and `param` will be kept
@@ -166,22 +192,23 @@ without any changes.
 
 ```{r tuning}
 tuning <- default_tuning(experience = TRUE)
-param <- default_param(sparse = TRUE)
-# param[["prec_num_shp"]] <- 0.001
-# param[["prec_num_rte"]] <- 1
+param <- default_param(sparse = FALSE)
+# param[["prec_num_shp"]] <- 1
+# param[["prec_num_rte"]] <- 0.001
 # param$InvV <- 0.00000001
 # param[["beta_num_fix_sd"]] <- 10
 # param[["beta_num_sd"]] <- 10
 # data$platelet <- round(data$platelet / 100)
 ```
 
-Since we do not know the number of underlying clusters in advance, we
-set the maximal number of clusters `G` to 10.  We also apply
+<!-- Since we do not know the number of underlying clusters in advance, we -->
+<!-- set the maximal number of clusters `G` to 10.  We also apply -->
+We are going to fit the same number of clusters `G = 2`. We also apply
 standardization of covariates and outcomes to ensure that priors are
 truly non-informative.  We run a couple of randomly initialized chains
 for initial 1000 iterations.
 
-```{r clustGLMM-burnin}
+```{r clustGLMM-burnin, message = FALSE}
 set.seed(123456789)
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
                          G = 2, nchains = 2, iter = 1000, 
@@ -195,18 +222,18 @@ patients within each cluster separately for all chains:
 ```{r plot-mcmc-burnin}
 plot(mcmc_burnin)
 ```
+Apparently the number of patients within each cluster stabilizes in time.
+<!-- Apparently the number of non-empty groups is decreasing in time.  -->
+<!-- Moreover, it seems to differ between chains:  -->
 
-Apparently the number of non-empty groups is decreasing in time. 
-Moreover, it seems to differ between chains: 
-
-```{r plot-mcmc-burnin-Gplus}
+```{r plot-mcmc-burnin-Gplus, eval = FALSE, echo = FALSE}
 plot(mcmc_burnin, "Gplus")
 ```
 
 The current chains cannot be used for inference.
 We continue to sample from initial values set to `mcmc_burnin$last`:
 
-```{r clustGLMM-burnin2}
+```{r clustGLMM-burnin2, message = FALSE}
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
                          G = 2, nchains = 2, iter = 1000, 
                          inits = mcmc_burnin$last,
@@ -214,30 +241,66 @@ mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = d
                          standardize = TRUE)
 ```
 
-And we plot the same plots again to see that one chains prefers the
-two-cluster solution while the other still keeps 3 clusters while one
-of the clusters is rather sparse.
+We plot the same traceplots for the cluster occupancy numbers to detect
+potential changes, which actually occur from time to time:
+<!-- And we plot the same plots again to see that one chains prefers the -->
+<!-- two-cluster solution while the other still keeps 3 clusters while one -->
+<!-- of the clusters is rather sparse. -->
 
 ```{r plot-mcmc-burnin2}
 plot(mcmc_burnin)
+```
+```{r plot-mcmc-burnin-clusters}
+plot(mcmc_burnin, "beta_num", "clusters_kerneldensity", chain = 1)
+plot(mcmc_burnin, "beta_num", "clusters_kerneldensity", chain = 2)
 ```
 
 Now we sample next $10\,000$ iterations.
 
 ```{r clustGLMM}
+set.seed(42)
 mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
                   G = 2, nchains = 2, iter = 10000, 
                   inits = mcmc_burnin$last,
                   varying = varying, save = save, tuning = tuning, param = param, 
                   standardize = TRUE)
+# mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
+#                   G = 2, nchains = 2, iter = 10000, 
+#                   inits = mcmc$last,
+#                   varying = varying, save = save, tuning = tuning, param = param, 
+#                   standardize = TRUE)
+mcmc <- permute_cluster_labels(mcmc, perm = list(1:2, 2:1))
 ```
 
 ```{r plot-mcmc}
 plot(mcmc)
 ```
 
-```{r plot-mcmc-clusters-kde}
+```{r plot-mcmc-traceplots}
+plot(mcmc, "beta_num")
+plot(mcmc, "prec_num")
+plot(mcmc, "beta_poi")
+plot(mcmc, "beta_bin")
+plot(mcmc, "sdSigma")
+plot(mcmc, "corSigma")
+plot(mcmc, "w")
+```
+
+
+```{r plot-mcmc-clusters-kde-ch-1}
 ch <- 1
+plot(mcmc, "beta_num", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "beta_poi", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "beta_bin", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "beta_ord", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "c_ord", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "sdSigma", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "corSigma", "clusters_kerneldensity", chain = ch)
+plot(mcmc, "w", "clusters_kerneldensity", chain = ch)
+```
+
+```{r plot-mcmc-clusters-kde-ch-2}
+ch <- 2
 plot(mcmc, "beta_num", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "beta_poi", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "beta_bin", "clusters_kerneldensity", chain = ch)
@@ -253,13 +316,20 @@ mcmc_pp <- post_processing(mcmc)
 ```
 
 ```{r Uclustering}
-data[, paste0("Uclustering", ch)] <- mcmc$clustering[as.character(data$id), ch]
+for(ch in 1:2){
+  data[, paste0("Uclustering", ch)] <- mcmc$clustering[as.character(data$id), ch]
+}
 ```
 
-```{r plot-pbc-vs-time-clustered, fig.height = 6}
-par(mfrow = c(1, 3), mar = c(4, 4, 1, 0. 5))
+```{r plot-pbc-vs-time-clustered-ch-1, fig.height = 6, fig.width = 8}
+par(mfrow = c(1, 3), mar = c(4, 4, 1, 0.5))
 plot_num_vs_x_grouped(data, y = "lbili", x = "time", group = "Uclustering1", id = "id")
 plot_num_vs_x_grouped(data, y = "platelet", x = "time", group = "Uclustering1", id = "id")
 plot_cat_vs_x_grouped(data, y = "spiders", x = "time", group = "Uclustering1", main = "spiders")
 ```
-
+```{r plot-pbc-vs-time-clustered-ch-2, fig.height = 6, fig.width = 8}
+par(mfrow = c(1, 3), mar = c(4, 4, 1, 0.5))
+plot_num_vs_x_grouped(data, y = "lbili", x = "time", group = "Uclustering2", id = "id")
+plot_num_vs_x_grouped(data, y = "platelet", x = "time", group = "Uclustering2", id = "id")
+plot_cat_vs_x_grouped(data, y = "spiders", x = "time", group = "Uclustering2", main = "spiders")
+```
