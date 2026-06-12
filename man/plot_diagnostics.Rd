@@ -45,24 +45,25 @@ plot_ng_trace_chain_split(mcmc,
                           burnin = 0, thin = 1, iterations, chains,
                           COL, labcex = 1, setparmfrow = TRUE)
 plot_diagnostics(mcmc, scalar_samples, what, gspec, dimspec, yspec,
-                 burnin = 0, thin = 1, lag.max = 30, iterations, chains, trueval, 
-                 setparmfrow = TRUE, COL, move.width = 0.3, whatLAB)
-plot_ACF_param(mcmc, what = "ng", yspec, burnin = 0, thin = 1, iterations, lag.max = 30, chains, 
-               setparmfrow = TRUE, allclusters = FALSE)
+                 burnin = 0, thin = 1, lag.max = 30, iterations, chains,
+                 trueval, setparmfrow = TRUE, COL, move.width = 0.3, whatLAB)
+plot_ACF_param(mcmc, what = "ng", yspec, burnin = 0, thin = 1, iterations,
+               lag.max = 30, chains, setparmfrow = TRUE, allclusters = FALSE)
 plot_ECDF_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
                 setparmfrow = TRUE, allclusters = FALSE)
-plot_kerneldensity_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
-                         setparmfrow = TRUE, allclusters = FALSE)
-plot_traceplots_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
-                      setparmfrow = TRUE, allclusters = FALSE)
+plot_kerneldensity_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations,
+                         chains, setparmfrow = TRUE, allclusters = FALSE)
+plot_traceplots_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations,
+                      chains, setparmfrow = TRUE, allclusters = FALSE)
 plot_clusters(mcmc, what, dimspec, yspec, whichg,
               burnin = 0, thin = 1, iterations, chains,
               setparmfrow = TRUE, doKern = TRUE, doECDF = TRUE,
               COL, labcex = 0.8, whatLAB, wherelegend = "topright")
-plot_clusters_kerneldensity_param(mcmc, what, whichg, yspec, burnin = 0, thin = 1,
-                                  iterations, chains, setparmfrow = TRUE)
-plot_clusters_ECDF_param(mcmc, what, whichg, yspec, burnin = 0, thin = 1, iterations,
-                         chains, setparmfrow = TRUE)
+plot_clusters_kerneldensity_param(mcmc, what, whichg, yspec, burnin = 0,
+                                  thin = 1, iterations, chains,
+                                  setparmfrow = TRUE)
+plot_clusters_ECDF_param(mcmc, what, whichg, yspec, burnin = 0, thin = 1,
+                         iterations, chains, setparmfrow = TRUE)
 }
 \arguments{
   \item{mcmc}{
