@@ -1359,11 +1359,6 @@ psurvey1 <- psurvey1[psurvey1$j == 1, ]
 psurvey1[, "Uclustering"] <- mcmc_pp$clustering[psurvey1$i, 1]
 with(psurvey1, table(g, Uclustering))
 with(psurvey1, mclust::classError(g, Uclustering)$errorRate)
-if (requireNamespace("mclust", quietly = TRUE)) {
-  with(psurvey1, mclust::classError(g, Uclustering)$errorRate)
-}else{
-  ## do something else not involving mclust.
-}
 ```
 
 After suitable relabeling, the misclassification error is indeed very
