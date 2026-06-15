@@ -153,7 +153,7 @@ kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
 
 In the following, we discuss the implementation of the methodology
 in package \pkg{clustGLMM} in more detail. An overview of the typical workflow and
-the key functions is given in Figure \@ref(fig:workflow-diagram). In
+the key functions is given in Figure\ \@ref(fig:workflow-diagram). In
 the following subsections we go through each of the steps and discuss
 it in detail.
 

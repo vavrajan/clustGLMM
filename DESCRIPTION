@@ -17,5 +17,7 @@ Depends: R (>= 4.0.0)
 Suggests:
     knitr,
     rmarkdown,
+    kableExtra, dplyr,
+    DiagrammeR, DiagrammeRsvg, rsvg, mclust, 
     testthat (>= 3.0.0)
 VignetteBuilder: knitr

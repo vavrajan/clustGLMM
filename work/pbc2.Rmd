@@ -30,7 +30,7 @@ library("clustGLMM")
 
 ## PBC910
 
-We use the dataset from package **mixAk**.
+We use the dataset from package **mixAK**.
 
 ```{r pbc-data}
 data("PBC910", package = "mixAK")

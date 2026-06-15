@@ -1,6 +1,9 @@
 ---
 title: "The R Package clustGLMM - Clustering Longitudinal Data of Mixed Type"
+author: "Jan Vávra, Bettina Grün, Gertraud Malsiner-Walli, Arnošt Komárek"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+bibliography: "clustGLMM.bib"
 vignette: >
   %\VignetteIndexEntry{The R Package clustGLMM - Clustering Longitudinal Data of Mixed Type}
   %\VignetteEngine{knitr::rmarkdown}
@@ -304,7 +307,11 @@ ptab <- data.frame(Notation = c("$\\beta_{lr}^F$, $\\beta_{lr}^{(g)}$",
                                  "Component sizes",
                                  "Sparsity"),
                    check.names = FALSE)
-kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
+if (requireNamespace("kableExtra", quietly = TRUE) & requireNamespace("dplyr", quietly = TRUE)) {
+  kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
+}else{
+  kable(ptab, booktabs = TRUE, escape = FALSE)
+}
 ```
 
 # Inference {#sec:inference}
@@ -398,69 +405,75 @@ the following subsections we go through each of the steps and discuss
 it in detail.
 
 ```{r workflow-diagram, fig.cap="Typical workflow with \\pkg{clustGLMM} and key functions.", out.width="100%", dev="png"}
-graph <- DiagrammeR::grViz("digraph {
-  graph[layout = dot, rankdir = TB]
-  
-  node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
-  rec1[label = '@@1']
-  rec2[label = '@@2']
-  rec3[label = 'Visual diagnostics']
-  rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
-  rec4[label = 'Within chain post-processing']
-  rec5[label = 'Across chain post-processing', fillcolor = LemonChiffon]
-  
-  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
-  code1[label = 'data, family, formula, varying, ...']
-  code2[label = 'clustGLMM()']
-  code3[label = 'as_coda(), plot()']
-  code3a[label = 'If not, return to previous steps (adjust settings or continue in sampling)', fillcolor = white, fontname = Helvetica]
-  code4[label = 'post_processing()']
-  code5[label = 'plot(, which=clusters_kerneldensity), permute_cluster_labels()']
-  
-  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
-  code6a[label = 'summary()']
-  code6b[label = 'predict()']
-  code6c[label = 'clustering_probabilities_and_deviance()']
-  
-  subgraph cluster6 {
-    graph[layout = fdp, shape = rectangle, style = rounded, fillcolor = gold, style = filled]
+if (requireNamespace("DiagrammeR", quietly = TRUE) & 
+    requireNamespace("DiagrammeRsvg", quietly = TRUE) & 
+    requireNamespace("rsvg", quietly = TRUE)) {
+  graph <- DiagrammeR::grViz("digraph {
+    graph[layout = dot, rankdir = TB]
     
-    label = ''
-    node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
-    rec6[label = 'Inference', fillcolor = gold, shape = none]
-    rec6a[label = 'Posterior description with the use of coda']
-    rec6b[label = 'Reconstruct linear predictor']
-    rec6c[label = 'Approximate posterior of clustering probabilities and deviance']
-  }
-  
-  # edge definitions with the node IDs
-  edge[arrowhead = normal, arrowtail = none]
-  rec1 -> rec2 -> rec3 -> rec3a -> rec4 -> rec5 -> rec6
-  
-  edge[arrowhead = none, arrowtail = none]
-  {{rank=same rec1 -> code1}}
-  {{rank=same rec2 -> code2}}
-  {{rank=same rec3 -> code3}}
-  {{rank=same rec3a -> code3a}}
-  {{rank=same rec4 -> code4}}
-  {{rank=same rec5 -> code5}}
-  {{rank=same rec6a -> code6a}}
-  {{rank=same rec6b -> code6b}}
-  {{rank=same rec6c -> code6c}}
-  
-  edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
-  rec6 -> rec6a -> rec6b -> rec6c 
-  
-  }
-  
-  # Substitutions with R code are possible:
-  [1]: paste0('Prepare inputs')
-  [2]: paste0('Sample chains')
-  ",
-  height = 500, width = 600)
-svg_text <- DiagrammeRsvg::export_svg(graph)
-rsvg::rsvg_png(charToRaw(svg_text), file = "workflow-diagram.png")
-knitr::include_graphics("workflow-diagram.png")
+    node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
+    rec1[label = '@@1']
+    rec2[label = '@@2']
+    rec3[label = 'Visual diagnostics']
+    rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
+    rec4[label = 'Within chain post-processing']
+    rec5[label = 'Across chain post-processing', fillcolor = LemonChiffon]
+    
+    node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
+    code1[label = 'data, family, formula, varying, ...']
+    code2[label = 'clustGLMM()']
+    code3[label = 'as_coda(), plot()']
+    code3a[label = 'If not, return to previous steps (adjust settings or continue in sampling)', fillcolor = white, fontname = Helvetica]
+    code4[label = 'post_processing()']
+    code5[label = 'plot(, which=clusters_kerneldensity), permute_cluster_labels()']
+    
+    node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
+    code6a[label = 'summary()']
+    code6b[label = 'predict()']
+    code6c[label = 'clustering_probabilities_and_deviance()']
+    
+    subgraph cluster6 {
+      graph[layout = fdp, shape = rectangle, style = rounded, fillcolor = gold, style = filled]
+      
+      label = ''
+      node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
+      rec6[label = 'Inference', fillcolor = gold, shape = none]
+      rec6a[label = 'Posterior description with the use of coda']
+      rec6b[label = 'Reconstruct linear predictor']
+      rec6c[label = 'Approximate posterior of clustering probabilities and deviance']
+    }
+    
+    # edge definitions with the node IDs
+    edge[arrowhead = normal, arrowtail = none]
+    rec1 -> rec2 -> rec3 -> rec3a -> rec4 -> rec5 -> rec6
+    
+    edge[arrowhead = none, arrowtail = none]
+    {{rank=same rec1 -> code1}}
+    {{rank=same rec2 -> code2}}
+    {{rank=same rec3 -> code3}}
+    {{rank=same rec3a -> code3a}}
+    {{rank=same rec4 -> code4}}
+    {{rank=same rec5 -> code5}}
+    {{rank=same rec6a -> code6a}}
+    {{rank=same rec6b -> code6b}}
+    {{rank=same rec6c -> code6c}}
+    
+    edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
+    rec6 -> rec6a -> rec6b -> rec6c 
+    
+    }
+    
+    # Substitutions with R code are possible:
+    [1]: paste0('Prepare inputs')
+    [2]: paste0('Sample chains')
+    ",
+    height = 500, width = 600)
+  svg_text <- DiagrammeRsvg::export_svg(graph)
+  rsvg::rsvg_png(charToRaw(svg_text), file = "workflow-diagram.png")
+  knitr::include_graphics("workflow-diagram.png")
+}else{
+  knitr::include_graphics("workflow-diagram.png")
+}
 ```
 
 ## Prepare inputs {#impl-prepare-inputs}
@@ -1346,6 +1359,11 @@ psurvey1 <- psurvey1[psurvey1$j == 1, ]
 psurvey1[, "Uclustering"] <- mcmc_pp$clustering[psurvey1$i, 1]
 with(psurvey1, table(g, Uclustering))
 with(psurvey1, mclust::classError(g, Uclustering)$errorRate)
+if (requireNamespace("mclust", quietly = TRUE)) {
+  with(psurvey1, mclust::classError(g, Uclustering)$errorRate)
+}else{
+  ## do something else not involving mclust.
+}
 ```
 
 After suitable relabeling, the misclassification error is indeed very
