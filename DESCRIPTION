@@ -10,7 +10,7 @@ Authors@R: c(person("Jan", "Vavra", role = c("aut", "cre"),
                     email = "gertraud.malsiner-walli@wu.ac.at"),
              person("Arnost", "Komarek", role = c("aut"),
                     email = "komarek@karlin.mff.cuni.cz"))
-Maintainer: person("Jan", "Vavra", email = "vavraj@karlin.mff.cuni.cz")     
+Maintainer: Jan Vavra <vavraj@karlin.mff.cuni.cz>    
 Description: Provides tools for Bayesian estimation and inference for modelling clusterwise multivariate regression models for numeric, count, binary, ordinal and count outcomes observed repeatedly on the same units and where possible relations among outcomes are captured through a joint distribution of random effects. The clusters are defined through cluster-specific parameters, which the analyst can choose, e.g., with respect to the regression coefficients. In particular, the model specification for each regression model via the formula is specific to the outcome and consists of four parts: (1) fixed - regression coefficients common to all clusters, (2) group - group-specific regression coefficients, (3) random - random effects specific for each unit, (3) offset - name of an offset variable (if needed). Estimation is performed using MCMC sampling combining Gibbs and Metropolis-Hastings steps. Post-processing tools allow to assess convergence and address label switching and provide visual diagnostics. Units may be classified based on sampled allocation indicators or by exploiting the posterior distribution of the classification probabilities. For more details see Vavra et al. (2024) <doi:10.1007/s11222-023-10304-5>. 
 License: GPL-2
 Imports: coda, colorspace, gaussquad, graphics, grDevices, HDInterval, MASS, methods, mvtnorm, nnet, RcppHungarian, splines, stats, utils
