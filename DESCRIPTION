@@ -5,7 +5,7 @@ Encoding: UTF-8
 Authors@R: c(person("Jan", "Vavra", role = c("aut", "cre"),
                     email = "vavraj@karlin.mff.cuni.cz"),
              person("Bettina", "Gruen", role = c("aut"),
-                    email = "bettina.gruen@wu.ac.at"),
+                    email = "bettina.gruen@R-project.org"),
              person("Gertraud", "Malsiner-Walli", role = c("aut"),
                     email = "gertraud.malsiner-walli@wu.ac.at"),
              person("Arnost", "Komarek", role = c("aut"),
