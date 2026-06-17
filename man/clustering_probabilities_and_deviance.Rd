@@ -135,7 +135,7 @@ for(y in Ys){
 ###-----------------------------------------------------------------------------
 
 Gmax <- 5     # maximal number of mixture components to be considered
-nchains <- 2  # number of chains to be sampled 
+nchains <- 1  # number of chains to be sampled 
 
 ## No inits specified
 set.seed(123456789)

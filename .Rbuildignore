@@ -1,5 +1,7 @@
 clusGLMM.Rproj
 ^.*\.Rproj$
 ^\.Rproj\.user$
-work
+bugs
+presentation
 RJ-clustGLMM
+work
