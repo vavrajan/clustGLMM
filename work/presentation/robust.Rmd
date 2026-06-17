@@ -1,0 +1,644 @@
+---
+title: "clustGLMM: Clustering Longitudinal Data of Mixed Type"
+author: "Jan Vávra"
+date: "18 January 2026"
+output: 
+  beamer_presentation:
+    theme: "CambridgeUS"
+    colortheme: "dolphin"
+    extra_dependencies: ["amsmath", "amssymb", "amsfonts", "amsthm", "bbding", "bm",
+  "graphicx"]
+    includes: 
+      in_header: "preamble2.tex"
+classoption:
+  - c
+  - 10pt
+  - aspectratio=169
+header-includes:
+  - \setbeamertemplate{section page}{}
+  - \AtBeginSection{}
+---
+
+```{r setup, include=FALSE}
+library("rmarkdown")
+knitr::opts_chunk$set(echo = FALSE, fig.align='center', fig.width=10, fig.height=4.8, out.width="100%", out.height="100%", fig.pos='H', warning = F, message = F)
+options(tinytex.verbose = TRUE, digits = 4, width = 80)
+WD <- getwd()
+if(basename(WD) != "presentation"){
+  WD <- file.path(WD, "presentation")
+}
+```
+
+# Longitudinal data of mixed type
+
+##
+
+```{r load-clustGLMM, echo = FALSE}
+library("clustGLMM")
+data(students, package = "clustGLMM")
+n <- length(unique(students$i))
+```
+
+```{r print-students, echo = TRUE}
+students[10:24, c("i", "j", "g", "age", "income", "ntrips", "satisfaction")]
+```
+
+##
+
+\vspace*{-0.3cm}
+```{r students-income-vs-age, echo=FALSE}
+students$g0 <- rep(0, dim(students)[1])
+par(mar = c(4, 4, 0.5, 0.5), mfrow = c(2,3))
+plot_num_vs_x_grouped(students, "income", x = "age", g = "g0", legend_placement = "topleft")
+plot_num_vs_x_grouped(students, "ntrips", x = "age", g = "g0", legend_placement = "topleft")
+plot_cat_vs_x_grouped(students, "satisfaction", x = "age", g = "g0")
+plot_num_vs_x_grouped(students, "income", x = "age", g = "g", legend_placement = "topleft")
+plot_num_vs_x_grouped(students, "ntrips", x = "age", g = "g", legend_placement = "topleft")
+plot_cat_vs_x_grouped(students, "satisfaction", x = "age", g = "g")
+```
+
+# Model Overview
+
+## 5 different outcome types
+
+numeric, count, binary, ordinal and general categorical: 
+$r\in\mathcal{R} = \mathcal{R}^{\mathsf{Num}} \cup \mathcal{R}^{\mathsf{Poi}} \cup \mathcal{R}^{\mathsf{Bin}} \cup \mathcal{R}^{\mathsf{Ord}} \cup \mathcal{R}^{\mathsf{Cat}}$
+
+\vspace*{-0.1cm}
+$$
+\eta_{ijr}^{(g)} = \mathbf{F}_{ijr}^\top \boldsymbol{\beta}_r^F + \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r^{(g)} + \mathbf{Z}_{ijr}^\top \mathbf{b}_{ir}
+$$
+\vspace*{-0.1cm}
+\begin{align*}
+  \left. Y_{ij}^r \,\right\vert\, U_i = g, \mathbf{b}_i^r, \mathbf{F}_{ijr}, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} 
+  &\sim 
+  \mathsf{N}\left(\eta_{ijr}^{(g)}, \; \left(\tau_r^{(g)}\right)^{-1}\right) 
+  &\qquad r \in\mathcal{R}^{\mathsf{Num}}
+  \\
+  \left. Y_{ij}^r \,\right\vert\, U_i = g, \mathbf{b}_i^r, \mathbf{F}_{ijr}, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} 
+  &\sim 
+  \mathsf{Pois}\left(\exp\left\{\eta_{ijr}^{(g)}\right\}\right) 
+  &\qquad r \in\mathcal{R}^{\mathsf{Poi}}
+  \\
+  \mathsf{P} \left[\left. Y_{ij}^r = 1 \,\right\vert\, U_i = g, \mathbf{b}_i^r, \mathbf{F}_{ijr}, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  &= 
+  \mathsf{logit}^{-1} \left(\eta_{ijr}^{(g)}\right) 
+  &\qquad r \in\mathcal{R}^{\mathsf{Bin}}
+  \\
+  \mathsf{P} \left[\left. Y_{ij}^r > k \,\right\vert\, U_i = g, \mathbf{b}_i^r, \mathbf{F}_{ijr}, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  &= 
+  \mathsf{logit}^{-1} \left(\eta_{ijr}^{(g)} - c_{k,r}^{(g)}\right) 
+  &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Ord}}
+  \\
+  \mathsf{P} \left[\left. Y_{ij}^r = k \,\right\vert\, U_i = g, \mathbf{b}_i^r, \mathbf{F}_{ijr}, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  &= 
+  \frac{\exp \eta_{ijkr}^{(g)}}{1 + \sum\limits_{\kappa=1}^{K^r-1} \exp \eta_{ij\kappa r}^{(g)}} 
+  &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Cat}}
+\end{align*}
+
+## Latent data - random effects, cluster allocations, missing outcome values
+
+combined vector of random effects $\mathbf{b}_{i} = \left\{\mathbf{b}_i^r, r\in\mathcal{R}\right\} \,\vert\, U_i = g \,\sim\, \mathsf{N}_{d^R}\left(\mathbf{0}, \boldsymbol{\Sigma}^{(g)}\right)$,
+where $\boldsymbol{\Sigma}^{(g)} > 0$
+
+cluster allocations $U_i \in \{1,\ldots, G\}$: $\mathsf{P}(U_i = g) = w_g$ for $g = 1, \ldots, G$
+
+$$
+  p(\mathbb{Y}_i \,\vert\, \mathbb{F}_{i}, \mathbb{X}_{i}, \mathbb{Z}_{i})
+  = \sum\limits_{g=1}^{G} 
+  w_g \int 
+  p\left(\mathbb{Y}_i \,\left\vert\, U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \mathbb{F}_{i}, \mathbb{X}_{i}, \mathbb{Z}_{i} \right.\right)
+  p\left(\mathbf{b}_i \,\left\vert\, U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right.\right)
+  \mathrm{d} \mathbf{b}_i
+$$
+
+Moreover, outcome values $Y_{ij}^r$ _missing at random_ become model parameter.
+
+## Bayesian inference via MCMC
+
+uninformative prior distributions: normal ($\boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}$), gamma ($\boldsymbol{\tau}^{(g)}$), Inverse Wishart ($\boldsymbol{\Sigma}^{(g)}$)
+
+sparse finite mixture prior for $\mathbf{w}$
+$$
+\boldsymbol{\theta} = \left\{\mathbb{Y}^{\mathsf{mis}}, \mathbf{U}, \mathbf{b}, \mathbf{w}, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \boldsymbol{\Sigma}^{(g)}, g = 1, \ldots, G \right\}
+$$
+$$
+p(\boldsymbol{\theta} \, | \, \mathbb{Y}^{\mathsf{obs}}, \mathbb{F}, \mathbb{X}, \mathbb{Z}) 
+\propto 
+p(\mathbb{Y}^{\mathsf{obs}} \, | \, \boldsymbol{\theta}, \mathbb{F}, \mathbb{X}, \mathbb{Z}) 
+\, 
+p(\boldsymbol{\theta} \, | \, \mathbb{F}, \mathbb{X}, \mathbb{Z})
+$$
+Metropolis-within-Gibbs sampling algorithm (sampling in sub blocks $\boldsymbol{\omega} \subset \boldsymbol{\theta}$)
+
+Metropolis proposal distribution based on Laplace approximation
+$$
+\ell (\boldsymbol{\omega}) := \log p (\boldsymbol{\omega} | \cdots) 
+\approx 
+\mathrm{const.} - 
+\frac{1}{2} \left(\boldsymbol{\omega}-\widehat{\boldsymbol{\omega}}\right)^\top
+\left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]
+\left(\boldsymbol{\omega}-\widehat{\boldsymbol{\omega}}\right)
+$$
+$$
+\boldsymbol{\omega}^{\mathrm{proposal}} = \boldsymbol{\omega}^{\mathrm{current}} + \mathbf{s}, 
+\qquad \text{where} \quad 
+\mathbf{s} \sim 
+\mathsf{N}_d\left(\mathbf{0}, c_{\boldsymbol{\omega}} \left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]^{-1}\right)
+$$
+Proposal accepted with probability \quad
+$\min\left\{1, \, \exp(\ell(\boldsymbol{\omega}^{\mathrm{proposal}}) -\ell(\boldsymbol{\omega}^{\mathrm{current}}))\right\}$
+
+
+# Sampling MCMC with clustGLMM
+
+```{r workflow-diagram, eval = FALSE, out.width="80%", out.height="140%"}
+DiagrammeR::grViz("digraph {
+  graph[layout = dot, rankdir = TB]
+  
+  node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
+  rec1[label = '@@1']
+  rec2[label = '@@2']
+  rec3[label = '3. Visual diagnostics']
+  rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
+  rec4[label = '4. Within chain post-processing']
+  rec5[label = '5. Across chain post-processing']
+  
+  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
+  code1[label = 'data, family, formula, varying, ...']
+  code2[label = 'clustGLMM()']
+  code3[label = 'as_coda(), plot()']
+  code3a[label = 'If not, return to previous steps (adjust settings or continue in sampling)', fillcolor = white, fontname = Helvetica]
+  code4[label = 'post_processing()']
+  code5[label = 'plot(, which=clusters_kerneldensity), permute_cluster_labels()']
+  
+  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
+  code6a[label = 'summary()']
+  code6b[label = 'predict()']
+  code6c[label = 'clustering_probabilities_and_deviance()']
+  
+  subgraph cluster6 {
+    graph[layout = fdp, shape = rectangle, style = rounded, fillcolor = gold, style = filled]
+    
+    label = ''
+    node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
+    rec6[label = '6. Inference', fillcolor = gold, shape = none]
+    rec6a[label = '6.1 Posterior description with the use of coda']
+    rec6b[label = '6.2 Reconstruct linear predictor']
+    rec6c[label = '6.3 Approximate posterior of clustering probabilities and deviance']
+  }
+  
+  # edge definitions with the node IDs
+  edge[arrowhead = normal, arrowtail = none]
+  rec1 -> rec2 -> rec3 -> rec3a -> rec4 -> rec5 -> rec6
+  
+  edge[arrowhead = none, arrowtail = none]
+  {{rank=same rec1 -> code1}}
+  {{rank=same rec2 -> code2}}
+  {{rank=same rec3 -> code3}}
+  {{rank=same rec3a -> code3a}}
+  {{rank=same rec4 -> code4}}
+  {{rank=same rec5 -> code5}}
+  {{rank=same rec6a -> code6a}}
+  {{rank=same rec6b -> code6b}}
+  {{rank=same rec6c -> code6c}}
+  
+  edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
+  rec6 -> rec6a -> rec6b -> rec6c 
+  
+  }
+  
+  # Substitutions with R code are possible:
+  [1]: paste0('1. Prepare inputs')
+  [2]: paste0('2. Sample chains')
+  ",
+  height = 1200, width = 1200)
+```
+
+## Preparations for clustGLMM
+
+```{r students-NAs, echo = FALSE, eval = TRUE}
+set.seed(31415)
+nmis <- 6
+na_indices <- na_true_vals <- list()
+for (y in c("income", "ntrips", "satisfaction")) {
+  na_indices[[y]] <- sort(sample(seq_len(nrow(students)), nmis))
+  na_true_vals[[y]] <- students[na_indices[[y]], y]
+  is.na(students[na_indices[[y]], y]) <- TRUE
+}
+```
+
+Specification of outcome types
+
+```{r students-family, echo=TRUE}
+family <- c("num", "poi", "ord") # is also equivalent to
+family <- c("gaussian", "poisson", "cumulative")
+names(family) <- Ys <- c("income", "ntrips", "satisfaction")
+```
+
+`clustGLMM()` checks the required format, orders by type
+
+## Formulas for linear predictor
+
+```{r students-formula, echo=TRUE}
+library("splines")
+degree <- 2
+knots <- c(18, 20, 25, 30, 35, 40)
+inner <- knots[-c(1, length(knots))]
+bound <- knots[c(1, length(knots))]
+id <- "i"
+formula <- list()
+for (y in Ys) {
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- ~ 1 # will become ~ 0
+  formula[[y]]$group <- ~ bs(age, 
+                             knots = inner, Boundary.knots = bound, 
+                             degree = degree, intercept = FALSE)
+  formula[[y]]$random <- ~ 1
+  formula[[y]]$offset <- ""
+}
+```
+
+## Adjusting algorithm settings
+
+Which parameters should be group-specific?
+```{r students-defaults, echo = TRUE}
+(varying <- default_varying())
+varying["prec_num"] <- FALSE   # change tau to common to all groups
+```
+
+Which parameters should be saved?
+```{r students-defaults-2, echo = TRUE}
+save <- default_save()
+save["naY"] <- TRUE            # save estimates for missing Y values
+```
+
+```{r students-defaults-other, echo = TRUE, eval = F}
+default_param()        # hyperparameters for prior distributions
+default_tuning()       # algorithm tuning parameters + other settings
+```
+
+## The basic use of clustGLMM()
+
+```{r students-mcmc-initial, echo=TRUE, eval=FALSE, results=FALSE}
+set.seed(12345678)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
+                  G = 10, nchains = 2, iter = 3000, 
+                  varying = varying, save = save,
+                  standardize = TRUE)
+```
+
+```{r clustGLMM-auxiliary-print, echo = F}
+cat("Chain: 1, (100 %)\nChain: 2, (100 %)")
+```
+```{r saving-students-mcmc-initial, eval = F, echo = F}
+save(mcmc, file = file.path(WD, "data", "students_mcmc_initial.RData"))
+```
+
+```{r loading-students-mcmc-initial, eval = T, echo = F}
+load(file.path(WD, "data", "students_mcmc_initial.RData"))
+```
+
+##
+
+```{r students-mcmc-initial-plot, echo=TRUE, out.height = "85%"}
+plot(mcmc, ng_trace_chain_split = FALSE)
+```
+
+## Continue in sampling
+
+```{r students-mcmc, echo=TRUE, eval=FALSE, results=FALSE}
+set.seed(1234)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, data = students,
+                  inits = mcmc$last,                # last -> initial values
+                  G = 10, nchains = 2, iter = 1000, 
+                  varying = varying, save = save,
+                  standardize = TRUE)
+```
+
+```{r clustGLMM-auxiliary-print2, echo = F}
+cat("Chain: 1, (100 %)\nChain: 2, (100 %)")
+```
+```{r saving-students-mcmc, eval = F, echo = F}
+save(mcmc, file = file.path(WD, "data", "students_mcmc.RData"))
+```
+
+```{r loading-students-mcmc, eval = T, echo = F}
+load(file.path(WD, "data", "students_mcmc.RData"))
+```
+
+
+## 
+
+```{r students-mcmc-plot, echo=TRUE, out.height = "85%"}
+plot(mcmc)
+```
+
+
+##
+
+```{r students-mcmc-prec-num, echo=TRUE, out.height = "85%"}
+plot(mcmc, "prec_num")
+```
+
+##
+
+```{r students-mcmc-beta-num, echo=TRUE, out.height = "85%"}
+plot(mcmc, what = "beta_num", which = "kerneldensity", chain = 1)
+```
+
+##
+
+```{r students-mcmc-sd-num, echo=TRUE, out.height = "85%"}
+plot_diagnostics(mcmc, what = "sd_num", yspec = "income", burnin = 200)
+```
+
+##
+
+```{r students-mcmc-print, echo = TRUE, eval = FALSE}
+print(mcmc)
+```
+
+
+```{r students-mcmc-print2, echo = FALSE, eval = TRUE}
+out <- capture.output(print(mcmc))
+cat(c(out[1:16], "..."), sep = "\n")
+```
+##
+
+```{r students-mcmc-print-clusteringU, echo = TRUE, eval = FALSE}
+print(mcmc, which = "clustering")
+```
+```{r students-mcmc-print-clusteringU2, echo = FALSE, eval = TRUE}
+out <- capture.output(print(mcmc, which = "clustering"))
+cat(c(out[c(4:13,15:20)], "..."), sep = "\n")
+```
+
+# Post-processing and other functionalities
+
+## 
+
+```{r students-post-processing, echo = TRUE, results=FALSE}
+set.seed(123456)
+mcmc_pp <- post_processing(mcmc)
+```
+
+```{r students-mcmc-pp-print, echo = TRUE, eval = FALSE}
+print(mcmc_pp)
+```
+
+```{r students-mcmc-pp-print2, echo = FALSE, eval = TRUE}
+out <- capture.output(print(mcmc_pp))
+cat(out[c(7:13, 16:22)], sep = "\n")
+```
+
+##
+
+```{r students-mcmc-pp-beta-num-1, echo = TRUE, out.height = "85%"}
+plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity", chains = 1)
+```
+
+## 
+
+```{r students-mcmc-pp-beta-num-2, echo = TRUE, out.height = "85%"}
+plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity", chains = 2)
+```
+
+##
+
+```{r students-permuting-labels, echo = TRUE, results=FALSE}
+perm <- list()
+perm[[1]] <- c(2, 1, 3);                  perm[[2]] <- c(1, 2, 3)
+mcmc_pp <- permute_cluster_labels(mcmc_pp, perm = perm)
+```
+\vspace*{-0.5cm}
+```{r students-permuting-labels-2, echo = FALSE, fig.width=10, fig.height=4, out.height = "85%"}
+par(mfrow = c(1, 2), mar = c(4, 4, 0.5, 0.5))
+plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7, 
+              chains = 1, setparmfrow = FALSE, doECDF = FALSE)
+plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7, 
+              chains = 2, setparmfrow = FALSE, doECDF = FALSE)
+```
+
+##
+
+```{r students-mcmc-summary, echo = TRUE, eval = FALSE}
+print(sum_pp <- summary(mcmc_pp), which = c("mcmc", "clustering"), chains = 1)
+```
+```{r students-mcmc-summary2, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
+sum_pp <- summary(mcmc_pp)
+out <- capture.output(print(sum_pp, which = c("mcmc", "clustering"), chains = 1))
+cat(out[c(2:18)], sep = "\n")
+```
+
+##
+
+```{r students-mcmc-summary-inv-param, echo = TRUE, eval = FALSE}
+print(sum_pp, which = c("inv_param"), chains = 1)
+```
+
+```{r students-mcmc-summary-inv-param2, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
+out <- capture.output(print(sum_pp, which = c("inv_param"), chains = 1))
+cat(c(out[8:13], "...", out[19:28]), sep = "\n")
+```
+
+##
+
+```{r students-mcmc-summary-group-param, echo = TRUE, eval = FALSE}
+print(sum_pp, which = c("group_param"), chains = 1)
+```
+
+```{r students-mcmc-summary-group-param2, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
+out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1))
+cat(c(out[c(8:23)], "..."), sep = "\n")
+```
+
+## 
+
+```{r students-mcmc-summary-group-param3, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
+out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1))
+cat(c(out[c(36:51)], "..."), sep = "\n")
+```
+
+## 
+
+```{r students-mcmc-summary-group-param4, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
+out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1))
+cat(c(out[c(64:79)], "..."), sep = "\n")
+```
+
+##
+
+```{r students-mcmc-summary-2, echo = TRUE, eval = TRUE}
+print(sum_pp, which = "group_param", chains = 1, clusters = 1, pattern = "^beta_num")
+```
+
+```{r students-mcmc-summary-2-2, echo = FALSE, eval = FALSE, R.options = list(digits = 2)}
+out <- capture.output(print(sum_pp, which = "group_param", chains = 1:2, 
+                            clusters = 1, pattern = "^beta_num"))
+cat(c(out[c(2:3,8:16,19:20,25:33)], "..."), sep = "\n")
+```
+
+## Misclassification (we know the truth)
+
+```{r students-misclassification-U-samples, echo=TRUE, results=TRUE}
+students[, paste0("Uclustering", 1)] <- mcmc_pp$clustering[students$i, 1]
+# confusion matrix
+table(students[students$j == 1, c("g", paste0("Uclustering", 1))])
+```
+
+## Prediction of missing values
+
+\vspace*{-0.3cm}
+```{r students-mcmc-naY, echo = FALSE, out.height = "85%"}
+par(mar = c(4, 4, 0.5, 0.5), mfrow = nice_nrow_ncol(nmis))
+y <- "income"
+for (j in 1:nmis) {
+  plot_kerneldensity(mcmc_pp, what = "naY", yspec = y, dimspec = j, labcex = 0.8)
+  # true value
+  abline(v = as.numeric(na_true_vals[[y]][j]), col = "seagreen", lty = 2)
+  # 95% CI
+  abline(v = sum_pp$coda_summary[[1]]$quantiles[paste0("naY_",y,"[",j,"]"),
+                                                c("2.5%","97.5%")], 
+         col = "black", lty = 3)
+}
+```
+
+## 
+
+```{r students-predict-income-and-ntrips-code, echo = TRUE, eval = FALSE}
+age_grid <- seq(18, 40, by = 0.1)
+newdata <- data.frame(age = age_grid)
+burnin <- 0
+thin <- 1
+ch <- 1
+par(mfrow = c(1, 2), mar = c(4, 4, 1, 0.5))
+for (y in c(mcmc_pp$Nums, mcmc_pp$Pois)) {
+  ...
+  pred <- predict(mcmc_pp, newdata, y = y, type = "response", method = "samples",
+                  burnin = burnin, thin = thin, chain = ch)
+  ...
+  ## Posterior predictive distribution for each cluster separately
+  pred <- predict(mcmc_pp, newdata, y = y, 
+                  type = "posterior_predictive_response",
+                  posterior_predictive_by_cluster = TRUE,
+                  method = "samples",
+                  burnin = burnin, thin = thin, chain = ch)
+  ...
+}
+```
+
+## 
+
+```{r students-predict-income-and-ntrips-plot, echo = FALSE, eval = TRUE, out.height = "95%"}
+age_grid <- seq(18, 40, by = 0.1)
+newdata <- data.frame(age = age_grid)
+  
+burnin <- 0
+thin <- 1
+ch <- 1
+COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[ch], c = 80, l = 50)
+
+par(mfrow = c(1, 2), mar = c(4, 4, 1, 0.5))
+for (y in c(mcmc_pp$Nums, mcmc_pp$Pois)) {
+  plot_num_vs_x_grouped(students, y = y, x = "age", g = paste0("Uclustering", ch), id = id, 
+                        legend_placement = "topleft", add_lowess = FALSE)
+  
+  pred <- predict(mcmc_pp, newdata, y = y, type = "response", method = "samples",
+                  burnin = burnin, thin = thin, chain = ch)
+  
+  for (g in mcmc_pp$clusters[[ch]]) {
+    lines(x = age_grid, y = pred$fit[, paste0("(", g, ")")], col = COL[g], lwd = 3)
+    lines(x = age_grid, y = pred$lwr[, paste0("(", g, ")")], col = COL[g], lty = 2)
+    lines(x = age_grid, y = pred$upr[, paste0("(", g, ")")], col = COL[g], lty = 2)
+  }
+  
+  ## Posterior predictive distribution for each cluster separately
+  pred <- predict(mcmc_pp, newdata, y = y, 
+                  type = "posterior_predictive_response",
+                  posterior_predictive_by_cluster = TRUE,
+                  method = "samples",
+                  burnin = burnin, thin = thin, chain = ch)
+  for (g in mcmc_pp$clusters[[ch]]) {
+    lines(x = age_grid, y = pred$lwr[, g], col = COL[g], lty = 1)
+    lines(x = age_grid, y = pred$upr[, g], col = COL[g], lty = 1)
+  }
+}
+```
+
+##
+
+```{r students-predict-satisfaction, echo = FALSE, eval = TRUE, out.height = "95%"}
+par(mfrow = c(1, 3))
+for (y in mcmc_pp$Ords) {
+  # Predicted spline curves 
+  maxK <- mcmc_pp$Kord[y]
+  pred <- predict(mcmc_pp, newdata, y = y, type = "link", 
+                  what = "fg", method = "samples", 
+                  burnin = burnin, thin = thin, chain = ch)
+  
+  par(mar = c(4, 4, 2, 0.5))
+  plot(x = 0, y = 0, type = "n",
+       xlim = range(age_grid), ylim = range(unlist(pred)),
+       xlab = "age", ylab = "Linear predictor - ordered intercept",
+       main = y)
+  for (k in 1:maxK) {
+    for (g in mcmc_pp$clusters[[ch]]) {
+      lines(x = age_grid, y = pred$fit[, paste0("(", g, ")"), paste0("k=", k)],
+            col = COL[g], lwd = 3)
+      lines(x = age_grid, y = pred$lwr[, paste0("(", g, ")"), paste0("k=", k)],
+            col = COL[g], lty = 2)
+      lines(x = age_grid, y = pred$upr[, paste0("(", g, ")"), paste0("k=", k)],
+            col = COL[g], lty = 2)
+    }
+  }
+  
+  # Predicted probabilities
+  pred <- predict(mcmc_pp, newdata, y = y, type = "response", 
+                  what = "fg", method = "samples", 
+                  burnin = burnin, thin = thin, chain = ch)
+  
+  par(mar = c(4, 4, 2, 2.5))
+  plot(x = 0, y = 0, type = "n",
+       xlim = range(age_grid), ylim = range(1, maxK+2),
+       xlab = "age", ylab = "Predicted probability for level k",
+       yaxt = "n",
+       main = y)
+  axis(2, at = 0.5+1:(maxK+1), labels = paste0("k=", 0:maxK))
+  for (p in c(0.2, 0.5, 0.8)) {
+    axis(4, at = p+1:(maxK+1), labels = rep(p, maxK+1), las = 1, cex = 0.8)
+  }
+  for (k in 1:(maxK+1)) {
+    for (g in mcmc_pp$clusters[[ch]]) {
+      lines(x = age_grid, y = k+pred$fit[, paste0("(", g, ")"), paste0("k=", k)],
+            col = COL[g], lwd = 3)
+      lines(x = age_grid, y = k+pred$lwr[, paste0("(", g, ")"), paste0("k=", k)],
+            col = COL[g], lty = 2)
+      lines(x = age_grid, y = k+pred$upr[, paste0("(", g, ")"), paste0("k=", k)],
+            col = COL[g], lty = 2)
+    }
+  }
+  
+  # Spineplots
+  par(mar = c(4, 4, 2, 0.5))
+    plot_cat_vs_x_grouped(students, y = y, x = "age",
+                          group = paste0("Uclustering", ch), main = y)
+}
+```
+
+## Conclusion
+
+Thank you for your attention and feedback!
+
+* _Is its use intuitive?_
+* _Does it feel user-friendly and flexible enough?_
+* _Any functionality you would expect that was not mentioned?_
+
+__clustGLMM available on CRAN soon, hopefully...__
+
+\raggedright
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{literature}
+
+
