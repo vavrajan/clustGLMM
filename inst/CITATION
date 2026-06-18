@@ -6,13 +6,5 @@ bibentry(bibtype = "Article",
 	 volume       = "34",
 	 number       = "46",
 	 doi          = "https://doi.org/10.1007/s11222-023-10304-5",
-	 header = "To cite the package clustGLMM in publications use either of the following articles:"
-)
-
-bibentry(bibtype = "Article",
-         title = "The {R} Package clust{GLMM} - Clustering Longitudinal Data of Mixed Type",
-         author = c(as.person("Jan Vávra"), as.person("Bettina Grün"), as.person("Gertraud Malsiner-Walli"), as.person("Arnošt Komárek")),
-         journal      = "R journal",
-         year         = "202?",
-         doi          = ""
+	 header = "To cite the package clustGLMM in publications use the following article:"
 )
