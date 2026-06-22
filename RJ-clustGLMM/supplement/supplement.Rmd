@@ -35,7 +35,7 @@ author:
   - 186 75 Praha 8
 date: "2024-10-07"
 draft: true
-bibliography: "RJ-clustGLMM.bib"
+bibliography: "../RJ-clustGLMM.bib"
 type: package
 preamble: |
   % Any extra LaTeX you need in the preamble
