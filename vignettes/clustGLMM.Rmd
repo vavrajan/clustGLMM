@@ -13,7 +13,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = "figure-latex/")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = file.path(tempdir(), "figure-latex/"))
 options(tinytex.verbose = TRUE, width = 90, digits = 3)
 # options(width = 110) # does not change the template
 library("kableExtra")
@@ -475,10 +475,10 @@ if (requireNamespace("DiagrammeR", quietly = TRUE) &
     ",
     height = 500, width = 600)
   svg_text <- DiagrammeRsvg::export_svg(graph)
-  rsvg::rsvg_png(charToRaw(svg_text), file = "workflow-diagram.png")
-  knitr::include_graphics("workflow-diagram.png")
+  rsvg::rsvg_png(charToRaw(svg_text), file = file.path(tempdir(), "workflow-diagram.png"))
+  knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
 }else{
-  knitr::include_graphics("workflow-diagram.png")
+  knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
 }
 ```
 
