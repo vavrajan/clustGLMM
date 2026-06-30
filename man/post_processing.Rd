@@ -180,7 +180,7 @@ plot(mcmc, "beta_num", "clusters_kerneldensity", chains=1:nchains)
 
 ## first we have to recognize which chain has which meaning
 neff <- mcmc$ngrp[["ynum"]]
-opar <- par(no.readonly = TRUE)
+oldpar <- par(no.readonly = TRUE)
 par(mfrow = c(nchains,neff), mar = c(4,4,1,1))
 for(ch in 1:nchains){
   TAB <- table(mcmc$last[[ch]]$U)
@@ -237,5 +237,7 @@ plot(mcmc1, "beta_cat", "clusters_kerneldensity")
 # Compare
 plot(mcmc1, "beta_num", "clusters_kerneldensity")
 plot(mcmc2, "beta_num", "clusters_kerneldensity")
-par(opar)
+
+par(oldpar)
+
 }

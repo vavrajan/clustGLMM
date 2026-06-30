@@ -235,7 +235,7 @@ plot(mcmc, ng_trace_chain_split=FALSE)
 ## Traceplots of number of non-empty clusters
 # Plotting with defaults values:
 # thin = 1, burnin = 0, chains = 1:mcmc$nchains
-opar <- par(mfrow = c(1, 1), mar = c(4, 4, 1, 1))
+oldpar <- par(mfrow = c(1, 1), mar = c(4, 4, 1, 1))
 plot_traceplots(mcmc = mcmc, what = "Gplus")
 
 ## Traceplots of number of observations in cluster 1
@@ -337,5 +337,5 @@ for(y in mcmc$Nums){
 plot_clusters_kerneldensity_param(mcmc = mcmc, what = "beta_num", chains = c(ch))
 # where cluster labels are taken from mcmc$clusters
 
-par(opar)
+on.exit(par(oldpar))
 }

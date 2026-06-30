@@ -112,6 +112,8 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family,
 ###     Using plot() function on clustglmm object
 ###-----------------------------------------------------------------------------
 
+oldpar <- par()
+
 # traceplots by default                       
 plot(mcmc)
 plot(mcmc, "Gplus")
@@ -123,5 +125,7 @@ plot(mcmc, "sdSigma", "ECDF")
 plot(mcmc, "corSigma", "kerneldensity")
 plot(mcmc, "beta_bin", "clusters_kerneldensity")
 plot(mcmc, "beta_ord", "clusters_ECDF")
+
+on.exit(par(oldpar))
 
 }
