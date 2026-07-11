@@ -235,7 +235,6 @@ plot(mcmc, ng_trace_chain_split=FALSE)
 ## Traceplots of number of non-empty clusters
 # Plotting with defaults values:
 # thin = 1, burnin = 0, chains = 1:mcmc$nchains
-oldpar <- par(mfrow = c(1, 1), mar = c(4, 4, 1, 1))
 plot_traceplots(mcmc = mcmc, what = "Gplus")
 
 ## Traceplots of number of observations in cluster 1
@@ -320,7 +319,7 @@ nonempty <- as.numeric(names(TAB)[which(TAB>0)])
 # by default, mcmc$clusters (based on all iterations) is taken
 
 neff <- mcmc$ngrp[[mcmc$Nums[1]]]
-par(mfrow = c(length(mcmc$Nums), neff), mar = c(4, 4, 1, 1))
+oldpar <- par(mfrow = c(length(mcmc$Nums), neff), mar = c(4, 4, 1, 1))
 
 for(y in mcmc$Nums){
   for(i in 1:neff){
@@ -332,10 +331,10 @@ for(y in mcmc$Nums){
     # e.g. true values, etc.
   }
 }
+par(oldpar)
 
 # or simply use
 plot_clusters_kerneldensity_param(mcmc = mcmc, what = "beta_num", chains = c(ch))
 # where cluster labels are taken from mcmc$clusters
 
-on.exit(par(oldpar))
 }
