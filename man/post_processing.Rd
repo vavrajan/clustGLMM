@@ -180,8 +180,7 @@ plot(mcmc, "beta_num", "clusters_kerneldensity", chains=1:nchains)
 
 ## first we have to recognize which chain has which meaning
 neff <- mcmc$ngrp[["ynum"]]
-oldpar <- par(no.readonly = TRUE)
-par(mfrow = c(nchains,neff), mar = c(4,4,1,1))
+oldpar <- par(mfrow = c(nchains,neff), mar = c(4,4,1,1))
 for(ch in 1:nchains){
   TAB <- table(mcmc$last[[ch]]$U)
   nonempty <- as.numeric(names(TAB)[which(TAB>0)]) 
@@ -193,6 +192,7 @@ for(ch in 1:nchains){
                   doECDF = FALSE)
   }
 }
+par(oldpar)
 
 ## confusion matrices with the true labelling
 for(ch in 1:mcmc$nchains){
@@ -237,7 +237,5 @@ plot(mcmc1, "beta_cat", "clusters_kerneldensity")
 # Compare
 plot(mcmc1, "beta_num", "clusters_kerneldensity")
 plot(mcmc2, "beta_num", "clusters_kerneldensity")
-
-par(oldpar)
 
 }

@@ -218,8 +218,6 @@ p1 <- predict(mcmc, newdata, y="ynum", type="link", what="fg")
 # posterior predictive distribution of the response
 p2 <- predict(mcmc, newdata, y="ynum", type="posterior_predictive_response")
 
-oldpar <- par()
-
 matplot(newdata$x, p1$fit, type = "l", lty = 1, lwd = 2)
 matplot(newdata$x, p1$lwr, type = "l", lty = 2, add = TRUE)
 matplot(newdata$x, p1$upr, type = "l", lty = 2, add = TRUE)
@@ -242,7 +240,5 @@ matplot(newdata$x, p2$upr, type = "l", lty = 3, add = TRUE) # needs longer chain
 
 ## Categorical outcome - list of fit, lwr, upr 3D arrays (category dimension added)
 predict(mcmc, newdata[1:5,], y="ycat", type="link", what="fg")
-
-on.exit(par(oldpar))
 
 }

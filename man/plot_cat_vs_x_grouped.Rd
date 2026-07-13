@@ -170,8 +170,6 @@ table(data1$clustering1, data1$g)
 ###     Plotting the resulting clustering
 ###-----------------------------------------------------------------------------
 
-oldpar <- par()
-
 # Plotting numeric outcomes
 plot_num_vs_x_grouped(longitudinal_mixed_type_data, y = "ynum", x = "x", 
                       group = "g", id = "i", units = 1:mcmc$n)
@@ -203,6 +201,4 @@ plot_cat_vs_x_grouped(longitudinal_mixed_type_data, y = "ycat", x = "x",
                       
 plot_cat_vs_x_grouped(longitudinal_mixed_type_data, y = "ycat", x = "x",
                       group = "clustering1")
-
-on.exit(par(oldpar))
 }

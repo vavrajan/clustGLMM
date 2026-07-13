@@ -52,12 +52,6 @@ function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
   }
   
   if(isxfactor){
-    # par(mfrow = nice_nrow_ncol(length(ggs)), mar = c(4,4,2.0,0.5))
-    # for(g in ggs){
-    #   subdata <- data[data[,group] == g, ]
-    #   plot(subdata[,y] ~ factor(subdata[,x]),
-    #        xlab = x, ylab = y, main = paste0("Cluster ", g), col = COL[as.character(g)])
-    # }
     plot(x = c(0,1), y = c(0,1), type = "n", 
          xlim = 0.5+c(0,nlevels(data[,x])),
          ylim = range(data[,y], na.rm=TRUE),

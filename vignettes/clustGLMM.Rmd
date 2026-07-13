@@ -20,6 +20,8 @@ oldopt <- options(tinytex.verbose = TRUE, width = 90, digits = 3)
 library("kableExtra")
 library("clustGLMM")
 
+opar <- par(no.readonly = TRUE)
+
 combine <- function(x, sep, width) {
   cs <- cumsum(nchar(x))
   remaining <- if (any(cs[-1] > width)) combine(x[c(FALSE, cs[-1] > width)], sep, width)
@@ -1570,7 +1572,6 @@ range of functionality covered on an artificial dataset.
 
 # References
 
-```{r set-back-orig-par-options, include=FALSE}
-on.exit(par(oldpar))
-on.exit(options(oldopt))
+```{r final, include=FALSE}
+par(opar)
 ```
