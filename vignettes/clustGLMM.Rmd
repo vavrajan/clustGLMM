@@ -1573,4 +1573,5 @@ range of functionality covered on an artificial dataset.
 
 ```{r final, include=FALSE}
 par(opar)
+options(oldopt)
 ```
