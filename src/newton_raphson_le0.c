@@ -76,7 +76,7 @@ void newton_raphson_le0(struct str_state* last,    // OUT+IN last known values o
         shift = 0.5*shift;
         le0_new = le0 + shift;
         
-        if((isfinite(loglik)) & (abs(shift) + abs(loglik - *max_value) < *((*tuning).tolerance))){
+        if((isfinite(loglik)) & (fabs(shift) + fabs(loglik - *max_value) < *((*tuning).tolerance))){
           cont = 0;
         }else{
           cont = 1;
@@ -93,8 +93,8 @@ void newton_raphson_le0(struct str_state* last,    // OUT+IN last known values o
     }
     
     // Did we converge?
-    norm_shift = abs(shift);
-    *converged = ( norm_shift + abs(loglik - *max_value) < *((*tuning).tolerance));
+    norm_shift = fabs(shift);
+    *converged = ( norm_shift + fabs(loglik - *max_value) < *((*tuning).tolerance));
     //printf("\nnewton_raphson_e0: normshift = %f", norm_shift);
     //fflush(stdout);
     

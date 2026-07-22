@@ -254,7 +254,7 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
             theta_new[k] = theta_max[k] + shift[k];
           }
           
-          // if((isfinite(loglik_new)) & (norm_shift + abs(loglik_new - loglik_max) < *((*tuning).tolerance))){
+          // if((isfinite(loglik_new)) & (norm_shift + fabs(loglik_new - loglik_max) < *((*tuning).tolerance))){
           if(isfinite(loglik_new)){
             if(norm_shift < *((*tuning).tolerance)){
               cont_half = 0;
@@ -284,7 +284,7 @@ void newton_raphson(struct str_state* last,   // IN last known values of generat
       }
       
       // Did we converge?
-      *converged = (norm_shift + abs(loglik - loglik_max) < *((*tuning).tolerance));
+      *converged = (norm_shift + fabs(loglik - loglik_max) < *((*tuning).tolerance));
       
       if(loglik > loglik_max){
         for(k = 0; k < dim_theta; k++){

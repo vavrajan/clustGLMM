@@ -269,7 +269,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
           theta_new[k] = theta_max[k] + shift[k];
         }
         
-        if((isfinite(loglik_new) == 1) & (norm_shift + abs(loglik_new - *max_value) < *tolerance)){
+        if((isfinite(loglik_new) == 1) & (norm_shift + fabs(loglik_new - *max_value) < *tolerance)){
           cont_half = 0;
         }else{
           cont_half = 1;
@@ -290,7 +290,7 @@ void newton_raphson_bi_dev(double* Y,                 // IN [*N]
     
     // Did we converge?
     // both differences in thetas and logliks have to be negligible
-    *converged = (norm_shift + abs(loglik_new - *max_value) < *tolerance);
+    *converged = (norm_shift + fabs(loglik_new - *max_value) < *tolerance);
     
     if(isfinite(*max_value)){
       print = 0;
