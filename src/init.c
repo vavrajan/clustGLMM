@@ -10,9 +10,9 @@ extern void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(void *, void *, void *, 
 extern void pUig_dev(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 
 static const R_CMethodDef CEntries[] = {
-    {"Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat", (DL_FUNC) &Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat, 62},
-    {"pUig_dev",                                    (DL_FUNC) &pUig_dev,                                    49},
-    {NULL, NULL, 0}
+   {"Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat", (DL_FUNC) (void (*)(void)) &Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat, 62, NULL},
+   {"pUig_dev",                                    (DL_FUNC) (void (*)(void)) &pUig_dev,                                    49, NULL},
+   {NULL, NULL, 0, NULL}
 };
 
 void R_init_clustGLMM(DllInfo *dll)
