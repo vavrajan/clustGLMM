@@ -407,13 +407,15 @@ These approximations have to be done for all considered cluster labels $g$ and f
 # Implementation {#implementation}
 
 In the following, we discuss the implementation of the methodology
-in package **clustGLMM** in more detail.<!--  An overview of the typical workflow and -->
-<!-- the key functions is given in Figure\ \@ref(fig:workflow-diagram). In -->
-<!-- the following subsections we go through each of the steps and discuss -->
-<!-- it in detail. -->
+in package **clustGLMM** in more detail. An overview of the typical workflow and
+the key functions is given in Figure\ \@ref(fig:workflow-diagram). In
+the following subsections we go through each of the steps and discuss
+it in detail.
 
-```{r workflow-diagram, eval = FALSE, fig.cap="Typical workflow with **clustGLMM** and key functions.", out.width="100%", dev="png"}
-if (requireNamespace("DiagrammeR", quietly = TRUE) & 
+```{r workflow-diagram, fig.cap="Typical workflow with **clustGLMM** and key functions.", out.width="100%", dev="png"}
+if (file.exists("workflow-diagram.png")) {
+  knitr::include_graphics("workflow-diagram.png")
+} else if (requireNamespace("DiagrammeR", quietly = TRUE) &
     requireNamespace("DiagrammeRsvg", quietly = TRUE) & 
     requireNamespace("rsvg", quietly = TRUE)) {
   graph <- DiagrammeR::grViz("digraph {
@@ -480,6 +482,10 @@ if (requireNamespace("DiagrammeR", quietly = TRUE) &
   rsvg::rsvg_png(charToRaw(svg_text), file = file.path(tempdir(), "workflow-diagram.png"))
   knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
 }else{
+  png(file.path(tempdir(), "workflow-diagram.png"), width = 918, height = 708,
+      units = "px")
+  plot.new()
+  dev.off()
   knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
 }
 ```
