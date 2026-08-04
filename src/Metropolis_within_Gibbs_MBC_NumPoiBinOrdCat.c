@@ -95,17 +95,17 @@
 
 void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat( 
     /** IN parameters **/
-    int* Id,              // [N] IDs
-    double* Y,            // [N*sum(nY)]  responses
-    int* isYna,           // [N*sum(nY)]  0 = Y value present, 1 = Y value is NA
-    double* X,            // [N*#regr]    regressors
-    int* varying,         // [5]          class-specific parameters
+    void* void_Id,          // [N] IDs
+    void* void_Y,           // [N*sum(nY)]  responses
+    void* void_isYna,       // [N*sum(nY)]  0 = Y value present, 1 = Y value is NA
+    void* void_X,           // [N*#regr]    regressors
+    void* void_varying,     // [5]          class-specific parameters
                             // order:   [0] prec_num, 
                             //          [1] c_ord,
                             //          [2] InvSigma, 
                             //          [3] InvQ, 
                             //          [4] naY
-    int* save,            // [33]:        what parameters are saved
+    void* void_save,        // [33]:        what parameters are saved
                             // order:   [0-1]   beta_num_fix, beta_num,
                             //          [2-4]   prec_num, sd_num, var_num,
                             //          [5-6]   beta_poi_fix, beta_poi,
@@ -120,28 +120,28 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                             //          [27-29] loglik, pUig, U,
                             //          [30,31] Gplus, e0,
                             //          [32]    naY
-    double* vecparam,     // vector of parameters --> str_param
-    double* vecinits,     // vector of initial values (except U) --> str_state 
+    void* void_vecparam,  // vector of parameters --> str_param
+    void* void_vecinits,  // vector of initial values (except U) --> str_state
     /** OUT last state **/
-    double* veclast,      // vector of last values (except U) <-- str_state 
+    void* void_veclast,   // vector of last values (except U) <-- str_state
     /** Parameters describing dimensions **/
-    int* chain,           // [1]        number of generated chain (just for printing)
-    int* G,               // [1]        number of groups=classes=clusters
-    int* iter,            // [1]        total number of generated states
-    int* N,               // [1]        total number of observations
-    int* n,               // [1]        total number of subjects (different ids in the dataset)
-    int* nY,              // [5]        counts of Nums, Pois, Bins, Ords, Cats variables
-    int* FormulaF,        // [sum(nfix)]  numbers of columns of X that should be used for FIXED  effects of modelled responses
-    int* FormulaG,        // [sum(ngrp)]  numbers of columns of X that should be used for GROUP-SPECIFIC  effects of modelled responses
-    int* FormulaR,        // [sum(nran)]  numbers of columns of X that should be used for RANDOM effects of modelled responses
-    int* FormulaO,        // [sum(noff)]  numbers of columns of X that should be used for OFFSET effects of modelled responses
-    int* nfix,            // [sum(nY)]  number of FIXED  regressors for each response
-    int* ngrp,            // [sum(nY)]  number of GROUP-SPECIFIC  regressors for each response
-    int* nran,            // [sum(nY)]  number of RANDOM regressors for each response
-    int* noff,            // [sum(nY)]  number of OFFSET regressors for each response
-    int* Kord,            // [nY[Ords]]  the counts of categories of ordinal variables -1
-    int* Kcat,            // [nY[Cats]]  the counts of categories of ordinal variables -1
-    int* dims,            // [33]:              what parameters are saved
+    void* void_chain,           // [1]        number of generated chain (just for printing)
+    void* void_G,               // [1]        number of groups=classes=clusters
+    void* void_iter,            // [1]        total number of generated states
+    void* void_N,               // [1]        total number of observations
+    void* void_n,               // [1]        total number of subjects (different ids in the dataset)
+    void* void_nY,              // [5]        counts of Nums, Pois, Bins, Ords, Cats variables
+    void* void_FormulaF,        // [sum(nfix)]  numbers of columns of X that should be used for FIXED  effects of modelled responses
+    void* void_FormulaG,        // [sum(ngrp)]  numbers of columns of X that should be used for GROUP-SPECIFIC  effects of modelled responses
+    void* void_FormulaR,        // [sum(nran)]  numbers of columns of X that should be used for RANDOM effects of modelled responses
+    void* void_FormulaO,        // [sum(noff)]  numbers of columns of X that should be used for OFFSET effects of modelled responses
+    void* void_nfix,            // [sum(nY)]  number of FIXED  regressors for each response
+    void* void_ngrp,            // [sum(nY)]  number of GROUP-SPECIFIC  regressors for each response
+    void* void_nran,            // [sum(nY)]  number of RANDOM regressors for each response
+    void* void_noff,            // [sum(nY)]  number of OFFSET regressors for each response
+    void* void_Kord,            // [nY[Ords]]  the counts of categories of ordinal variables -1
+    void* void_Kcat,            // [nY[Cats]]  the counts of categories of ordinal variables -1
+    void* void_dims,            // [33]:              what parameters are saved
                             // order:   [0-1]   beta_num_fix, beta_num,
                             //          [2-4]   prec_num, sd_num, var_num,
                             //          [5-6]   beta_poi_fix, beta_poi,
@@ -156,7 +156,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                             //          [27-29] loglik, pUig, U,
                             //          [30,31] Gplus, e0,
                             //          [32]    naY
-    int* dimswithG,       // [33]:              what parameters are saved
+    void* void_dimswithG,   // [33]:              what parameters are saved
                             // order:   [0-1]   beta_num_fix, beta_num,
                             //          [2-4]   prec_num, sd_num, var_num,
                             //          [5-6]   beta_poi_fix, beta_poi,
@@ -174,44 +174,107 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     // keep in mind that these counts for Cats are just for single predictor, not all of them
     /** Arrays to store generated states **/
     /** Some of them might be NULL (see save and calc) **/
-    double* beta_num_fix, // [(B+M)*sum(nfix[Nums])]      Beta parameters for fixed effects of numerical variables
-    double* beta_num,     // [(B+M)*sum(ngrp[Nums]) *G]   Beta parameters for group-specific fixed effects of numerical variables
-    double* prec_num,     // [(B+M)*nY[0]*(G)]            Precision parameter of numerical variables
-    double* sd_num,       // [(B+M)*nY[0]*(G)]            Standard deviation of numerical variables
-    double* var_num,      // [(B+M)*nY[0]*(G)]            Variance of numerical variables
-    double* beta_poi_fix, // [(B+M)*sum(nfix[Pois])]      Beta parameters for fixed effects of count variables
-    double* beta_poi,     // [(B+M)*sum(ngrp[Pois]) *G]   Beta parameters for group-specific fixed effects of count variables
-    double* beta_bin_fix, // [(B+M)*sum(nfix[Bins])]      Beta parameters for fixed effects of binary variables
-    double* beta_bin,     // [(B+M)*sum(ngrp[Bins]) *G]   Beta parameters for group-specific effects of binary variables
-    double* beta_ord_fix, // [(B+M)*sum(nfix[Ords])]      Beta parameters for fixed effects of ordinal variables
-    double* beta_ord,     // [(B+M)*sum(ngrp[Ords]) *G]   Beta parameters for group-specific fixed effects of ordinal variables
-    double* a_ord,        // [(B+M)*sum(Kord)(* G)]       Non-constrained transformed intercepts for ordinal variables
-    double* c_ord,        // [(B+M)*sum(Kord)(* G)]       Ordered intercepts for ordinal variables
-    double* pi_ord,       // [(B+M)*sum(Kord+1)(* G)]     Ordered intercepts for ordinal variables
-    double* beta_cat_fix, // [(B+M)*sum(nfix[Cats]*Kcat)] Beta parameters for fixed effects of categorical variables
-    double* beta_cat,     // [(B+M)*sum(ngrp[Cats]*Kcat) *G] Beta parameters for group-specific effects of categorical variables
-    double* InvSigma,     // [(B+M)*totnran*(totnran+1)/2(* G)] Precision matrix of random effects
-    double* Sigma,        // [(B+M)*totnran*(totnran+1)/2(* G)] Variance matrix of random effects
-    double* sdSigma,      // [(B+M)*totnran(* G)]         standard deviations of random effects
-    double* corSigma,     // [(B+M)*totnran*(totnran-1)/2(* G)] correlations of random effects
-    double* detInvSigma,  // [(B+M)(* G)]                 determinant of InvSigma
-    double* InvQ,         // [(B+M)*totnran*(totnran+1)/2(* G)] Prior inverse scale matrix of InvSigma
-    double* Q,            // [(B+M)*totnran*(totnran+1)/2(* G)] Prior scale matrix of InvSigma
-    double* detInvQ,      // [(B+M)(* G)]                 determinant of InvQ
-    double* b,            // [(B+M)*totnran * n]          Random effects
-    double* w,            // [(B+M)*G]                    Class probabilities
-    int*    ng,           // [(B+M)*G]                    counts of units within clusters
-    double* loglik,       // [(B+M)]                      Full-conditional model likelihood (evaluated when all latent known)
-    double* pUig,         // [(B+M)*n * G]                Probability of i-th subject belong to each class
-    int*    U,            // [(B+M)*n]                    To which class does i-th subject belong to
-    int*    Gplus,        // [B+M]                        number of non-empty clusters
-    double* e0,           // [B+M]                        precision parameter for prior of w
-    double* naY,          // [(B+M)*sum(isYna)(* G)]      imputed missing outcome values
+    void* void_beta_num_fix, // [(B+M)*sum(nfix[Nums])]      Beta parameters for fixed effects of numerical variables
+    void* void_beta_num,     // [(B+M)*sum(ngrp[Nums]) *G]   Beta parameters for group-specific fixed effects of numerical variables
+    void* void_prec_num,     // [(B+M)*nY[0]*(G)]            Precision parameter of numerical variables
+    void* void_sd_num,       // [(B+M)*nY[0]*(G)]            Standard deviation of numerical variables
+    void* void_var_num,      // [(B+M)*nY[0]*(G)]            Variance of numerical variables
+    void* void_beta_poi_fix, // [(B+M)*sum(nfix[Pois])]      Beta parameters for fixed effects of count variables
+    void* void_beta_poi,     // [(B+M)*sum(ngrp[Pois]) *G]   Beta parameters for group-specific fixed effects of count variables
+    void* void_beta_bin_fix, // [(B+M)*sum(nfix[Bins])]      Beta parameters for fixed effects of binary variables
+    void* void_beta_bin,     // [(B+M)*sum(ngrp[Bins]) *G]   Beta parameters for group-specific effects of binary variables
+    void* void_beta_ord_fix, // [(B+M)*sum(nfix[Ords])]      Beta parameters for fixed effects of ordinal variables
+    void* void_beta_ord,     // [(B+M)*sum(ngrp[Ords]) *G]   Beta parameters for group-specific fixed effects of ordinal variables
+    void* void_a_ord,        // [(B+M)*sum(Kord)(* G)]       Non-constrained transformed intercepts for ordinal variables
+    void* void_c_ord,        // [(B+M)*sum(Kord)(* G)]       Ordered intercepts for ordinal variables
+    void* void_pi_ord,       // [(B+M)*sum(Kord+1)(* G)]     Ordered intercepts for ordinal variables
+    void* void_beta_cat_fix, // [(B+M)*sum(nfix[Cats]*Kcat)] Beta parameters for fixed effects of categorical variables
+    void* void_beta_cat,     // [(B+M)*sum(ngrp[Cats]*Kcat) *G] Beta parameters for group-specific effects of categorical variables
+    void* void_InvSigma,     // [(B+M)*totnran*(totnran+1)/2(* G)] Precision matrix of random effects
+    void* void_Sigma,        // [(B+M)*totnran*(totnran+1)/2(* G)] Variance matrix of random effects
+    void* void_sdSigma,      // [(B+M)*totnran(* G)]         standard deviations of random effects
+    void* void_corSigma,     // [(B+M)*totnran*(totnran-1)/2(* G)] correlations of random effects
+    void* void_detInvSigma,  // [(B+M)(* G)]                 determinant of InvSigma
+    void* void_InvQ,         // [(B+M)*totnran*(totnran+1)/2(* G)] Prior inverse scale matrix of InvSigma
+    void* void_Q,            // [(B+M)*totnran*(totnran+1)/2(* G)] Prior scale matrix of InvSigma
+    void* void_detInvQ,      // [(B+M)(* G)]                 determinant of InvQ
+    void* void_b,            // [(B+M)*totnran * n]          Random effects
+    void* void_w,            // [(B+M)*G]                    Class probabilities
+    void* void_ng,           // [(B+M)*G]                    counts of units within clusters
+    void* void_loglik,       // [(B+M)]                      Full-conditional model likelihood (evaluated when all latent known)
+    void* void_pUig,         // [(B+M)*n * G]                Probability of i-th subject belong to each class
+    void* void_U,            // [(B+M)*n]                    To which class does i-th subject belong to
+    void* void_Gplus,        // [B+M]                        number of non-empty clusters
+    void* void_e0,           // [B+M]                        precision parameter for prior of w
+    void* void_naY,          // [(B+M)*sum(isYna)(* G)]      imputed missing outcome values
     // Tuning parameters
-    double* vectuningdouble,  // [11]
-    int* vectuninginteger     // [5]
+    void* void_vectuningdouble,  // [11]
+    void* void_vectuninginteger  // [5]
   )
 {
+// Unpack and cast generic pointers to original types for UBSAN compliance //
+  int* Id              = (int*)void_Id;
+  double* Y            = (double*)void_Y;
+  int* isYna           = (int*)void_isYna;
+  double* X            = (double*)void_X;
+  int* varying         = (int*)void_varying;
+  int* save            = (int*)void_save;
+  double* vecparam     = (double*)void_vecparam;
+  double* vecinits     = (double*)void_vecinits;
+  double* veclast      = (double*)void_veclast;
+  int* chain           = (int*)void_chain;
+  int* G               = (int*)void_G;
+  int* iter            = (int*)void_iter;
+  int* N               = (int*)void_N;
+  int* n               = (int*)void_n;
+  int* nY              = (int*)void_nY;
+  int* FormulaF        = (int*)void_FormulaF;
+  int* FormulaG        = (int*)void_FormulaG;
+  int* FormulaR        = (int*)void_FormulaR;
+  int* FormulaO        = (int*)void_FormulaO;
+  int* nfix            = (int*)void_nfix;
+  int* ngrp            = (int*)void_ngrp;
+  int* nran            = (int*)void_nran;
+  int* noff            = (int*)void_noff;
+  int* Kord            = (int*)void_Kord;
+  int* Kcat            = (int*)void_Kcat;
+  int* dims            = (int*)void_dims;
+  int* dimswithG       = (int*)void_dimswithG;
+  double* beta_num_fix = (double*)void_beta_num_fix;
+  double* beta_num     = (double*)void_beta_num;
+  double* prec_num     = (double*)void_prec_num;
+  double* sd_num       = (double*)void_sd_num;
+  double* var_num      = (double*)void_var_num;
+  double* beta_poi_fix = (double*)void_beta_poi_fix;
+  double* beta_poi     = (double*)void_beta_poi;
+  double* beta_bin_fix = (double*)void_beta_bin_fix;
+  double* beta_bin     = (double*)void_beta_bin;
+  double* beta_ord_fix = (double*)void_beta_ord_fix;
+  double* beta_ord     = (double*)void_beta_ord;
+  double* a_ord        = (double*)void_a_ord;
+  double* c_ord        = (double*)void_c_ord;
+  double* pi_ord       = (double*)void_pi_ord;
+  double* beta_cat_fix = (double*)void_beta_cat_fix;
+  double* beta_cat     = (double*)void_beta_cat;
+  double* InvSigma     = (double*)void_InvSigma;
+  double* Sigma        = (double*)void_Sigma;
+  double* sdSigma      = (double*)void_sdSigma;
+  double* corSigma     = (double*)void_corSigma;
+  double* detInvSigma  = (double*)void_detInvSigma;
+  double* InvQ         = (double*)void_InvQ;
+  double* Q            = (double*)void_Q;
+  double* detInvQ      = (double*)void_detInvQ;
+  double* b            = (double*)void_b;
+  double* w            = (double*)void_w;
+  int*    ng           = (int*)void_ng;
+  double* loglik       = (double*)void_loglik;
+  double* pUig         = (double*)void_pUig;
+  int*    U            = (int*)void_U;
+  int*    Gplus        = (int*)void_Gplus;
+  double* e0           = (double*)void_e0;
+  double* naY          = (double*)void_naY;
+  double* vectuningdouble       = (double*)void_vectuningdouble;
+  int*    vectuninginteger      = (int*)void_vectuninginteger;
   //// Declarations ////
   //// ------------ ////
   int i, j, m, y;          // looping indeces

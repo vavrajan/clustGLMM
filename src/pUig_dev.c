@@ -66,35 +66,35 @@
 
 void pUig_dev( 
     /** IN parameters **/
-    int* Id,              // [N] IDs
-    double* Y,            // [N*sum(nY)]  responses
-    int* isYna,           // [N*sum(nY)]  0 = Y value present, 1 = Y value is NA
-    double* X,            // [N*#regr]    regressors
-    int* varying,            // [5]                class-specific parameters
+    void* void_Id,              // [N] IDs
+    void* void_Y,            // [N*sum(nY)]  responses
+    void* void_isYna,           // [N*sum(nY)]  0 = Y value present, 1 = Y value is NA
+    void* void_X,            // [N*#regr]    regressors
+    void* void_varying,            // [5]                class-specific parameters
     // order:   [0] prec_num, 
     //          [1] c_ord,
     //          [2] InvSigma, 
     //          [3] InvQ, 
     //          [4] naY
     /** Parameters describing dimensions **/
-    int* chain,           // [1]        number of generated chain (just for printing)
-    int* G,               // [1]        number of classes
-    int* iter,            // [1]        total number of generated states
-    int* N,               // [1]        total number of observations
-    int* n,               // [1]        total number of subjects (different ids in the dataset)
-    int* nY,              // [5]        counts of Nums, Ords and Bins variables
-    int* FormulaF,        // [totnfix]  numbers of columns of X that should be used for FIXED  effects of modelled responses
-    int* FormulaG,        // [totnfrp]  numbers of columns of X that should be used for GROUP-SPECIFIC  effects of modelled responses
-    int* FormulaR,        // [totnran]  numbers of columns of X that should be used for RANDOM effects of modelled responses
-    int* FormulaO,        // [totnoff]  numbers of columns of X that should be used for OFFSET effects of modelled responses
-    int* nfix,            // [sum(nY)]  number of FIXED  regressors for each response
-    int* ngrp,            // [sum(nY)]  number of GROUP-SPECIFIC  regressors for each response
-    int* nran,            // [sum(nY)]  number of RANDOM regressors for each response
-    int* noff,            // [sum(nY)]  number of OFFSET regressors for each response
-    int* totnran,         // [1]        total number of random effects across all vars
-    int* Kord,            // [nY[Ords]]  the counts of categories of ordinal variables -1
-    int* Kcat,            // [nY[Cats]]  the counts of categories of ordinal variables -1
-    int* dims,            // [17]:      the length of subarray that corresponds to one state (disected by various parameters)
+    void* void_chain,           // [1]        number of generated chain (just for printing)
+    void* void_G,               // [1]        number of classes
+    void* void_iter,            // [1]        total number of generated states
+    void* void_N,               // [1]        total number of observations
+    void* void_n,               // [1]        total number of subjects (different ids in the dataset)
+    void* void_nY,              // [5]        counts of Nums, Ords and Bins variables
+    void* void_FormulaF,        // [totnfix]  numbers of columns of X that should be used for FIXED  effects of modelled responses
+    void* void_FormulaG,        // [totnfrp]  numbers of columns of X that should be used for GROUP-SPECIFIC  effects of modelled responses
+    void* void_FormulaR,        // [totnran]  numbers of columns of X that should be used for RANDOM effects of modelled responses
+    void* void_FormulaO,        // [totnoff]  numbers of columns of X that should be used for OFFSET effects of modelled responses
+    void* void_nfix,            // [sum(nY)]  number of FIXED  regressors for each response
+    void* void_ngrp,            // [sum(nY)]  number of GROUP-SPECIFIC  regressors for each response
+    void* void_nran,            // [sum(nY)]  number of RANDOM regressors for each response
+    void* void_noff,            // [sum(nY)]  number of OFFSET regressors for each response
+    void* void_totnran,         // [1]        total number of random effects across all vars
+    void* void_Kord,            // [nY[Ords]]  the counts of categories of ordinal variables -1
+    void* void_Kcat,            // [nY[Cats]]  the counts of categories of ordinal variables -1
+    void* void_dims,            // [17]:      the length of subarray that corresponds to one state (disected by various parameters)
     // order:   [0-1]   beta_num_fix, beta_num, 
     //          [2]     prec_num, 
     //          [3-4]   beta_poi_fix, beta_poi, 
@@ -107,7 +107,7 @@ void pUig_dev(
     //          [14]    pUig_int,
     //          [15]    deviance
     //          [16]    dev_i
-    int* dimswithG,       // [17]       the length of subarray that corresponds to one state 
+    void* void_dimswithG,       // [17]       the length of subarray that corresponds to one state
     // order:   [0-1]   beta_num_fix, beta_num, 
     //          [2]     prec_num, 
     //          [3-4]   beta_poi_fix, beta_poi, 
@@ -120,39 +120,89 @@ void pUig_dev(
     //          [14]    pUig_int,
     //          [15]    deviance
     //          [16]    dev_i
-    int* kspec_bi_cat,    // [1]        TRUE = each cat var has different set of bi for each of K-1 levels
+    void* void_kspec_bi_cat,    // [1]        TRUE = each cat var has different set of bi for each of K-1 levels
     //            FALSE = all levels of cat var have one set of bi - compares last category with others
-    //double* predictor,
+    //void* void_predictor,
     // those are used to construct totnfix, totnran and cummulative versions
     /** Arrays to store generated states **/
     /** Some of them might be NULL (see whatsave and calc) **/
-    double* beta_num_fix, // [(B+M)*sum(nfix[Nums])]   Beta parameters for fixed effects of numerical variables
-    double* beta_num,     // [(B+M)*sum(ngrp[Nums])*G] Beta parameters for group-specific effects of numerical variables
-    double* prec_num,     // [(B+M)*nY[0]*(G)]         Precision parameter of numerical variables
-    double* beta_poi_fix, // [(B+M)*sum(nfix[Pois])]   Beta parameters for fixed effects of Poisson variables
-    double* beta_poi,     // [(B+M)*sum(ngrp[Pois])*G] Beta parameters for group-specific effects of Poisson variables
-    double* beta_bin_fix, // [(B+M)*sum(nfix[Bins])]   Beta parameters for fixed effects of binary variables
-    double* beta_bin,     // [(B+M)*sum(nfix[Bins])*G] Beta parameters for group-specific effects of binary variables
-    double* beta_ord_fix, // [(B+M)*sum(nfix[Ords])]   Beta parameters for fixed effects of ordinal variables
-    double* beta_ord,     // [(B+M)*sum(nfix[Ords])*G] Beta parameters for group-specific effects of ordinal variables
-    double* c_ord,        // [(B+M)*sum(Kord)(* G)]    Ordered intercepts for ordinal variables
-    double* beta_cat_fix, // [(B+M)*sum(nfix[Cats]*Kcat)]   Beta parameters for fixed effects of categorical variables
-    double* beta_cat,     // [(B+M)*sum(nfix[Cats]*Kcat)*G] Beta parameters for group-specific effects of categorical variables
-    double* InvSigma,     // [(B+M)*totnran*(totnran+1)/2(* G)] Precision matrix of random effects
-    double* w,            // [(B+M)*G]                    Class probabilities
-    double* pUig_int,     // [(B+M)*(n or N) * G]         Probability of i-th subject belong to each class
-    double* deviance,     // [(B+M) * 1]               Deviance of the model
-    double* dev_i,        // [(B+M) * (n or N)]        Individual contributions to deviance 
-    int* dynamic_prob,    // [1] Should probabilities be calculated dynamically? --> (n or N) prob calculations
-    int* NGQ,             // [1] number of roots within one dimension
+    void* void_beta_num_fix, // [(B+M)*sum(nfix[Nums])]   Beta parameters for fixed effects of numerical variables
+    void* void_beta_num,     // [(B+M)*sum(ngrp[Nums])*G] Beta parameters for group-specific effects of numerical variables
+    void* void_prec_num,     // [(B+M)*nY[0]*(G)]         Precision parameter of numerical variables
+    void* void_beta_poi_fix, // [(B+M)*sum(nfix[Pois])]   Beta parameters for fixed effects of Poisson variables
+    void* void_beta_poi,     // [(B+M)*sum(ngrp[Pois])*G] Beta parameters for group-specific effects of Poisson variables
+    void* void_beta_bin_fix, // [(B+M)*sum(nfix[Bins])]   Beta parameters for fixed effects of binary variables
+    void* void_beta_bin,     // [(B+M)*sum(nfix[Bins])*G] Beta parameters for group-specific effects of binary variables
+    void* void_beta_ord_fix, // [(B+M)*sum(nfix[Ords])]   Beta parameters for fixed effects of ordinal variables
+    void* void_beta_ord,     // [(B+M)*sum(nfix[Ords])*G] Beta parameters for group-specific effects of ordinal variables
+    void* void_c_ord,        // [(B+M)*sum(Kord)(* G)]    Ordered intercepts for ordinal variables
+    void* void_beta_cat_fix, // [(B+M)*sum(nfix[Cats]*Kcat)]   Beta parameters for fixed effects of categorical variables
+    void* void_beta_cat,     // [(B+M)*sum(nfix[Cats]*Kcat)*G] Beta parameters for group-specific effects of categorical variables
+    void* void_InvSigma,     // [(B+M)*totnran*(totnran+1)/2(* G)] Precision matrix of random effects
+    void* void_w,            // [(B+M)*G]                    Class probabilities
+    void* void_pUig_int,     // [(B+M)*(n or N) * G]         Probability of i-th subject belong to each class
+    void* void_deviance,     // [(B+M) * 1]               Deviance of the model
+    void* void_dev_i,        // [(B+M) * (n or N)]        Individual contributions to deviance
+    void* void_dynamic_prob,    // [1] Should probabilities be calculated dynamically? --> (n or N) prob calculations
+    void* void_NGQ,             // [1] number of roots within one dimension
                           // if==1 then only single Laplace approximation is performed
-    double* roots,        // [NGQ] roots of Hermitean polynomials at which to evaluate normalized underlying distribution of b_i
-    double* weights,      // [NGQ] weights of roots of Hermitean polynomials
-    double* tolerance,    // [1] tolerance when computing norm of the shift within Newton-Raphson
-    int* maxiter,         // [1] maximum iterations allowed during Newton-Raphson update of proposal distribution
-    int* maxnrep          // [1] maximum number of repetitions of Newton-Raphson from different starting points
+    void* void_roots,        // [NGQ] roots of Hermitean polynomials at which to evaluate normalized underlying distribution of b_i
+    void* void_weights,      // [NGQ] weights of roots of Hermitean polynomials
+    void* void_tolerance,    // [1] tolerance when computing norm of the shift within Newton-Raphson
+    void* void_maxiter,         // [1] maximum iterations allowed during Newton-Raphson update of proposal distribution
+    void* void_maxnrep          // [1] maximum number of repetitions of Newton-Raphson from different starting points
 )
 {
+// Unpack and cast generic pointers to original types for UBSAN compliance //
+  int* Id               = (int*)void_Id;
+  double* Y             = (double*)void_Y;
+  int* isYna            = (int*)void_isYna;
+  double* X             = (double*)void_X;
+  int* varying          = (int*)void_varying;
+  int* chain            = (int*)void_chain;
+  int* G                = (int*)void_G;
+  int* iter             = (int*)void_iter;
+  int* N                = (int*)void_N;
+  int* n                = (int*)void_n;
+  int* nY               = (int*)void_nY;
+  int* FormulaF         = (int*)void_FormulaF;
+  int* FormulaG         = (int*)void_FormulaG;
+  int* FormulaR         = (int*)void_FormulaR;
+  int* FormulaO         = (int*)void_FormulaO;
+  int* nfix             = (int*)void_nfix;
+  int* ngrp             = (int*)void_ngrp;
+  int* nran             = (int*)void_nran;
+  int* noff             = (int*)void_noff;
+  int* totnran          = (int*)void_totnran;
+  int* Kord             = (int*)void_Kord;
+  int* Kcat             = (int*)void_Kcat;
+  int* dims             = (int*)void_dims;
+  int* dimswithG        = (int*)void_dimswithG;
+  int* kspec_bi_cat     = (int*)void_kspec_bi_cat;
+  double* beta_num_fix  = (double*)void_beta_num_fix;
+  double* beta_num      = (double*)void_beta_num;
+  double* prec_num      = (double*)void_prec_num;
+  double* beta_poi_fix  = (double*)void_beta_poi_fix;
+  double* beta_poi      = (double*)void_beta_poi;
+  double* beta_bin_fix  = (double*)void_beta_bin_fix;
+  double* beta_bin      = (double*)void_beta_bin;
+  double* beta_ord_fix  = (double*)void_beta_ord_fix;
+  double* beta_ord      = (double*)void_beta_ord;
+  double* c_ord         = (double*)void_c_ord;
+  double* beta_cat_fix  = (double*)void_beta_cat_fix;
+  double* beta_cat      = (double*)void_beta_cat;
+  double* InvSigma      = (double*)void_InvSigma;
+  double* w             = (double*)void_w;
+  double* pUig_int      = (double*)void_pUig_int;
+  double* deviance      = (double*)void_deviance;
+  double* dev_i         = (double*)void_dev_i;
+  int* dynamic_prob     = (int*)void_dynamic_prob;
+  int* NGQ              = (int*)void_NGQ;
+  double* roots         = (double*)void_roots;
+  double* weights       = (double*)void_weights;
+  double* tolerance     = (double*)void_tolerance;
+  int* maxiter          = (int*)void_maxiter;
+  int* maxnrep          = (int*)void_maxnrep;
   //// Declarations ////
   //// ------------ ////
   int g, i, ij, l, k, m;    // looping indeces
