@@ -60,14 +60,14 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
   double qk;
   // double etak, etak_1;
   // double pk, pk_1;
-  int add_to_c;
+  //int add_to_c;
   int maxKcat = 0;
   for(y = 0; y < nY[4]; y++){
     if(maxKcat < Kcat[y]){
       maxKcat = Kcat[y];
     }
   }
-  int cumKcat;
+  //int cumKcat;
   double* etas;
   etas = (double*)malloc(maxKcat * sizeof(double));
   //double etas[maxKcat];
@@ -230,7 +230,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
     //printf("\nlogpYi_dev: After Bins: j = %d, value = %f", j, *value);
              
     // Ordinal variables
-    add_to_c = 0;
+    //add_to_c = 0;
     tf = tg = 0;
     for(y = 0; y < nY[3]; y++){
       if(isYna[coord + *N * shift_nY]){
@@ -343,12 +343,12 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
       }
       
       shift_nY++;
-      add_to_c += Kord[y];
+      //add_to_c += Kord[y];
     }
     //printf("\nlogpYi_dev: After Ords: j = %d, value = %f", j, *value);
     
     // Categorical variables
-    cumKcat = 0;
+    //cumKcat = 0;
     tf = tg = 0;
     for(y = 0; y < nY[4]; y++){
       if(isYna[coord + *N * shift_nY]){
@@ -425,7 +425,7 @@ void logpYi_dev(double* Y,                // IN [totnY*N]
           }
           
           //log_sum_exp += exp(etas[k]);
-          cumKcat++; // updates by 1 to another set of predictors
+          //cumKcat++; // updates by 1 to another set of predictors
         }
         
         log_sum_exp = exp(-maxeta);
@@ -592,7 +592,7 @@ void d_d2_logpbi_dev(double* Y,             // IN [totnY*N]
       maxKcat = Kcat[y];
     }
   }
-  int cumKcat;
+  //int cumKcat;
   double* etas;
   etas = (double*)malloc(maxKcat * sizeof(double));
   //double etas[maxKcat];
@@ -866,7 +866,7 @@ void d_d2_logpbi_dev(double* Y,             // IN [totnY*N]
     //printf("\nd_d2_logpbi: Ords are added");
     
     // Categorical variables
-    cumKcat = 0;
+    //cumKcat = 0;
     tf = tg = 0;
     for(y = 0; y < nY[4]; y++){
       if(isYna[coord + *N * shift_nY]){
@@ -916,7 +916,7 @@ void d_d2_logpbi_dev(double* Y,             // IN [totnY*N]
           if(maxeta < etas[k]){
             maxeta = etas[k];
           }
-          cumKcat++; // updates by 1 to another set of predictors
+          //cumKcat++; // updates by 1 to another set of predictors
         }
         // subtracting maximal value
         sum_exp = exp(-maxeta);
