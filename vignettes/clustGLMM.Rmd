@@ -407,12 +407,12 @@ These approximations have to be done for all considered cluster labels $g$ and f
 # Implementation {#implementation}
 
 In the following, we discuss the implementation of the methodology
-in package **clustGLMM** in more detail. An overview of the typical workflow and
-the key functions is given in Figure\ \@ref(fig:workflow-diagram). In
-the following subsections we go through each of the steps and discuss
-it in detail.
+in package **clustGLMM** in more detail.<!--  An overview of the typical workflow and -->
+<!-- the key functions is given in Figure\ \@ref(fig:workflow-diagram). In -->
+<!-- the following subsections we go through each of the steps and discuss -->
+<!-- it in detail. -->
 
-```{r workflow-diagram, fig.cap="Typical workflow with **clustGLMM** and key functions.", out.width="100%", dev="png"}
+```{r workflow-diagram, eval = FALSE, fig.cap="Typical workflow with **clustGLMM** and key functions.", out.width="100%", dev="png"}
 if (requireNamespace("DiagrammeR", quietly = TRUE) & 
     requireNamespace("DiagrammeRsvg", quietly = TRUE) & 
     requireNamespace("rsvg", quietly = TRUE)) {
