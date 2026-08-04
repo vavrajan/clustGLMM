@@ -42,11 +42,10 @@ permute_cluster_labels <-
       if(mcmc$howsave == "data.frame"){
         # data are save in matrix format
         aux <- mcmc$draws[[ch]]
-        
         # permute U
         if(mcmc$save["U"]){
           Unames <- grep("^U\\[", colnames(aux))
-          aux[,Unames] <- apply(aux[,Unames], c(1,2), function(g){which(perm[[ch]] == g)})
+          aux[,Unames] <- as.data.frame(apply(aux[,Unames], c(1,2), function(g){which(perm[[ch]] == g)}))
         }
         
         # cluster-specific parameters
