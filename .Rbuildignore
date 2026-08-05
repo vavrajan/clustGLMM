@@ -1,6 +1,5 @@
-clusGLMM.Rproj
 ^.*\.Rproj$
 ^\.Rproj\.user$
-RJ-clustGLMM
-src/Makevars
-work
+^RJ-clustGLMM/
+^src/Makevars
+^work/
