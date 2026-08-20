@@ -10,14 +10,20 @@ Editor
 The R Journal  
 \bigskip
 
-Dear Professor Cook,
+Dear Professor Tanaka,
 \bigskip
 
-Please consider our article titled "ToOoOlTiPs: An R Package for Customizable Tooltips in Interactive Graphics" for publication in the R Journal.
+Please consider our article titled "The R Package clustGLMM - Clustering Longitudinal Data of Mixed Type" for publication in the R Journal.
 
-The manuscript introduces the new package called `ToOoOlTiPs` which provides examples on how to use interactive graphics in journal articles, and general tips for making an interesting contribution.
+The manuscript introduces the new package called `clustGLMM`, which implements MCMC algorithms for Bayesian clustering of longitudinal data of mixed type (Gaussian, Poisson, binary, ordinal, and nominal). 
+While the underlying statistical model was published previously (Vávra et al., 2024), this paper presents a consolidated, user‑friendly software implementation suitable for applied researchers. 
+The article provides detailed guidance on the use of the package and illustrates its functionality through reproducible examples.
 
-We believe the readers of the R Journal will find this article helpful for their work because it provides generally useful instructions that will work for many purposes. 
+Over the past years, we have received numerous inquiries regarding the availability of source code for our methodology. 
+With `clustGLMM` now released on CRAN, we hope to make these tools accessible to a broad community of statisticians and data scientists working on clustering problems. 
+We believe that the accompanying article will help users understand the intended workflow and practical considerations behind the implemented functions.
+
+Thank you for your consideration.
 
 \bigskip
 \bigskip
@@ -27,15 +33,9 @@ Regards,
     
     
     
-Quietest Quokka  
-Department of Letter Q  
-University of Little Mates  
-Somewhere, Australia  
-qquo@ulm.edu
-
-\bigskip
-
-NOTES: Modify this file with information about your article. 
-
-1. It may be invisible to you, so be aware that after each address line there are two spaces, this makes the line break correctly.
-2. It is also reasonable to submit an .md format of your motivating letter instead of a pdf. 
+Jan Vávra  
+Department of Probability and Mathematical Statistics  
+Faculty of Mathematics and Physics  
+Charles University   
+Prague, Czech Republic   
+vavraj@karlin.mff.cuni.cz
