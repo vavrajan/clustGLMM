@@ -1,0 +1,15 @@
+clustGLMM
+coda
+colorspace
+gaussquad
+grDevices
+graphics
+HDInterval
+MASS
+methods
+mvtnorm
+nnet
+RcppHungarian
+splines
+stats
+utils
