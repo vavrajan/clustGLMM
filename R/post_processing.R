@@ -152,7 +152,7 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     draws[[ch]] <- mcmc$draws[[ch]][inds[[ch]], nongcols]
     
     # Add permuted clusterspec - only cols
-    draws[[ch]] <- cbind(draws[[ch]], clusterspec[[ch]])
+    draws[[ch]] <- cbind(draws[[ch]], subset(clusterspec[[ch]], select = -m))
     
     # Add other group-specific columns than those given
     othergcols <- setdiff(allgcols[[ch]], kmcols[[ch]])
