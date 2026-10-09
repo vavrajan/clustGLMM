@@ -142,13 +142,13 @@ predict.clustglmm <-
     
     # Just linear predictor
     if(type == "link"){
-      res[["fit"]] <- apply(samples[[what]], c(1,2,4), fun_posterior)[,,,drop=TRUE]
+      res[["fit"]] <- apply(samples[[what]], c(1,2,4), fun_posterior, na.rm = TRUE)[,,,drop=TRUE]
       if(interval == "ET"){
-        res[["lwr"]] <- apply(samples[[what]], c(1,2,4), quantile, probs = alpha_half)[,,,drop=TRUE]
-        res[["upr"]] <- apply(samples[[what]], c(1,2,4), quantile, probs = 1-alpha_half)[,,,drop=TRUE]
+        res[["lwr"]] <- apply(samples[[what]], c(1,2,4), quantile, probs = alpha_half, na.rm = TRUE)[,,,drop=TRUE]
+        res[["upr"]] <- apply(samples[[what]], c(1,2,4), quantile, probs = 1-alpha_half, na.rm = TRUE)[,,,drop=TRUE]
       }
       if(interval == "HPD"){
-        hpdis <- apply(samples[[what]], c(1,2,4), hdi, credMass = level)
+        hpdis <- apply(samples[[what]], c(1,2,4), hdi, credMass = level, na.rm = TRUE)
         res[["lwr"]] <- hpdis[1,,,,drop=TRUE]
         res[["upr"]] <- hpdis[2,,,,drop=TRUE]
       }
@@ -203,13 +203,13 @@ predict.clustglmm <-
         }
       }
       
-      res[["fit"]] <- apply(samples[["response"]], c(1,2,4), fun_posterior)[,,,drop=TRUE]
+      res[["fit"]] <- apply(samples[["response"]], c(1,2,4), fun_posterior, na.rm = TRUE)[,,,drop=TRUE]
       if(interval == "ET"){
-        res[["lwr"]] <- apply(samples[["response"]], c(1,2,4), quantile, probs = alpha_half)[,,,drop=TRUE]
-        res[["upr"]] <- apply(samples[["response"]], c(1,2,4), quantile, probs = 1-alpha_half)[,,,drop=TRUE]
+        res[["lwr"]] <- apply(samples[["response"]], c(1,2,4), quantile, probs = alpha_half, na.rm = TRUE)[,,,drop=TRUE]
+        res[["upr"]] <- apply(samples[["response"]], c(1,2,4), quantile, probs = 1-alpha_half, na.rm = TRUE)[,,,drop=TRUE]
       }
       if(interval == "HPD"){
-        hpdis <- apply(samples[["response"]], c(1,2,4), hdi, credMass = level)
+        hpdis <- apply(samples[["response"]], c(1,2,4), hdi, credMass = level, na.rm = TRUE)
         res[["lwr"]] <- hpdis[1,,,,drop=TRUE]
         res[["upr"]] <- hpdis[2,,,,drop=TRUE]
       }
@@ -380,13 +380,13 @@ predict.clustglmm <-
       
       ### return results
       # summarized samples
-      res[["fit"]] <- apply(samples[["y"]], c(1,2,4), fun_posterior)[,,,drop=TRUE]
+      res[["fit"]] <- apply(samples[["y"]], c(1,2,4), fun_posterior, na.rm = TRUE)[,,,drop=TRUE]
       if(interval == "ET"){
-        res[["lwr"]] <- apply(samples[["y"]], c(1,2,4), quantile, probs = alpha_half)[,,,drop=TRUE]
-        res[["upr"]] <- apply(samples[["y"]], c(1,2,4), quantile, probs = 1-alpha_half)[,,,drop=TRUE]
+        res[["lwr"]] <- apply(samples[["y"]], c(1,2,4), quantile, probs = alpha_half, na.rm = TRUE)[,,,drop=TRUE]
+        res[["upr"]] <- apply(samples[["y"]], c(1,2,4), quantile, probs = 1-alpha_half, na.rm = TRUE)[,,,drop=TRUE]
       }
       if(interval == "HPD"){
-        hpdis <- apply(samples[["y"]], c(1,2,4), hdi, credMass = level)
+        hpdis <- apply(samples[["y"]], c(1,2,4), hdi, credMass = level, na.rm = TRUE)
         res[["lwr"]] <- hpdis[1,,,,drop=TRUE]
         res[["upr"]] <- hpdis[2,,,,drop=TRUE]
       }
@@ -447,13 +447,13 @@ predict.clustglmm <-
       }
       
       fnames <- params[grep(paste0(beta_fix_name, "_", y, nametag), params)]
-      beta_fix <- apply(draws[, fnames], 2, fun_posterior)
+      beta_fix <- apply(draws[, fnames], 2, fun_posterior, na.rm = TRUE)
       samples[["f"]][, 1, k] <- fX %*% beta_fix
       
       for(ig in 1:length(gs)){
         g <- gs[ig]
         gnames <- params[grep(paste0(beta_grp_name, "_", y, "\\(", g, "\\)", nametag), params)]
-        beta_grp <- apply(draws[, gnames], 2, fun_posterior)
+        beta_grp <- apply(draws[, gnames], 2, fun_posterior, na.rm = TRUE)
         samples[["g"]][, ig, k] <- gX %*% beta_grp
       }
       
@@ -462,11 +462,11 @@ predict.clustglmm <-
           for(ig in 1:length(gs)){
             g <- gs[ig]
             c_ord_name <- paste0("c_ord_", y, "(", g, ")[", k, "]")
-            samples[["g"]][, ig, k] <- samples[["g"]][, ig, k] - fun_posterior(draws[, c_ord_name])
+            samples[["g"]][, ig, k] <- samples[["g"]][, ig, k] - fun_posterior(draws[, c_ord_name], na.rm = TRUE)
           }
         }else{
           c_ord_name <- paste0("c_ord_", y, "\\[", k, "\\]")
-          samples[["f"]][, 1, k] <- samples[["f"]][, 1, k] - fun_posterior(draws[, c_ord_name])
+          samples[["f"]][, 1, k] <- samples[["f"]][, 1, k] - fun_posterior(draws[, c_ord_name], na.rm = TRUE)
         }
       }
       
