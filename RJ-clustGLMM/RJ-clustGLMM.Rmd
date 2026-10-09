@@ -146,7 +146,7 @@ Assuming independence among the set of outcomes for the same individual is often
 
 ## Model-based clustering of GLMMs {#subsec:mbc-glmms}
 
-The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach will fail. We thus extend our model and consider a\ model-based clustering approach where we assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regression parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups. 
+The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach will produce misleading interpretations. We thus extend our model and consider a\ model-based clustering approach where we assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regression parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups. 
 
 The specification which parameters are group-specific and which are the same across all latent groups will usually depend on what is assumed to characterize the latent groups. In addition imposing the restriction that some of the effects are the same across groups simplifies the model and facilitates estimation and interpretation. In the following, we will denote group-specific parameters with a\ superscript $(g)$, e.g., $\tau_r^{(g)}$. Parameters without this superscript are parameters which are the same across groups or represent the set of the corresponding parameters across all groups depending on context. Turning group-specificity on or off will be made en bloc for auxiliary model parameters like $\tau_r$, $\mathbf{c}_r$ or $\boldsymbol{\Sigma}$. For the fixed effects, a\ more selective approach is usually pursued with some effects being assumed to be the same across all groups, while others differ across groups. I.e., we split the fixed-effects contribution to the linear predictor into two parts such that the linear predictor for group $g$ takes the form of 
 $$
@@ -344,7 +344,7 @@ profiles of these underlying groups.
 
 We start by preparing all necessary input to call the main function
 `clustGLMM()`. In particular, we create a\ named vector `family` of
-length equal to the number of outcomes which specifies the asumed family type
+length equal to the number of outcomes which specifies the assumed family type
 of each outcome. The family type names are not unique and one can for
 example either use `"num"` or `"gaussian"` to indicate that the
 outcome is numeric and a\ normal distribution should be used, i.e., the
@@ -369,7 +369,7 @@ for (y in c("ntrips", "satisfaction")) {
 }
 ```
 
-Function `default_varying()` returns a\ named logical vector indicting
+Function `default_varying()` returns a\ named logical vector indicating
 for other parameters which could potentially be group-specified, whether they are to be
 fitted group-specific. The default values are:
 
@@ -747,7 +747,7 @@ pred3 <- predict(mcmc_pp, newdata, y = "ntrips",
 
 In the following we plot the cluster-specific predicted values for `ntrips`.
 
-```{r  psurvey-prediction, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Cluster-specific predictions of `ntrips`. Linear predictor (left), predicted mean response with 95% credible intervals (middle) and samples from the predictive distribution (right).", fig.pos="H", out.width="100%", echo = TRUE, eval = TRUE}
+```{r  psurvey-prediction, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Cluster-specific predictions of `ntrips`. Linear predictor (left), predicted mean response  (middle) and samples from the predictive distribution (right) including 95% credible intervals (dashed lines).", fig.pos="H", out.width="100%", echo = TRUE, eval = TRUE}
 par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 3))
 COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[1], c = 80, l = 50)
 
@@ -986,7 +986,7 @@ pmcmc <- clustering_probabilities_and_deviance(
 
 Using `data = psurvey`, these clustering probabilities are determined
 for all original respondents.  We reduce the samples by using only
-everth 10-th sample (using thinning with `thin = 10`) and the rather
+every 10-th sample (using thinning with `thin = 10`) and the rather
 crude Laplace approximation (`NGQ = 1`).
 
 <!-- ```{r psurvey-clustering-probabilities-and-deviance-print, echo=TRUE, results = TRUE} -->
@@ -1065,7 +1065,7 @@ legend("topleft", legend = 1:3, title = "Cluster", col = COL, lwd = 3, lty = 1, 
 As more and more observations for this new respondent are available
 the clustering probabilities evolve in time as depicted in Figure
 \@ref(fig:psurvey-probability-new-data-plot). The high income at young
-age lead to rather high clustering probabilities for one custer, which
+age lead to rather high clustering probabilities for one cluster, which
 shifts to another cluster due to the steady income growth and the high
 number of trips and level of satisfaction. These results also indicate
 how the clustering uncertainty decreases with more information being

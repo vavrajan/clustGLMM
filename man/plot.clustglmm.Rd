@@ -19,7 +19,7 @@ a string containing the name of the parameter.
   \item{which}{
 a string declaring the type of the plot to be created.
 }
-  \item{ng_trace_chain_split}{a logical indicating ...}
+  \item{ng_trace_chain_split}{a logical indicating whether cluster occupancy numbers \code{ng} of all clusters should be plotted together in one plot separately for each chain (\code{TRUE}), or separate plots comparing different chains for each cluster (\code{FALSE}). }
   \item{...}{
 other arguments.
 }
