@@ -105,7 +105,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             print_s <- s[cnames,,drop=FALSE]
             if(any(!is.na(cnames_eff)) & extend_names){
               rownames(print_s) <- paste0(rownames(print_s),
-                                          ifelse(is.na(fnames_eff), "", " <=> "),
+                                          ifelse(is.na(cnames_eff), "", " <=> "),
                                           cnames_eff)
             }
             print(print_s)
@@ -123,7 +123,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             print_s <- s[lnames,,drop=FALSE]
             if(any(!is.na(lnames_eff)) & extend_names){
               rownames(print_s) <- paste0(rownames(print_s),
-                                          ifelse(is.na(fnames_eff), "", " <=> "),
+                                          ifelse(is.na(lnames_eff), "", " <=> "),
                                           lnames_eff)
             }
             print(print_s)
@@ -143,7 +143,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
               print_s <- s[ggnames,,drop=FALSE]
               if(any(!is.na(ggnames_eff)) & extend_names){
                 rownames(print_s) <- paste0(rownames(print_s),
-                                            ifelse(is.na(fnames_eff), "", " <=> "),
+                                            ifelse(is.na(ggnames_eff), "", " <=> "),
                                             ggnames_eff)
               }
               print(print_s)
