@@ -10,7 +10,7 @@ Computes and prints the summary statistics for objects of class \code{"clustglmm
 \usage{
 \method{summary}{clustglmm}(object, ...)
 \method{print}{summary.clustglmm}(x, which = c("mcmc", "inv_param", "clust_param"), chains = 1L, 
-      clusters, pattern = "", ...)
+      clusters, pattern = "", extend_names = TRUE, ...)
 }
 \arguments{
   \item{object}{
@@ -32,6 +32,9 @@ a list of cluster labels for which group-specific parameters are printed for eac
 a pattern to be used for matching with \code{\link[base]{grep}} among
 parameter names to include in the summary, an empty string by default
 (i.e., matches all names from the selected category).
+}
+  \item{extend_names}{
+a logical value declaring whether extended parameter names should be printed in the table (effect names, id values, etc.).
 }
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
@@ -77,7 +80,8 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
   \item{fnames}{vector of parameter names invariant to clustering,}
   \item{gnames}{cluster-specific parameter names only for cluster 1,}
   \item{lnames}{latent variable names (allocation indicators, random effects, missing values),}
-  \item{cnames}{clustering related parameter names.}
+  \item{cnames}{clustering related parameter names,}
+  \item{effect_names}{details on each model parameter to be added to \code{rownames} if \code{extend_names=TRUE}.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
