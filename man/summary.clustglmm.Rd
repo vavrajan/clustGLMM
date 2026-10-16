@@ -10,7 +10,7 @@ Computes and prints the summary statistics for objects of class \code{"clustglmm
 \usage{
 \method{summary}{clustglmm}(object, ...)
 \method{print}{summary.clustglmm}(x, which = c("mcmc", "inv_param", "clust_param"), chains = 1L, 
-      clusters, pattern = "", extend_names = TRUE, ...)
+      clusters, pattern = "", effect_details = TRUE, max_nchar_details = 25, ...)
 }
 \arguments{
   \item{object}{
@@ -33,8 +33,11 @@ a pattern to be used for matching with \code{\link[base]{grep}} among
 parameter names to include in the summary, an empty string by default
 (i.e., matches all names from the selected category).
 }
-  \item{extend_names}{
-a logical value declaring whether extended parameter names should be printed in the table (effect names, id values, etc.).
+  \item{effect_details}{
+a logical value declaring whether additional column with details on parameters should be added to printed table (effect names, id values, etc.).
+}
+  \item{effect_details}{
+a maximal number of characters for details to be printed in the additional column, the rest is replaced with "...".
 }
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).

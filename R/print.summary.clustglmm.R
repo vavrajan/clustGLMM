@@ -2,7 +2,9 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
                                     chains = 1L, 
                                     clusters,
                                     pattern = "", 
-                                    extend_names = TRUE, ...){
+                                    effect_details = TRUE, 
+                                    max_nchar_details = 25, 
+                                    ...){
   
   stopifnot(length(which) >= 1,
             is.character(which),
@@ -37,6 +39,14 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
   #   print(tapply(x$certainty[,ch], x$clustering[,ch], mean))
   # }
   # 
+  
+  replace_long_with_dots <- function(e){
+    if(nchar(e) > max_nchar_details){
+      e <- substr(e, 1, max_nchar_details)
+      substr(e, max_nchar_details-2, max_nchar_details) <- "..."
+    }
+    return(e)
+  }
   
   
   for(ch in chains){
@@ -84,9 +94,10 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nCluster-invariant parameters:\n")
             fnames_eff <- x$effect_names[[ch]][fnames]
             print_s <- s[fnames,,drop=FALSE]
-            if(any(fnames_eff != "") & extend_names){
+            if(any(fnames_eff != "") & effect_details){
               cn <- c("Effect", colnames(print_s))
-              print_s <- data.frame(fnames_eff, print_s)
+              effs <- sapply(fnames_eff, replace_long_with_dots)
+              print_s <- data.frame(effs, print_s)
               colnames(print_s) <- cn
             }
             print(print_s)
@@ -103,9 +114,10 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nClustering-related parameters:\n")
             cnames_eff <- x$effect_names[[ch]][cnames]
             print_s <- s[cnames,,drop=FALSE]
-            if(any(cnames_eff != "") & extend_names){
+            if(any(cnames_eff != "") & effect_details){
               cn <- c("Observation", colnames(print_s))
-              print_s <- data.frame(cnames_eff, print_s)
+              effs <- sapply(cnames_eff, replace_long_with_dots)
+              print_s <- data.frame(effs, print_s)
               colnames(print_s) <- cn
             }
             print(print_s)
@@ -121,9 +133,10 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nLatent variables:\n")
             lnames_eff <- x$effect_names[[ch]][lnames]
             print_s <- s[lnames,,drop=FALSE]
-            if(any(lnames_eff != "") & extend_names){
+            if(any(lnames_eff != "") & effect_details){
               cn <- c("Observation", colnames(print_s))
-              print_s <- data.frame(lnames_eff, print_s)
+              effs <- sapply(lnames_eff, replace_long_with_dots)
+              print_s <- data.frame(effs, print_s)
               colnames(print_s) <- cn
             }
             print(print_s)
@@ -141,9 +154,10 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
               cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
               ggnames_eff <- x$effect_names[[ch]][ggnames]
               print_s <- s[ggnames,,drop=FALSE]
-              if(any(ggnames_eff != "") & extend_names){
+              if(any(ggnames_eff != "") & effect_details){
                 cn <- c("Effect", colnames(print_s))
-                print_s <- data.frame(ggnames_eff, print_s)
+                effs <- sapply(ggnames_eff, replace_long_with_dots)
+                print_s <- data.frame(effs, print_s)
                 colnames(print_s) <- cn
               }
               print(print_s)
