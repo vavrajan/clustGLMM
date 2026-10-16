@@ -1,7 +1,8 @@
 print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_param"), 
                                     chains = 1L, 
                                     clusters,
-                                    pattern = "", ...){
+                                    pattern = "", 
+                                    extend_names = TRUE, ...){
   
   stopifnot(length(which) >= 1,
             is.character(which),
@@ -83,9 +84,9 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nCluster-invariant parameters:\n")
             fnames_eff <- x$effect_names[[ch]][fnames]
             print_s <- s[fnames,,drop=FALSE]
-            if(any(!is.na(fnames_eff))){
+            if(any(!is.na(fnames_eff)) & extend_names){
               rownames(print_s) <- paste0(rownames(print_s),
-                                          " <=> ",
+                                          ifelse(is.na(fnames_eff), "", " <=> "),
                                           fnames_eff)
             }
             print(print_s)
@@ -102,9 +103,9 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nClustering-related parameters:\n")
             cnames_eff <- x$effect_names[[ch]][cnames]
             print_s <- s[cnames,,drop=FALSE]
-            if(any(!is.na(cnames_eff))){
+            if(any(!is.na(cnames_eff)) & extend_names){
               rownames(print_s) <- paste0(rownames(print_s),
-                                          " <=> ",
+                                          ifelse(is.na(fnames_eff), "", " <=> "),
                                           cnames_eff)
             }
             print(print_s)
@@ -120,9 +121,9 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nLatent variables:\n")
             lnames_eff <- x$effect_names[[ch]][lnames]
             print_s <- s[lnames,,drop=FALSE]
-            if(any(!is.na(lnames_eff))){
+            if(any(!is.na(lnames_eff)) & extend_names){
               rownames(print_s) <- paste0(rownames(print_s),
-                                          " <=> ",
+                                          ifelse(is.na(fnames_eff), "", " <=> "),
                                           lnames_eff)
             }
             print(print_s)
@@ -140,9 +141,9 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
               cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
               ggnames_eff <- x$effect_names[[ch]][ggnames]
               print_s <- s[ggnames,,drop=FALSE]
-              if(any(!is.na(ggnames_eff))){
+              if(any(!is.na(ggnames_eff)) & extend_names){
                 rownames(print_s) <- paste0(rownames(print_s),
-                                            " <=> ",
+                                            ifelse(is.na(fnames_eff), "", " <=> "),
                                             ggnames_eff)
               }
               print(print_s)
