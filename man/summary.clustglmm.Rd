@@ -36,8 +36,8 @@ parameter names to include in the summary, an empty string by default
   \item{effect_details}{
 a logical value declaring whether additional column with details on parameters should be added to printed table (effect names, id values, etc.).
 }
-  \item{effect_details}{
-a maximal number of characters for details to be printed in the additional column, the rest is replaced with "...".
+  \item{max_nchar_details}{
+a maximal number of characters for details to be printed in the additional column, if longer the last three characters are replaced with "...".
 }
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
