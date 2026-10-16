@@ -292,7 +292,7 @@ Working under zero offset."))
   iters <- list()
   niter <- numeric(mcmc$nchains)
   nparams <- numeric(mcmc$nchains)
-  output <- cmcmc <- cnames <- param_names <- list()
+  output <- cmcmc <- cnames <- param_names <- effect_names <- list()
   lsettings <- list()
   for(ch in chains){
     # iterations
@@ -340,6 +340,24 @@ Working under zero offset."))
         index = index + settings[p,"dimswithG"]
       }
     }
+    
+    ### Effect names for summary outputs
+    param_names <- unlist(mcmc$param_names[[ch]], use.names = F)
+    effect_names <- rep(NA, length(param_names))
+    names(effect_names) <- param_names
+    
+    pUigs <- grep("^pUig_int\\(", param_names)
+    if(length(pUigs) > 0){
+      effect_names[pUigs] <- rep(names(mcmc$numbered_unique_ids), mcmc$G[ch])
+    }
+    
+    dis <- grep("^dev_i\\[", param_names)
+    if(length(dis) > 0){
+      effect_names[dis] <- names(mcmc$numbered_unique_ids)
+    }
+    
+    effect_names[[ch]] <- effect_names
+    
   }
   
   
@@ -528,6 +546,7 @@ Working under zero offset."))
   res$chains <- chains
   res$settings <- lsettings
   res$param_names <- param_names
+  res$effect_names <- effect_names
   res$n <- n
   res$N <- N
   res$numbered_unique_ids <- numbered_unique_ids
