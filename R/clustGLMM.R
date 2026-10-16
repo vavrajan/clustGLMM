@@ -1135,7 +1135,10 @@ Therefore, the given outcomes are considered independent. ")
     na_names <- c()
     for(iy in 1:length(sorted_family)){
       na_names <- c(na_names, 
-                    names(numbered_unique_ids)[data[matisYna[,iy], id]])
+                    paste0(which(matisYna[,iy]), 
+                           ", ", id, "=",
+                           names(numbered_unique_ids)[data[matisYna[,iy], id]])
+                    )
     }
     effect_names[nas] <- na_names
     
