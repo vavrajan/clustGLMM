@@ -1080,7 +1080,7 @@ Therefore, the given outcomes are considered independent. ")
     
     ### Effect names for summary tables
     param_names <- unlist(mcmc$param_names[[ch]], use.names = F)
-    effect_names <- rep(NA, length(param_names))
+    effect_names <- rep("", length(param_names))
     names(effect_names) <- param_names
     
     ## fixed and group effects parameters

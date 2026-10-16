@@ -343,7 +343,7 @@ Working under zero offset."))
     
     ### Effect names for summary outputs
     param_names <- unlist(param_names[[ch]], use.names = F)
-    eff_names <- rep(NA, length(param_names))
+    eff_names <- rep("", length(param_names))
     names(eff_names) <- param_names
     
     pUigs <- grep("^pUig_int\\(", param_names)
