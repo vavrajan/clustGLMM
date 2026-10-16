@@ -342,7 +342,7 @@ Working under zero offset."))
     }
     
     ### Effect names for summary outputs
-    param_names <- unlist(mcmc$param_names[[ch]], use.names = F)
+    param_names <- unlist(param_names[[ch]], use.names = F)
     effect_names <- rep(NA, length(param_names))
     names(effect_names) <- param_names
     

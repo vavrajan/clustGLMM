@@ -1084,27 +1084,27 @@ Therefore, the given outcomes are considered independent. ")
     names(effect_names) <- param_names
     
     ## fixed and group effects parameters
-    for(y in names(mcmc$family)){
-      k <- ifelse(mcmc$family[y] == "cat", mcmc$Kcat[y], 1)
+    for(y in names(sorted_family)){
+      k <- ifelse(sorted_family[y] == "cat", Kcat[y], 1)
       # fixed
-      pattern <- paste0("^beta_", mcmc$family[y], "_fix_", y)
+      pattern <- paste0("^beta_", sorted_family[y], "_fix_", y)
       bnames <- param_names[grep(pattern, param_names)]
       if(length(bnames) > 0){
-        effect_names[bnames] <- rep(mcmc$lfixnames[[y]], each = k)
+        effect_names[bnames] <- rep(lfixnames[[y]], each = k)
       }
       
       # group
-      pattern <- paste0("^beta_", mcmc$family[y], "_", y)
+      pattern <- paste0("^beta_", sorted_family[y], "_", y)
       bnames <- param_names[grep(pattern, param_names)]
       if(length(bnames) > 0){
-        effect_names[bnames] <- rep(mcmc$lgrpnames[[y]], each = k)
+        effect_names[bnames] <- rep(lgrpnames[[y]], each = k)
       }
     }
     ## random effects parameters
     #sdSigma
     sdnames <- param_names[grep("^sdSigma", param_names)]
-    refnames <- unlist(mcmc$lrannames)
-    refnames <- paste0(rep(names(mcmc$family), times = lapply(mcmc$lrannames, length)), 
+    refnames <- unlist(lrannames)
+    refnames <- paste0(rep(names(sorted_family), times = lapply(lrannames, length)), 
                        "_", refnames)
     effect_names[sdnames] <- refnames
     
@@ -1120,28 +1120,28 @@ Therefore, the given outcomes are considered independent. ")
     ## individual original ids
     bis <- grep("^b\\[", param_names)
     if(length(bis) > 0){
-      effect_names[bis] <- paste0(rep(names(mcmc$numbered_unique_ids), each = length(refnames)),
+      effect_names[bis] <- paste0(rep(names(numbered_unique_ids), each = length(refnames)),
                                   ", ",
-                                  rep(refnames,length(mcmc$numbered_unique_ids)))
+                                  rep(refnames,length(numbered_unique_ids)))
     }
     
     Us <- grep("^U\\[", param_names)
     if(length(Us) > 0){
-      effect_names[Us] <- names(mcmc$numbered_unique_ids)
+      effect_names[Us] <- names(numbered_unique_ids)
     }
     
     nas <- grep("^naY_", param_names)
-    matisYna <- matrix(mcmc$isYna, ncol = length(mcmc$family))
+    matisYna <- matrix(cisYna, ncol = length(sorted_family))
     na_names <- c()
-    for(iy in 1:length(mcmc$family)){
+    for(iy in 1:length(sorted_family)){
       na_names <- c(na_names, 
-                    names(mcmc$numbered_unique_ids)[data[matisYna[,iy], id]])
+                    names(numbered_unique_ids)[data[matisYna[,iy], id]])
     }
     effect_names[nas] <- na_names
     
     pUigs <- grep("^pUig\\(", param_names)
     if(length(pUigs) > 0){
-      effect_names[pUigs] <- rep(names(mcmc$numbered_unique_ids), mcmc$G[ch])
+      effect_names[pUigs] <- rep(names(numbered_unique_ids), G[ch])
     }
     
     mcmc$effect_names[[ch]] <- effect_names
