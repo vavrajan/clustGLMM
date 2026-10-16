@@ -1120,14 +1120,15 @@ Therefore, the given outcomes are considered independent. ")
     ## individual original ids
     bis <- grep("^b\\[", param_names)
     if(length(bis) > 0){
-      effect_names[bis] <- paste0(rep(names(numbered_unique_ids), each = length(refnames)),
+      effect_names[bis] <- paste0(id, "=", 
+                                  rep(names(numbered_unique_ids), each = length(refnames)),
                                   ", ",
                                   rep(refnames,length(numbered_unique_ids)))
     }
     
     Us <- grep("^U\\[", param_names)
     if(length(Us) > 0){
-      effect_names[Us] <- names(numbered_unique_ids)
+      effect_names[Us] <- paste0(id, "=", names(numbered_unique_ids))
     }
     
     nas <- grep("^naY_", param_names)
@@ -1144,7 +1145,7 @@ Therefore, the given outcomes are considered independent. ")
     
     pUigs <- grep("^pUig\\(", param_names)
     if(length(pUigs) > 0){
-      effect_names[pUigs] <- rep(names(numbered_unique_ids), G[ch])
+      effect_names[pUigs] <- paste0(id, "=", rep(names(numbered_unique_ids), G[ch]))
     }
     
     mcmc$effect_names[[ch]] <- effect_names
