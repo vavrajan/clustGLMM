@@ -58,7 +58,8 @@ summary.clustglmm <- function(object, ...) {
               fnames = fnames,
               gnames = gnames,
               lnames = lnames,
-              cnames = cnames)
+              cnames = cnames,
+              effect_names = object$effect_names)
   
   class(res) <- "summary.clustglmm"
   return(res)
