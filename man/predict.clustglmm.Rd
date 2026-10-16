@@ -128,6 +128,8 @@ For given outcome \code{y} returns a list with
   \item{$lwr}{the lower bound of credible interval, if \code{method="samples"},}
   \item{$upr}{the upper bound of credible interval, if \code{method="samples"}.}
 }
+Whenever a summarizing function (\code{fun_posterior}, \code{mean} or \code{quantile}) is called, all \code{NA} are omitted with \code{na.rm = TRUE} treatment. 
+For example, \code{NA} could appear in the post processed samples when no clear permutation is found. 
 
 Moreover, \code{type="posterior_predictive_response"} provides
 \describe{
