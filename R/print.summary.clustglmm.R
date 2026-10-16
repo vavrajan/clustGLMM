@@ -2,7 +2,6 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
                                     chains = 1L, 
                                     clusters,
                                     pattern = "", 
-                                    effect_details = TRUE, 
                                     max_nchar_details = 25, 
                                     ...){
   
@@ -94,7 +93,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nCluster-invariant parameters:\n")
             fnames_eff <- x$effect_names[[ch]][fnames]
             print_s <- s[fnames,,drop=FALSE]
-            if(any(fnames_eff != "") & effect_details){
+            if(any(fnames_eff != "") & (max_nchar_details > 3)){
               cn <- c("Effect", colnames(print_s))
               effs <- sapply(fnames_eff, replace_long_with_dots)
               print_s <- data.frame(effs, print_s)
@@ -114,7 +113,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nClustering-related parameters:\n")
             cnames_eff <- x$effect_names[[ch]][cnames]
             print_s <- s[cnames,,drop=FALSE]
-            if(any(cnames_eff != "") & effect_details){
+            if(any(cnames_eff != "") & (max_nchar_details > 3)){
               cn <- c("Observation", colnames(print_s))
               effs <- sapply(cnames_eff, replace_long_with_dots)
               print_s <- data.frame(effs, print_s)
@@ -133,7 +132,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cat("\nLatent variables:\n")
             lnames_eff <- x$effect_names[[ch]][lnames]
             print_s <- s[lnames,,drop=FALSE]
-            if(any(lnames_eff != "") & effect_details){
+            if(any(lnames_eff != "") & (max_nchar_details > 3)){
               cn <- c("Observation", colnames(print_s))
               effs <- sapply(lnames_eff, replace_long_with_dots)
               print_s <- data.frame(effs, print_s)
@@ -154,7 +153,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
               cat(paste0("\nParameters specific for cluster g=", g, ":\n"))
               ggnames_eff <- x$effect_names[[ch]][ggnames]
               print_s <- s[ggnames,,drop=FALSE]
-              if(any(ggnames_eff != "") & effect_details){
+              if(any(ggnames_eff != "") & (max_nchar_details > 3)){
                 cn <- c("Effect", colnames(print_s))
                 effs <- sapply(ggnames_eff, replace_long_with_dots)
                 print_s <- data.frame(effs, print_s)

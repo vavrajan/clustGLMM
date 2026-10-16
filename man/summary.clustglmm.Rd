@@ -10,7 +10,7 @@ Computes and prints the summary statistics for objects of class \code{"clustglmm
 \usage{
 \method{summary}{clustglmm}(object, ...)
 \method{print}{summary.clustglmm}(x, which = c("mcmc", "inv_param", "clust_param"), chains = 1L, 
-      clusters, pattern = "", effect_details = TRUE, max_nchar_details = 25, ...)
+      clusters, pattern = "", max_nchar_details = 25, ...)
 }
 \arguments{
   \item{object}{
@@ -33,11 +33,9 @@ a pattern to be used for matching with \code{\link[base]{grep}} among
 parameter names to include in the summary, an empty string by default
 (i.e., matches all names from the selected category).
 }
-  \item{effect_details}{
-a logical value declaring whether additional column with details on parameters should be added to printed table (effect names, id values, etc.).
-}
   \item{max_nchar_details}{
 a maximal number of characters for details to be printed in the additional column, if longer the last three characters are replaced with "...".
+If lower than 4, then such column of details is not added.
 }
   \item{...}{
 other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
@@ -84,7 +82,7 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
   \item{gnames}{cluster-specific parameter names only for cluster 1,}
   \item{lnames}{latent variable names (allocation indicators, random effects, missing values),}
   \item{cnames}{clustering related parameter names,}
-  \item{effect_names}{details on each model parameter to be added to \code{rownames} if \code{extend_names=TRUE}.}
+  \item{effect_names}{details on each model parameter to be added to summary table if \code{max_nchar_details > 3}.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
