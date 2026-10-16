@@ -85,9 +85,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             fnames_eff <- x$effect_names[[ch]][fnames]
             print_s <- s[fnames,,drop=FALSE]
             if(any(fnames_eff != "") & extend_names){
-              rownames(print_s) <- paste0(rownames(print_s),
-                                          ifelse(fnames_eff=="", "", " <=> "),
-                                          fnames_eff)
+              print_s <- data.frame(Effect = fnames_eff, print_s)
             }
             print(print_s)
             
@@ -104,9 +102,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             cnames_eff <- x$effect_names[[ch]][cnames]
             print_s <- s[cnames,,drop=FALSE]
             if(any(cnames_eff != "") & extend_names){
-              rownames(print_s) <- paste0(rownames(print_s),
-                                          ifelse(cnames_eff=="", "", " <=> "),
-                                          cnames_eff)
+              print_s <- data.frame(Observation = cnames_eff, print_s)
             }
             print(print_s)
           }
@@ -122,9 +118,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
             lnames_eff <- x$effect_names[[ch]][lnames]
             print_s <- s[lnames,,drop=FALSE]
             if(any(lnames_eff != "") & extend_names){
-              rownames(print_s) <- paste0(rownames(print_s),
-                                          ifelse(lnames_eff=="", "", " <=> "),
-                                          lnames_eff)
+              print_s <- data.frame(Observation = lnames_eff, print_s)
             }
             print(print_s)
           }
@@ -142,9 +136,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "inv_param", "clust_par
               ggnames_eff <- x$effect_names[[ch]][ggnames]
               print_s <- s[ggnames,,drop=FALSE]
               if(any(ggnames_eff != "") & extend_names){
-                rownames(print_s) <- paste0(rownames(print_s),
-                                            ifelse(ggnames_eff=="", "", " <=> "),
-                                            ggnames_eff)
+                print_s <- data.frame(Effect = ggnames_eff, print_s)
               }
               print(print_s)
             }
