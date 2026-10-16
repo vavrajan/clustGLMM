@@ -426,7 +426,7 @@ rescale_matrix <- function(draws, settings,
         L[i, i] <- yscl
         if (length(notint_ran) > 0) {
           for (z in notint_ran) {
-            L[i, i+z] <- -centers[lrannames[[y]][z]] * yscl / scales[lrannames[[y]][z]]
+            L[i, z+yadd] <- -centers[lrannames[[y]][z]] * yscl / scales[lrannames[[y]][z]]
           }
         }
       }
