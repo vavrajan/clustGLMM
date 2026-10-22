@@ -229,13 +229,14 @@ $$
 \left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]
 \left(\boldsymbol{\omega}-\widehat{\boldsymbol{\omega}}\right).
 $$
-This Taylor expansion reduces to a\ quadratic form with negative Hessian matrix in the middle if evaluated at the maximum point $\widehat{\boldsymbol{\omega}}$ found by the Newton-Raphson (N-R) method, i.e., where $\frac{\partial}{\partial \boldsymbol{\omega}} \ell(\widehat{\boldsymbol{\omega}}) = \mathbf{0}$. Locally, the log-pdf resembles the log-pdf of a\ centered multivariate normal distribution. Since the M-H step works best if the proposal distribution is close to the target distribution, we use the negative Hessian matrix (obtained as a\ by-product of the N-R method) as the precision matrix for the proposal distribution of direction in which to move from the current value of the transformed block $\boldsymbol{\theta}_l$. This distribution can be adjusted by a\ multiplicative constant $c_{\boldsymbol{\theta}_l}$ to increase or decrease the potential step size. Hence,
+This Taylor expansion reduces to a\ quadratic form with negative Hessian matrix in the middle if evaluated at the maximum point $\widehat{\boldsymbol{\omega}}$ found by the Newton-Raphson (N-R) method, i.e., where $\frac{\partial}{\partial \boldsymbol{\omega}} \ell(\widehat{\boldsymbol{\omega}}) = \mathbf{0}$. Locally, the log-pdf resembles the log-pdf of a\ centered multivariate normal distribution. Since the M-H step works best if the proposal distribution is close to the target distribution, we use the negative Hessian matrix (obtained as a\ by-product of the N-R method) as the precision matrix for the multivariate normal proposal distribution of direction in which to move from the current value of the transformed block $\boldsymbol{\theta}_l$. This distribution can be adjusted by a\ multiplicative constant $c_{\boldsymbol{\theta}_l}$ to increase or decrease the potential step size. Hence,
 $$
 \boldsymbol{\omega}^{\mathrm{proposal}} = \boldsymbol{\omega}^{\mathrm{current}} + \mathbf{s}, 
 \qquad \text{where} \quad 
 \mathbf{s} \sim 
 \mathsf{N}_d\left(\mathbf{0}, c_{\boldsymbol{\theta}_l} \left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]^{-1}\right).
 $$
+Moreover, we allow for robust proposals by multivariate Student-t distribution with the same scale matrix but heavier tails if degrees of freedom are set low.
 The new value is accepted with probability 
 $$
 \min\left\{1, \, \exp(\ell(\boldsymbol{\omega}^{\mathrm{proposal}}) - \ell(\boldsymbol{\omega}^{\mathrm{current}}))\right\},
@@ -363,7 +364,7 @@ included. We also include random intercepts using `random = ~ 1`.
 
 ```{r psurvey-splines, echo=TRUE}
 formula <- list()
-formula[["income"]] <- list(fixed = ~ 0, group = ~ age + I(age^2), random = ~ 1)
+formula[["income"]] <- list(fixed = ~ 0, group = ~ age + I(age^2), random = ~ 1 + age)
 for (y in c("ntrips", "satisfaction")) {
   formula[[y]] <- list(fixed = ~ 0, group = ~ age, random = ~ 1)
 }
