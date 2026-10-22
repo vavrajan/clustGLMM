@@ -116,6 +116,17 @@ The output of \code{default_tuning} is a named list of parameters that tune the 
 \item{\code{$double$const_proposal_a_ord = 1.0}}{constant by which the proposal direction for \code{a_ord} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_b = 1.0}}{constant by which the proposal direction for \code{b} is multiplied (const_proposal^2 to variance),}
 \item{\code{$double$const_proposal_e0 = 1.0}}{constant by which the proposal direction for \code{e0} is multiplied (const_proposal^2 to variance),}
+\item{\code{$double$df_proposal_beta_poi_fix = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_poi_fix},}
+\item{\code{$double$df_proposal_beta_poi = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_poi},}
+\item{\code{$double$df_proposal_beta_bin_fix = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_bin_fix},}
+\item{\code{$double$df_proposal_beta_bin = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_bin},}
+\item{\code{$double$df_proposal_beta_ord_fix = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_ord_fix},}
+\item{\code{$double$df_proposal_beta_ord = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_ord},}
+\item{\code{$double$df_proposal_beta_cat_fix = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_cat_fix},}
+\item{\code{$double$df_proposal_beta_cat = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{beta_cat},}
+\item{\code{$double$df_proposal_a_ord = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{a_ord},}
+\item{\code{$double$df_proposal_b = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{b},}
+\item{\code{$double$df_proposal_e0 = Inf}}{the degrees of freedom for multivariate Student-t proposal (\code{Inf} results in standard multivariate normal proposal) of \code{e0},}
 \item{\code{$double$tolerance = 1e-07}}{tolerance when computing the norm of the shift within Newton-Raphson.}
 }
 With \code{experience = TRUE} the chosen values will be set to those proven suitable from empirical experience.
