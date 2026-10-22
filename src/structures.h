@@ -15,6 +15,17 @@ struct str_tuning {
   double* const_proposal_a_ord;         // [1]    constant by which the proposal direction is multiplied (const_proposal^2 to variance)
   double* const_proposal_b;             // [1]    constant by which the proposal direction is multiplied (const_proposal^2 to variance)
   double* const_proposal_e0;            // [1]    constant by which the proposal direction is multiplied (const_proposal^2 to variance)
+  double* df_proposal_beta_poi_fix;     // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_poi;         // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_bin_fix;     // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_bin;         // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_ord_fix;     // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_ord;         // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_cat_fix;     // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_beta_cat;         // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_a_ord;            // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_b;                // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
+  double* df_proposal_e0;               // [1]    degrees of freedom for multivariate Student proposal (if Inf, then Normal distribution)
   double* tolerance;                    // [1]    tolerance when computing norm of the shift within Newton-Raphson
   int* maxiter;                         // [1]    maximum iterations allowed during Newton-Raphson update of proposal distribution
   int* maxnrep;                         // [1]    maximum number of repetitions of Newton-Raphson with a different start location

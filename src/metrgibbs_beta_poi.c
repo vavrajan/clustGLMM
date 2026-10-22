@@ -143,7 +143,7 @@ void metrgibbs_beta_poi(struct str_state* last,   // OUT+IN last known values of
                  // Functions used
                  logpbeta_poi,
                  // Tuning parameters
-                 tuning, (*tuning).const_proposal_beta_poi_fix
+                 tuning, (*tuning).const_proposal_beta_poi_fix, (*tuning).df_proposal_beta_poi_fix
                  );
       
       beta_dim += nfix[shift_nY];
@@ -227,7 +227,7 @@ void metrgibbs_beta_poi(struct str_state* last,   // OUT+IN last known values of
                    // Functions used
                    logpbeta_poi,
                    // Tuning parameters
-                   tuning, (*tuning).const_proposal_beta_poi
+                   tuning, (*tuning).const_proposal_beta_poi, (*tuning).df_proposal_beta_poi
         );
         
         beta_dim += ngrp[shift_nY];

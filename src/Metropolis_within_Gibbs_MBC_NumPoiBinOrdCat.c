@@ -305,6 +305,17 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   tuning.const_proposal_a_ord         = p;     p++;
   tuning.const_proposal_b             = p;     p++;
   tuning.const_proposal_e0            = p;     p++;
+  tuning.df_proposal_beta_poi_fix     = p;     p++;
+  tuning.df_proposal_beta_poi         = p;     p++;
+  tuning.df_proposal_beta_bin_fix     = p;     p++;
+  tuning.df_proposal_beta_bin         = p;     p++;
+  tuning.df_proposal_beta_ord_fix     = p;     p++;
+  tuning.df_proposal_beta_ord         = p;     p++;
+  tuning.df_proposal_beta_cat_fix     = p;     p++;
+  tuning.df_proposal_beta_cat         = p;     p++;
+  tuning.df_proposal_a_ord            = p;     p++;
+  tuning.df_proposal_b                = p;     p++;
+  tuning.df_proposal_e0               = p;     p++;
   tuning.tolerance                    = p;     p++;
   tuning.maxiter                      = pi;    pi++;
   tuning.maxnrep                      = pi;    pi++;

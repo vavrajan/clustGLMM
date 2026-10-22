@@ -57,10 +57,10 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
                       int*, int*, int*, int*, int*, int*, 
                       int*, int*, int*, int*, int*, int*, int*, int*,
                       double*, double*),
-                      // Tuning parameters
-                      struct str_tuning* tuning, // tuning parameters
-                      double* const_proposal   // IN [1] pointer to one of tuning parameters
-                  
+                // Tuning parameters
+                struct str_tuning* tuning, // tuning parameters
+                double* const_proposal,    // IN [1] pointer to one of tuning parameters
+                double* df_proposal        // IN [1] pointer to one of tuning parameters
 );
 
 #endif

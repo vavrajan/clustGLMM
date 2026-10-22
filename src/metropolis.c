@@ -70,7 +70,8 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
                       double*, double*),
                 // Tuning parameters
                 struct str_tuning* tuning, // tuning parameters
-                double* const_proposal   // IN [1] pointer to one of tuning parameters
+                double* const_proposal,    // IN [1] pointer to one of tuning parameters
+                double* df_proposal        // IN [1] pointer to one of tuning parameters
                   
 ){
   // Auxiliary parameters
@@ -101,6 +102,7 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
   double shift[dim_theta];
   double accept_prob;
   double u;
+  double koefchi = 1.0;
   int accept;
   
   //printf("\nmetropolis: nfix = %d, Kcat = %d, dim_theta = %d", *nfix, *Kcat, dim_theta);
@@ -111,8 +113,15 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
     //// Sample shift from N(0, const_proposal^2 * [Hess matrix]^{-1})
     // We already have cholesky decomposition of Hess matrix in proposal_chol
     //printf("\nmetropolis: g = %d, j = %d, theta", *g, j);
+    
+    if(!isinf(*df_proposal)){
+      // The number of degrees of freedom is finite
+      // To get multivariate t-distribution divide with sqrt(chi/df)
+      koefchi = sqrt(rchisq(*df_proposal) / *df_proposal);
+    } // else koefchi = 1.0; Inf degrees of freedom --> multivariate normal distribution
+    
     for(k = 0; k < dim_theta; k++){
-      N01[k] = rnorm(0.0, 1.0);
+      N01[k] = rnorm(0.0, 1.0) / koefchi;
       //printf("[%d] = %f, ", k, theta[k]);
     }
     //fflush(stdout);

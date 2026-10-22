@@ -37,6 +37,9 @@ void metropolis_le0(struct str_state* last,    // OUT+IN last known values of ge
   le = log(*((*last).e0));
   // proposal var is actually inverse variance
   proposal_sd = sqrt(1/(*proposal_prec)) * *((*tuning).const_proposal_e0);
+  if(!isinf(*((*tuning).df_proposal_e0))){
+    proposal_sd /= sqrt(rchisq(*((*tuning).df_proposal_e0)) / *((*tuning).df_proposal_e0));
+  }
   
   logple0(last, param, 
          G, Gplus, n, nUg,

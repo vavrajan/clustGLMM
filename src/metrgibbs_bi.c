@@ -138,7 +138,7 @@ void metrgibbs_bi(struct str_state* last,   // OUT+IN last known values of gener
                // Functions used
                logpbi,
                // Tuning parameters
-               tuning, (*tuning).const_proposal_b
+               tuning, (*tuning).const_proposal_b, (*tuning).df_proposal_b
     );
     
   }

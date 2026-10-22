@@ -143,7 +143,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
                  // Functions used
                  logpbeta_bin,
                  // Tuning parameters
-                 tuning, (*tuning).const_proposal_beta_bin_fix
+                 tuning, (*tuning).const_proposal_beta_bin_fix, (*tuning).df_proposal_beta_bin_fix
       );
       
       beta_dim += nfix[shift_nY];
@@ -226,7 +226,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
                    // Functions used
                    logpbeta_bin,
                    // Tuning parameters
-                   tuning, (*tuning).const_proposal_beta_bin
+                   tuning, (*tuning).const_proposal_beta_bin, (*tuning).df_proposal_beta_bin
         );
         
         beta_dim += ngrp[shift_nY];

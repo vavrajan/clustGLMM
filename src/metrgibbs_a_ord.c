@@ -129,7 +129,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
                    // Functions used
                    logpapi_ord,
                    // Tuning parameters
-                   tuning, (*tuning).const_proposal_a_ord
+                   tuning, (*tuning).const_proposal_a_ord, (*tuning).df_proposal_a_ord
         );
         
         a_ord_dim += Kord[y];
@@ -175,7 +175,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
                  // Functions used
                  logpapi_ord,
                  // Tuning parameters
-                 tuning, (*tuning).const_proposal_a_ord
+                 tuning, (*tuning).const_proposal_a_ord, (*tuning).df_proposal_a_ord
       );
       
       a_ord_dim += Kord[y];
