@@ -1398,7 +1398,8 @@ Therefore, the given outcomes are considered independent. ")
          naY         = cstore$naY,
          # Tuning parameters
          vectuningdouble  = as.double(unlist(ctuning$double)),
-         vectuninginteger = as.integer(unlist(ctuning$integer))
+         vectuninginteger = as.integer(unlist(ctuning$integer)),
+         NAOK = TRUE
       )
     #)
     message(paste0("Sampling of chain ", ch, " is completed.\n"))
