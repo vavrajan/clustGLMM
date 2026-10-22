@@ -1037,6 +1037,17 @@ Therefore, the given outcomes are considered independent. ")
     const_proposal_a_ord = tuning$double$const_proposal_a_ord,
     const_proposal_b = tuning$double$const_proposal_b,
     const_proposal_e0 = tuning$double$const_proposal_e0,
+    df_proposal_beta_poi_fix = tuning$double$df_proposal_beta_poi_fix,
+    df_proposal_beta_poi = tuning$double$df_proposal_beta_poi,
+    df_proposal_beta_bin_fix = tuning$double$df_proposal_beta_bin_fix,
+    df_proposal_beta_bin = tuning$double$df_proposal_beta_bin,
+    df_proposal_beta_ord_fix = tuning$double$df_proposal_beta_ord_fix,
+    df_proposal_beta_ord = tuning$double$df_proposal_beta_ord,
+    df_proposal_beta_cat_fix = tuning$double$df_proposal_beta_cat_fix,
+    df_proposal_beta_cat = tuning$double$df_proposal_beta_cat,
+    df_proposal_a_ord = tuning$double$df_proposal_a_ord,
+    df_proposal_b = tuning$double$df_proposal_b,
+    df_proposal_e0 = tuning$double$df_proposal_e0,
     tolerance = tuning$double$tolerance
   )
   
