@@ -19,6 +19,17 @@ default_tuning <- function(experience = FALSE, ...){
     const_proposal_a_ord = ifelse(experience, 0.5, 1),
     const_proposal_b = ifelse(experience, 0.5, 1),
     const_proposal_e0 = 1,
+    df_proposal_beta_poi_fix = Inf,
+    df_proposal_beta_poi = Inf,
+    df_proposal_beta_bin_fix = Inf,
+    df_proposal_beta_bin = Inf,
+    df_proposal_beta_ord_fix = Inf,
+    df_proposal_beta_ord = Inf,
+    df_proposal_beta_cat_fix = Inf,
+    df_proposal_beta_cat = Inf,
+    df_proposal_a_ord = Inf,
+    df_proposal_b = Inf,
+    df_proposal_e0 = Inf,
     tolerance = 1e-7
   )
   dots <- list(...)
