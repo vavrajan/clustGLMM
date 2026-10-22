@@ -373,6 +373,7 @@ $$
 \mathbf{s} \sim 
 \mathsf{N}_d\left(\mathbf{0}, c_{\boldsymbol{\theta}_l} \left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]^{-1}\right).
 $$
+Moreover, we allow for robust proposals by multivariate Student-t distribution with the same scale matrix but heavier tails if degrees of freedom are set low.
 The new value is accepted with probability 
 $$
 \min\left\{1, \, \exp(\ell(\boldsymbol{\omega}^{\mathrm{proposal}}) - \ell(\boldsymbol{\omega}^{\mathrm{current}}))\right\},
