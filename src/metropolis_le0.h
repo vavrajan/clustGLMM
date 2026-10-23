@@ -10,7 +10,9 @@ void metropolis_le0(struct str_state* last,    // OUT+IN last known values of ge
                     // Proposal distribution parameters
                     double* proposal_prec,      // IN+OUT[1] precision of proposal distribution for log(e0)
                     // Tuning parameters
-                    struct str_tuning* tuning
+                    struct str_tuning* tuning,      // tuning parameters
+                    // Acceptance parameters
+                    double* accept                  // matrix to save acceptance values
 );
 
 #endif

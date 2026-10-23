@@ -20,7 +20,9 @@ void metropolis_le0(struct str_state* last,    // OUT+IN last known values of ge
                     // Proposal distribution parameters
                     double* proposal_prec,      // IN+OUT[1] precision of proposal distribution for log(e0)
                     // Tuning parameters
-                    struct str_tuning* tuning
+                    struct str_tuning* tuning,      // tuning parameters
+                    // Acceptance parameters
+                    double* accept                  // matrix to save acceptance values
 ){
   // Auxiliary parameters
   int j;
@@ -32,7 +34,7 @@ void metropolis_le0(struct str_state* last,    // OUT+IN last known values of ge
   double log_accept_prob;
   double accept_prob;
   double u;
-  int accept;
+  int acc;
   
   le = log(*((*last).e0));
   // proposal var is actually inverse variance
@@ -44,6 +46,8 @@ void metropolis_le0(struct str_state* last,    // OUT+IN last known values of ge
   logple0(last, param, 
          G, Gplus, n, nUg,
          &le, &loglik);
+  
+  *accept = 0.0;
   
   for(j = 0; j < *((*tuning).times_proposal); j++){
     //// Sample proposal as current value + N(0, var * const_propsal^2)
@@ -60,31 +64,35 @@ void metropolis_le0(struct str_state* last,    // OUT+IN last known values of ge
     log_accept_prob = loglik_new - loglik;
     
     // Do we accept proposal?
-    accept = 0;
+    acc = 0;
     if(log_accept_prob > 0){
       // definitely accept this proposal
       //accept_prob = 1.0;
-      accept = 1;
-      //printf("\naccept = %d", accept);
+      acc = 1;
+      //printf("\naccept = %d", acc);
       //fflush(stdout);
     }else{
       accept_prob = exp(log_accept_prob);
       // accept_prob lies within [0, 1] --> sample u from Unif[0,1]
       u = runif(0.0, 1.0);
       if(u < accept_prob){
-        accept = 1;
+        acc = 1;
       }// otherwise accept remains to be 0
-      //printf("\naccept_prob = %f, u = %f, accept = %d", accept_prob, u, accept);
+      //printf("\naccept_prob = %f, u = %f, acc = %d", accept_prob, u, acc);
       //fflush(stdout);
     }
     
     // If to be accepted switch le to proposal, last.e0 to exp of proposal and loglik
-    if(accept){
+    if(acc){
       le = proposal;
       *((*last).e0) = exp(proposal);
       loglik = loglik_new;
     }
     
+    // add the decision to acceptance
+    *accept += acc;
     // ... and continue with another proposals
   }
+  
+  *accept /= *((*tuning).times_proposal);
 }

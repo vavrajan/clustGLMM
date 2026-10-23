@@ -25,7 +25,9 @@ void metrgibbs_e0(struct str_state* last,    // OUT+IN last known values of gene
                   // Proposal distribution parameters
                   double* proposal_prec,      // IN+OUT[1] precision of proposal distribution for log(e0)
                   // Tuning parameters
-                  struct str_tuning* tuning
+                  struct str_tuning* tuning,      // tuning parameters
+                  // Acceptance parameters
+                  double* accept                  // matrix to save acceptance values
 ){
   int iter;
   int converged;
@@ -49,7 +51,9 @@ void metrgibbs_e0(struct str_state* last,    // OUT+IN last known values of gene
                 // IN+OUT parameters
                 proposal_prec,
                 // Tuning parameters
-                tuning);
+                tuning,
+                // Acceptance parameters
+                accept);
 
   
 }

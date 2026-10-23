@@ -49,6 +49,7 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
                 int* nUg,               // IN [G] number of subjects in classes 1, ..., G
                 int* listUi,            // IN [n*G] row by row indices of subjects in group g
                 double* theta,          // IN+OUT [dims[.]] theta from which we start the random walk
+                double* acceptance,     // OUT [1] value in interval [0, 1] containing the ratio of accepted values out of tuning.times_proposal
                 //double* loglik,         // IN+OUT [1] the value of maximized log-likelihood
                 double* proposal_chol,  // IN [dims[.] * (dims[.]+1) / 2]
                 // Functions used

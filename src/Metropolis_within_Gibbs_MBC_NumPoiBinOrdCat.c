@@ -208,6 +208,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
     void* void_Gplus,        // [B+M]                        number of non-empty clusters
     void* void_e0,           // [B+M]                        precision parameter for prior of w
     void* void_naY,          // [(B+M)*sum(isYna)(* G)]      imputed missing outcome values
+    void* void_accept,       // [(B+M)*dim_accept.total]     matrix for accept values
     // Tuning parameters
     void* void_vectuningdouble,  // [11]
     void* void_vectuninginteger  // [5]
@@ -274,6 +275,7 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   int*    Gplus        = (int*)void_Gplus;
   double* e0           = (double*)void_e0;
   double* naY          = (double*)void_naY;
+  double* accept       = (double*)void_accept;
   double* vectuningdouble       = (double*)void_vectuningdouble;
   int*    vectuninginteger      = (int*)void_vectuninginteger;
   //// Declarations ////
@@ -1085,6 +1087,101 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
   //printf("\nC: Last state prepared");
   //fflush(stdout);
   
+  ////------------------------------////
+  //// Inicialization of acceptance ////
+  ////------------------------------////
+  
+  struct str_accept dim_accept; // structure for parameter acceptance rates in one sampling iteration
+  
+  // int nacceptance = 0;
+  int nbeta_poi_fix = 0;
+  int nbeta_poi = 0;
+  int nbeta_bin_fix = 0;
+  int nbeta_bin = 0;
+  int nbeta_ord_fix = 0;
+  int nbeta_ord = 0;
+  int na_ord = nY[3];
+  int nbeta_cat_fix = 0;
+  int nbeta_cat = 0;
+  
+  if(varying[1]){
+    na_ord *= (*G);
+  }
+  for(i = nY[0]; i < nY[0]+nY[1]; i++){
+    if(nfix[i] > 0){
+      nbeta_poi_fix++;
+    }
+    if(ngrp[i] > 0){
+      nbeta_poi++;
+    }
+  }
+  for(i = nY[0]+nY[1]; i < nY[0]+nY[1]+nY[2]; i++){
+    if(nfix[i] > 0){
+      nbeta_bin_fix++;
+    }
+    if(ngrp[i] > 0){
+      nbeta_bin++;
+    }
+  }
+  for(i = nY[0]+nY[1]+nY[2]; i < nY[0]+nY[1]+nY[2]+nY[3]; i++){
+    if(nfix[i] > 0){
+      nbeta_ord_fix++;
+    }
+    if(ngrp[i] > 0){
+      nbeta_ord++;
+    }
+  }
+  for(i = nY[0]+nY[1]+nY[2]+nY[3]; i < nY[0]+nY[1]+nY[2]+nY[3]+nY[4]; i++){
+    if(nfix[i] > 0){
+      nbeta_cat_fix++;
+    }
+    if(ngrp[i] > 0){
+      nbeta_cat++;
+    }
+  }
+  
+  dim_accept.e0 = 0;
+  dim_accept.beta_poi_fix = dim_accept.e0 + 1;
+  dim_accept.beta_poi = dim_accept.beta_poi_fix + nbeta_poi_fix;
+  dim_accept.beta_bin_fix = dim_accept.beta_poi + nbeta_poi * (*G);
+  dim_accept.beta_bin = dim_accept.beta_bin_fix + nbeta_bin_fix;
+  dim_accept.beta_ord_fix = dim_accept.beta_bin + nbeta_bin * (*G);
+  dim_accept.beta_ord = dim_accept.beta_ord_fix + nbeta_ord_fix;
+  dim_accept.a_ord = dim_accept.beta_ord + nbeta_ord * (*G);
+  dim_accept.beta_cat_fix = dim_accept.a_ord + na_ord;
+  dim_accept.beta_cat = dim_accept.beta_cat_fix + nbeta_cat_fix;
+  dim_accept.b = dim_accept.beta_cat + nbeta_cat * (*G);
+  dim_accept.total = dim_accept.b;
+  if(dimswithG[24] > 0){
+    dim_accept.total += (*n);
+  }
+  
+  /*
+  acceptance.e0           = pp;      pp++; // dim is always 1 double
+  nacceptance++;
+  
+  acceptance.beta_poi_fix = pp;      pp+=nbeta_poi_fix;
+  acceptance.beta_poi     = pp;      pp+=nbeta_poi * (*G);
+  nacceptance += nbeta_poi_fix + nbeta_poi * (*G);
+  
+  acceptance.beta_bin_fix = pp;      pp+=nbeta_bin_fix;
+  acceptance.beta_bin     = pp;      pp+=nbeta_bin * (*G);
+  nacceptance += nbeta_bin_fix + nbeta_bin * (*G);
+  
+  acceptance.beta_ord_fix = pp;      pp+=nbeta_ord_fix;
+  acceptance.beta_ord     = pp;      pp+=nbeta_ord * (*G);
+  acceptance.a_ord        = pp;      pp+=na_ord;
+  nacceptance += nbeta_ord_fix + nbeta_ord * (*G) + na_ord;
+  
+  acceptance.beta_cat_fix = pp;      pp+=nbeta_cat_fix;
+  acceptance.beta_cat     = pp;      pp+=nbeta_cat * (*G);
+  nacceptance += nbeta_cat_fix + nbeta_cat * (*G);
+  
+  acceptance.b            = pp;      pp+=(*n);
+  nacceptance += (*n);
+  */
+  
+  
   
   ////----------------------------------////
   //// Proposal distribution parameters ////
@@ -1510,7 +1607,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                        n_i, i_j, nUg, listUi, 
                        prop_beta_poi_fix, prop_chol_beta_poi_fix, cumdim_prop_beta_poi_fix, &totdim_prop_beta_poi_fix,
                        prop_beta_poi, prop_chol_beta_poi, cumdim_prop_beta_poi, &totdim_prop_beta_poi,
-                       &m, &tuning 
+                       &m, &tuning,
+                       accept + m * dim_accept.total + dim_accept.beta_poi_fix
     );
     
     // Saving sample beta_poi_fix and beta_poi
@@ -1540,7 +1638,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                        n_i, i_j, nUg, listUi, 
                        prop_beta_bin_fix, prop_chol_beta_bin_fix, cumdim_prop_beta_bin_fix, &totdim_prop_beta_bin_fix,
                        prop_beta_bin, prop_chol_beta_bin, cumdim_prop_beta_bin, &totdim_prop_beta_bin,
-                       &m, &tuning 
+                       &m, &tuning,
+                       accept + m * dim_accept.total + dim_accept.beta_bin_fix
     );
     
     // Saving sample beta_bin_fix and beta_bin
@@ -1572,7 +1671,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                        n_i, i_j, nUg, listUi, 
                        prop_beta_ord_fix, prop_chol_beta_ord_fix, cumdim_prop_beta_ord_fix, &totdim_prop_beta_ord_fix,
                        prop_beta_ord, prop_chol_beta_ord, cumdim_prop_beta_ord, &totdim_prop_beta_ord,
-                       &m, &tuning 
+                       &m, &tuning,
+                       accept + m * dim_accept.total + dim_accept.beta_ord_fix
     );
     
     // Saving sample beta_ord_fix and beta_ord
@@ -1598,7 +1698,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                     nfix, cumnfix, FormulaF,
                     n_i, i_j, nUg, listUi,
                     prop_a_ord, prop_chol_a_ord, cumdim_prop_a_ord, &totdim_prop_a_ord,
-                    &m, &tuning 
+                    &m, &tuning,
+                    accept + m * dim_accept.total + dim_accept.a_ord
     );
     
     // Saving a_ord
@@ -1668,7 +1769,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                        n_i, i_j, nUg, listUi, 
                        prop_beta_cat_fix, prop_chol_beta_cat_fix, cumdim_prop_beta_cat_fix, &totdim_prop_beta_cat_fix,
                        prop_beta_cat, prop_chol_beta_cat, cumdim_prop_beta_cat, &totdim_prop_beta_cat,
-                       &m, &tuning 
+                       &m, &tuning,
+                       accept + m * dim_accept.total + dim_accept.beta_cat_fix 
     );
     
     // Saving sample beta_cat_fix and beta_cat
@@ -1733,7 +1835,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                    //loglik_last_bi, 
                    // Tuning parameters
                    lag_proposal_bi, 
-                   &tuning
+                   &tuning,
+                   accept + m * dim_accept.total + dim_accept.b
       );
       
       // Saving sampled bi
@@ -1843,7 +1946,8 @@ void Metropolis_within_Gibbs_MBC_NumPoiBinOrdCat(
                  G, &Gp, n, nUg, &m,
                  &e0_prop_prec,
                  // Tuning parameters
-                 &tuning
+                 &tuning,
+                 accept + m * dim_accept.total + dim_accept.e0
     );
     
     // Saving sampled e0

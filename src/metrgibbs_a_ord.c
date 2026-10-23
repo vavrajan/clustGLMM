@@ -71,7 +71,9 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
                      int* totdim_prop_a_ord,      // IN [1] total dimension of chol matrices (per one cluster)
                      int* m,                         // IN [1] number of the step (to decide whether to update proposal distribution)
                      // Tuning parameters
-                     struct str_tuning* tuning       // tuning parameters
+                     struct str_tuning* tuning,      // tuning parameters
+                     // Acceptance parameters
+                     double* accept                  // matrix to save acceptance values
 ){
   int y, g;
   int iter;
@@ -89,6 +91,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
   for(y = 0; y < nY[3]; y++){
     cumKord[y+1] = cumKord[y] + Kord[y]; 
   }
+  int ay = 0;
   
   if(spec[1]){
     // a_ord is group-specific
@@ -125,6 +128,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
                    Kord+y, cumnfix+shift_nY, cumKord+y, FormulaF, // instead of totnran --> cumKord
                    n_i, i_j, nUg, listUi, 
                    (*last).a_ord + a_ord_dim, // theta_0
+                   accept + ay, // acceptance matrix
                    prop_chol_a_ord + cumdim_prop_a_ord[y] + *totdim_prop_a_ord * g, // 
                    // Functions used
                    logpapi_ord,
@@ -134,6 +138,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
         
         a_ord_dim += Kord[y];
         shift_nY++;
+        ay++;
       }
       
     }
@@ -171,6 +176,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
                  Kord+y, cumnfix+shift_nY, cumKord+y, FormulaF, // instead of totnran --> cumKord
                  n_i, i_j, nUg, listUi, 
                  (*last).a_ord + a_ord_dim, // theta_0
+                 accept + ay, // acceptance matrix
                  prop_chol_a_ord + cumdim_prop_a_ord[y], // 
                  // Functions used
                  logpapi_ord,
@@ -180,6 +186,7 @@ void metrgibbs_a_ord(struct str_state* last,   // OUT+IN last known values of ge
       
       a_ord_dim += Kord[y];
       shift_nY++;
+      ay++;
     }
   }
   

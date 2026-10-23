@@ -1062,6 +1062,8 @@ Therefore, the given outcomes are considered independent. ")
   mcmc$param_names <- list()
   mcmc$effect_names <- list()
   lsettings <- list()
+  dim_accept <- list()
+  nam_accept <- list()
   
   for(ch in 1:nchains){
     lsettings[[ch]] <- settings 
@@ -1093,6 +1095,7 @@ Therefore, the given outcomes are considered independent. ")
     param_names <- unlist(mcmc$param_names[[ch]], use.names = F)
     effect_names <- rep("", length(param_names))
     names(effect_names) <- param_names
+    mcmc$accept <- list()
     
     ## fixed and group effects parameters
     for(y in names(sorted_family)){
@@ -1161,6 +1164,64 @@ Therefore, the given outcomes are considered independent. ")
     
     mcmc$effect_names[[ch]] <- effect_names
     
+    # dimensions and colnames of acceptance matrix
+    dim_accept[[ch]] <- c(e0 = 1,
+                          beta_poi_fix = sum(nfix[Pois] > 0),
+                          beta_poi = sum(ngrp[Pois] > 0) * G[ch],
+                          beta_bin_fix = sum(nfix[Bins] > 0),
+                          beta_bin = sum(ngrp[Bins] > 0) * G[ch],
+                          beta_ord_fix = sum(nfix[Ords] > 0),
+                          beta_ord = sum(ngrp[Ords] > 0) * G[ch],
+                          a_ord = length(Ords) * ifelse(unname(varying["c_ord"]), G[ch], 1),
+                          beta_cat_fix = sum(nfix[Cats] > 0),
+                          beta_cat = sum(ngrp[Cats] > 0) * G[ch],
+                          b = (totnran > 0) * n,
+                          total = 0)
+    dim_accept[[ch]]["total"] <- sum(dim_accept[[ch]], na.rm = T)
+    cumdims <- cumsum(dim_accept[[ch]])
+    
+    nam_accept[[ch]] <- character(dim_accept[[ch]]["total"])
+    nam_accept[[ch]][1] <- "e0"
+    if(dim_accept[[ch]]["beta_poi_fix"] > 0){
+      nam_accept[[ch]][2:cumdims["beta_poi_fix"]] <- paste0("beta_poi_fix_", Ords[nfix[Pois] > 0])
+    }
+    if(dim_accept[[ch]]["beta_poi"] > 0){
+      nam_accept[[ch]][(cumdims["beta_poi_fix"]+1):cumdims["beta_poi"]] <- paste0(rep(paste0("beta_poi_", Ords[ngrp[Pois] > 0]), each = G[ch]),
+                                                                                  rep(paste0("(", 1:G[ch], ")"), sum(ngrp[Pois] > 0)))
+    }
+    if(dim_accept[[ch]]["beta_bin_fix"] > 0){
+      nam_accept[[ch]][(cumdims["beta_poi"]+1):cumdims["beta_bin_fix"]] <- paste0("beta_bin_fix_", Bins[nfix[Bins] > 0])
+    }
+    if(dim_accept[[ch]]["beta_bin"] > 0){
+      nam_accept[[ch]][(cumdims["beta_bin_fix"]+1):cumdims["beta_bin"]] <- paste0(rep(paste0("beta_bin_", Bins[ngrp[Bins] > 0]), each = G[ch]),
+                                                                                  rep(paste0("(", 1:G[ch], ")"), sum(ngrp[Bins] > 0)))
+    }
+    if(dim_accept[[ch]]["beta_ord_fix"] > 0){
+      nam_accept[[ch]][(cumdims["beta_bin"]+1):cumdims["beta_ord_fix"]] <- paste0("beta_ord_fix_", Ords[nfix[Ords] > 0])
+    }
+    if(dim_accept[[ch]]["beta_ord"] > 0){
+      nam_accept[[ch]][(cumdims["beta_ord_fix"]+1):cumdims["beta_ord"]] <- paste0(rep(paste0("beta_ord_", Ords[ngrp[Ords] > 0]), each = G[ch]),
+                                                                                  rep(paste0("(", 1:G[ch], ")"), sum(ngrp[Ords] > 0)))
+    }
+    if(dim_accept[[ch]]["a_ord"] > 0){
+      if(varying["c_ord"]){
+        nam_accept[[ch]][(cumdims["beta_ord"]+1):cumdims["a_ord"]] <- paste0(rep(paste0("a_ord_", Ords), each = G[ch]),
+                                                                             rep(paste0("(", 1:G[ch], ")"), length(Ords)))
+      }else{
+        nam_accept[[ch]][(cumdims["beta_ord"]+1):cumdims["a_ord"]] <- paste0("a_ord_", Ords)
+      }
+    }
+    if(dim_accept[[ch]]["beta_cat_fix"] > 0){
+      nam_accept[[ch]][(cumdims["a_ord"]+1):cumdims["beta_cat_fix"]] <- paste0("beta_cat_fix_", Cats[nfix[Cats] > 0])
+    }
+    if(dim_accept[[ch]]["beta_cat"] > 0){
+      nam_accept[[ch]][(cumdims["beta_cat_fix"]+1):cumdims["beta_cat"]] <- paste0(rep(paste0("beta_ord_", Cats[ngrp[Cats] > 0]), each = G[ch]),
+                                                                                  rep(paste0("(", 1:G[ch], ")"), sum(ngrp[Cats] > 0)))
+    }
+    if(dim_accept[[ch]]["b"] > 0){
+      nam_accept[[ch]][(cumdims["beta_cat"]+1):cumdims["b"]] <- paste0("b[", 1:n, "]")
+    }
+    
   }
 
   mcmc$draws <- list()
@@ -1198,6 +1259,7 @@ Therefore, the given outcomes are considered independent. ")
         }
       }
     }
+    cstore$accept <- double(iter * dim_accept[[ch]]["total"])
 
     ## initial values for chain ch
     initsch <- inits[[ch]]
@@ -1396,6 +1458,7 @@ Therefore, the given outcomes are considered independent. ")
          Gplus       = cstore$Gplus,
          e0          = cstore$e0,
          naY         = cstore$naY,
+         accept      = cstore$accept,
          # Tuning parameters
          vectuningdouble  = as.double(unlist(ctuning$double)),
          vectuninginteger = as.integer(unlist(ctuning$integer)),
@@ -1756,6 +1819,12 @@ Therefore, the given outcomes are considered independent. ")
       }
       message(paste0("Saving chain ", ch, " is completed.\n"))
     }
+    
+    # Acceptance
+    mcmc$accept[[ch]] <- matrix(cmcmc$accept, nrow = iter, byrow = T)
+    mcmc$accept[[ch]] <- as.data.frame(cbind(mcmc$draws[[ch]][,"m"], mcmc$accept[[ch]]))
+    colnames(mcmc$accept[[ch]]) <- c("m", nam_accept[[ch]])
+    
   } # end of chain
   message("All chains have been sampled.\n")
 
@@ -1840,6 +1909,8 @@ Therefore, the given outcomes are considered independent. ")
   mcmc$inits <- inits
   mcmc$last <- last
   mcmc$InitType <- ifelse(initsgiven, "given", "created")
+  
+  mcmc$dim_accept <- dim_accept
 
   mcmc$call <- c("###------------------------------------------------------------###\n")
   mcmc$call <- paste0(mcmc$call, "### Model Based Clustering for Generalized Linear Mixed Models ###\n")

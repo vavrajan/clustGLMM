@@ -79,5 +79,36 @@ struct str_state {
   double* naY;          // [sum(isYna)(*G)]           Imputed missing outcome values
   double* detInvSigma;  // [1 (*G)]                   determinant of InvSigma (calculable parameter)
 };
+/*
+struct str_accept {
+  double* e0;           // [1]         Precision parameter for prior of w
+  double* beta_poi_fix; // [nY[1]]     Beta parameters for fixed effects of Pois
+  double* beta_poi;     // [nY[1] *G]  Beta parameters for group-specific effects of Pois
+  double* beta_bin_fix; // [nY[2]]     Beta parameters for fixed effects of Bins
+  double* beta_bin;     // [nY[2] *G]  Beta parameters for group-specific effects of Bins
+  double* beta_ord_fix; // [nY[3]]     Beta parameters for fixed effects of Ords
+  double* beta_ord;     // [nY[3] *G]  Beta parameters for group-specific effects of Ords
+  double* a_ord;        // [nY[3](*G)  Non-constrained transformed intercepts of Ords
+  double* beta_cat_fix; // [nY[4]]     Beta parameters for fixed effects of Cats
+  double* beta_cat;     // [nY[4] *G]  Beta parameters for group-specific effects of Cats
+  double* b;            // [n]         Random effects
+};
+*/
+
+struct str_accept {
+  // where in the accept matrix starts this parameter
+  int e0;           // [1]  Precision parameter for prior of w
+  int beta_poi_fix; // [1]  Beta parameters for fixed effects of Pois
+  int beta_poi;     // [1]  Beta parameters for group-specific effects of Pois
+  int beta_bin_fix; // [1]  Beta parameters for fixed effects of Bins
+  int beta_bin;     // [1]  Beta parameters for group-specific effects of Bins
+  int beta_ord_fix; // [1]  Beta parameters for fixed effects of Ords
+  int beta_ord;     // [1]  Beta parameters for group-specific effects of Ords
+  int a_ord;        // [1]  Non-constrained transformed intercepts of Ords
+  int beta_cat_fix; // [1]  Beta parameters for fixed effects of Cats
+  int beta_cat;     // [1]  Beta parameters for group-specific effects of Cats
+  int b;            // [1]  Random effects
+  int total;        // [1]  Total dimension of acceptance
+};
 
 #endif

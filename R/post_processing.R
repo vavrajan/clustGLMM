@@ -330,7 +330,6 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
   }
   res$param_names <- param_names
   
-  # TODO
   # inits, last? 
   # iter? the same --> will be always the maximum value
   # res$post_processed <- TRUE
@@ -734,6 +733,49 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
     } # end of else m==0
   } # end for chain in mcmc$chains
   res$last <- last
+  
+  
+  # Proposal acceptances 
+  accept <- list()
+  dim_accept <- mcmc$dim_accept
+  
+  for(ch in mcmc$chains){
+    agcols <- colnames(accept[[ch]])[grep("\\(\\d+\\)", colnames(accept[[ch]]))]
+    accept[[ch]] <- mcmc$accept[[ch]][,setdiff(colnames(mcmc$accept[[ch]]), agcols)]
+
+    if(length(agcols) > 0){
+      suball <- mcmc$accept[[ch]][inds[[ch]], agcols]
+      cnames <- agcols[grep("\\(1\\)", agcols)]
+      ag <- matrix(NA, nrow = iters[ch], ncol = mcmc$modeGplus[ch]*length(cnames))
+      allcnames <- c()
+      for(g in 1:mcmc$modeGplus[ch]){
+        allcnames <- c(allcnames, gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames))
+      }
+      colnames(ag) <- allcnames
+      
+      for(m in 1:iters[ch]){
+        if(ispermutation[[ch]][m]){
+          expr <- paste(paste0("\\(", whichG[[ch]][m,], "\\)"), collapse = "|")
+          subcols <- agcols[grep(expr, agcols)]
+          auxrow <- unlist(suball[m,subcols,drop=FALSE])
+          for(g in 1:mcmc$modeGplus[ch]){
+            gnames <- gsub("\\(1\\)", paste0("\\(",whichG[[ch]][m,g],"\\)"), cnames)
+            pnames <- gsub("\\(1\\)", paste0("\\(",indmat[[ch]][m,g],"\\)"), cnames)
+            ag[m,pnames] <- auxrow[gnames]
+          }
+        }else{
+          # remains NA
+        }
+      }
+      accept[[ch]] <- as.data.frame(cbind(accept[[ch]], ag))
+      for(p in c("beta_poi", "beta_bin", "beta_ord", "a_ord", "beta_cat")){
+        dim_accept[[ch]][p] <- dim_accept[[ch]][p] / mcmc$G[ch] * mcmc$modeGplus[ch]
+      }
+    }
+  } # end for chain in mcmc$chains
+  
+  res$accept <- accept
+  res$dim_accept <- dim_accept
   
   # call
   call <- c("###------------------------------------------###\n")

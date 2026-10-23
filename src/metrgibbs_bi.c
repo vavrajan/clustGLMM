@@ -80,7 +80,9 @@ void metrgibbs_bi(struct str_state* last,   // OUT+IN last known values of gener
                   //double* loglik_last_bi, // OUT [n] loglikelihood under current beta_cat 
                   // Tuning parameters
                   int* lag_proposal_bi,           // [n] if 0, then we should update the distribution
-                  struct str_tuning* tuning       // tuning parameters
+                  struct str_tuning* tuning,      // tuning parameters
+                  // Acceptance parameters
+                  double* accept                  // matrix to save acceptance values
 ){
   
   int y, i, k;
@@ -134,6 +136,7 @@ void metrgibbs_bi(struct str_state* last,   // OUT+IN last known values of gener
                nran, cumnran, totnran, FormulaR, 
                n_i, i_j, nUg, listUi, 
                (*last).b + *totnran * i, // theta_0
+               accept + i, // acceptance matrix
                prop_chol_bi + *totnran*(*totnran+1)/2 * i,
                // Functions used
                logpbi,

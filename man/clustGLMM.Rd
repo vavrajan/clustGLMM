@@ -112,6 +112,7 @@ The algorithm also requires a set of tuning parameters in \code{tuning} that tun
  An object of class \code{"clustglmm"} where the most important elements contained are:
 \item{draws}{a list indexed by chain with generated samples saved either in a large data.frame (\code{howsave = "data.frame"}) or a carefully structured list (\code{howsave = "list"}).}
 \item{param_names}{individual parameter (column) names in a structured list by general parameter name.}
+\item{accept}{a list indexed by chain with a \code{data.frame} of proposal acceptances with values in interval [0, 1] (could be inbetween if multiple proposals per step are considered by \code{tuning$integer$times_proposal}).}
 
 In addition the object contains the inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}, \code{standardize}.
 
@@ -125,6 +126,7 @@ Furthermore elements consisting of newly defined quantities are:
 \item{inits}{a structured list of parameter values used as initial values,}
 \item{last}{a structured list in the same format as \code{inits} to be used as initial values for additional sampling,}
 \item{InitType}{string describing whether the initial values were given or created,} 
+\item{dim_accept}{a list contaning a vector of \code{accept} dimensions per parameter for each chain,} 
 \item{call}{summary of what has been fitted,}
 \item{iter}{length of each sampled chain,}
 \item{n}{total number of units (unique IDs),}

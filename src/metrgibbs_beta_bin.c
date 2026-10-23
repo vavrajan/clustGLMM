@@ -85,7 +85,9 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
                         int* totdim_prop_beta_bin,      // IN [1] total dimension of chol matrices (per one cluster)
                         int* m,                         // IN [1] number of the step (to decide whether to update proposal distribution)
                         // Tuning parameters
-                        struct str_tuning* tuning       // tuning parameters
+                        struct str_tuning* tuning,      // tuning parameters
+                        // Acceptance parameters
+                        double* accept                  // matrix to save acceptance values
 ){
   //printf("\nmetrgibbs_beta_poi: Ahoj");
   //fflush(stdout);
@@ -99,6 +101,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
   int pred_skip;
   int kspec_bi_cat = 0;
   int beta_dim;
+  int ay;
   
   ////------------------------------////
   //// Fixed effects - beta_bin_fix ////
@@ -106,6 +109,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
   pred_skip = 0;
   beta_dim = 0;
   shift_nY = nY[0]+nY[1];
+  ay = 0;
   
   for(y = 0; y < nY[2]; y++){
     // UPDATE AND PROPOSE ONLY WHEN THERE IS SOMETHING TO BE PROPOSED!
@@ -139,6 +143,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
                  nfix+shift_nY, cumnfix+shift_nY, totnran, FormulaF, // use totnran - not used anyway
                  n_i, i_j, nUg, listUi, 
                  (*last).beta_bin_fix + beta_dim, // theta_0
+                 accept + ay, // acceptance matrix
                  prop_chol_beta_bin_fix + cumdim_prop_beta_bin_fix[y], // 
                  // Functions used
                  logpbeta_bin,
@@ -147,6 +152,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
       );
       
       beta_dim += nfix[shift_nY];
+      ay++;
     } // end of if nfix>0
     shift_nY++;
   }
@@ -222,6 +228,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
                    ngrp+shift_nY, cumngrp+shift_nY, totnran, FormulaG, // use totnran - not used anyway
                    n_i, i_j, nUg, listUi, 
                    (*last).beta_bin + beta_dim, // theta_0
+                   accept + ay, // acceptance matrix
                    prop_chol_beta_bin + cumdim_prop_beta_bin[y] + *totdim_prop_beta_bin * g, // 
                    // Functions used
                    logpbeta_bin,
@@ -230,6 +237,7 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
         );
         
         beta_dim += ngrp[shift_nY];
+        ay++;
       } // end of if nfix>0
       shift_nY++;
     } // end of for y

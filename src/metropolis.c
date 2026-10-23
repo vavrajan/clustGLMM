@@ -60,6 +60,7 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
                 int* nUg,               // IN [G] number of subjects in classes 1, ..., G
                 int* listUi,            // IN [n*G] row by row indices of subjects in group g
                 double* theta,          // IN+OUT [dims[.]] theta from which we start the random walk
+                double* acceptance,     // OUT [1] value in interval [0, 1] containing the ratio of accepted values out of tuning.times_proposal
                 //double* loglik,         // IN+OUT [1] the value of maximized log-likelihood
                 double* proposal_chol,  // IN [dims[.] * (dims[.]+1) / 2]
                 // Functions used
@@ -104,6 +105,8 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
   double u;
   double koefchi = 1.0;
   int accept;
+  
+  *acceptance = 0.0;
   
   //printf("\nmetropolis: nfix = %d, Kcat = %d, dim_theta = %d", *nfix, *Kcat, dim_theta);
   //fflush(stdout);
@@ -184,8 +187,13 @@ void metropolis(struct str_state* last,   // IN last known values of generated p
         theta[k] = theta_new[k];
       }
       loglik = loglik_new;
+      
     }
     
+    // add the decision to acceptance
+    *acceptance += accept;
     // ... and continue with another proposals
   }
+  
+  *acceptance /= *((*tuning).times_proposal);
 }

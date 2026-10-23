@@ -66,7 +66,9 @@ void metrgibbs_beta_bin(struct str_state* last,   // OUT+IN last known values of
                         int* totdim_prop_beta_bin,      // IN [1] total dimension of chol matrices (per one cluster)
                         int* m,                         // IN [1] number of the step (to decide whether to update proposal distribution)
                         // Tuning parameters
-                        struct str_tuning* tuning       // tuning parameters
+                        struct str_tuning* tuning,      // tuning parameters
+                        // Acceptance parameters
+                        double* accept                  // matrix to save acceptance values
 );
   
 #endif
