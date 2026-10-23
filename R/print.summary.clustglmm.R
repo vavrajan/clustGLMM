@@ -60,7 +60,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "accept", "inv_param", 
       cat(paste0("Thinning interval = ", x$coda_summary[[ch]]$thin, "\n"))
       cat(paste0("Number of chains = ", x$coda_summary[[ch]]$nchain, "\n"))
       cat(paste0("Sample size per chain = ", ceiling((x$coda_summary[[ch]]$end - x$coda_summary[[ch]]$start+1) / x$coda_summary[[ch]]$nchain), "\n"))
-      cat(paste0("Overall acceptance: ", format(100*mean(colMeans(mcmc$accept[[ch]]), na.rm = TRUE), digits = 4), "% \n"))
+      cat(paste0("Overall acceptance: ", format(100*mean(x$accept_summary[[ch]]$cmeans, na.rm = TRUE), digits = 4), "% \n"))
     }
     
     if(is.element("accept", which)){

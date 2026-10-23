@@ -59,7 +59,7 @@ summary.clustglmm <- function(object, ...) {
                100*mean(x[(breaks[2]+1):breaks[3],], na.rm = TRUE),
                100*mean(x[(breaks[3]+1):breaks[4],], na.rm = TRUE),
                100*mean(x[(breaks[4]+1):n,], na.rm = TRUE),
-               mean(x, na.rm = TRUE)
+               100*mean(x, na.rm = TRUE)
                ))
     }))
     colnames(accept_summary[[ch]]$means_joined) <- c(
