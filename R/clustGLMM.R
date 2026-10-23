@@ -1822,8 +1822,8 @@ Therefore, the given outcomes are considered independent. ")
     
     # Acceptance
     mcmc$accept[[ch]] <- matrix(cmcmc$accept, nrow = iter, byrow = T)
-    mcmc$accept[[ch]] <- as.data.frame(cbind(mcmc$draws[[ch]][,"m"], mcmc$accept[[ch]]))
-    colnames(mcmc$accept[[ch]]) <- c("m", nam_accept[[ch]])
+    mcmc$accept[[ch]] <- as.data.frame(mcmc$accept[[ch]])
+    colnames(mcmc$accept[[ch]]) <- nam_accept[[ch]]
     
   } # end of chain
   message("All chains have been sampled.\n")
@@ -2007,6 +2007,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$call <- paste0(mcmc$call, "\nMCMC sampling: \n")
   mcmc$call <- paste0(mcmc$call, "nchains = number of sampled chains: ", nchains, "\n")
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")
+  mcmc$call <- paste0(mcmc$call, "Overll acceptance: ", iter, "\n") 
   mcmc$call <- paste0(mcmc$call, ifelse(initsgiven, 
                                         "Initialized with given values.", 
                                         "Initialized by a random partition."),
