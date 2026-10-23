@@ -46,6 +46,7 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
   Depending on what is selected with the \code{which} argument, the following summaries are printed:
   \describe{
     \item{mcmc}{an overview of the sampled chains,}
+    \item{accept}{an evolution (samples divided into 5 segments) of the average propoposal acceptance grouped by parameter type,}
     \item{clustering}{a summary of the clustering,}
     \item{inv_param}{cluster-invariant parameters,}
     \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w}),}
@@ -82,7 +83,8 @@ other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}})
   \item{gnames}{cluster-specific parameter names only for cluster 1,}
   \item{lnames}{latent variable names (allocation indicators, random effects, missing values),}
   \item{cnames}{clustering related parameter names,}
-  \item{effect_names}{details on each model parameter to be added to summary table if \code{max_nchar_details > 3}.}
+  \item{effect_names}{details on each model parameter to be added to summary table if \code{max_nchar_details > 3},
+  \item{accept_summary}{a list of column means and standard deviations of \code{object$accept} and evolution of grouped average acceptance by parameter names, again each chain separately.}
 }
 \references{
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5

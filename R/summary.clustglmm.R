@@ -3,7 +3,7 @@ summary.clustglmm <- function(object, ...) {
   coda <- as_coda(object, ...)
   
   # computes necessary outputs for summary
-  coda_summary <- fnames <- gnames <- cnames <- lnames <- list()
+  coda_summary <- accept_summary <- fnames <- gnames <- cnames <- lnames <- list()
   for (ch in object$chains) {
     if (anyNA(coda[[ch]])) {
       stats <- data.frame(Mean = apply(coda[[ch]], 2, mean, na.rm = TRUE),
@@ -45,6 +45,27 @@ summary.clustglmm <- function(object, ...) {
       
       cnames[[ch]] <- c("Gplus", "e0", paste0("w(", 1:object$G[ch], ")"))
     }
+    
+    accept_summary[[ch]] <- list()
+    accept_summary[[ch]]$cmeans <- colMeans(object$accept[[ch]], na.rm = TRUE)
+    accept_summary[[ch]]$csds <- apply(object$accept[[ch]], 2, sd, na.rm = TRUE)
+    begin_cols <- gsub("[([\\[].*$", "", colnames(object$accept[[ch]]))
+    fcol <- factor(begin_cols, levels = unique(begin_cols))
+    accept_summary[[ch]]$means_joined <- t(sapply(split.default(object$accept[[ch]], fcol), function(x){
+      x <- as.matrix(x)
+      n <- nrow(x)
+      breaks <- floor(seq(0,1,by=0.2)*n)
+      return(c(100*mean(x[(breaks[1]+1):breaks[2],], na.rm = TRUE),
+               100*mean(x[(breaks[2]+1):breaks[3],], na.rm = TRUE),
+               100*mean(x[(breaks[3]+1):breaks[4],], na.rm = TRUE),
+               100*mean(x[(breaks[4]+1):breaks[5],], na.rm = TRUE),
+               100*mean(x[(breaks[5]+1):n,], na.rm = TRUE),
+               mean(x, na.rm = TRUE)
+               ))
+    }))
+    colnames(accept_summary[[ch]]$means_joined) <- c(
+      "Mean[0-20]%", "Mean[20-40]%", "Mean[40-60]%", 
+      "Mean[60-80]%", "Mean[80-100]%", "Mean %")
   }
   
   res <- list(call = object$call,
@@ -59,7 +80,8 @@ summary.clustglmm <- function(object, ...) {
               gnames = gnames,
               lnames = lnames,
               cnames = cnames,
-              effect_names = object$effect_names)
+              effect_names = object$effect_names,
+              accept_summary = accept_summary)
   
   class(res) <- "summary.clustglmm"
   return(res)

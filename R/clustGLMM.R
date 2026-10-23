@@ -2007,7 +2007,7 @@ All rows in the data are assumed to be independent as well as outcomes among the
   mcmc$call <- paste0(mcmc$call, "\nMCMC sampling: \n")
   mcmc$call <- paste0(mcmc$call, "nchains = number of sampled chains: ", nchains, "\n")
   mcmc$call <- paste0(mcmc$call, "iter = length of the chain: ", iter, "\n")
-  mcmc$call <- paste0(mcmc$call, "Overll acceptance: ", iter, "\n") 
+  mcmc$call <- paste0(mcmc$call, "Overall acceptance: ", format(100*mean(unlist(mcmc$accept), na.rm = TRUE), digits = 4), "% \n") 
   mcmc$call <- paste0(mcmc$call, ifelse(initsgiven, 
                                         "Initialized with given values.", 
                                         "Initialized by a random partition."),
