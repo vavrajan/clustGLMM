@@ -164,6 +164,21 @@ permute_cluster_labels <-
       # clustering, clusters
       mcmc$clustering[, ch] <- sapply(mcmc$clustering[, ch], function(g){which(perm[[ch]] == g)})
       mcmc$clusters[[ch]] <- sort(sapply(mcmc$clusters[[ch]], function(g){which(perm[[ch]] == g)}))
+      # accept
+      aux <- mcmc$accept[[ch]]
+      cnames <- colnames(aux)[grep("\\(1\\)", colnames(aux))]
+      all_cnames <- c()
+      for(g in 1:mcmc$G[ch]){
+        all_cnames <- c(all_cnames, gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames))
+      }
+      auxcs <- aux[,all_cnames]
+      for(g in 1:mcmc$G[ch]){
+        pnames <- gsub("\\(1\\)", paste0("\\(",perm[[ch]][g],"\\)"), cnames)
+        gnames <- gsub("\\(1\\)", paste0("\\(",g,"\\)"), cnames)
+        aux[,gnames] <- auxcs[,pnames]
+      } 
+      mcmc$accept[[ch]] <- aux
+
     } # end for ch in mcmc$chains
     
     # sameclusters

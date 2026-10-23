@@ -740,8 +740,8 @@ function(mcmc, cols, iter.max = 200, nstart = 30){
   dim_accept <- mcmc$dim_accept
   
   for(ch in mcmc$chains){
-    agcols <- colnames(accept[[ch]])[grep("\\(\\d+\\)", colnames(accept[[ch]]))]
-    accept[[ch]] <- mcmc$accept[[ch]][,setdiff(colnames(mcmc$accept[[ch]]), agcols)]
+    agcols <- colnames(mcmc$accept[[ch]])[grep("\\(\\d+\\)", colnames(mcmc$accept[[ch]]))]
+    accept[[ch]] <- mcmc$accept[[ch]][inds[[ch]],setdiff(colnames(mcmc$accept[[ch]]), agcols)]
 
     if(length(agcols) > 0){
       suball <- mcmc$accept[[ch]][inds[[ch]], agcols]
