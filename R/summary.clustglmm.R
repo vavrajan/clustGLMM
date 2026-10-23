@@ -54,18 +54,17 @@ summary.clustglmm <- function(object, ...) {
     accept_summary[[ch]]$means_joined <- t(sapply(split.default(object$accept[[ch]], fcol), function(x){
       x <- as.matrix(x)
       n <- nrow(x)
-      breaks <- floor(seq(0,1,by=0.2)*n)
+      breaks <- floor(seq(0,1,by=0.25)*n)
       return(c(100*mean(x[(breaks[1]+1):breaks[2],], na.rm = TRUE),
                100*mean(x[(breaks[2]+1):breaks[3],], na.rm = TRUE),
                100*mean(x[(breaks[3]+1):breaks[4],], na.rm = TRUE),
-               100*mean(x[(breaks[4]+1):breaks[5],], na.rm = TRUE),
-               100*mean(x[(breaks[5]+1):n,], na.rm = TRUE),
+               100*mean(x[(breaks[4]+1):n,], na.rm = TRUE),
                mean(x, na.rm = TRUE)
                ))
     }))
     colnames(accept_summary[[ch]]$means_joined) <- c(
-      "Mean[0-20]%", "Mean[20-40]%", "Mean[40-60]%", 
-      "Mean[60-80]%", "Mean[80-100]%", "Mean %")
+      "Mean[0-25]%", "Mean[25-50]%", "Mean[50-75]%", 
+      "Mean[75-100]%", "Mean %")
   }
   
   res <- list(call = object$call,

@@ -64,8 +64,8 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "accept", "inv_param", 
     }
     
     if(is.element("accept", which)){
-      cat("Evolution of the proposal acceptance grouped and averaged by parameters")
-      cat("\n-----------------------------------------------------------------------")
+      cat("\nEvolution of the proposal acceptance grouped and averaged by parameters\n")
+      cat("-----------------------------------------------------------------------\n")
       print(x$accept_summary[[ch]]$means_joined)
     }
     
