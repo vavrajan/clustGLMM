@@ -1,6 +1,6 @@
-summary.clustglmm <- function(object, ...) {
+summary.clustglmm <- function(object, burnin = 0, thin = 1) {
   
-  coda <- as_coda(object, ...)
+  coda <- as_coda(object, burnin = burnin, thin = thin)
   
   # computes necessary outputs for summary
   coda_summary <- accept_summary <- fnames <- gnames <- cnames <- lnames <- list()
@@ -51,7 +51,8 @@ summary.clustglmm <- function(object, ...) {
     accept_summary[[ch]]$csds <- apply(object$accept[[ch]], 2, sd, na.rm = TRUE)
     begin_cols <- gsub("[([\\[].*$", "", colnames(object$accept[[ch]]))
     fcol <- factor(begin_cols, levels = unique(begin_cols))
-    accept_summary[[ch]]$means_joined <- t(sapply(split.default(object$accept[[ch]], fcol), function(x){
+    ithin <- seq(burnin+1, nrow(object$accept[[ch]]), by = thin)
+    accept_summary[[ch]]$means_joined <- t(sapply(split.default(object$accept[[ch]][ithin, ], fcol), function(x){
       x <- as.matrix(x)
       n <- nrow(x)
       breaks <- floor(seq(0,1,by=0.25)*n)

@@ -2,8 +2,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "accept", "inv_param", 
                                     chains = 1L, 
                                     clusters,
                                     pattern = "", 
-                                    max_nchar_details = 25, 
-                                    ...){
+                                    max_nchar_details = 25){
   
   stopifnot(length(which) >= 1,
             is.character(which),
@@ -88,7 +87,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "accept", "inv_param", 
     if(length(intersect(which, 
                         c("inv_param", "clust_param", "latent_param", "group_param"))
               ) > 0){
-      cat("Summary of the parameter estimates")
+      cat("\nSummary of the parameter estimates")
       cat("\n-----------------------------------------------------------------------")
 
       if(is.element("inv_param", which)){

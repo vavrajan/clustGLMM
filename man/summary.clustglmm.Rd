@@ -8,13 +8,19 @@ Compute the Summary Statistics of \code{clustGLMM} Output
 Computes and prints the summary statistics for objects of class \code{"clustglmm"}, the output from function \code{\link{clustGLMM}}.
 }
 \usage{
-\method{summary}{clustglmm}(object, ...)
+\method{summary}{clustglmm}(object, burnin = 0, thin = 1)
 \method{print}{summary.clustglmm}(x, which = c("mcmc", "inv_param", "clust_param"), chains = 1L, 
-      clusters, pattern = "", max_nchar_details = 25, ...)
+      clusters, pattern = "", max_nchar_details = 25)
 }
 \arguments{
   \item{object}{
 an object of class \code{"clustglmm"} (as returned by function \code{\link{clustGLMM}}).
+}
+  \item{burnin}{
+the length of burn-in period (default 0), i.e., the number of initial samples to omit.
+}
+  \item{thin}{
+thinning rate (default 1); only every \code{thin}th value is kept (must be a positive integer). 
 }
   \item{x}{
 an object of class \code{"summary.clustglmm"} (as returned by the \code{summary} method for \code{"clustglmm"} objects) .
@@ -36,9 +42,6 @@ parameter names to include in the summary, an empty string by default
   \item{max_nchar_details}{
 a maximal number of characters for details to be printed in the additional column, if longer the last three characters are replaced with "...".
 If lower than 4, then such column of details is not added.
-}
-  \item{...}{
-other arguments (such as \code{burnin} or \code{thin} for \code{\link{as_coda}}).
 }
 }
 \details{
