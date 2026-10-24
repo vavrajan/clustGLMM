@@ -1186,7 +1186,7 @@ Therefore, the given outcomes are considered independent. ")
       nam_accept[[ch]][2:cumdims["beta_poi_fix"]] <- paste0("beta_poi_fix_", Ords[nfix[Pois] > 0])
     }
     if(dim_accept[[ch]]["beta_poi"] > 0){
-      nam_accept[[ch]][(cumdims["beta_poi_fix"]+1):cumdims["beta_poi"]] <- paste0(rep(paste0("beta_poi_", Ords[ngrp[Pois] > 0]), each = G[ch]),
+      nam_accept[[ch]][(cumdims["beta_poi_fix"]+1):cumdims["beta_poi"]] <- paste0(rep(paste0("beta_poi_", Pois[ngrp[Pois] > 0]), each = G[ch]),
                                                                                   rep(paste0("(", 1:G[ch], ")"), sum(ngrp[Pois] > 0)))
     }
     if(dim_accept[[ch]]["beta_bin_fix"] > 0){
