@@ -2,6 +2,7 @@ plot_traceplots <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, iterations, chains,
+         dolegend = FALSE, legend.pos = "top",
          COL, labcex = 1, whatLAB){
   opar <- par(mar = c(3.5, 3.5, 0.8, 0.8))
   on.exit(par(opar))
@@ -47,7 +48,8 @@ function(mcmc, scalar_samples,
   for(ch in chains){
     lines(y ~ m, data = scalar_samples$draws[[ch]], col = COL[ch])
   }
-  # legend
-  #legend("top", legend = chains, ncol = length(chains),
-  #       col = COL[chains], lty =1, bty = "n", title = "Chain", cex = 0.8)
+  if(dolegend){
+    legend(legend.pos, legend = chains, ncol = length(chains),
+           col = COL[chains], lty=1, bty = "n", title = "Chain", cex = 0.8)
+  }
 }

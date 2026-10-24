@@ -2,6 +2,7 @@ plot_ECDF <-
 function(mcmc, scalar_samples, 
          what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, iterations, chains,
+         dolegend = FALSE, legend.pos = "bottomright",
          COL, labcex = 1, whatLAB){
   opar <- par(mar = c(3.5, 3.5, 0.8, 0.8))
   on.exit(par(opar))
@@ -43,5 +44,10 @@ function(mcmc, scalar_samples,
   mtext(text = "ECDF", side = 2, line = 2.5, cex = labcex)
   for(ch in chains){
     plot(ecdf(scalar_samples$draws[[ch]]$y), col = COL[ch], add = T, verticals = T, pch = NA)
+  }
+  
+  if(dolegend){
+    legend(legend.pos, legend = chains, 
+           col = COL[chains], lty=1, bty = "n", title = "Chain", cex = 0.8)
   }
 }

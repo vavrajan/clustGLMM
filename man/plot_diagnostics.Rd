@@ -31,15 +31,19 @@ A special function is \code{plot_clusters} which allows to compare densities or 
 \usage{
 plot_ACF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains, 
+         dolegend = FALSE, legend.pos = "topright",
          COL, move.width = 0.3, labcex = 1, whatLAB)
 plot_ECDF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
           burnin = 0, thin = 1, iterations, chains, 
+          dolegend = FALSE, legend.pos = "bottomright",
           COL, labcex = 1, whatLAB)
 plot_kerneldensity(mcmc, scalar_samples, what, gspec, dimspec, yspec, 
                    burnin = 0, thin = 1, iterations, chains, 
-                   dolegend = FALSE, COL, labcex = 1, whatLAB)
+                   dolegend = FALSE, legend.pos = "topright", 
+                   COL, labcex = 1, whatLAB)
 plot_traceplots(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                 burnin = 0, thin = 1, iterations, chains, 
+                dolegend = FALSE, legend.pos = "top",
                 COL, labcex = 1, whatLAB)
 plot_ng_trace_chain_split(mcmc, 
                           burnin = 0, thin = 1, iterations, chains,
@@ -121,16 +125,19 @@ the label for the parameter; default corresponds to the label for that parameter
 \code{cex} value for label of plots. 
 }
   \item{dolegend}{
-a Boolean declaring whether legend should be added to the plot.  
+a logical declaring whether legend should be added to the plot.  
+}
+  \item{legend.pos}{
+position for the legend given by a string (see details of \code{legend}).
 }
   \item{whichg}{
 a set of cluster labels to be compared in \code{plot_clusters}. By default \code{mcmc$clusters} is taken under consistency among selected chains. Can be a list in \code{plot_clusters_kerneldensity_param} and \code{plot_clusters_ECDF_param}.  
 }
   \item{doKern}{
-a Boolean declaring whether kernel density estimates should be plotted for comparing different clusters.
+a logical declaring whether kernel density estimates should be plotted for comparing different clusters.
 }
   \item{doECDF}{
-a Boolean declaring whether ECDFs should be plotted for comparing different clusters.
+a logical declaring whether ECDFs should be plotted for comparing different clusters.
 }
   \item{wherelegend}{
   a string that declares where the legend should be placed.
