@@ -48,13 +48,17 @@ function(mcmc, what = "e0",
   
   if(is.element(what, fixs)){
     wnames <- colnames(mcmc$accept[[chains[1]]])[grepl(paste0("^", what), colnames(mcmc$accept[[chains[1]]]))]
-    if(setparmfrow){par(mfrow = nice_nrow_ncol(length(wnames)))}
-    for(w in wnames){
-      plot_acceptance(mcmc, w, 
-                      burnin = burnin, thin = thin, 
-                      iterations = iterations, chains = chains,
-                      adjust.ylim = adjust.ylim,
-                      labcex = ifelse(length(wnames) > 1, 0.6, 1.0))
+    if(length(wnames) > 0){
+      if(setparmfrow){par(mfrow = nice_nrow_ncol(length(wnames)))}
+      for(w in wnames){
+        plot_acceptance(mcmc, w, 
+                        burnin = burnin, thin = thin, 
+                        iterations = iterations, chains = chains,
+                        adjust.ylim = adjust.ylim,
+                        labcex = ifelse(length(wnames) > 1, 0.6, 1.0))
+      }
+    }else{
+      warning(paste0("There are no acceptances in mcmc$accept[[", chains[1], "]] for parameter ", what, "."))
     }
   }
   
@@ -94,17 +98,20 @@ function(mcmc, what = "e0",
       whatfixnames <- colnames(mcmc$accept[[ch]])[grepl(paste0("^", what, "_fix"), colnames(mcmc$accept[[ch]]))]
       wnames <- setdiff(whatnames, whatfixnames)
       wnames <- wnames[grepl(paste0("\\(", nonempty[[ch]][1], "\\)"), wnames)]
-      
-      if(setparmfrow){par(mfrow = nice_nrow_ncol(length(wnames)*length(nonempty[[ch]])))}
-      for(w in wnames){
-        for(g in nonempty[[ch]]){
-          wg <- sub("\\(\\d+\\)", paste0("(", g, ")"), w)
-          plot_acceptance(mcmc, wg, 
-                          burnin = burnin, thin = thin, 
-                          iterations = iterations, chains = plot_chains[[ch]],
-                          adjust.ylim = adjust.ylim,
-                          labcex = ifelse(length(wnames) > 1, 0.6, 1.0))
+      if(length(wnames) > 0){
+        if(setparmfrow){par(mfrow = nice_nrow_ncol(length(wnames)*length(nonempty[[ch]])))}
+        for(w in wnames){
+          for(g in nonempty[[ch]]){
+            wg <- sub("\\(\\d+\\)", paste0("(", g, ")"), w)
+            plot_acceptance(mcmc, wg, 
+                            burnin = burnin, thin = thin, 
+                            iterations = iterations, chains = plot_chains[[ch]],
+                            adjust.ylim = adjust.ylim,
+                            labcex = ifelse(length(wnames) > 1, 0.6, 1.0))
+          }
         }
+      }else{
+        warning(paste0("There are no acceptances in mcmc$accept[[", ch, "]] for parameter ", what, "."))
       }
     }
     

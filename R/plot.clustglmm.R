@@ -33,6 +33,7 @@ plot.clustglmm <- function(x, what="ng", which="traceplots", ng_trace_chain_spli
     }else{
       # No specification of what should be plotted
       switch(which,
+             "acceptance" = plot_acceptance_param(x, what, ...),
              "ACF" = plot_ACF_param(x, what, ...),
              "ECDF" = plot_ECDF_param(x, what, ...),
              "kerneldensity" = plot_kerneldensity_param(x, what, ...),
