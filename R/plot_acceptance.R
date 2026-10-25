@@ -3,7 +3,7 @@ function(mcmc, what,
          burnin = 0, thin = 1, 
          iterations, chains,
          dolegend = FALSE, legend.pos = "bottomright",
-         COL, labcex = 1, whatLAB = what,
+         COL, labcex = 1, whatLAB,
          adjust.ylim = 0){
   opar <- par(mar = c(3.5, 3.5, 2.0, 0.8))
   on.exit(par(opar))
@@ -18,6 +18,16 @@ function(mcmc, what,
     YLIM <- c(0, 100)
   }
   XLIM <- c(Inf, -Inf)
+  
+  if(grepl("^b\\[", what)){
+    what <- sub(",\\d", "", what)
+  }else{
+    what <- sub("\\[[0-9]+(,[0-9]+)?\\]", "", what)
+  }
+  if(missing(whatLAB)){whatLAB = what}
+  
+  what <- sub("^c_ord", "a_ord", what)
+  what <- sub("^pi_ord", "a_ord", what)
   
   for(ch in chains){
     if(misiter){

@@ -23,12 +23,30 @@ function(mcmc, scalar_samples,
                                          iterations = iterations, chains = chains)
   }
   
+  if(missing(whatLAB)){whatLAB <- scalar_samples$whatLAB}
+  if(what == "b"){
+    awhat <- sub(",\\d", "", whatLAB)
+  }else{
+    awhat <- sub("\\[[0-9]+(,[0-9]+)?\\]", "", whatLAB)
+    awhat <- sub("^c_ord", "a_ord", awhat)
+    awhat <- sub("^pi_ord", "a_ord", awhat)
+  }
+  accept <- numeric(length(mcmc$chains))
+  for(ich in 1:length(mcmc$chains)){
+    if(is.element(awhat, colnames(mcmc$accept[[mcmc$chains[ich]]]))){
+      accept[ich] <- 100*mean(mcmc$accept[[mcmc$chains[ich]]][,awhat], na.rm = TRUE)
+    }else{
+      accept[ich] <- NA
+    }
+  }
+  
   plot_traceplots(mcmc=mcmc, scalar_samples = scalar_samples, 
                   what=what, gspec=gspec, dimspec=dimspec, yspec=yspec,
                   chains=chains, COL=COL, labcex = 0.8, whatLAB=whatLAB)
   if(!missing(trueval)){
     abline(h = trueval, col = "seagreen", lty = 2)
   }
+  
   plot_ECDF(mcmc=mcmc, scalar_samples = scalar_samples,
             what=what, gspec=gspec, dimspec=dimspec, yspec=yspec,
             chains=chains, COL=COL, labcex = 0.8, whatLAB=whatLAB)
@@ -45,5 +63,17 @@ function(mcmc, scalar_samples,
            what=what, gspec=gspec, dimspec=dimspec, yspec=yspec,
            chains=chains, COL=COL, labcex = 0.8, whatLAB=whatLAB,
            lag.max = lag.max, move.width = move.width)
+  
+  if(any(!is.na(accept))){
+    legend("topright", legend = paste0(mcmc$chains, ": ", format(accept, digits = 4), "%"), 
+           col = diverge_hcl(mcmc$nchains, c = 80, l = 70)[mcmc$chains], 
+           lty = 1, title = "Acceptance", cex = 0.8,
+           y.intersp = 0.6, x.intersp = 0.5)
+  }else{
+    legend("topright", legend = mcmc$chains, 
+           col = diverge_hcl(mcmc$nchains, c = 80, l = 70)[mcmc$chains], 
+           lty = 1, title = "Chain", cex = 0.8,
+           y.intersp = 0.6, x.intersp = 0.5)
+  }
   
 }

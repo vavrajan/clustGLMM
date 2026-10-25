@@ -12,10 +12,11 @@ function(mcmc, what = "e0",
   if(!is.element(what, c("e0", "b", 
                          "beta_poi_fix", "beta_poi", 
                          "beta_bin_fix", "beta_bin", 
-                         "beta_ord_fix", "beta_ord", "a_ord",
+                         "beta_ord_fix", "beta_ord", 
+                         "a_ord", "c_ord", "pi_ord",
                          "beta_cat_fix", "beta_cat"))){
     stop(paste0("Parameter ", what, " does not exist or is not sampled via Metropolis-Hastings proposal algorithm.
-                Try one of 'e0', 'b', 'beta_poi_fix', 'beta_poi', 'beta_bin_fix', 'beta_bin', 'beta_ord_fix', 'beta_ord', 'a_ord', 'beta_cat_fix', 'beta_cat'."))
+                Try one of 'e0', 'b', 'beta_poi_fix', 'beta_poi', 'beta_bin_fix', 'beta_bin', 'beta_ord_fix', 'beta_ord', 'a_ord', 'c_ord', 'pi_ord', 'beta_cat_fix', 'beta_cat'."))
   }
   
   if(what == "e0"){
@@ -41,17 +42,21 @@ function(mcmc, what = "e0",
   fixs <- c("beta_poi_fix", "beta_bin_fix", "beta_ord_fix", "beta_cat_fix")
   grps <- c("beta_poi", "beta_bin", "beta_ord", "beta_cat")
   if(mcmc$varying["c_ord"]){
-    grps <- c(grps, "a_ord")
+    grps <- c(grps, "a_ord", "c_ord", "pi_ord")
   }else{
-    fixs <- c(fixs, "a_ord")
+    fixs <- c(fixs, "a_ord", "c_ord", "pi_ord")
   }
   
+  awhat <- sub("^c_ord", "a_ord", what)
+  awhat <- sub("^pi_ord", "a_ord", awhat)
+  
   if(is.element(what, fixs)){
-    wnames <- colnames(mcmc$accept[[chains[1]]])[grepl(paste0("^", what), colnames(mcmc$accept[[chains[1]]]))]
+    wnames <- colnames(mcmc$accept[[chains[1]]])[grepl(paste0("^", awhat), colnames(mcmc$accept[[chains[1]]]))]
     if(length(wnames) > 0){
       if(setparmfrow){par(mfrow = nice_nrow_ncol(length(wnames)))}
       for(w in wnames){
-        plot_acceptance(mcmc, w, 
+        aw <- sub("^a_ord", what, w)
+        plot_acceptance(mcmc, aw, 
                         burnin = burnin, thin = thin, 
                         iterations = iterations, chains = chains,
                         adjust.ylim = adjust.ylim,
@@ -94,7 +99,7 @@ function(mcmc, what = "e0",
     
     
     for(ch in for_chains){
-      whatnames <- colnames(mcmc$accept[[ch]])[grepl(paste0("^", what), colnames(mcmc$accept[[ch]]))]
+      whatnames <- colnames(mcmc$accept[[ch]])[grepl(paste0("^", awhat), colnames(mcmc$accept[[ch]]))]
       whatfixnames <- colnames(mcmc$accept[[ch]])[grepl(paste0("^", what, "_fix"), colnames(mcmc$accept[[ch]]))]
       wnames <- setdiff(whatnames, whatfixnames)
       wnames <- wnames[grepl(paste0("\\(", nonempty[[ch]][1], "\\)"), wnames)]
@@ -103,7 +108,8 @@ function(mcmc, what = "e0",
         for(w in wnames){
           for(g in nonempty[[ch]]){
             wg <- sub("\\(\\d+\\)", paste0("(", g, ")"), w)
-            plot_acceptance(mcmc, wg, 
+            awg <- sub("^a_ord", what, wg)
+            plot_acceptance(mcmc, awg, 
                             burnin = burnin, thin = thin, 
                             iterations = iterations, chains = plot_chains[[ch]],
                             adjust.ylim = adjust.ylim,

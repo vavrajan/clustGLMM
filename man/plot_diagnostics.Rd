@@ -1,10 +1,12 @@
 \name{plot_diagnostics}
 \alias{plot_diagnostics}
+\alias{plot_acceptance}
 \alias{plot_ACF}
 \alias{plot_ECDF}
 \alias{plot_kerneldensity}
 \alias{plot_traceplots}
 \alias{plot_ng_trace_chain_split}
+\alias{plot_acceptance_param}
 \alias{plot_ACF_param}
 \alias{plot_ECDF_param}
 \alias{plot_kerneldensity_param}
@@ -25,10 +27,16 @@ There are 4 main plots to be created:
 }
 All of these for one specific parameter can be plotted by \code{plot_diagnostics}. 
 These functions above work only for a univariate parameter. 
+Additionally, \code{acceptance} draws cumulative means of acceptance of Metropolis-Hastings proposals agains the iteration number for a parameter block.
 Plots for all elements of a multivariate parameter can be created using \code{..._param} functions. 
 A special function is \code{plot_clusters} which allows to compare densities or ECDFs of univariate group-specific parameter across non-empty clusters.  
 }
 \usage{
+plot_acceptance(mcmc, what, 
+                burnin = 0, thin = 1, iterations, chains,
+                dolegend = FALSE, legend.pos = "bottomright",
+                COL, labcex = 1, whatLAB = what,
+                adjust.ylim = 0)
 plot_ACF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains, 
          dolegend = FALSE, legend.pos = "topright",
@@ -51,6 +59,9 @@ plot_ng_trace_chain_split(mcmc,
 plot_diagnostics(mcmc, scalar_samples, what, gspec, dimspec, yspec,
                  burnin = 0, thin = 1, lag.max = 30, iterations, chains,
                  trueval, setparmfrow = TRUE, COL, move.width = 0.3, whatLAB)
+plot_acceptance_param(mcmc, what = "e0", burnin = 0, thin = 1, iterations, chains, 
+                      setparmfrow = TRUE, allclusters = FALSE, 
+                      adjust.ylim = 0, which.b = 1:min(mcmc$n, 20))
 plot_ACF_param(mcmc, what = "ng", yspec, burnin = 0, thin = 1, iterations,
                lag.max = 30, chains, setparmfrow = TRUE, allclusters = FALSE)
 plot_ECDF_param(mcmc, what, yspec, burnin = 0, thin = 1, iterations, chains, 
@@ -78,6 +89,7 @@ an output of \code{get_scalar_samples}, overrides any given \code{burnin} or \co
 }  
   \item{what}{
 a name of the parameter to be extracted; see \code{names(mcmc$save)} for possible options. 
+For \code{plot_acceptance} the full name of the parameter block has to be given, e.g. \code{"beta_poi_...(1)"}.
 }
   \item{gspec}{
 a group specifier (values in \code{1:mcmc$G}); if not group-specific parameter this \emph{should be missing}.
@@ -94,14 +106,17 @@ the length of burn-in period (default 0), i.e. number of initial samples to igno
   \item{thin}{
 thinning rate (default 1); only every \code{thin}th value is used for inference (must be a positive integer). 
 }
-  \item{lag.max}{
-maximal lag value to be plotted in ACF.
-}
   \item{iterations}{
 a vector of iterations numbers to extract, overrides any given \code{burnin} or \code{thin}. 
 }
   \item{chains}{
 a vector of chain numbers to be plotted.
+}
+  \item{adjust.ylim}{
+a probability that will shorten the \code{ylim} to \code{quantile(y, probs = c(adjust.ylim, 1-adjust.ylim))} where \code{y} stands for the y-axis values of the objects to be plotted.
+}
+  \item{lag.max}{
+maximal lag value to be plotted in ACF.
 }
   \item{trueval}{
 a true value of the parameter to be plotted by vertical/horizontal line.
@@ -111,6 +126,9 @@ whether \code{par(mfrow = ..)} should be set automatically before creating all p
 }
   \item{allclusters}{
 whether for group-specific parameters plot all the clusters (\code{TRUE}) or just those in \code{mcmc$clusters} (\code{FALSE}).
+}
+  \item{which.b}{
+a subset of \code{1:mcmc$n} giving the subject internal indices to be plotted; by default setting limited to first 20 subjects, since plotting all of them could produce too many plots.
 }
   \item{COL}{
 colors for different chains; default values are set by \code{diverge_hcl(mcmc$nchains, c = 80, l = 70)}.
@@ -158,6 +176,7 @@ a logical declaring whether ECDFs should be plotted for comparing different clus
   }
   You can plot all 4 of these by \code{plot_diagnostics}. 
   By default they are produced in 2 by 2 layout, but if you would prefer some different arrangement you can do that before calling the function and supressing \code{setparmfrow = FALSE}. 
+  Moreover, the \code{ACF} plot contains a legend for the chains including the acceptance percentage, if the parameter is sampled via Metropolis-Hastings proposal algorithm. 
   
   Using the functions above you can only plot a scalar model parameter which is specified by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. 
   If you would like to plot results for all parameters that are associated with parameter \code{what} then \code{..._param} functions can do this for you automatically. 
@@ -168,6 +187,16 @@ a logical declaring whether ECDFs should be plotted for comparing different clus
   Using function \code{\link{nice_nrow_ncol}} plots are arranged into a most effective grid. 
   Moreover, parameters which are symmetric matrices (with or without diagonal) are arranged as expected and only the upper triangle is filled with plots. 
   See examples below.
+  
+  Parameters \code{e0}, \code{b}, \code{beta_poi_fix}, \code{beta_poi}, \code{beta_bin_fix}, \code{beta_bin}, \code{beta_ord_fix}, \code{beta_ord}, \code{a_ord}, \code{beta_cat_fix}, \code{beta_cat} are sampled in blocks.
+  Therefore, their acceptance is gathered in \code{mcmc$accept} named after such blocks. 
+  In many cases the corresponding name is much shorter, e.g., \code{b[i]} instead of \code{b[i,3]}, \code{beta_poi_y(1)} instead of \code{beta_poi_y(1)[2]} or even \code{beta_cat_y(2)} instead of \code{beta_poi_y(2)[2,3]}.
+  Function \code{plot_acceptance} requires these shorter names in the argument \code{what} (the name that appears in columns of \code{mcmc$accept[[ch]]}), \code{yspec}, \code{dimspec}, \code{gspec} are no longer required.
+  It plots the cumulative mean of acceptance level against the iteration number on percentage scale.
+  The y-axis is by default fixed to 0-100 percent, but could be shortened via \code{adjust.ylim} probability. 
+  Since it depends on the plotted y-values through \code{quantile(yvalues, probs = c(adjust.ylim, 1-adjust.ylim))} the final \code{ylim} will be different among parameter blocks.
+  To plot all cumulative acceptance levels tied to the same parameter use \code{plot_acceptance_param} or \code{plot(, which = "acceptance")}.
+  Since \code{c_ord}, \code{a_ord} and \code{pi_ord} are different transformations of the same parameters, the same acceptance (saved only for \code{a_ord}) is plotted in these cases.
   
   Special function in this collection is \code{plot_clusters} which allows to plot kernel density estimates or empirical cumulative distribution function of the same parameters for different cluster labels (\code{whichg}) into one plot. 
   There are also \code{plot_clusters_kerneldensity_param} and \code{plot_clusters_ECDF_param} functions that create the plots automatically for a set of given parameter \code{what}, however, the plotted cluster labels only include those in \code{mcmc$clusters} of corresponding chain. 
@@ -262,6 +291,12 @@ plot_traceplots(mcmc = mcmc, what = "beta_num_fix", yspec = mcmc$Nums[1],
                 dimspec = 1)
 plot_diagnostics(mcmc = mcmc, what = "beta_num_fix", yspec = mcmc$Nums[1], dimspec = 1)
 
+## Acceptance level for beta coefficients for ordinal outcome in specific cluster
+plot_acceptance(mcmc = mcmc, what = "beta_ord_yord(1)")
+
+## Acceptance level for beta coefficients for all ordinal outcomes and clusters
+plot(mcmc, "beta_ord", which = "acceptance")
+
 ## Correlation matrix between the random effects
 # True correlation matrix used for generating the data
 corr <- matrix(c(1, -0.5, -0.5, -0.4, -0.4,
@@ -316,6 +351,7 @@ plot_traceplots_param(mcmc, "loglik", thin = 5)
 plot_kerneldensity_param(mcmc, "beta_num")
 plot_ECDF_param(mcmc, "prec_num")
 plot_ACF_param(mcmc, "w")
+plot_acceptance_param(mcmc, "c_ord")
 
 ## Comparing different cluster-specific parameters
 ## We recommend to do it for chains separately

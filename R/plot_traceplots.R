@@ -36,7 +36,7 @@ function(mcmc, scalar_samples,
     if(mcmc$nchains == 1){
       COL <- "grey"
     }else{
-      COL <- diverge_hcl(mcmc$nchains, c = 80, l =70)
+      COL <- diverge_hcl(mcmc$nchains, c = 80, l = 70)
     }
   }
   
@@ -50,6 +50,6 @@ function(mcmc, scalar_samples,
   }
   if(dolegend){
     legend(legend.pos, legend = chains, ncol = length(chains),
-           col = COL[chains], lty=1, bty = "n", title = "Chain", cex = 0.8)
+           col = COL[chains], lty = 1, bty = "n", title = "Chain", cex = 0.8)
   }
 }
