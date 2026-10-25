@@ -1,15 +1,19 @@
 \name{generate_longitudinal_mixed_type_data}
 \alias{generate_longitudinal_mixed_type_data}
+\alias{generate_psurvey_data}
 \title{
 Generate an Artificial Longitudinal Dataset with Mixed-type Outcomes
 }
 \description{
 Five different longitudinal outcomes are sampled accoring to the model described by Vávra et al. (2024). Column \code{i} is the unit id, \code{j} is the number of observation for \code{i}th unit. Numeric \code{ynum}, count \code{ypoi}, binary \code{ybin}, ordinal \code{yord} and categorical \code{ycat} outcomes are sampled according to predictors \code{pred_...} which are constructed from the intercept, time covariate \code{x}, categorical covariate \code{f} and the random effects \code{b_...}. The definition of the predictor can be adjusted.
+
+Moreover, the function used to generate \code{psurvey} data is included. 
 }
 \usage{
 generate_longitudinal_mixed_type_data(n, n_i = 4, G = 2, timepar = "parallel", 
   catpar = "no", catsubjfix = TRUE, xin1 = 1, Sigma, 
   Kord = 5, Kcat = 4, kspec_bi_cat = FALSE)
+generate_psurvey_data(n)
 }
 \arguments{
   \item{n}{
@@ -47,7 +51,11 @@ a logical value; should the random effects be specific to each level of categori
 }
 }
 \details{
-The function is limitted in the number of clusters \code{G} since it is quite laborious to define all the true values of model parameters (e.g. effects \eqn{\beta}).
+The function \code{generate_psurvey_data} is used to generate the \code{psurvey} data used in the manuscript.
+See the examples below to find out, under which setttings the \code{psurvey} data has been generated.
+Print \code{generate_psurvey_data} to examine the parameter settings.
+
+The function \code{generate_longitudinal_mixed_type_data} is limitted in the number of clusters \code{G} since it is quite laborious to define all the true values of model parameters (e.g. effects \eqn{\beta}).
 
 Time covariate \code{x} is sampled so that observations for one unit are close to each other. First, half-length of the observational window \code{xmid = 1/(2xin1)} is defined. Then, values for a unit are sampled by uniform distribution on \code{[-xmid, xmid]} and randomly shifted by multiples of \code{xmid}. Time covariate is limitted to interval [0, 1]. 
 
@@ -133,4 +141,11 @@ head(data)
 # The same as the "longitudinal_mixed_type_data"
 # which will be used in other examples
 data("longitudinal_mixed_type_data")
+
+### Generate psurvey data
+set.seed(31415)
+n <- 500
+ldata <- generate_psurvey_data(n)
+psurvey <- ldata$data[,c("i", "j", "age", "income", "ntrips", "satisfaction")]
+psurvey_latent <- ldata$data[,c("i", "j", "g", "b_num", "b_poi", "b_ord")]
 }
