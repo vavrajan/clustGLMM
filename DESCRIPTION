@@ -1,6 +1,6 @@
 Package: clustGLMM
 Title: Model-Based Clustering of Mixed-Type Longitudinal Data
-Version: 1.0.1
+Version: 1.1.0
 Encoding: UTF-8
 Authors@R: c(person("Jan", "Vavra", role = c("aut", "cre"),
                     email = "vavraj@karlin.mff.cuni.cz",
