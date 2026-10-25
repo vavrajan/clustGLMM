@@ -270,7 +270,8 @@ These approximations have to be done for all considered cluster labels $g$ and f
 
 # Illustrative use of the package {#sec:psurvey}
 
-We created an artificial longitudinal dataset `psurvey` and included it in package \pkg{clustGLMM}. We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
+We created an artificial longitudinal dataset `psurvey` and included it in package \pkg{clustGLMM}. Visit the help page to see, how the data were generated. 
+We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
 We observe three outcomes of different type:
 
@@ -281,10 +282,15 @@ We observe three outcomes of different type:
 We generated the data assuming three latent groups which differ in the regression coefficient parameters, i.e., how the mean of the outcome variables depends on age. In particular, the numeric outcome variable alone does not allow to differentiate between the three groups. The three outcome variables in combination, however, allow us to distinguish between the three groups.
 
 We load the dataset and inspect the first few entries:
-
-```{r psurvey-load, echo = TRUE}
+```{r psurvey-load-and-head, echo = TRUE}
 data("psurvey", package = "clustGLMM")
 head(psurvey)
+```
+
+<!-- We load the dataset with the following command: -->
+
+```{r psurvey-load, echo = FALSE, eval = FALSE}
+data("psurvey", package = "clustGLMM")
 ```
 
 ```{r psurvey-n}
@@ -364,7 +370,7 @@ included. We also include random intercepts using `random = ~ 1`.
 
 ```{r psurvey-splines, echo=TRUE}
 formula <- list()
-formula[["income"]] <- list(fixed = ~ 0, group = ~ age + I(age^2), random = ~ 1 + age)
+formula[["income"]] <- list(fixed = ~ 0, group = ~ age + I(age^2), random = ~ 1)
 for (y in c("ntrips", "satisfaction")) {
   formula[[y]] <- list(fixed = ~ 0, group = ~ age, random = ~ 1)
 }
@@ -476,7 +482,8 @@ depending on the size of the dataset, the complexity of the model, the
 number of chains and the number of iterations. The `print` method
 without specifying any arguments provides an overview on the dataset,
 the defined regression models for the different outcomes and the
-simulation specification used for MCMC sampling.
+simulation specification used for MCMC sampling including the 
+overall acceptance rate.
 
 ```{r psurvey-mcmc-print, echo = TRUE, results=TRUE}
 print(mcmc)
@@ -523,8 +530,9 @@ supplementary material.
 One might also be interested in focusing on a\ single specific scalar
 model parameter and inspect all four implemented plot types: trace
 plot, kernel density estimate, empirical cumulative distribution
-function (ECDF) and auto-correlation function (ACF). These plots can be
-obtained with function `plot_diagnostics()`. 
+function (ECDF) and auto-correlation function (ACF), where the legend 
+contains the acceptance rate in case of M--H sampled parameters. 
+These plots can be obtained with function `plot_diagnostics()`. 
 <!-- This function also has -->
 <!-- the option to add a\ line for the true value of the parameters, if -->
 <!-- known.  -->
@@ -538,6 +546,12 @@ remaining samples to reduce auto-correlation.
 
 ```{r psurvey-mcmc-beta-3-num, echo=TRUE, results=FALSE, fig.align="center", fig.width=8, fig.height=5.6, fig.cap="The four implemented plots - regression coefficient for squared age for income.", fig.pos="t", out.width="80%"}
 plot_diagnostics(mcmc, what = "beta_num", yspec = "income", dimspec = 3, gspec = 3,
+                 burnin = 0, thin = 2)
+```
+
+
+```{r psurvey-mcmc-beta-3-ord, echo=FALSE, eval = FALSE, results=FALSE, fig.align="center", fig.width=8, fig.height=5.6, fig.cap="The four implemented plots - regression coefficient for age for satisfaction.", fig.pos="t", out.width="80%"}
+plot_diagnostics(mcmc, what = "beta_ord", yspec = "satisfaction", dimspec = 1, gspec = 3,
                  burnin = 0, thin = 2)
 ```
 
@@ -586,6 +600,7 @@ Note that the success of this post-processing step may vary depending on the
 parameters used for clustering, the random initialization used for
 `kmeans()` as well as its argument specification, which can be changed
 by setting the arguments `cols`, `iter.max` and `nstart`.
+To avoid dropping some of the draws we would rather prolong the burn-in phase.
 
 ## Inference {#subsec:psurvey-inference}
 
@@ -640,6 +655,15 @@ Figure \@ref(fig:psurvey-mcmc-pp-beta-num-1) clearly demonstrates that
 one cluster differs from the other two that seem to be rather similar,
 in regard to `income`.
 
+The following summary provides the acceptance rates in four consecutive stages
+aggregated for the key model M--H sampled parameters. In case the rate is too 
+low or too high one may tune the associated proposal constant in `tuning`.
+The graphical depiction is also provided with `plot(, which = "accept")`. 
+
+```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE}
+print(sum_mcmc, which = "accept")
+```
+
 Next we provide the summary of the model parameters related to the
 component weights:
 
@@ -648,14 +672,16 @@ print(sum_mcmc, which = "clust_param")
 ```
 
 Finally, we might be interested in inspecting the predictive
-distributions for the `r nmis` missing values for `income`:
+distributions for the `r nmis` missing values for `income`.
+Notice that the output automatically contains the row number 
+and original id of the corresponding subject. 
 
 ```{r psurvey-mcmc-summary-latent-param, echo = TRUE, results = TRUE}
 print(sum_mcmc, which = "latent_param", pattern = "^naY_income")
 ```
 
 We also plot the kernel density estimates of the posterior
-distributions of the missing values. We add a\ dashed seegrean line
+distributions of the missing values. We add a\ dashed seagreen line
 indicating the true value to the plot as well as dotted black lines to
 indicate the 2.5% and the 97.5% quantiles of the posterior
 distributions. Figure \@ref(fig:psurvey-mcmc-naY-income) shows that the true values
@@ -678,10 +704,10 @@ It is also possible to extract specific draws from the rich MCMC output
 included in the object returned by `clustGLMM()`. To understand how to
 select specific parameters, an overview over the sampled parameters and
 how to address them is helpful. The names can be inspected using
-`str(mcmc$param_names)`:
+`str(mcmc_pp$param_names)`:
 
 ```{r psurvey-mcmc-names, echo=TRUE}
-str(mcmc$param_names, vec.len = 1)
+str(mcmc_pp$param_names, vec.len = 1)
 ```
 
 E.g.,
@@ -689,8 +715,8 @@ E.g.,
 regression formula for `income` in component 4, whereas
 `prec_num_income` contains the draws of the precision for the numeric
 outcome income. The occupation numbers of component 5 are stored in 
-`mcmc$draws[[1]][["ng(5)"]]`, while the allocations of the third
-observation are stored in `mcmc$draws[[1]][["U[3]"]]`.  The names can be
+`mcmc_pp$draws[[1]][["ng(5)"]]`, while the allocations of the third
+observation are stored in `mcmc_pp$draws[[1]][["U[3]"]]`.  The names can be
 used to access the draws directly and, e.g., plot a\ histogram.
 
 Draws of specific parameters such as the latent cluster assignments
@@ -699,13 +725,16 @@ extracted from the `draws` object in the return object by selecting
 the list element of the relevant chain, in this case chain 1, and the
 columns which start with `U` or `w`:
 
-```{r, echo=TRUE}
-U <- mcmc$draws[[1]][, grep("^U", colnames(mcmc$draws[[1]]))]
-w <- mcmc$draws[[1]][, grep("^w", colnames(mcmc$draws[[1]]))]
+```{r mcmc-extract-draws, echo=TRUE}
+U <- mcmc_pp$draws[[1]][, grep("^U", colnames(mcmc_pp$draws[[1]]))]
+w <- mcmc_pp$draws[[1]][, grep("^w", colnames(mcmc_pp$draws[[1]]))]
+```
+
+```{r mcmc-extract-draws-with-dplyr, echo=FALSE, eval=FALSE}
 # or using dplyr
 library("dplyr")
-U <- mcmc$draws[[1]] |> select(starts_with("U"))
-w <- mcmc$draws[[1]] |> select(starts_with("w"))
+U <- mcmc_pp$draws[[1]] |> select(starts_with("U"))
+w <- mcmc_pp$draws[[1]] |> select(starts_with("w"))
 ```
 
 <!-- ```{r psurvey-mcmc-histograms, echo=TRUE, results = FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Histogram of the sampled coefficient of squared age of income for component 4 (left) and sampled precision of income (right)", fig.pos="H", out.width="100%"} -->
@@ -737,8 +766,10 @@ pred1 <- predict(mcmc_pp, newdata, y = "ntrips", type = "link")
 The function returns a\ list of `fit`, `lwr` and `upr` containing the
 posterior mean and equal-tailed credible intervals of prescribed level
 for each cluster separately. In addition, predictions of the mean on
-the response scale (`type = "response"`) as well as of the response
-(`type = "posterior_predictive_response"`) might also be obtained.
+the response scale (`type = "response"`) as well as of the response 
+(`type = "posterior_predictive_response"`) might also be obtained. The latter
+has wider credible intervals as it predicts the actual response value unlike
+the former which focuses solely on the mean. 
 
 ```{r psurvey-predict-basic-use-2, echo = TRUE, eval = TRUE}
 pred2 <- predict(mcmc_pp, newdata, y = "ntrips", type = "response") 

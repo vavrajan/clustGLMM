@@ -36,6 +36,9 @@ data("psurvey_latent")
     \item{\code{b_ord}}{a numeric vector - true random intercept for \code{satisfaction}}
   }
 }
+\seealso{
+\code{\link{generate_psurvey_data}}.
+}
 \examples{
 data(psurvey)
 head(psurvey)
@@ -43,5 +46,17 @@ summary(psurvey)
 
 data(psurvey_latent)
 head(psurvey_latent)
+
+### Generate psurvey data
+set.seed(31415)
+n <- 500
+ldata <- generate_psurvey_data(n)
+psurvey1 <- ldata$data[,c("i", "j", "age", "income", "ntrips", "satisfaction")]
+psurvey_latent1 <- ldata$data[,c("i", "j", "g", "b_num", "b_poi", "b_ord")]
+
+data("psurvey", package = "clustGLMM")
+data("psurvey_latent", package = "clustGLMM")
+all.equal(psurvey, psurvey1)
+all.equal(psurvey_latent, psurvey_latent1)
 }
 \keyword{datasets}
