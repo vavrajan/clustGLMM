@@ -146,6 +146,11 @@ data("longitudinal_mixed_type_data")
 set.seed(31415)
 n <- 500
 ldata <- generate_psurvey_data(n)
-psurvey <- ldata$data[,c("i", "j", "age", "income", "ntrips", "satisfaction")]
-psurvey_latent <- ldata$data[,c("i", "j", "g", "b_num", "b_poi", "b_ord")]
+psurvey1 <- ldata$data[,c("i", "j", "age", "income", "ntrips", "satisfaction")]
+psurvey_latent1 <- ldata$data[,c("i", "j", "g", "b_num", "b_poi", "b_ord")]
+
+data("psurvey", package = "clustGLMM")
+data("psurvey_latent", package = "clustGLMM")
+all.equal(psurvey, psurvey1)
+all.equal(psurvey_latent, psurvey_latent1)
 }
