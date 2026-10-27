@@ -6,8 +6,12 @@ print.clustglmm <- function(x, which = "call", ...){
     cat(x$call)
   }
   
+  if(length(which) > 1){
+    cat("\n")
+  }
+  
   if(is.element("clustering", which)){
-    cat("\n## Clustering based on sampled indicators:\n")
+    cat("## Clustering based on sampled indicators:\n")
     for(ch in x$chains){
       cat("-----------------------------------------------------------------------\n")
       cat(paste0("Chain ", ch, "\n"))

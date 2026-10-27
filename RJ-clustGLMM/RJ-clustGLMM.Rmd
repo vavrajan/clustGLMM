@@ -61,6 +61,7 @@ always_allow_html: true
 -->
 
 ```{r setup, include=FALSE}
+library(knitr)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = "figure-latex/")
 options(tinytex.verbose = TRUE, width = 90, digits = 3)
 # options(width = 110) # does not change the template
@@ -75,6 +76,39 @@ prettyPrint <- function(x, sep = " ", linebreak = "\n\t", width = getOption("wid
     x <- strsplit(x, sep)[[1]]
     paste(combine(x, sep, width), collapse = paste(sep, linebreak, collapse = ""))
 }  
+
+# 1. Save the default output behavior
+hook_output <- knit_hooks$get("output")
+
+# 2. Create a custom hook to filter text lines
+knit_hooks$set(output = function(x, options) {
+  lines <- options$output.lines
+  if (is.null(lines)) {
+    return(hook_output(x, options)) # Pass to default if option isn't used
+  }
+  
+  # Split the output into individual rows
+  x <- unlist(strsplit(x, "\n"))
+  more <- "..."
+  
+  # Handle negative indexing (omitting specific rows)
+  if (any(lines < 0)) {
+    x <- x[lines]
+  } else {
+    # Handle positive indexing (keeping specific rows)
+    if (length(lines) == 1) {
+      if (length(x) > lines) {
+        x <- c(head(x, lines), more)
+      }
+    } else {
+      x <- c(more, x[lines], more)
+    }
+  }
+  
+  # Recombine into a single string block
+  x <- paste(c(x, ""), collapse = "\n")
+  hook_output(x, options)
+})
 ```
 
 # Introduction {#sec:introduction}
@@ -83,9 +117,10 @@ Clustering longitudinal multivariate data is a\ key task in many fields, includi
 
 This indicates the need for a\ unified, flexible, and extensible implementation for clustering mixed-type longitudinal data within a\ fully probabilistic framework based on a\ mixture model of multivariate generalized linear mixed models. Several R packages address only parts of this problem as they only allow to fit simplified versions of this model. Package \CRANpkg{lcmm} [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package \CRANpkg{flexmix} [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering the non-Gaussian case of a\ mixed model and a\ multivariate approach requiring the conditional independence assumption. Packages such as \CRANpkg{MCMCglmm} [@Hadfield10MCMCglmm] and \CRANpkg{mixAK} [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes.
 
-To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a\ Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a\ mixture of generalized linear mixed models (GLMMs), allowing for a\ flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, enabling a\ full posterior characterization of both, model parameters and latent cluster assignments.
+To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a\ Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a\ mixture of generalized linear mixed models (GLMMs), allowing for a\ flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, the outputs are compatible with \CRANpkg{coda} [@Plummer06coda] package, enabling a\ full posterior characterization of both, model parameters and latent cluster assignments. 
 
-Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a\ high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and \CRANpkg{coda} [@Plummer06coda] for MCMC output analysis. By focusing specifically on clustering, \pkg{clustGLMM} fills a\ gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a\ practical and extensible solution for researchers working with complex longitudinal data. In particular, a\ number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a\ convenient use in clustering applications. 
+<!-- Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a\ high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and \CRANpkg{coda} [@Plummer06coda] for MCMC output analysis.  -->
+By focusing specifically on clustering, \pkg{clustGLMM} fills a\ gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a\ practical and extensible solution for researchers working with complex longitudinal data. In particular, a\ number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a\ convenient use in clustering applications. 
 
 All computations and graphics in this paper have been done with \pkg{clustGLMM} version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of \pkg{clustGLMM} is always available from the Comprehensive R Archive Network (CRAN) at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a\ package vignette.
 
@@ -97,7 +132,7 @@ In this section, we briefly outline the model for clustering multivariate longit
 
 We start with explaining the necessary notation. We consider a\ multivariate regression setting where the indices for the outcomes are contained in the set $\mathcal{R}$. The index $r\in\mathcal{R}$ denotes one specific outcome variable and $\mathcal{R}$ is the union of five disjoint sets of indices: $\mathcal{R}^{\mathsf{Num}}$, $\mathcal{R}^{\mathsf{Poi}}$, $\mathcal{R}^{\mathsf{Bin}}$, $\mathcal{R}^{\mathsf{Ord}}$, $\mathcal{R}^{\mathsf{Cat}}$. Each set contains the indices for one of the five different outcome types considered: numeric, count, binary, ordinal and nominal. 
 
-We assume that the data provided is collected for $n$ individuals with observations possibly made for each individual at different observation points resulting in a\ potentially different number of observations for each individual. We denote outcome $r\in\mathcal{R}$ of individual $i=1, \ldots, n$ from the $j$-th time point, $j = 1, \ldots, n_i$, by $Y_{ij}^r$, which together form a data set of $N = \sum_{i=1}^n n_i$ rows. These observations are accompanied by explanatory variables which are split into two regression vectors $\mathbf{X}_{ijr}$ and $\mathbf{Z}_{ijr}$ to distinguish the model matrix for the fixed and random effects in the mixed-effects model, respectively. Note that each outcome $r$ is allowed to have a\ different set of regressors. Thus, the linear predictor 
+We assume that the data provided is collected for $n$ individuals with observations possibly made for each individual at different observation points resulting in a\ potentially different number of observations for each individual. We denote outcome $r\in\mathcal{R}$ of individual $i=1, \ldots, n$ from the $j$-th time point, $j = 1, \ldots, n_i$, by $Y_{ij}^r$, which together form a dataset of $N = \sum_{i=1}^n n_i$ rows. These observations are accompanied by explanatory variables which are split into two regression vectors $\mathbf{X}_{ijr}$ and $\mathbf{Z}_{ijr}$ to distinguish the model matrix for the fixed and random effects in the mixed-effects model, respectively. Note that each outcome $r$ is allowed to have a\ different set of regressors. Thus, the linear predictor 
 $$
 \eta_{ijr} = \mathbf{X}_{ijr}^\top \boldsymbol{\beta}_r + \mathbf{Z}_{ijr}^\top \mathbf{b}_{i}^r,
 $$
@@ -270,8 +305,91 @@ These approximations have to be done for all considered cluster labels $g$ and f
 
 # Illustrative use of the package {#sec:psurvey}
 
-We created an artificial longitudinal dataset `psurvey` and included it in package \pkg{clustGLMM}. Visit the help page to see, how the data were generated. 
-We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
+In the following, we demonstrate the use of package **clustGLMM** on artificial dataset `psurvey` and illustrate a\ broad range of the functionality covered. An overview of the typical workflow and the key functions is given in Figure\ \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail.
+
+```{r workflow-diagram, fig.cap="Typical workflow with **clustGLMM** and key functions.", out.width="100%", dev="png"}
+if (file.exists("workflow-diagram.png")) {
+  knitr::include_graphics("workflow-diagram.png")
+} else if (requireNamespace("DiagrammeR", quietly = TRUE) &
+    requireNamespace("DiagrammeRsvg", quietly = TRUE) & 
+    requireNamespace("rsvg", quietly = TRUE)) {
+  graph <- DiagrammeR::grViz("digraph {
+    graph[layout = dot, rankdir = TB]
+    
+    node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
+    rec1[label = '@@1']
+    rec2[label = '@@2']
+    rec3[label = 'Visual diagnostics']
+    rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
+    rec4[label = 'Within chain post-processing']
+    rec5[label = 'Across chain post-processing', fillcolor = LemonChiffon]
+    
+    node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
+    code1[label = 'data, family, formula, varying, ...']
+    code2[label = 'clustGLMM()']
+    code3[label = 'as_coda(), plot()']
+    code3a[label = 'If not, return to previous steps (adjust settings or continue in sampling)', fillcolor = white, fontname = Helvetica]
+    code4[label = 'post_processing()']
+    code5[label = 'plot(, which=clusters_kerneldensity), permute_cluster_labels()']
+    
+    node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
+    code6a[label = 'summary()']
+    code6b[label = 'predict()']
+    code6c[label = 'clustering_probabilities_and_deviance()']
+    
+    subgraph cluster6 {
+      graph[layout = fdp, shape = rectangle, style = rounded, fillcolor = gold, style = filled]
+      
+      label = ''
+      node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
+      rec6[label = 'Inference', fillcolor = gold, shape = none]
+      rec6a[label = 'Posterior description with the use of coda']
+      rec6b[label = 'Reconstruct linear predictor']
+      rec6c[label = 'Approximate posterior of clustering probabilities and deviance']
+    }
+    
+    # edge definitions with the node IDs
+    edge[arrowhead = normal, arrowtail = none]
+    rec1 -> rec2 -> rec3 -> rec3a -> rec4 -> rec5 -> rec6
+    
+    edge[arrowhead = none, arrowtail = none]
+    {{rank=same rec1 -> code1}}
+    {{rank=same rec2 -> code2}}
+    {{rank=same rec3 -> code3}}
+    {{rank=same rec3a -> code3a}}
+    {{rank=same rec4 -> code4}}
+    {{rank=same rec5 -> code5}}
+    {{rank=same rec6a -> code6a}}
+    {{rank=same rec6b -> code6b}}
+    {{rank=same rec6c -> code6c}}
+    
+    edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
+    rec6 -> rec6a -> rec6b -> rec6c 
+    
+    }
+    
+    # Substitutions with R code are possible:
+    [1]: paste0('Prepare inputs')
+    [2]: paste0('Sample chains')
+    ",
+    height = 500, width = 600)
+  svg_text <- DiagrammeRsvg::export_svg(graph)
+  rsvg::rsvg_png(charToRaw(svg_text), file = file.path(tempdir(), "workflow-diagram.png"))
+  knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
+}else{
+  png(file.path(tempdir(), "workflow-diagram.png"), width = 918, height = 708,
+      units = "px")
+  plot.new()
+  dev.off()
+  knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
+}
+```
+
+## Artificial `psurvey` data
+
+These panel survey data available in package \pkg{clustGLMM} were generated using `generate_psurvey_data()`, see the help pages for details. 
+<!-- We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered.  -->
+The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
 We observe three outcomes of different type:
 
@@ -624,7 +742,7 @@ summary into several parts.  We start with the subset of
 cluster-invariant model parameters where the name contains the pattern
 `"income"`:
 
-```{r psurvey-mcmc-summary-inv-param, echo = TRUE, results = TRUE, R.options = list(digits = 2)}
+```{r psurvey-mcmc-summary-inv-param, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
 sum_mcmc <- summary(mcmc_pp, burnin = 0, thin = 1)
 print(sum_mcmc, which = "inv_param", pattern = "income")
 ```
@@ -639,7 +757,7 @@ every group-specific parameter. In the following, we only summarize
 the group-specific parameters for cluster 1 where the parameter names
 contain the pattern `"ntrips"`.
 
-```{r psurvey-summary-group-param, echo = TRUE, results = TRUE, R.options = list(digits = 2)}
+```{r psurvey-summary-group-param, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
 print(sum_mcmc, which = "group_param", clusters = 1, pattern = "ntrips")
 ```
 
@@ -660,14 +778,14 @@ aggregated for the key model M--H sampled parameters. In case the rate is too
 low or too high one may tune the associated proposal constant in `tuning`.
 The graphical depiction is also provided with `plot(, which = "accept")`. 
 
-```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE}
+```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
 print(sum_mcmc, which = "accept")
 ```
 
 Next we provide the summary of the model parameters related to the
 component weights:
 
-```{r psurvey-mcmc-summary-clust-param, echo = TRUE, results = TRUE}
+```{r psurvey-mcmc-summary-clust-param, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
 print(sum_mcmc, which = "clust_param")
 ```
 
@@ -676,7 +794,7 @@ distributions for the `r nmis` missing values for `income`.
 Notice that the output automatically contains the row number 
 and original id of the corresponding subject. 
 
-```{r psurvey-mcmc-summary-latent-param, echo = TRUE, results = TRUE}
+```{r psurvey-mcmc-summary-latent-param, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
 print(sum_mcmc, which = "latent_param", pattern = "^naY_income")
 ```
 
@@ -768,22 +886,28 @@ posterior mean and equal-tailed credible intervals of prescribed level
 for each cluster separately. In addition, predictions of the mean on
 the response scale (`type = "response"`) as well as of the response 
 (`type = "posterior_predictive_response"`) might also be obtained. The latter
-has wider credible intervals as it predicts the actual response value unlike
-the former which focuses solely on the mean. 
+is created by sampling independent response values given sampled parameters, thus, 
+has much wider credible intervals that should cover 95\% of response values, unlike
+the other that targets solely the mean, see Figure \@ref(fig:psurvey-prediction). 
+The wiggly lines in the plot on the right are caused by low sample size 
+and discreteness of Poisson variable.
 
 ```{r psurvey-predict-basic-use-2, echo = TRUE, eval = TRUE}
 pred2 <- predict(mcmc_pp, newdata, y = "ntrips", type = "response") 
-pred3 <- predict(mcmc_pp, newdata, y = "ntrips",                    
-                 type = "posterior_predictive_response")            
+pred3 <- predict(mcmc_pp, newdata, y = "ntrips", type = "posterior_predictive_response")
 ```
 
-In the following we plot the cluster-specific predicted values for `ntrips`.
+Because of the broad usage of `predict` function with user-specified `newdata` argument
+we do not provide any general-purpose plotting function for such output.
+The plots have to be created manually using simple commands as shown below 
+where we plot the cluster-specific predicted values for `ntrips`.
 
 ```{r  psurvey-prediction, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Cluster-specific predictions of `ntrips`. Linear predictor (left), predicted mean response  (middle) and samples from the predictive distribution (right) including 95% credible intervals (dashed lines).", fig.pos="H", out.width="100%", echo = TRUE, eval = TRUE}
-par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 3))
+par(mar = c(4, 4, 2.5, 0.5), mfrow = c(1, 3))
 COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[1], c = 80, l = 50)
 
-plot(c(18, 40), c(0, 3), type = "n", xlab = "age", ylab = expression(x * beta))
+plot(c(18, 40), c(0, 3), type = "n", main = "Linear predictor",
+     xlab = "age", ylab = expression(x * beta))
 for (g in 1:mcmc_pp$modeGplus[1]) {
   lines(newdata$age, pred1$fit[, g], col = COL[g], lwd = 2)
   lines(newdata$age, pred1$lwr[, g], col = COL[g], lty = 2, lwd = 1)
@@ -791,14 +915,16 @@ for (g in 1:mcmc_pp$modeGplus[1]) {
 }  
 legend("topleft", legend = 1:mcmc_pp$modeGplus[1], title = "Cluster", 
        col = COL, lty = 1, lwd = 2, bty = "n")
-plot(c(18, 40), c(0, 8), type = "n", xlab = "age", ylab = expression(exp(x * beta)))
+plot(c(18, 40), c(0, 8), type = "n", main = "Mean of the response",
+     xlab = "age", ylab = expression(exp(x * beta)))
 for (g in 1:mcmc_pp$modeGplus[1]) {
   lines(newdata$age, pred2$fit[, g], col = COL[g], lwd = 2)
   lines(newdata$age, pred2$lwr[, g], col = COL[g], lty = 2, lwd = 1)
   lines(newdata$age, pred2$upr[, g], col = COL[g], lty = 2, lwd = 1)
 }
-plot(c(18, 40), c(0, 20), type = "n", xlab = "age",
-     ylab = expression(Y ~ "~" ~ Pois(exp(x * beta))))
+plot(c(18, 40), c(0, 20), type = "n", 
+     main = "Posterior predictive distribution of response",
+     xlab = "age", ylab = expression(Y ~ "~" ~ Pois(exp(x * beta))))
 for (g in 1:mcmc_pp$modeGplus[1]) {
   lines(newdata$age, pred3$fit[, g], col = COL[g], lwd = 2)
   lines(newdata$age, pred3$lwr[, g], col = COL[g], lty = 2, lwd = 1)
@@ -919,7 +1045,7 @@ The clustering of the observations is based on the sampled allocation
 indicators.  A\ quick summary of the clustering can be displayed by
 adjusting the `print` statement:
 
-```{r psurvey-mcmc-pp-clustering, echo = TRUE, results = TRUE}
+```{r psurvey-mcmc-pp-clustering, echo = TRUE, results = TRUE, output.lines=-(3:4)}
 print(mcmc_pp, which = "clustering")
 ```
 
@@ -1017,9 +1143,17 @@ pmcmc <- clustering_probabilities_and_deviance(
 ```
 
 Using `data = psurvey`, these clustering probabilities are determined
-for all original respondents.  We reduce the samples by using only
+for all original respondents. To keep this example computable in couple 
+of seconds we reduce the samples by using only
 every 10-th sample (using thinning with `thin = 10`) and the rather
 crude Laplace approximation (`NGQ = 1`).
+Ideally, we would use more samples (as)
+If higher precision of approximation is required we encourage to use 
+higher values of `NGQ` but beware of extremely quickly rising complexity.
+In situations where probabilities for all subjects are of interest
+we have always used `NGQ = 1` so far to keep the computational costs low
+and we have not encountered any severe misclassification errors.
+
 
 <!-- ```{r psurvey-clustering-probabilities-and-deviance-print, echo=TRUE, results = TRUE} -->
 <!-- pmcmc -->
@@ -1042,6 +1176,9 @@ these observations. We use the ECDF rather than the kernel density
 estimate here, since the density reaches extremely high values for one
 cluster, which makes the other two clusters almost flat despite being
 the two competing ones.
+Maybe, the computationally more demanding higher values of `NGQ` (2, 3, 4, 5)
+could be applied only to those subjects that are marked as indecisive 
+by the quick scan with `NGQ = 1`.
 
 ```{r psurvey-clust-probs-posterior, echo=TRUE, eval=TRUE, results=TRUE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Posterior distribution of clustering probabilities for subjects with the lowest certainty level.", fig.pos="H", out.width="100%"}
 par(mar = c(4, 4, 2.5, 0.5), mfrow = c(1, 4))

@@ -223,6 +223,9 @@ rsvg::rsvg_png(charToRaw(svg_text), file = "workflow-diagram.png")
 knitr::include_graphics("workflow-diagram.png")
 ```
 
+The primary inspiration for our package was the usual workflow in R: main function of the same name as the package `clustGLMM()` accompanied with `summary`, `plot` and `predict` methods. The key arguments `formula`, `family`, `data` are already familiar to R users and are coincidentally the same as arguments of `brm` function from R package \pkg{brms} [@Burkner17brms]. However, unlike this package we do not rely on RStan [@RStan], which in our early experiments could not handle the complexity of the mixture model and joint random effects. Although, there are some benefits of separation of model definition from the model fitting as is usual in RStan, we decided to keep the workflow familiar to ordinary R users. The `summary` output is highly inspired by \pkg{coda} [@Plummer06coda], we even offer a function that converts the samples to the `mcmc` object from this package.
+
+
 ## Prepare inputs {#impl-prepare-inputs}
 
 First, we discuss the arguments which need to be specified for the main fitting function `clustGLMM()` and describe the expected format of the required inputs. The overview of the arguments of function `clustGLMM()` reads:
