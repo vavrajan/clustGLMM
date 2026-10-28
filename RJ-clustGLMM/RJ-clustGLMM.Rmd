@@ -117,7 +117,7 @@ Clustering longitudinal multivariate data is a\ key task in many fields, includi
 
 This indicates the need for a\ unified, flexible, and extensible implementation for clustering mixed-type longitudinal data within a\ fully probabilistic framework based on a\ mixture model of multivariate generalized linear mixed models. Several R packages address only parts of this problem as they only allow to fit simplified versions of this model. Package \CRANpkg{lcmm} [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package \CRANpkg{flexmix} [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering the non-Gaussian case of a\ mixed model and a\ multivariate approach requiring the conditional independence assumption. Packages such as \CRANpkg{MCMCglmm} [@Hadfield10MCMCglmm] and \CRANpkg{mixAK} [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes.
 
-To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a\ Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a\ mixture of generalized linear mixed models (GLMMs), allowing for a\ flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, the outputs are compatible with \CRANpkg{coda} [@Plummer06coda] package, enabling a\ full posterior characterization of both, model parameters and latent cluster assignments. 
+To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a\ Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a\ mixture of generalized linear mixed models (GLMMs), allowing for a\ flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, the outputs are compatible with package \CRANpkg{coda} [@Plummer06coda], enabling a\ full posterior characterization of both, model parameters and latent cluster assignments.
 
 <!-- Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a\ high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and \CRANpkg{coda} [@Plummer06coda] for MCMC output analysis.  -->
 By focusing specifically on clustering, \pkg{clustGLMM} fills a\ gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a\ practical and extensible solution for researchers working with complex longitudinal data. In particular, a\ number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a\ convenient use in clustering applications. 
@@ -181,7 +181,7 @@ Assuming independence among the set of outcomes for the same individual is often
 
 ## Model-based clustering of GLMMs {#subsec:mbc-glmms}
 
-The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach will produce misleading interpretations. We thus extend our model and consider a\ model-based clustering approach where we assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regression parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups. 
+The model described in the previous section assumes that all individuals within the random sample follow the same, homogeneous model conditional on the explanatory variables. In case unobserved heterogeneity is present in the sample, this approach provides misleading results. We thus extend our model and consider a\ model-based clustering approach where we assume the presence of $G$ latent groups. Each group follows the model outlined in the previous section but possibly differs in the values of the parameters. E.g., the groups may differ in the fixed-effects regression parameters, in the error precision of the numeric outcome and / or in the dependence structure of the random effects. Our implementation allows to flexibly choose which model parameters are group-specific and which ones are fixed to be the same across all latent groups.
 
 The specification which parameters are group-specific and which are the same across all latent groups will usually depend on what is assumed to characterize the latent groups. In addition imposing the restriction that some of the effects are the same across groups simplifies the model and facilitates estimation and interpretation. In the following, we will denote group-specific parameters with a\ superscript $(g)$, e.g., $\tau_r^{(g)}$. Parameters without this superscript are parameters which are the same across groups or represent the set of the corresponding parameters across all groups depending on context. Turning group-specificity on or off will be made en bloc for auxiliary model parameters like $\tau_r$, $\mathbf{c}_r$ or $\boldsymbol{\Sigma}$. For the fixed effects, a\ more selective approach is usually pursued with some effects being assumed to be the same across all groups, while others differ across groups. I.e., we split the fixed-effects contribution to the linear predictor into two parts such that the linear predictor for group $g$ takes the form of 
 $$
@@ -271,8 +271,7 @@ $$
 \mathbf{s} \sim 
 \mathsf{N}_d\left(\mathbf{0}, c_{\boldsymbol{\theta}_l} \left[- \left.\frac{\partial^2 \ell(\boldsymbol{\omega})}{\partial \boldsymbol{\omega} \partial \boldsymbol{\omega}^\top }\right|_{\boldsymbol{\omega}=\widehat{\boldsymbol{\omega}}} \right]^{-1}\right).
 $$
-Moreover, we allow for robust proposals by multivariate Student-t distribution with the same scale matrix but heavier tails if degrees of freedom are set low.
-The new value is accepted with probability 
+Moreover, we also allow for robust proposals based on a multivariate Student-$t$ distribution, where the scale matrix is the same but the tails are heavier in case of a lower value for the degrees of freedom. The new value is accepted with probability 
 $$
 \min\left\{1, \, \exp(\ell(\boldsymbol{\omega}^{\mathrm{proposal}}) - \ell(\boldsymbol{\omega}^{\mathrm{current}}))\right\},
 $$
@@ -305,7 +304,7 @@ These approximations have to be done for all considered cluster labels $g$ and f
 
 # Illustrative use of the package {#sec:psurvey}
 
-In the following, we demonstrate the use of package **clustGLMM** on artificial dataset `psurvey` and illustrate a\ broad range of the functionality covered. An overview of the typical workflow and the key functions is given in Figure\ \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss it in detail.
+In the following, we demonstrate the use of package **clustGLMM** on artificial dataset `psurvey` and illustrate a\ broad range of the functionality covered. An overview of the typical workflow and the key functions is given in Figure\ \@ref(fig:workflow-diagram). In the following subsections we go through each of the steps and discuss them in detail.
 
 ```{r workflow-diagram, fig.cap="Typical workflow with **clustGLMM** and key functions.", out.width="100%", dev="png"}
 if (file.exists("workflow-diagram.png")) {
@@ -387,7 +386,7 @@ if (file.exists("workflow-diagram.png")) {
 
 ## Artificial `psurvey` data
 
-These panel survey data available in package \pkg{clustGLMM} were generated using `generate_psurvey_data()`, see the help pages for details. 
+The panel survey data available in package \pkg{clustGLMM} were generated using function `generate_psurvey_data()` (see the help pages for details). 
 <!-- We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered.  -->
 The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
