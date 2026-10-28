@@ -1115,29 +1115,31 @@ Therefore, the given outcomes are considered independent. ")
       }
     }
     ## random effects parameters
-    #sdSigma
-    sdnames <- param_names[grep("^sdSigma", param_names)]
-    refnames <- unlist(lrannames)
-    refnames <- paste0(rep(names(sorted_family), times = lapply(lrannames, length)), 
-                       "_", refnames)
-    effect_names[sdnames] <- refnames
-    
-    #corSigma, Sigma, InvSigma
-    mat_names <- param_names[grep("Sigma\\[(\\d+),(\\d+)\\]", param_names)]
-    positions <- regexec("Sigma\\[(\\d+),(\\d+)\\]", mat_names)
-    extracted_numbers <- matrix(unlist(regmatches(mat_names, positions)), nrow = 3)
-    coordinates <- cbind(as.numeric(extracted_numbers[2,]), as.numeric(extracted_numbers[3,]))
-    coord_names <- matrix(refnames[coordinates], ncol = 2)
-    coord_names <- paste0(coord_names[,1], "|", coord_names[,2])
-    effect_names[mat_names] <- coord_names
-    
-    ## individual original ids
-    bis <- grep("^b\\[", param_names)
-    if(length(bis) > 0){
-      effect_names[bis] <- paste0(id, "=", 
-                                  rep(names(numbered_unique_ids), each = length(refnames)),
-                                  ", ",
-                                  rep(refnames,length(numbered_unique_ids)))
+    if(totnran > 0){
+      #sdSigma
+      sdnames <- param_names[grep("^sdSigma", param_names)]
+      refnames <- unlist(lrannames)
+      refnames <- paste0(rep(names(sorted_family), times = lapply(lrannames, length)), 
+                         "_", refnames)
+      effect_names[sdnames] <- refnames
+      
+      #corSigma, Sigma, InvSigma
+      mat_names <- param_names[grep("Sigma\\[(\\d+),(\\d+)\\]", param_names)]
+      positions <- regexec("Sigma\\[(\\d+),(\\d+)\\]", mat_names)
+      extracted_numbers <- matrix(unlist(regmatches(mat_names, positions)), nrow = 3)
+      coordinates <- cbind(as.numeric(extracted_numbers[2,]), as.numeric(extracted_numbers[3,]))
+      coord_names <- matrix(refnames[coordinates], ncol = 2)
+      coord_names <- paste0(coord_names[,1], "|", coord_names[,2])
+      effect_names[mat_names] <- coord_names
+      
+      ## individual original ids
+      bis <- grep("^b\\[", param_names)
+      if(length(bis) > 0){
+        effect_names[bis] <- paste0(id, "=", 
+                                    rep(names(numbered_unique_ids), each = length(refnames)),
+                                    ", ",
+                                    rep(refnames,length(numbered_unique_ids)))
+      }
     }
     
     Us <- grep("^U\\[", param_names)
