@@ -1,4 +1,4 @@
-summary.clustglmm <- function(object, burnin = 0, thin = 1) {
+summary.clustglmm <- function(object, burnin = 0, thin = 1, ...) {
   
   coda <- as_coda(object, burnin = burnin, thin = thin)
   

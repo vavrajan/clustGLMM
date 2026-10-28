@@ -2,7 +2,7 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "accept", "inv_param", 
                                     chains = 1L, 
                                     clusters,
                                     pattern = "", 
-                                    max_nchar_details = 25){
+                                    max_nchar_details = 25, ...){
   
   stopifnot(length(which) >= 1,
             is.character(which),

@@ -35,7 +35,7 @@ A special function is \code{plot_clusters} which allows to compare densities or 
 plot_acceptance(mcmc, what, 
                 burnin = 0, thin = 1, iterations, chains,
                 dolegend = FALSE, legend.pos = "bottomright",
-                COL, labcex = 1, whatLAB = what,
+                COL, labcex = 1, whatLAB,
                 adjust.ylim = 0)
 plot_ACF(mcmc, scalar_samples, what, gspec, dimspec, yspec,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains, 
