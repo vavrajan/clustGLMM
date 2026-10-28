@@ -10,13 +10,13 @@ author:
   - Sokolovská 49/83
   - 186 75 Praha 8
 - name: Bettina Grün
-  email: bettina.gruen@wu.ac.at
+  email: bettina.gruen@uibk.ac.at
   orcid: "0000-0001-7265-4773"
-  url: "https://statmath.wu.ac.at/~gruen"
-  affiliation: Vienna University of Economics and Business
+  url: "https://eeecon.uibk.ac.at/~gruen"
+  affiliation: University of Innsbruck 
   address:
-  - Welthandelsplatz 1
-  - 1020 Wien
+  - Universitätsstraße 15
+  - 6020 Innsbruck
 - name: "Gertraud Malsiner-Walli"
   email: "gertraud.malsiner-walli@wu.ac.at"
   orcid: "0000-0002-1213-4749"
