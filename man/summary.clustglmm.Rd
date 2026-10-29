@@ -52,7 +52,7 @@ further arguments passed to or from other methods.
   Depending on what is selected with the \code{which} argument, the following summaries are printed:
   \describe{
     \item{mcmc}{an overview of the sampled chains,}
-    \item{accept}{an evolution (samples divided into 4 segments) of the average propoposal acceptance grouped by parameter type,}
+    \item{accept}{an evolution (samples divided into 4 segments) of the average proposal acceptance grouped by parameter type,}
     \item{clustering}{a summary of the clustering,}
     \item{inv_param}{cluster-invariant parameters,}
     \item{clust_param}{clustering-related parameters (\code{Gplus}, \code{e0}, \code{w}),}

@@ -66,7 +66,7 @@ In such case, this iteration has to be eliminated (replaced with \code{NA}), so 
 This should result in a matrix where all the values in one column  correspond to the same cluster. 
 This output matrix is called \code{clusterspec}.
 
-7) Create the matrix of posterior draws by relabelling and permuting clustering-related parameters.
+7) Create the matrix of posterior draws by relabeling and permuting clustering-related parameters.
 
 8) Update all other items saved in \code{mcmc}, see \code{\link{clustGLMM}}.
 Especially, 
@@ -93,12 +93,12 @@ cluster 4 is to become cluster 3,
 cluster 1 is to become cluster 4.
 
 If \code{perm} is missing, then labels within the first chain are fixed. 
-For remaining chains we take the posterior means of group-specific parameters and compute the root mean square errors among all couples of cluster labels (between the first and currect chain).
-The resulting cost matrix is sent to \code{\link[RcppHungarian]{HungarianSolver}} and second column of \code{$pairs} output is used as the permuation for the current chain.
-This automatic choice of \code{perm} is slowed down by the call of \code{\link{summary}} to \code{mcmc}. 
+For the remaining chains we take the posterior means of group-specific parameters and compute the root mean square errors among all pairs of cluster labels (between the first and current chain).
+The resulting cost matrix is sent to \code{\link[RcppHungarian]{HungarianSolver}} and the second column of the \code{$pairs} output is used as the permutation for the current chain.
+This automatic determination of \code{perm} is slowed down by the call of \code{\link{summary}} to \code{mcmc}.
 }
 \value{
-Both functions return back list of class \code{\link{clustGLMM}}, the same structure as \code{mcmc}, but with modified items.
+Both functions return back a list of class \code{"clustglmm"}, i.e., the same structure as \code{mcmc}, but with modified items.
 }
 \references{
 Frühwirth-Schnatter, S. (2011) Dealing with Label Switching under Model Uncertainty, John Wiley & Sons, chap 10, pp 213–239
@@ -195,7 +195,7 @@ for(ch in 1:nchains){
 }
 par(oldpar)
 
-## confusion matrices with the true labelling
+## confusion matrices with the true labeling
 for(ch in 1:mcmc$nchains){
   longitudinal_mixed_type_data[,paste0("clustering",ch)] <- 
     mcmc$clustering[longitudinal_mixed_type_data[,id],ch]

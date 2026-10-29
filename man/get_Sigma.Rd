@@ -5,7 +5,7 @@
 Extract the m-th Sample of Sigma or sd_num
 }
 \description{
-These two parameters are saved under different formats or tranformation.
+These two parameters are saved under different formats or transformation.
 These functions return the m-th sample of the corresponding parameter even if it has to be transformed from another equivalent saved parameter.
 }
 \usage{
@@ -49,7 +49,7 @@ columns in \code{draws} where corSigma matrix is stored, found automatically if 
 From \code{draws}, only the \code{m}-th element is used, which slightly differs depending on \code{howsave}.
 Functions are able to detect group-specificity and dimension from \code{settings}.
 
-If \code{Sigma} is group-specific, then only matrix for gorup \code{g} is returned.
+If \code{Sigma} is group-specific, then only matrix for group \code{g} is returned.
 If \code{Sigma} is not saved among draws, then it is reconstructed from \code{InvSigma} and inversion.
 If neither of \code{Sigma} and \code{InvSigma} is saved among draws, then it is reconstructed from standard deviations \code{sdSigma} or \code{corSigma}.
 If none of the above, a warning is triggered and diagonal unit matrix is returned. 

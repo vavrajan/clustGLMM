@@ -27,7 +27,7 @@ There are 4 main plots to be created:
 }
 All of these for one specific parameter can be plotted by \code{plot_diagnostics}. 
 These functions above work only for a univariate parameter. 
-Additionally, \code{acceptance} draws cumulative means of acceptance of Metropolis-Hastings proposals agains the iteration number for a parameter block.
+Additionally, \code{acceptance} draws cumulative means of acceptance of Metropolis-Hastings proposals against the iteration number for a parameter block.
 Plots for all elements of a multivariate parameter can be created using \code{..._param} functions. 
 A special function is \code{plot_clusters} which allows to compare densities or ECDFs of univariate group-specific parameter across non-empty clusters.  
 }
@@ -169,13 +169,13 @@ a logical declaring whether ECDFs should be plotted for comparing different clus
   
   Description of the plots:
   \describe{
-    \item{\code{ACF}}{Autocorrelation function plots have the lag on x-axis [0, \code{lag.max}] and auto-correlations in interval (-1, 1) on y-axis. By default, \code{lag.max = min(30, mcmc$iter-1)}. Different chains have different colors and are slightly jittered for better visuality, see \code{move.width}. }
+    \item{\code{ACF}}{Autocorrelation function plots have the lag on x-axis [0, \code{lag.max}] and auto-correlations in interval (-1, 1) on y-axis. By default, \code{lag.max = min(30, mcmc$iter-1)}. Different chains have different colors and are slightly jittered for better visibility, see \code{move.width}. }
     \item{\code{ECDF}}{Cumulative distribution function plots have the range of sampled values on x-axis and the cumulative probabilities in [0, 1] on y-axis. Different colors depict different chains of non-decreasing ECDFs.}
     \item{\code{kerneldensity}}{Kernel density estimator plots have the range of sampled values on x-axis and the density value in [0, max(density)] on y-axis. Different colors depict different chains.}
     \item{\code{traceplot}}{Traceplots have the range of the considered iteration numbers on x-axis and the sampled values of the parameter on y-axis. Different colors depict different chains. Stationarity of these plots is desired for reliable posterior approximation, if the plots are not stationary then consider continuation in sampling. }
   }
   You can plot all 4 of these by \code{plot_diagnostics}. 
-  By default they are produced in 2 by 2 layout, but if you would prefer some different arrangement you can do that before calling the function and supressing \code{setparmfrow = FALSE}. 
+  By default they are produced in 2 by 2 layout, but if you would prefer some different arrangement you can do that before calling the function and suppressing \code{setparmfrow = FALSE}.
   Moreover, the \code{ACF} plot contains a legend for the chains including the acceptance percentage, if the parameter is sampled via Metropolis-Hastings proposal algorithm. 
   
   Using the functions above you can only plot a scalar model parameter which is specified by filling/missing \code{what}, \code{gspec}, \code{yspec}, \code{dimspec}. 

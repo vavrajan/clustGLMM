@@ -64,7 +64,7 @@ Output of \code{plot_num_vs_x_grouped} depends on the type of covariate \code{x}
 \describe{
 \item{factor}{boxplots of the outcome \code{y} wrt levels of covariate \code{x} with a transparent color
 determined by \code{group}. Boxplots for the same group may overlap, hence, transparent colors.}
-\item{numeric}{spaghetti-plots the outcome \code{y} wrt covariate \code{x} coloured by \code{group}. 
+\item{numeric}{spaghetti-plots the outcome \code{y} wrt covariate \code{x} colored by \code{group}.
 Only units included in \code{units} are plotted. }
 }
 
@@ -137,7 +137,7 @@ mcmc <- clustGLMM(formula = formula, id = id, family = family,
 ### Take the sampled U indicators
 threshold <- 0.5 # if not exceeded, unit remains unclassified
 
-# posterior mode of Gplus=number of nonemtpy components
+# posterior mode of Gplus=number of non-empty components
 mcmc$modeGplus
 
 # labels of non-empty clusters in each chain
