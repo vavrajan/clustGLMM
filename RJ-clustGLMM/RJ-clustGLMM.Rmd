@@ -56,10 +56,6 @@ output:
 always_allow_html: true
 -->
 
-<!--
-
--->
-
 ```{r setup, include=FALSE}
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = "figure-latex/")
@@ -119,7 +115,6 @@ This indicates the need for a\ unified, flexible, and extensible implementation 
 
 To address these limitations, we introduce the R package \pkg{clustGLMM}, which implements a\ Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a\ mixture of generalized linear mixed models (GLMMs), allowing for a\ flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, the outputs are compatible with package \CRANpkg{coda} [@Plummer06coda], enabling a\ full posterior characterization of both, model parameters and latent cluster assignments.
 
-<!-- Package \pkg{clustGLMM} draws on principles from general-purpose Bayesian modeling tools such as \CRANpkg{brms} [@Burkner17brms], which provides a\ high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and \CRANpkg{coda} [@Plummer06coda] for MCMC output analysis.  -->
 By focusing specifically on clustering, \pkg{clustGLMM} fills a\ gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a\ practical and extensible solution for researchers working with complex longitudinal data. In particular, a\ number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a\ convenient use in clustering applications. 
 
 All computations and graphics in this paper have been done with \pkg{clustGLMM} version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of \pkg{clustGLMM} is always available from the Comprehensive R Archive Network (CRAN) at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a\ package vignette.
@@ -387,7 +382,6 @@ if (file.exists("workflow-diagram.png")) {
 ## Artificial `psurvey` data
 
 The panel survey data available in package \pkg{clustGLMM} were generated using function `generate_psurvey_data()` (see the help pages for details). 
-<!-- We use this dataset to demonstrate the use of the package and illustrate a\ broad range of the functionality covered.  -->
 The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
 We observe three outcomes of different type:
@@ -403,8 +397,6 @@ We load the dataset and inspect the first few entries:
 data("psurvey", package = "clustGLMM")
 head(psurvey)
 ```
-
-<!-- We load the dataset with the following command: -->
 
 ```{r psurvey-load, echo = FALSE, eval = FALSE}
 data("psurvey", package = "clustGLMM")
@@ -650,9 +642,6 @@ plot, kernel density estimate, empirical cumulative distribution
 function (ECDF) and auto-correlation function (ACF), where the legend 
 contains the acceptance rate in case of M--H sampled parameters. 
 These plots can be obtained with function `plot_diagnostics()`. 
-<!-- This function also has -->
-<!-- the option to add a\ line for the true value of the parameters, if -->
-<!-- known.  -->
 Note that we specify the outcome to which the parameter belongs
 (`yspec`), but neither group (`gspec` empty, precision is not
 considered group-specific) nor dimension (`dimspec` empty, scalar
@@ -854,14 +843,6 @@ U <- mcmc_pp$draws[[1]] |> select(starts_with("U"))
 w <- mcmc_pp$draws[[1]] |> select(starts_with("w"))
 ```
 
-<!-- ```{r psurvey-mcmc-histograms, echo=TRUE, results = FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Histogram of the sampled coefficient of squared age of income for component 4 (left) and sampled precision of income (right)", fig.pos="H", out.width="100%"} -->
-<!-- par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 2)) -->
-<!-- hist(mcmc$draws[[1]]$`beta_num_income(4)[3]`, -->
-<!--      main = "coefficient of squared age of income for g=4", xlab = "draws") -->
-<!-- hist(mcmc$draws[[1]]$`prec_num_income`,  main = "precision of income", -->
-<!--      xlab = "draws") -->
-<!-- ``` -->
-
 ### Inspecting the posterior predictive distributions {#subsubsec:psurvey-predict}
 
 Inspecting the summaries of the posterior distributions provides some
@@ -969,74 +950,6 @@ for (g in 1:mcmc_pp$modeGplus[1]) {
 # }
 ```
 
-<!-- For the ordinal response, we plot the posterior estimates of the -->
-<!-- specific linear predictors based on the mean as well as the lower and -->
-<!-- upper bound for the 95% credible interval. We complement this plot -->
-<!-- with a\ visualization of the induced cluster-specific posterior -->
-<!-- probabilities for each category of the ordinal response. Finally, we -->
-<!-- also visualize the observed data using spineplots by splitting them -->
-<!-- into groups given the cluster classifications obtained with the fitted -->
-<!-- model. -->
-
-<!-- ```{r psurvey-predict-satisfaction, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=5, fig.cap="Estimated spline curves for satisfaction with shifting by intercepts (left), probability of attaining each ordinal level (middle) and spineplot for each group separately in time (right).", fig.pos="H", out.width="100%"} -->
-<!-- psurvey[, "Uclustering"] <- mcmc_pp$clustering[psurvey$i, 1] -->
-
-<!-- burnin <- 0 -->
-<!-- thin <- 1 -->
-<!-- age_grid <- seq(18, 40, by = 0.1) -->
-<!-- COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[1], c = 80, l = 50) -->
-
-<!-- par(mfrow = c(1, 2)) -->
-<!-- for (y in mcmc_pp$Ords) { -->
-<!--   maxK <- mcmc_pp$Kord[y] -->
-<!--   pred <- predict(mcmc_pp, newdata, y = y, type = "link", -->
-<!--                   what = "fg", method = "samples", -->
-<!--                   burnin = burnin, thin = thin, chain = 1) -->
-
-<!--   par(mar = c(4, 4, 2, 0.5)) -->
-<!--   plot(x = 0, y = 0, type = "n", -->
-<!--        xlim = range(age_grid), ylim = range(unlist(pred)), -->
-<!--        xlab = "age", ylab = "Linear predictor - ordered intercept", -->
-<!--        main = y) -->
-<!--   for (k in 1:maxK) { -->
-<!--     for (g in mcmc_pp$clusters[[1]]) { -->
-<!--       lines(x = age_grid, y = pred$fit[, paste0("(", g, ")"), paste0("k=", k)], -->
-<!--             col = COL[g], lwd = 3) -->
-<!--       lines(x = age_grid, y = pred$lwr[, paste0("(", g, ")"), paste0("k=", k)], -->
-<!--             col = COL[g], lty = 2) -->
-<!--       lines(x = age_grid, y = pred$upr[, paste0("(", g, ")"), paste0("k=", k)], -->
-<!--             col = COL[g], lty = 2) -->
-<!--     } -->
-<!--   } -->
-
-<!--   # Predicted probabilities -->
-<!--   pred <- predict(mcmc_pp, newdata, y = y, type = "response", -->
-<!--                   what = "fg", method = "samples", -->
-<!--                   burnin = burnin, thin = thin, chain = 1) -->
-
-<!--   par(mar = c(4, 4, 2, 2.5)) -->
-<!--   plot(x = 0, y = 0, type = "n", -->
-<!--        xlim = range(age_grid), ylim = range(1, maxK+2), -->
-<!--        xlab = "age", ylab = "Predicted probability for level k", -->
-<!--        yaxt = "n", -->
-<!--        main = y) -->
-<!--   axis(2, at = 0.5+1:(maxK+1), labels = paste0("k=", 0:maxK)) -->
-<!--   for (p in c(0.2, 0.5, 0.8)) { -->
-<!--     axis(4, at = p+1:(maxK+1), labels = rep(p, maxK+1), las = 1, cex = 0.8) -->
-<!--   } -->
-<!--   for (k in 1:(maxK+1)) { -->
-<!--     for (g in mcmc_pp$clusters[[1]]) { -->
-<!--       lines(x = age_grid, y = k+pred$fit[, paste0("(", g, ")"), paste0("k=", k)], -->
-<!--             col = COL[g], lwd = 3) -->
-<!--       lines(x = age_grid, y = k+pred$lwr[, paste0("(", g, ")"), paste0("k=", k)], -->
-<!--             col = COL[g], lty = 2) -->
-<!--       lines(x = age_grid, y = k+pred$upr[, paste0("(", g, ")"), paste0("k=", k)], -->
-<!--             col = COL[g], lty = 2) -->
-<!--     } -->
-<!--   } -->
-<!-- } -->
-<!-- ``` -->
-
 ### Obtaining clustering probabilities and deviance {#subsubsec:psurvey-clust-prob-deviance}
 
 
@@ -1102,34 +1015,12 @@ between the clusters which were not visible in Figure
 available in `data("psurvey_latent", package = "clustGLMM")`, we would
 essentially obtain the same differences up to label permutation.
 
-<!-- Overall, the results may be interpreted in the following way: Group 3 -->
-<!-- (blue) represents respondents who started to work earlier compared to -->
-<!-- members of the other groups, presumably because they did not pursue a\ -->
-<!-- university degree. That might explain their higher income at the age -->
-<!-- 18-23 years and the slower growth of their income later in their -->
-<!-- life. They start going on trips at an earlier age than other groups, -->
-<!-- but due to their lower income they cannot go as often at older age. -->
-
-<!-- Groups 1 (red) and also 2 (green) represent respondents who have a\ low -->
-<!-- income at young age but then have a\ steep increase in income after an -->
-<!-- age of 25 years. This might be due to them staying longer in education -->
-<!-- and earning a\ university degree. Comparing these two groups further -->
-<!-- indicates that respondents in group 1 travel a\ lot, in particular -->
-<!-- between 25 and 30 years and again after an age of 35 years while also -->
-<!-- showing an increase in satisfaction levels. By contrast, respondents -->
-<!-- in group 2 rarely go on trips after the age of 20 years and show a\ -->
-<!-- reduction in level of satisfaction when they grow older. -->
-
 So far we considered the classification of respondents based on the
 sampled indicators. Alternatively, the posterior distribution of the
 clustering probabilities $u_{i,g}$ could be determined and used to
 obtain clustering probabilities for already observed or new
 respondents. $u_{i,g}$ is the probability induced by the model that observation $i$ belongs
-to component $g$ where the random effects are integrated out. <!-- E.g., -->
-<!-- the probabilities for observation $i=1$ to belong to component -->
-<!-- $g=1,2,3$ is stored in `pmcmc$draws[[1]][["pUig_int(1)[1]"]]`, -->
-<!-- `pmcmc$draws[[1]][["pUig_int(2)[1]"]]` and -->
-<!-- `pmcmc$draws[[1]][["pUig_int(3)[1]"]]`. -->
+to component $g$ where the random effects are integrated out. 
 
 Function `clustering_probabilities_and_deviance()` evaluates these
 clustering probabilities at carefully chosen iterations (which could
@@ -1152,11 +1043,6 @@ higher values of `NGQ` but beware of extremely quickly rising complexity.
 In situations where probabilities for all subjects are of interest
 we have always used `NGQ = 1` so far to keep the computational costs low
 and we have not encountered any severe misclassification errors.
-
-
-<!-- ```{r psurvey-clustering-probabilities-and-deviance-print, echo=TRUE, results = TRUE} -->
-<!-- pmcmc -->
-<!-- ``` -->
 
 We compare the resulting clustering based on the clustering
 probabilities to the clustering obtained based on the sampled
@@ -1260,23 +1146,6 @@ missing observations, label switching, an unknown number of clusters,
 insufficient burn-in iterations, prediction and the clustering of new
 observations. We demonstrated the ease of usage as well as the broad
 range of functionality covered on an artificial dataset.
-
-<!-- Although we consider our implementation to be very flexible, there -->
-<!-- some potential limitations for the user. For example, the prior -->
-<!-- distributions (i.e., their hyperparameters) are restricted to be the -->
-<!-- same for all components and within each type of outcome. Currently, -->
-<!-- differences are only possible for different outcome types, which may -->
-<!-- be insufficient for some applications. A similar problem holds for the -->
-<!-- model parameters $\tau$ (the error precision of numeric outcomes) and -->
-<!-- $c$ (the ordered intercepts for ordered outcomes), their -->
-<!-- group-specificity is applied uniformly to all outcomes. Cluster -->
-<!-- identification could be also resolved with a\ semi-supervised approach -->
-<!-- where labels of some individuals are assumed to be known in -->
-<!-- advance. Finally, there is also a\ limitation in the parameterization -->
-<!-- of each outcome type: we do not allow for different link functions or -->
-<!-- families. However, we opted for these simplifications to obtain a\ -->
-<!-- suitable trade-off between flexibility and ease of use. -->
-
 
 
 
