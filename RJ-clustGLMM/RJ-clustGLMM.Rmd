@@ -274,7 +274,7 @@ otherwise the old value is retained. Finally, the new value of $\boldsymbol{\ome
 
 ## Clustering probabilities and deviance {#subsec:clust-prob-deviance}
 
-Using an MCMC sampling approach with data augmentation, we can avoid approximating the integral \@ref(eq:pdf-int-bi-Ui) to estimate the model parameters. However, to determine some quantities of interest such as the clustering probabilities or evaluating the deviance, this integration over the random effects needs to be performed. In particular, the clustering probabilities $u_{i,g}$ of an individual $i$ to belong to component $g$ can be viewed as parametric functions of the primary model parameters and the data of the individual $i$ and are proportional to
+Using an MCMC sampling approach with data augmentation, we can avoid approximating the integral \@ref(eq:pdf-int-bi-Ui) to estimate the model parameters. However, for some quantities of interest such as the clustering probabilities or the deviance, the integral over the random effects needs to be determined. In particular, the clustering probabilities $u_{i,g}$ of an individual $i$ to belong to component $g$ are parametric functions of the primary model parameters and the data of the individual $i$ and are proportional to
 \begin{align*}
 u_{i,g}(\boldsymbol{\beta}, &\boldsymbol{\tau}, \mathbf{c}, \boldsymbol{\Sigma}, \mathbf{w} \,|\, \mathbb{Y}_i, \mathcal{C}_i) 
 \propto\\
@@ -284,7 +284,7 @@ p\left(\mathbb{Y}_i \,\left\vert\, U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F
 p\left(\mathbf{b}_i \,\left\vert\, U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right.\right)
 \mathrm{d} \mathbf{b}_i.
 \end{align*}
-We reformulate the integrand as a\ function $\exp\{h^{(g)}\}$ in variable $\mathbf{b}_i$, i.e., as $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, to apply an approximation method. The Laplace approximation relies on the Taylor expansion of the second order of the function $h^{(g)}$, assuming that it is differentiable and concave. Using the N-R method the maximum $\widehat{\mathbf{b}}_i^{(g)}$ and the negative Hessian matrix $H^{(g)}$ at the maximum are found. These are then used in the Laplace approximation:
+We reformulate the integrand as a\ function $\exp\{h^{(g)}\}$ in variable $\mathbf{b}_i$, i.e., as $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, to apply an approximation method. The Laplace approximation relies on the Taylor expansion of the second order of the function $h^{(g)}$, assuming that it is differentiable and concave. The N-R method finds the maximum $\widehat{\mathbf{b}}_i^{(g)}$ and the negative Hessian matrix $H^{(g)}$ at the maximum. These are then used in the Laplace approximation:
 \begin{equation}
   \int \exp\left\{h^{(g)}(\mathbf{b}_i)\right\} \mathrm{d} \mathbf{b}_i
   \approx 
@@ -293,9 +293,9 @@ We reformulate the integrand as a\ function $\exp\{h^{(g)}\}$ in variable $\math
 \end{equation}
 We use these approximations to obtain estimates for the clustering probabilities $u_{i,g}$ defined above. The normalizing denominator for the proportionality is an approximation to $p(\mathbb{Y}_i \,|\, \mathcal{C}_i)$ given in \@ref(eq:pdf-int-bi-Ui), which can be used to determine the contribution of a\ single individual to the deviance defined as $-2\log p(\mathbb{Y}_i \,|\, \mathcal{C}_i)$.
 
-In general, however, the Laplace approximation of the integral is rather crude. To reduce the approximation error, we also implemented Adaptive Gaussian Quadrature, a\ natural generalization of the Laplace approximation [@PinheiroChao06]. The idea is to evaluate the function $h^{(g)}$ on a\ suitable grid of $\mathbf{b}_i$ values determined by the maximal point $\widehat{\mathbf{b}}_i^{(g)}$ and $H^{(g)}$-scaled roots of the Hermite polynomial of prescribed order. The first order polynomial has only one root (0), thus yielding the Laplace approximation. The number of points where function $h^{(g)}$ needs to be evaluated increases exponentially with the order of the polynomial. Further details can be found in the supplementary material to @Vavra-etal2024.
+In general, however, the Laplace approximation of the integral is rather crude. To reduce the approximation error, we also implemented Adaptive Gaussian Quadrature (AGQ), a\ natural generalization of the Laplace approximation [@PinheiroChao06]. AGQ evaluates the function $h^{(g)}$ on a\ suitable grid of $\mathbf{b}_i$ values determined by the maximal point $\widehat{\mathbf{b}}_i^{(g)}$ and $H^{(g)}$-scaled roots of the Hermite polynomial of prescribed order. The first order polynomial has only one root (0), thus yielding the Laplace approximation. The number of points where function $h^{(g)}$ needs to be evaluated increases exponentially with the order of the polynomial. Further details can be found in the supplementary material to @Vavra-etal2024. A general recommendation to select the order of the polynomial is to pursue a stepwise procedure and increase the order until the approximation values are stable. 
 
-These approximations have to be done for all considered cluster labels $g$ and for every sampled set of model parameters within the MCMC chain to explore the posterior distribution of $u_{i,g}$ properly. Moreover, the full deviance requires the separate evaluation for each individual within the dataset. This is usually computationally very expensive and, hence, one might either need to rely on crude approximations or make use of parallel computing for better approximations.
+Overall this procedure is usually computationally very expensive, because these approximations have to be done for all considered cluster labels $g$ and for every sampled set of model parameters within the MCMC chain to explore the posterior distribution of $u_{i,g}$ properly. Also determining the full deviance requires the separate evaluation for each individual within the dataset. This suggests to reduce the computational burden by thinning the MCMC samples, selecting a low order for the AGQ approximation or exploit parallel computation due to the embarrassingly parallel nature of the individual-specific approximations. 
 
 # Illustrative use of the package {#sec:psurvey}
 
@@ -381,7 +381,7 @@ if (file.exists("workflow-diagram.png")) {
 
 ## Artificial `psurvey` data
 
-The panel survey data available in package \pkg{clustGLMM} were generated using function `generate_psurvey_data()` (see the help pages for details). 
+We use the panel survey data available in package \pkg{clustGLMM}, generated with function `generate_psurvey_data()`, to demonstrate the use of the package.
 The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
 We observe three outcomes of different type:
@@ -863,24 +863,26 @@ pred1 <- predict(mcmc_pp, newdata, y = "ntrips", type = "link")
 
 The function returns a\ list of `fit`, `lwr` and `upr` containing the
 posterior mean and equal-tailed credible intervals of prescribed level
-for each cluster separately. In addition, predictions of the mean on
+for each cluster separately. In addition, predictions  might also be obtained of the mean on
 the response scale (`type = "response"`) as well as of the response 
-(`type = "posterior_predictive_response"`) might also be obtained. The latter
-is created by sampling independent response values given sampled parameters, thus, 
+(`type = "posterior_predictive_response"`). The latter
+is created by sampling independent response values given sampled parameters. This, thus, 
 has much wider credible intervals that should cover 95\% of response values, unlike
 the other that targets solely the mean, see Figure \@ref(fig:psurvey-prediction). 
-The wiggly lines in the plot on the right are caused by low sample size 
-and discreteness of Poisson variable.
+The wiggly lines in the plot on the right are caused by the low number of iterations
+and discreteness of the Poisson variable.
 
 ```{r psurvey-predict-basic-use-2, echo = TRUE, eval = TRUE}
 pred2 <- predict(mcmc_pp, newdata, y = "ntrips", type = "response") 
 pred3 <- predict(mcmc_pp, newdata, y = "ntrips", type = "posterior_predictive_response")
 ```
 
-Because of the broad usage of `predict` function with user-specified `newdata` argument
-we do not provide any general-purpose plotting function for such output.
-The plots have to be created manually using simple commands as shown below 
-where we plot the cluster-specific predicted values for `ntrips`.
+We do not provide a general-purpose plotting function for the
+`predict` output because of the arbitrary structure in the data
+specified in the `newdata` argument and the general regression
+structure possible to fit with package \pkg{clustGLMM}. In the
+following we manually create plots using simple commands to illustrate
+the cluster-specific predicted values for `ntrips`.
 
 ```{r  psurvey-prediction, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Cluster-specific predictions of `ntrips`. Linear predictor (left), predicted mean response  (middle) and samples from the predictive distribution (right) including 95% credible intervals (dashed lines).", fig.pos="H", out.width="100%", echo = TRUE, eval = TRUE}
 par(mar = c(4, 4, 2.5, 0.5), mfrow = c(1, 3))
@@ -993,7 +995,7 @@ mcmc_perm <- permute_cluster_labels(mcmc_pp, perm = perm)
 
 However, for consistency in the analysis and interpretation of the
 clusters we continue working with the original post-processed MCMC
-sample `mcmc_pp` where the labels remain unpermuted.
+iterations `mcmc_pp` where the labels remain unpermuted.
 
 Finally, we plot the observed data again, but also include the
 information to which cluster each respondent is assigned using
@@ -1023,8 +1025,7 @@ respondents. $u_{i,g}$ is the probability induced by the model that observation 
 to component $g$ where the random effects are integrated out. 
 
 Function `clustering_probabilities_and_deviance()` evaluates these
-clustering probabilities at carefully chosen iterations (which could
-be parallelized), see \@ref(eq:integral-bi-approx).
+clustering probabilities. 
 
 ```{r psurvey-clustering-probabilities-and-deviance, echo=TRUE, results = FALSE}
 pmcmc <- clustering_probabilities_and_deviance(
@@ -1033,16 +1034,20 @@ pmcmc <- clustering_probabilities_and_deviance(
 ```
 
 Using `data = psurvey`, these clustering probabilities are determined
-for all original respondents. To keep this example computable in couple 
-of seconds we reduce the samples by using only
-every 10-th sample (using thinning with `thin = 10`) and the rather
-crude Laplace approximation (`NGQ = 1`).
-Ideally, we would use more samples (as)
-If higher precision of approximation is required we encourage to use 
-higher values of `NGQ` but beware of extremely quickly rising complexity.
-In situations where probabilities for all subjects are of interest
-we have always used `NGQ = 1` so far to keep the computational costs low
-and we have not encountered any severe misclassification errors.
+for all original respondents. To ensure that this example runs in a
+couple of seconds, we consider only every 10-th iteration (using
+thinning with `thin = 10`) and the rather crude Laplace approximation
+(`NGQ = 1`). In a real application, we suggest to use parallelization
+to reduce the computational burden and pursue a stepwise procedure to
+determine a suitable order comparing the approximations obtained.
+
+<!-- A higher precision of approximation would be achieved -->
+<!-- with higher values of `NGQ` but the computational complexity quickly -->
+<!-- increases.  -->
+<!-- In situations where probabilities for all subjects are of -->
+<!-- interest we have always used `NGQ = 1` so far to keep the -->
+<!-- computational costs low and we have not encountered any severe -->
+<!-- misclassification errors. -->
 
 We compare the resulting clustering based on the clustering
 probabilities to the clustering obtained based on the sampled
@@ -1147,5 +1152,13 @@ insufficient burn-in iterations, prediction and the clustering of new
 observations. We demonstrated the ease of usage as well as the broad
 range of functionality covered on an artificial dataset.
 
-
+The package was developed with a model-based clustering application in
+mind, assuming that distinctively different groups can be extracted
+from the data. We demonstrated the use of the package in such a
+situation. Alternatively, the package could also be used to fit
+mixtures of GLMMs to account for unobserved heterogeneity, while
+focusing inference on parameters which are constant across groups. In
+this case, no identification is required, but the package is still
+useful to fit the model and perform posterior inference for parameters
+constant across groups.
 
