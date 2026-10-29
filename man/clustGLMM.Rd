@@ -14,7 +14,7 @@ clustGLMM(formula, id, family, data, G,
 }
 \arguments{
   \item{formula}{
-a structured list containing formulae for all modelled outcomes. Let \code{y} be a modelled outcome then \code{formula[[y]]} should be a list containing
+a structured list containing formulae for all modeled outcomes. Let \code{y} be a modeled outcome then \code{formula[[y]]} should be a list containing
 \describe{
 \item{\code{$fixed}}{\code{formula} for effects common to all clusters,}
 \item{\code{$group}}{\code{formula} for cluster-specific effects,}
@@ -86,7 +86,7 @@ A named vector \code{save} contains a Boolean for each model parameter including
  
 A named list \code{param} contains the values of the hyperparameters needed to set up the priors. The default values are set up by \code{\link{default_param}}. By adjusting the values of \code{ae} and \code{be} different levels of sparsity can be achieved. The lower \code{ae/be} is, the sparser the results expected.  
 
-The list of initial values \code{inits} is convenient to supply in case one is intereseted in continuing the sampling using the last sampled values as initialization, e.g., if the chains have not yet converged. If \code{inits} is missing, then a completely new set of initial values for each of the sampled chains is generated in the following way:
+The list of initial values \code{inits} is convenient to supply in case one is interested in continuing the sampling using the last sampled values as initialization, e.g., if the chains have not yet converged. If \code{inits} is missing, then a completely new set of initial values for each of the sampled chains is generated in the following way:
 
 1. Units are randomly (uniformly) distributed to \code{G} components and \code{w} is initiated with \code{1/G} for all components.
 
@@ -112,7 +112,7 @@ The algorithm also requires a set of tuning parameters in \code{tuning} that tun
  An object of class \code{"clustglmm"} where the most important elements contained are:
 \item{draws}{a list indexed by chain with generated samples saved either in a large data.frame (\code{howsave = "data.frame"}) or a carefully structured list (\code{howsave = "list"}).}
 \item{param_names}{individual parameter (column) names in a structured list by general parameter name.}
-\item{accept}{a list indexed by chain with a \code{data.frame} of proposal acceptances with values in interval [0, 1] (could be inbetween if multiple proposals per step are considered by \code{tuning$integer$times_proposal}).}
+\item{accept}{a list indexed by chain with a \code{data.frame} of proposal acceptances with values in interval [0, 1] (could be in-between if multiple proposals per step are considered by \code{tuning$integer$times_proposal}).}
 
 In addition the object contains the inputs given to the function: \code{iter}, \code{nchains}, \code{family} (sorted by type), \code{formula}, \code{G} (a vector of Gs for all chains), \code{varying}, \code{save}, \code{howsave}, \code{param}, \code{tuning}, \code{standardize}.
 
@@ -126,7 +126,7 @@ Furthermore elements consisting of newly defined quantities are:
 \item{inits}{a structured list of parameter values used as initial values,}
 \item{last}{a structured list in the same format as \code{inits} to be used as initial values for additional sampling,}
 \item{InitType}{string describing whether the initial values were given or created,} 
-\item{dim_accept}{a list contaning a vector of \code{accept} dimensions per parameter for each chain,} 
+\item{dim_accept}{a list containing a vector of \code{accept} dimensions per parameter for each chain,}
 \item{call}{summary of what has been fitted,}
 \item{iter}{length of each sampled chain,}
 \item{n}{total number of units (unique IDs),}
@@ -141,10 +141,10 @@ Furthermore elements consisting of newly defined quantities are:
 \item{nran}{a vector named by outcomes that declares the dimension size of random effects specific to each unit,}
 \item{noff}{a vector named by outcomes that declares whether an offset is included in formula,}
 \item{totnran}{total dimension of random effects, \code{totnran = sum(nran)},}
-\item{lfixnames}{a list of names of fixed effects common to all clusters for each modelled outcome,}
-\item{lgrpnames}{a list of names of group-specific effects for each modelled outcome,}
-\item{lrannames}{a list of names of random effects specific to each unit for each modelled outcome,}
-\item{loffnames}{a list of names of offset variables for each modelled outcomes,}
+\item{lfixnames}{a list of names of fixed effects common to all clusters for each modeled outcome,}
+\item{lgrpnames}{a list of names of group-specific effects for each modeled outcome,}
+\item{lrannames}{a list of names of random effects specific to each unit for each modeled outcome,}
+\item{loffnames}{a list of names of offset variables for each modeled outcomes,}
 \item{fixnames}{unlisted \code{lfixnames},}
 \item{grpnames}{unlisted \code{lgrpnames},}
 \item{rannames}{unlisted \code{lrannames},}
