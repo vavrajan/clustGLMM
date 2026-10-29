@@ -605,7 +605,7 @@ function(
   data$ycat <- factor(data$ycat, levels = 0:(Kcat-1))
   
   return(list(data = data, 
-              sd_num = sd_num, 
+              sd_num = sd_num[[G]],
               beta_num = beta_num, 
               beta_poi = beta_poi, 
               beta_bin = beta_bin, 
