@@ -10,13 +10,13 @@ author:
   - Sokolovská 49/83
   - 186 75 Praha 8
 - name: Bettina Grün
-  email: bettina.gruen@wu.ac.at
+  email: bettina.gruen@uibk.ac.at
   orcid: "0000-0001-7265-4773"
-  url: "https://statmath.wu.ac.at/~gruen"
-  affiliation: Vienna University of Economics and Business
+  url: "https://eeecon.uibk.ac.at/~gruen"
+  affiliation: University of Innsbruck 
   address:
-  - Welthandelsplatz 1
-  - 1020 Wien
+  - Universitätsstraße 15
+  - 6020 Innsbruck
 - name: "Gertraud Malsiner-Walli"
   email: "gertraud.malsiner-walli@wu.ac.at"
   orcid: "0000-0002-1213-4749"
@@ -151,79 +151,9 @@ kable(ptab, booktabs = TRUE, escape = FALSE) |> kableExtra::landscape()
 
 # Implementation {#implementation}
 
-In the following, we discuss the implementation of the methodology
-in package \pkg{clustGLMM} in more detail. An overview of the typical workflow and
-the key functions is given in Figure\ \@ref(fig:workflow-diagram). In
-the following subsections we go through each of the steps and discuss
-it in detail.
+In the following, we discuss the implementation of the methodology in package \pkg{clustGLMM} in more detail. An overview of the typical workflow and the key functions is given in Figure\ 1 of the manuscript. In the following subsections we go through each of the steps and discuss them in detail.
 
-```{r workflow-diagram, fig.cap="Typical workflow with \\pkg{clustGLMM} and key functions.", out.width="100%", dev="png"}
-graph <- DiagrammeR::grViz("digraph {
-  graph[layout = dot, rankdir = TB]
-  
-  node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
-  rec1[label = '@@1']
-  rec2[label = '@@2']
-  rec3[label = 'Visual diagnostics']
-  rec3a[label = 'Satisfied', shape = diamond, fillcolor = LemonChiffon, style = filled]
-  rec4[label = 'Within chain post-processing']
-  rec5[label = 'Across chain post-processing', fillcolor = LemonChiffon]
-  
-  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled] 
-  code1[label = 'data, family, formula, varying, ...']
-  code2[label = 'clustGLMM()']
-  code3[label = 'as_coda(), plot()']
-  code3a[label = 'If not, return to previous steps (adjust settings or continue in sampling)', fillcolor = white, fontname = Helvetica]
-  code4[label = 'post_processing()']
-  code5[label = 'plot(, which=clusters_kerneldensity), permute_cluster_labels()']
-  
-  node[shape = rectangle, style = rounded, fontname = courier, penwidth = 2, fillcolor = grey70, style = filled]
-  code6a[label = 'summary()']
-  code6b[label = 'predict()']
-  code6c[label = 'clustering_probabilities_and_deviance()']
-  
-  subgraph cluster6 {
-    graph[layout = fdp, shape = rectangle, style = rounded, fillcolor = gold, style = filled]
-    
-    label = ''
-    node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fillcolor = LemonChiffon, style = filled]
-    rec6[label = 'Inference', fillcolor = gold, shape = none]
-    rec6a[label = 'Posterior description with the use of coda']
-    rec6b[label = 'Reconstruct linear predictor']
-    rec6c[label = 'Approximate posterior of clustering probabilities and deviance']
-  }
-  
-  # edge definitions with the node IDs
-  edge[arrowhead = normal, arrowtail = none]
-  rec1 -> rec2 -> rec3 -> rec3a -> rec4 -> rec5 -> rec6
-  
-  edge[arrowhead = none, arrowtail = none]
-  {{rank=same rec1 -> code1}}
-  {{rank=same rec2 -> code2}}
-  {{rank=same rec3 -> code3}}
-  {{rank=same rec3a -> code3a}}
-  {{rank=same rec4 -> code4}}
-  {{rank=same rec5 -> code5}}
-  {{rank=same rec6a -> code6a}}
-  {{rank=same rec6b -> code6b}}
-  {{rank=same rec6c -> code6c}}
-  
-  edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
-  rec6 -> rec6a -> rec6b -> rec6c 
-  
-  }
-  
-  # Substitutions with R code are possible:
-  [1]: paste0('Prepare inputs')
-  [2]: paste0('Sample chains')
-  ",
-  height = 500, width = 600)
-svg_text <- DiagrammeRsvg::export_svg(graph)
-rsvg::rsvg_png(charToRaw(svg_text), file = "workflow-diagram.png")
-knitr::include_graphics("workflow-diagram.png")
-```
-
-The primary inspiration for our package was the usual workflow in R: main function of the same name as the package `clustGLMM()` accompanied with `summary`, `plot` and `predict` methods. The key arguments `formula`, `family`, `data` are already familiar to R users and are coincidentally the same as arguments of `brm` function from R package \pkg{brms} [@Burkner17brms]. However, unlike this package we do not rely on RStan [@RStan], which in our early experiments could not handle the complexity of the mixture model and joint random effects. Although, there are some benefits of separation of model definition from the model fitting as is usual in RStan, we decided to keep the workflow familiar to ordinary R users. The `summary` output is highly inspired by \pkg{coda} [@Plummer06coda], we even offer a function that converts the samples to the `mcmc` object from this package.
+The primary inspiration for our package was the usual workflow in R: a main function of the same name as the package `clustGLMM()` which allows to specify and fit the model accompanied with `summary`, `plot` and `predict` methods for the object returned. The key arguments `formula`, `family`, `data` are already familiar to R users as these arguments are usually available in base R functions for fitting regression models (such as `lm` and `glm`). In addition, a similar user interface is also implmented in the R package \CRANpkg{brms} [@Burkner17brms] which provides functionality for fitting Bayesian regression models and which we inspected to inspire our implementation. In contrast to package \pkg{brms} which uses \CRANpkg{rstan} [@RStan] to perform the posterior sampling, our implementation does not make use of a general purpose MCMC sampling engine. In fact \pkg{rstan} was not able to handle the complexity of the mixture model and joint random effects when we were experimenting with it before starting to implement our own sampler. Regarding our user interface, we acknowledge that an alternative implementation could have separated model definition from model fitting. While this might be attractive to some users, we decided to provide a workflow which is familiar to base R users. The `summary` output is highly inspired by \CRANpkg{coda} [@Plummer06coda], we even offer a function that converts the samples to the `mcmc` object from this package.
 
 
 ## Prepare inputs {#impl-prepare-inputs}
@@ -348,7 +278,7 @@ Finally, `call` summarizes the sample sizes as well as the formulas specified fo
 
 ## Visual diagnostics {#impl-visual-diagnostics}
 
-Given that some users may already be familiar with already established diagnostic tools for assessing convergence of a\ MCMC chain, we provide function `as_coda()` to convert an object of class `"clustglmm"` to a\ `"mcmc.list"` object as defined in package \CRANpkg{coda} [@Plummer06coda]. This enables easy use of all diagnostic tools available in that package.
+Given that some users may already be familiar with already established diagnostic tools for assessing convergence of a\ MCMC chain, we provide function `as_coda()` to convert an object of class `"clustglmm"` to a\ `"mcmc.list"` object as defined in package \pkg{coda}. This enables easy use of all diagnostic tools available in that package.
 
 The use of these tools, however, might be complicated by the large dimension of the parameter space of our model, which can easily contain hundreds of parameters and even thousands of values in case latent id-specific variables are also considered. We thus provide a\ set of plotting functions which provide diagnostic plots for selected specific individual parameters related to a\ given parameter name:
 
