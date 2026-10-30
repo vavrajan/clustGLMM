@@ -577,13 +577,30 @@ plot(mcmc_burnin, ng_trace_chain_split = FALSE)
 Figure \@ref(fig:psurvey-mcmc-burnin-plot-ng) clearly shows that some
 of the `r mcmc_burnin$G[1]` components are immediately emptied and that
 `r length(unique(mcmc_burnin$last[[1]]$U))` non-empty components remain
-in the end. One can continue sampling from the last iteration using:
+in the end. Next, we can inspect the acceptance rates separately for 
+model parameters with the choice of `"accept"` summary:
+```{r psurvey-mcmc-burnin-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
+print(summary(mcmc_burnin), which = "accept")
+```
+The rates seem to be quite high for the usual Bayesian practice. Hence,
+for the upcoming continuation in sampling we adapt the `tuning` parameters
+responsible for inflating the proposal distribution with 
+$c_{\boldsymbol{\theta}_l}$ as discussed in Section\ \@ref(subsec:mcmc).
+By increasing the default value of 1 we flatten the proposal distribution,
+which will lead to lower acceptance rates:
+```{r set-tuning-const-proposal, echo = TRUE, results = TRUE}
+tuning <- default_tuning(const_proposal_e0 = 3.5, 
+  const_proposal_beta_poi = 2.5,  const_proposal_beta_ord = 3.5,
+  const_proposal_a_ord = 2.5, const_proposal_b = 1.5)
+```
+
+One can continue sampling with the new `tuning` settings from the last iteration using:
 
 ```{r psurvey-mcmc, echo=TRUE, results=FALSE}
-set.seed(1234)
+set.seed(12345)
 mcmc <- clustGLMM(formula, id = "i", family, data = psurvey, G = 10, 
-                  varying = varying, save = save, param = param, iter = 1000, 
-                  inits = mcmc_burnin$last, nchains = 1, standardize = TRUE)
+                  varying = varying, save = save, param = param, tuning = tuning, 
+                  iter = 1000, inits = mcmc_burnin$last, nchains = 1, standardize = TRUE)
 ```
 	
 Note that sampling MCMC chains can take several seconds or minutes,
@@ -592,7 +609,7 @@ number of chains and the number of iterations. The `print` method
 without specifying any arguments provides an overview on the dataset,
 the defined regression models for the different outcomes and the
 simulation specification used for MCMC sampling including the 
-overall acceptance rate.
+reduced overall acceptance rate.
 
 ```{r psurvey-mcmc-print, echo = TRUE, results=TRUE}
 print(mcmc)
@@ -761,14 +778,17 @@ Figure \@ref(fig:psurvey-mcmc-pp-beta-num-1) clearly demonstrates that
 one cluster differs from the other two that seem to be rather similar,
 in regard to `income`.
 
-The following summary provides the acceptance rates in four consecutive stages
-aggregated for the key model M--H sampled parameters. In case the rate is too 
-low or too high one may tune the associated proposal constant in `tuning`.
-The graphical depiction is also provided with `plot(, which = "accept")`. 
-
+With `which = "accept"` we can inspect, how our changes of `tuning` parameters
+effected the acceptance rates for each model parameter separately:
+<!-- The following summary provides the acceptance rates in four consecutive stages -->
+<!-- aggregated for the key model M--H sampled parameters. In case the rate is too  -->
+<!-- low or too high one may tune the associated proposal constant in `tuning`. -->
+<!-- The graphical depiction is also provided with `plot(, which = "accept")`.  -->
 ```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
 print(sum_mcmc, which = "accept")
 ```
+Moreover, with `plot(, which = "accept")` we could depict, how the acceptance rates evolve 
+during the whole sampling process.
 
 Next we provide the summary of the model parameters related to the
 component weights:

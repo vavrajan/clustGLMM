@@ -52,20 +52,20 @@ summary.clustglmm <- function(object, burnin = 0, thin = 1, ...) {
     begin_cols <- gsub("[([\\[].*$", "", colnames(object$accept[[ch]]))
     fcol <- factor(begin_cols, levels = unique(begin_cols))
     ithin <- seq(burnin+1, nrow(object$accept[[ch]]), by = thin)
-    accept_summary[[ch]]$means_joined <- t(sapply(split.default(object$accept[[ch]][ithin, ], fcol), function(x){
-      x <- as.matrix(x)
-      n <- nrow(x)
-      breaks <- floor(seq(0,1,by=0.25)*n)
-      return(c(100*mean(x[(breaks[1]+1):breaks[2],], na.rm = TRUE),
-               100*mean(x[(breaks[2]+1):breaks[3],], na.rm = TRUE),
-               100*mean(x[(breaks[3]+1):breaks[4],], na.rm = TRUE),
-               100*mean(x[(breaks[4]+1):n,], na.rm = TRUE),
-               100*mean(x, na.rm = TRUE)
-               ))
-    }))
-    colnames(accept_summary[[ch]]$means_joined) <- c(
-      "Mean[0-25]%", "Mean[25-50]%", "Mean[50-75]%", 
-      "Mean[75-100]%", "Mean %")
+    # accept_summary[[ch]]$means_joined <- t(sapply(split.default(object$accept[[ch]][ithin, ], fcol), function(x){
+    #   x <- as.matrix(x)
+    #   n <- nrow(x)
+    #   breaks <- floor(seq(0,1,by=0.25)*n)
+    #   return(c(100*mean(x[(breaks[1]+1):breaks[2],], na.rm = TRUE),
+    #            100*mean(x[(breaks[2]+1):breaks[3],], na.rm = TRUE),
+    #            100*mean(x[(breaks[3]+1):breaks[4],], na.rm = TRUE),
+    #            100*mean(x[(breaks[4]+1):n,], na.rm = TRUE),
+    #            100*mean(x, na.rm = TRUE)
+    #            ))
+    # }))
+    # colnames(accept_summary[[ch]]$means_joined) <- c(
+    #   "Mean[0-25]%", "Mean[25-50]%", "Mean[50-75]%", 
+    #   "Mean[75-100]%", "Mean %")
     accept_summary[[ch]]$minmeanmax <- t(sapply(split.default(object$accept[[ch]][ithin, ], fcol), function(x){
       x <- as.matrix(x)
       return(c(100*min(apply(x, 2, mean, na.rm = TRUE), na.rm = TRUE),
