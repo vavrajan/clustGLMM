@@ -8,7 +8,7 @@ Post-process the Chains Sampled with \code{clustGLMM}
 Sampling MCMC chains via \code{\link{clustGLMM}} assumes underlying \code{Gmax} clusters and allows for learning the true number of underlying clusters. 
 Many clusters are eventually empty and only some cluster labels survive. 
 Given random initialization, different chains may end up with different labels of non-empty clusters including their total count. 
-The function \code{post_processing} performs the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al (2016).
+The function \code{post_processing} performs the post-processing as explained in detail in Malsiner-Walli et al (2026).
 }
 \usage{
 post_processing(mcmc, cols, iter.max = 200, nstart = 30)
@@ -34,7 +34,7 @@ If missing, the chains are aligned to chain 1 based on the Hungarian algorithm, 
 }
 }
 \details{
-\code{post_processing} follows the post-processing suggested by Frühwirth-Schnatter (2011) and Malsiner-Walli et al. (2016) to identify the number of underlying cluster and to resolve possible issues with label-switching.
+\code{post_processing} follows the post-processing outlined in Malsiner-Walli et al. (2026) to identify the number of underlying cluster and to resolve possible issues with label-switching.
 All post-processing is done separately for each chain, keep in mind that the results among chains may differ due to different initial conditions. 
 The procedure can be divided into several steps:
 
@@ -101,9 +101,7 @@ This automatic determination of \code{perm} is slowed down by the call of \code{
 Both functions return back a list of class \code{"clustglmm"}, i.e., the same structure as \code{mcmc}, but with modified items.
 }
 \references{
-Frühwirth-Schnatter, S. (2011) Dealing with Label Switching under Model Uncertainty, John Wiley & Sons, chap 10, pp 213–239
-
-Malsiner-Walli, G., Frühwirth-Schnatter, S., Grün, B.(2016) Model-based clustering based on sparse finite Gaussian mixtures. Statistics and Computing 26:303–324. https://doi.org/10.1007/s11222-014-9500-2
+Malsiner-Walli, G., Frühwirth-Schnatter, S., Grün, B. CliPS - How to identify cluster distributions in Bayesian mixture models. TEST (2026). https://doi.org/10.1007/s11749-026-01034-7
 
 Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise multivariate regression of mixed-type panel data. Stat Comput 34, 46 (2024). https://doi.org/10.1007/s11222-023-10304-5
 }
