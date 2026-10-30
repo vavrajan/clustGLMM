@@ -697,7 +697,10 @@ number of non-empty components `Gplus` is equal to the most frequent
 number of non-empty components. In our example the most frequent
 number of non-empty components is `r mcmc$modeGplus[1]`.  Only draws
 of iterations where the number of non-empty components corresponds
-exactly to `Gplus` are kept for further analysis. Additionally, draws
+exactly to `Gplus` are kept for further analysis. This implies that
+the uncertainty regarding the number of clusters is subsequently not
+taken into account, similar to a procedure where one model is selected
+after fitting models with different number of clusters. In addition, draws
 of parameters sampled from empty components are dropped and the
 remaining draws are relabeled to 
 `r paste(1:mcmc$modeGplus[1], collapse = ", ")`.
@@ -723,7 +726,21 @@ Note that the success of this post-processing step may vary depending on the
 parameters used for clustering, the random initialization used for
 `kmeans()` as well as its argument specification, which can be changed
 by setting the arguments `cols`, `iter.max` and `nstart`.
-To avoid dropping some of the draws we would rather prolong the burn-in phase.
+
+Overall, this post-processing step works well in case the data and the
+model specification result in a posterior reflecting a clear group
+structure. This is indicated by the posterior of the number of
+non-empty components having a clear mode and the non-permutation rate
+being low. Inspecting these quantities is recommended to assess the
+cluster solution. If they indicate that a poor cluster solution is
+extracted, modifying the model specification, i.e., the prior
+parameters or the data model, could be considered to guide the cluster
+extraction and improve the cluster solution obtained. Alternatively,
+one could decide to not extract clusters but use the mixture model to
+account for unobserved heterogeneity while focusing inference on
+cluster-invariant parameters using an unidentified model.  For more
+details on the CliPS approach see @Malsiner-Walli-etal2026clips.
+
 
 ## Inference {#subsec:psurvey-inference}
 
