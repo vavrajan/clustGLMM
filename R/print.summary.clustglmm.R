@@ -63,9 +63,12 @@ print.summary.clustglmm <- function(x, which = c("mcmc", "accept", "inv_param", 
     }
     
     if(is.element("accept", which)){
-      cat("\nEvolution of the proposal acceptance grouped and averaged by parameters\n")
+      # cat("\nEvolution of the proposal acceptance grouped and averaged by parameters\n")
+      # cat("-----------------------------------------------------------------------\n")
+      # print(x$accept_summary[[ch]]$means_joined)
+      cat("\nProposal acceptance rates grouped and summarized by parameters\n")
       cat("-----------------------------------------------------------------------\n")
-      print(x$accept_summary[[ch]]$means_joined)
+      print(x$accept_summary[[ch]]$minmeanmax)
     }
     
     if(is.element("clustering", which)){

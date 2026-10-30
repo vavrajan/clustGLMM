@@ -66,6 +66,15 @@ summary.clustglmm <- function(object, burnin = 0, thin = 1, ...) {
     colnames(accept_summary[[ch]]$means_joined) <- c(
       "Mean[0-25]%", "Mean[25-50]%", "Mean[50-75]%", 
       "Mean[75-100]%", "Mean %")
+    accept_summary[[ch]]$minmeanmax <- t(sapply(split.default(object$accept[[ch]][ithin, ], fcol), function(x){
+      x <- as.matrix(x)
+      return(c(100*min(apply(x, 2, mean, na.rm = TRUE), na.rm = TRUE),
+               100*mean(x, na.rm = TRUE),
+               100*max(apply(x, 2, mean, na.rm = TRUE), na.rm = TRUE)
+      ))
+    }))
+    colnames(accept_summary[[ch]]$minmeanmax) <- c(
+      "Min %", "Mean %", "Max %")
   }
   
   res <- list(call = object$call,
