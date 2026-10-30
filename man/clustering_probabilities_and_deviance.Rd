@@ -176,7 +176,7 @@ corr <- matrix(c(1, -0.5, -0.5, -0.4, -0.4,
                  -0.4, 0.4, 0.2, 1, 0.1,
                  -0.4, 0.5, 0.3, 0.1, 1), byrow = TRUE, ncol = 5)
 sdSigmas <- c(0.5, 0.5, 0.5, 0.5, 0.5)
-Sigma <- diag(sdSigmas) %*% corr %*% diag(sdSigmas)
+Sigma <- diag(sdSigmas) \%*\% corr \%*\% diag(sdSigmas)
 
 set.seed(27818)
 ldatanew <- generate_longitudinal_mixed_type_data(n = nnew, n_i = 4,
