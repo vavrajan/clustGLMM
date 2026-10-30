@@ -579,7 +579,7 @@ of the `r mcmc_burnin$G[1]` components are immediately emptied and that
 `r length(unique(mcmc_burnin$last[[1]]$U))` non-empty components remain
 in the end. Next, we can inspect the acceptance rates separately for 
 model parameters with the choice of `"accept"` summary:
-```{r psurvey-mcmc-burnin-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
+```{r psurvey-mcmc-burnin-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 4), output.lines=-(1:4)}
 print(summary(mcmc_burnin), which = "accept")
 ```
 The rates seem to be quite high for the usual Bayesian practice. Hence,
@@ -779,12 +779,12 @@ one cluster differs from the other two that seem to be rather similar,
 in regard to `income`.
 
 With `which = "accept"` we can inspect, how our changes of `tuning` parameters
-effected the acceptance rates for each model parameter separately:
+affected the acceptance rates for each model parameter separately:
 <!-- The following summary provides the acceptance rates in four consecutive stages -->
 <!-- aggregated for the key model M--H sampled parameters. In case the rate is too  -->
 <!-- low or too high one may tune the associated proposal constant in `tuning`. -->
 <!-- The graphical depiction is also provided with `plot(, which = "accept")`.  -->
-```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 2), output.lines=-(1:4)}
+```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 4), output.lines=-(1:4)}
 print(sum_mcmc, which = "accept")
 ```
 Moreover, with `plot(, which = "accept")` we could depict, how the acceptance rates evolve 
