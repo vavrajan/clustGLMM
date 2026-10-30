@@ -1,0 +1,140 @@
+---
+output:
+  md_document:
+    variant: gfm
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# clustGLMM
+
+```{r, include=FALSE}
+stopifnot(require("knitr"))
+options(width = 90)
+knitr::opts_chunk$set(
+  fig.path = "man/figures/README-",
+  dev = "png",
+  dpi = 150,
+  fig.asp = 0.7,
+  fig.width = 6,
+  out.width = "100%",
+  fig.align = "center"
+)
+```
+
+## Overview
+
+The R package [clustGLMM](https://CRAN.r-project.org/package=clustGLMM/) provides tools for Bayesian estimation and inference for modelling clusterwise multivariate regression models for numeric, count, binary, ordinal and count outcomes observed repeatedly on the same units and where possible relations among outcomes are captured through a joint distribution of random effects. The clusters are defined through cluster-specific parameters, which the analyst can choose, e.g., with respect to the regression coefficients. In particular, the model specification for each regression model via the formula is specific to the outcome and consists of four parts: (1) fixed - regression coefficients common to all clusters, (2) group - group-specific regression coefficients, (3) random - random effects specific for each unit, (3) offset - name of an offset variable (if needed). Estimation is performed using MCMC sampling combining Gibbs and Metropolis-Hastings steps. Post-processing tools allow to assess convergence and address label switching and provide visual diagnostics. Units may be classified based on sampled allocation indicators or by exploiting the posterior distribution of the classification probabilities. For more details see Vavra et al. (2024, [doi:10.1007/s11222-023-10304-5](https://doi.org/10.1007/s11222-023-10304-5))
+
+## Installation 
+
+The stable version of `clustGLMM` is available on
+[CRAN](https://CRAN.R-project.org/package=clustGLMM) and can be
+installed using:
+
+```{r install_clustGLMM, eval=FALSE}
+install.packages("clustGLMM")
+```
+
+## License
+
+The package is available under the [General Public License version 2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
+
+## Illustration
+
+Package and data can be loaded via:
+
+```{r data}
+library("clustGLMM")
+data("psurvey", package = "clustGLMM")
+```
+
+First, the inputs are prepared:
+
+```{r inputs}
+family <- c(income = "num", ntrips = "poi", satisfaction = "ord") 
+formula <- list()
+formula[["income"]] <- list(fixed = ~ 0, group = ~ age + I(age^2), random = ~ 1)
+for (y in c("ntrips", "satisfaction")) {
+  formula[[y]] <- list(fixed = ~ 0, group = ~ age, random = ~ 1)
+}
+varying <- default_varying(prec_num = FALSE)
+param <- default_param(prec_num_rte = 15, e0_rte = 200)  
+```
+
+Then, MCMC sampling is performed:
+
+```{r burnin, results='hide', message=FALSE}
+set.seed(12345678)
+mcmc_burnin <- clustGLMM(formula, id = "i", family, data = psurvey, G = 10, 
+                         varying = varying, param = param, iter = 1000)
+```
+
+To assess convergence, the occupance numbers of the components over
+the iterations is inspected:
+
+```{r inspect_burnin}
+plot(mcmc_burnin, ng_trace_chain_split = FALSE)
+```
+
+The tuning parameters are changed before continuing the MCMC sampling
+to reduce acceptance rates:
+
+```{r tuning}
+tuning <- default_tuning(const_proposal_e0 = 4.5, const_proposal_beta_poi = 2,  
+  const_proposal_beta_ord = 4, const_proposal_a_ord = 2.2, const_proposal_b = 1.5)
+```
+
+Then, MCMC sampling is continued:
+```{r mcmc, results='hide', message=FALSE}
+set.seed(1234)
+mcmc <- clustGLMM(formula, id = "i", family, data = psurvey, G = 10, 
+                  varying = varying, param = param, iter = 1000, 
+                  inits = mcmc_burnin$last)
+```
+
+
+Again visual diagnostics are inspected to assess convergence:
+```{r diagnostics, out.width = "80%"}
+par(mfrow = c(1, 2))
+plot(mcmc, ng_trace_chain_split = TRUE, setparmfrow = FALSE)
+plot(mcmc, what = "prec_num", yspec = "income", setparmfrow = FALSE)
+```
+
+Post-processing is performed to obtain an identified model:
+```{r postprocess}
+set.seed(123456)
+(mcmc_pp <- post_processing(mcmc))
+```
+
+The posterior distribution of the parameters can be inspected, e.g.,
+the parameters of cluster 1 corresponding to the dependent variable
+`ntrips`:
+
+```{r inference}
+sum_mcmc <- summary(mcmc_pp, burnin = 0, thin = 1)
+print(sum_mcmc, which = "group_param", clusters = 1, pattern = "ntrips")
+```
+
+The clustering solution can also be inspected:
+```{r clustering}
+print(mcmc_pp, which = "clustering")
+```
+
+The data is plotted using the identified clustering to cluster the observations:
+```{r visualization, fig.asp = 0.5}
+psurvey$Uclustering <- mcmc_pp$clustering[psurvey$i, 1]
+par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 3))
+plot_num_vs_x_grouped(psurvey, "income", x = "age",  id = "i", group = "Uclustering",
+                      add_lowess = TRUE, legend_placement = "topleft")
+plot_num_vs_x_grouped(psurvey, "ntrips", x = "age",  id = "i", group = "Uclustering",
+                      add_lowess = TRUE, legend_placement = "topleft")
+plot_cat_vs_x_grouped(psurvey, "satisfaction", x = "age", group = "Uclustering")
+```
+
+## References
+
+Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise
+multivariate regression of mixed-type panel data. Stat Comput 34, 46
+(2024). https://doi.org/10.1007/s11222-023-10304-5
+

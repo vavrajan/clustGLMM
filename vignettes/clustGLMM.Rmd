@@ -13,7 +13,14 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.path = file.path(tempdir(), "figure-latex/"))
+is_pkgdown <- identical(Sys.getenv("IN_PKGDOWN"), "true") || 
+    any(grepl("pkgdown", search()))
+if (is_pkgdown) {
+    knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+} else {
+    knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                          fig.path = file.path(tempdir(), "figure-latex/"))
+}
 oldopt <- options(tinytex.verbose = TRUE, width = 90, digits = 3)
 # options(width = 110) # does not change the template
 library("kableExtra")

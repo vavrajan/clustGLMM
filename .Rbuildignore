@@ -3,3 +3,5 @@
 ^RJ-clustGLMM/
 ^src/Makevars
 ^work/
+^README\.Rmd$
+^_pkgdown.yml$
