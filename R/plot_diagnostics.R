@@ -64,14 +64,18 @@ function(mcmc, scalar_samples,
            chains=chains, COL=COL, labcex = 0.8, whatLAB=whatLAB,
            lag.max = lag.max, move.width = move.width)
   
+  if(missing(COL)){
+    COL <- diverge_hcl(mcmc$nchains, c = 80, l = 70)
+  }
+  
   if(any(!is.na(accept))){
     legend("topright", legend = paste0(mcmc$chains, ": ", format(accept, digits = 4), "%"), 
-           col = diverge_hcl(mcmc$nchains, c = 80, l = 70)[mcmc$chains], 
-           lty = 1, title = "Acceptance", cex = 0.8,
+           col = COL[mcmc$chains], 
+           lty = 1, title = "Chain: Acceptance", cex = 0.8,
            y.intersp = 0.6, x.intersp = 0.5)
   }else{
     legend("topright", legend = mcmc$chains, 
-           col = diverge_hcl(mcmc$nchains, c = 80, l = 70)[mcmc$chains], 
+           col = COL[mcmc$chains], 
            lty = 1, title = "Chain", cex = 0.8,
            y.intersp = 0.6, x.intersp = 0.5)
   }
