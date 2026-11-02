@@ -299,7 +299,7 @@ if (file.exists("workflow-diagram.png")) {
     requireNamespace("DiagrammeRsvg", quietly = TRUE) & 
     requireNamespace("rsvg", quietly = TRUE)) {
   graph <- DiagrammeR::grViz("digraph {
-    graph[layout = dot, rankdir = TB]
+    graph[layout = dot, rankdir = TB, ranksep = 0.4, nodesep = 0.4]
     
     node[shape = rectangle, style = rounded, fontname = Helvetica, penwidth = 2, fontsize = 15, fillcolor = gold, style = filled]  
     rec1[label = '@@1']
@@ -348,7 +348,7 @@ if (file.exists("workflow-diagram.png")) {
     {{rank=same rec6b -> code6b}}
     {{rank=same rec6c -> code6c}}
     
-    edge[arrowhead = normal, arrowtail = none, color = white, maxlen=0.8]
+    edge[arrowhead = normal, arrowtail = none, color = white, maxlen=1]
     rec6 -> rec6a -> rec6b -> rec6c 
     
     }
@@ -356,8 +356,7 @@ if (file.exists("workflow-diagram.png")) {
     # Substitutions with R code are possible:
     [1]: paste0('Prepare inputs')
     [2]: paste0('Sample chains')
-    ",
-    height = 400, width = 600)
+    ")
   svg_text <- DiagrammeRsvg::export_svg(graph)
   rsvg::rsvg_png(charToRaw(svg_text), file = file.path(tempdir(), "workflow-diagram.png"))
   knitr::include_graphics(file.path(tempdir(), "workflow-diagram.png"))
