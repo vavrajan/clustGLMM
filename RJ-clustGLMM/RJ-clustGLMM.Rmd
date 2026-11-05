@@ -44,6 +44,7 @@ preamble: |
   \newcommand{\indicator}{\mathbb{I}}
   \usepackage{float}
   \usepackage{pdflscape}
+  \renewcommand{\mid}{\;\middle\vert\!}
 output:
   rjtools::rjournal_pdf_article:
     toc: no
@@ -144,27 +145,27 @@ If the number of categories, $K^r$, is higher than 2, we consider the following 
 
 The probability distributions of the observed outcomes given the linear predictors and auxiliary model parameters can be summarized in the following way:
 \begin{align*}
-  \left. Y_{ij}^r \,\right\vert\, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} 
+  \left. Y_{ij}^r \mid \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right.
   &\sim 
   \mathsf{N}\left(\eta_{ijr}, \; \tau_r^{-1}\right), 
   &\qquad r \in\mathcal{R}^{\mathsf{Num}}, 
   \\
-  \left. Y_{ij}^r \,\right\vert\, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} 
+  \left. Y_{ij}^r \mid \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right.
   &\sim 
   \mathsf{Pois}\left(\exp\left\{\eta_{ijr}\right\}\right), 
   &\qquad r \in\mathcal{R}^{\mathsf{Poi}},
   \\
-  \mathsf{P} \left[\left. Y_{ij}^r = 1 \,\right\vert\, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  \mathsf{P} \left[ Y_{ij}^r = 1 \mid \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
   &= 
   \mathsf{logit}^{-1} \left(\eta_{ijr}\right), 
   &\qquad r \in\mathcal{R}^{\mathsf{Bin}},
   \\
-  \mathsf{P} \left[\left. Y_{ij}^r > k \,\right\vert\, c_{r,k}, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  \mathsf{P} \left[ Y_{ij}^r > k \mid c_{r,k}, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
   &= 
   \mathsf{logit}^{-1} \left(\eta_{ijr} - c_{r,k}\right), 
   &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Ord}},
   \\
-  \mathsf{P} \left[\left. Y_{ij}^r = k \,\right\vert\, \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
+  \mathsf{P} \left[ Y_{ij}^r = k \mid \boldsymbol{\beta}_r, \mathbf{b}_i^r, \mathbf{X}_{ijr}, \mathbf{Z}_{ijr} \right] 
   &= 
   \frac{\exp (\eta_{ijkr})}{1 + \sum\limits_{\kappa=1}^{K^r-1} \exp (\eta_{ij\kappa r})}, 
   &\qquad k = 0, 1, \ldots, K^r-1, \;r \in\mathcal{R}^{\mathsf{Cat}}.
@@ -184,15 +185,15 @@ where $\boldsymbol{\beta}_r^F$ are the fixed effects shared among all groups  an
 
 Each individual $i$ belongs to one of the groups. Group membership is assumed to be unobserved and given by the latent group allocation indicator $U_i \in \{1, \ldots, G\}$. The group size corresponds to the marginal group allocation probabilities $w_g = \mathsf{P}(U_i = g)$ that sum up to one over $g = 1, \ldots, G$. Marginalizing over the latent group allocation indicators, we obtain a\ mixture distribution where the components consist of multivariate generalized linear mixed models and the probability density function (pdf) is given by:
 \begin{equation}
-  p(\mathbb{Y}_i \,\vert\, \mathcal{C}_i)
+  p\left(\mathbb{Y}_i \mid\; \mathcal{C}_i\right)
   = \sum\limits_{g=1}^{G} 
   w_g \int 
-  p\left(\mathbb{Y}_i \,\left\vert\, U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \mathcal{C}_i \right.\right)
-  p\left(\mathbf{b}_i \,\left\vert\, U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right.\right)
+  p\left(\mathbb{Y}_i \mid U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \mathcal{C}_i \right)
+  p\left(\mathbf{b}_i \mid U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right)
   \mathrm{d} \mathbf{b}_i,
   (\#eq:pdf-int-bi-Ui)
 \end{equation}
-where $p(\,\vert\,)$ denotes the conditional pdf, $\mathbb{Y}_i = \{Y_{ij}^r, \, j = 1, \ldots, n_i, \, r \in\mathcal{R}\}$ gathers all outcome values observed for individual $i$ and $\mathcal{C}_i = \{\mathbb{F}_{i}, \mathbb{X}_{i}, \mathbb{Z}_{i}\}$ gathers the covariates for individual $i$. Due to the general model specification with different distributions for the dependent variables, the integral over the random effects $\mathbf{b}_i$ cannot be analytically evaluated. In Bayesian estimation using MCMC sampling, we avoid these integrals by not marginalizing over the random effects, but performing Bayesian data augmentation and working with the conditional distributions. 
+where $p\left(\,|\,\right)$ denotes the conditional pdf, $\mathbb{Y}_i = \{Y_{ij}^r, \, j = 1, \ldots, n_i, \, r \in\mathcal{R}\}$ gathers all outcome values observed for individual $i$ and $\mathcal{C}_i = \{\mathbb{F}_{i}, \mathbb{X}_{i}, \mathbb{Z}_{i}\}$ gathers the covariates for individual $i$. Due to the general model specification with different distributions for the dependent variables, the integral over the random effects $\mathbf{b}_i$ cannot be analytically evaluated. In Bayesian estimation using MCMC sampling, we avoid these integrals by not marginalizing over the random effects, but performing Bayesian data augmentation and working with the conditional distributions. 
 
 ## Priors {#subsec:priors}
 
@@ -203,7 +204,7 @@ The priors on the group-specific parameters in the components need to be proper 
 All the fixed effects are given an independent centered normal prior, where the scale is adjusted depending on the outcome type. For numeric outcomes, the precision parameter $\tau_r$ is included within the normal prior for fixed effects $\boldsymbol{\beta}_r^F$ and $\boldsymbol{\beta}_r^{(g)}$. The precision $\tau_r$ is given a\ gamma prior to complete the normal-gamma prior family for linear regression models. For the ordered intercepts of ordinal outcomes, we use an implicit prior by imposing a\ symmetric Dirichlet prior on the induced category probabilities given the ordered intercepts and a\ zero effect of the linear predictor:
 \begin{align*}
 \pi_{r,k}^{(g)} 
-&= \mathsf{P}\left[Y_{ijr} = k \,\vert\, \eta_{ijr} = 0, U_i = g\right]
+&= \mathsf{P}\left[Y_{ijr} = k \mid \eta_{ijr} = 0, U_i = g\right]
 = \mathsf{logit}^{-1}(c_{r,k-1}^{(g)}) - \mathsf{logit}^{-1}(c_{r,k}^{(g)}).
 \end{align*}
 
@@ -227,12 +228,12 @@ Using MCMC sampling, we create a\ Markov chain consisting of samples of $\boldsy
 
 To create such a\ Markov chain, we use Gibbs sampling  where possible. We divide $\boldsymbol{\theta}$ into suitable smaller blocks $\boldsymbol{\theta}_l$ and iteratively sample every block from its full-conditional distribution:
 \begin{equation}
-  p(\boldsymbol{\theta}_l \, | \cdots) :=  
-  p(\boldsymbol{\theta}_l \, | \, \mathbb{Y}, \boldsymbol{\theta}_{-l}, \mathcal{C}),
+  p\left(\boldsymbol{\theta}_l \mid\; \cdots\right) :=  
+  p\left(\boldsymbol{\theta}_l \mid\; \mathbb{Y}, \boldsymbol{\theta}_{-l}, \mathcal{C}\right),
 %  \propto 
-%  p(\mathbb{Y} \, | \, \boldsymbol{\theta}, \mathcal{C}) 
+%  p\left(\mathbb{Y} \mid \boldsymbol{\theta}, \mathcal{C}\right) 
 %  \, 
-%  p(\boldsymbol{\theta} \, | \, \mathcal{C}), 
+%  p\left(\boldsymbol{\theta} \mid \mathcal{C}\right), 
   (\#eq:pdf-full-cond)
 \end{equation}
 where the full-conditional distribution is viewed as a\ function of $\boldsymbol{\theta}_l$ and other parameter values $\boldsymbol{\theta}_{-l}  = \boldsymbol{\theta} \setminus \boldsymbol{\theta}_l$ are kept fixed. 
@@ -242,7 +243,7 @@ However, not every full-conditional distribution falls into a\ known family of d
 
 The first step consists of transforming the block of interest $\boldsymbol{\theta}_l$ so that it has unbounded support, $\boldsymbol{\omega} = t(\boldsymbol{\theta_l}) \in \mathbb{R}^d$, e.g., we log-transform $e_0$ or transform the ordered intercepts to probabilities $\pi$ using the softmax function. Then, the log-pdf of the full-conditional distribution for the transformed parameter $\boldsymbol{\omega}$ is approximated by the Taylor expansion of the second order:
 $$
-\ell (\boldsymbol{\omega}) := \log p (\boldsymbol{\omega} | \cdots) 
+\ell (\boldsymbol{\omega}) := \log p (\boldsymbol{\omega} \,|\, \cdots) 
 \approx 
 \mathrm{const.} - 
 \frac{1}{2} \left(\boldsymbol{\omega}-\widehat{\boldsymbol{\omega}}\right)^\top
@@ -270,8 +271,8 @@ u_{i,g}(\boldsymbol{\beta}, &\boldsymbol{\tau}, \mathbf{c}, \boldsymbol{\Sigma},
 \propto\\
 &w_g 
 \int 
-p\left(\mathbb{Y}_i \,\left\vert\, U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \mathcal{C}_i \right.\right)
-p\left(\mathbf{b}_i \,\left\vert\, U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right.\right)
+p\left(\mathbb{Y}_i \mid U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \mathcal{C}_i \right)
+p\left(\mathbf{b}_i \mid U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right)
 \mathrm{d} \mathbf{b}_i.
 \end{align*}
 We reformulate the integrand as a\ function $\exp\{h^{(g)}\}$ in variable $\mathbf{b}_i$, i.e., as $\int \exp\{h^{(g)}(\mathbf{b}_i)\} \mathrm{d} \mathbf{b}_i$, to apply an approximation method. The Laplace approximation relies on the Taylor expansion of the second order of the function $h^{(g)}$, assuming that it is differentiable and concave. Using the N-R method to find the maximum $\widehat{\mathbf{b}}_i^{(g)}$ and the negative Hessian matrix $H^{(g)}$ at the maximum, the Laplace approximation results as:
@@ -476,8 +477,7 @@ for other parameters which could potentially be group-specified, whether they ar
 fitted group-specific. The default values are:
 
 ```{r psurvey-defaults, echo = TRUE}
-varying <- default_varying()
-varying
+(varying <- default_varying())
 ```
 
 The standard deviation of the error of a\ numeric outcome thus is by
@@ -508,7 +508,7 @@ increase the rate parameter for $e_0$ to 200 to induce a sparse solution.
 param <- default_param(prec_num_rte = 15, e0_rte = 200)  
 ```
 
-In the following, we use the default options for the argument `tuning`
+For the following burn-in phase, we use the default options for the argument `tuning`
 when calling `clustGLMM()` which are obtained with `default_tuning()`.
 
 ## MCMC sampling {#subsec:psurvey-sample-chains}
@@ -598,7 +598,7 @@ number of chains and the number of iterations. The `print` method
 without specifying any arguments provides an overview on the dataset,
 the defined regression models for the different outcomes and the
 simulation specification used for MCMC sampling including the 
-overall acceptance rate, which is now withing the recommended target range.
+overall acceptance rate, which is now within the recommended target range.
 
 ```{r psurvey-mcmc-print, echo = TRUE, results=TRUE}
 print(mcmc)
@@ -783,7 +783,7 @@ one cluster differs from the other two that seem to be rather similar,
 in regard to `income`.
 
 With `which = "accept"` we can inspect, how changing the `tuning` parameters
-affected the acceptance rates for each group pf model parameters:
+affected the acceptance rates for each group of model parameters:
 
 <!-- The following summary provides the acceptance rates in four consecutive stages -->
 <!-- aggregated for the key model M--H sampled parameters. In case the rate is too  -->
@@ -905,11 +905,9 @@ specification fitable with package \pkg{clustGLMM}.
 par(mar = c(4, 4, 2.5, 0.5), mfrow = c(1, 3))
 COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[1], c = 80, l = 50)
 add_pred_lines <- function(pred) {
-  for (g in 1:mcmc_pp$modeGplus[1]) {
-    lines(newdata$age, pred$fit[, g], col = COL[g], lwd = 2)
-    lines(newdata$age, pred$lwr[, g], col = COL[g], lty = 2, lwd = 1)
-    lines(newdata$age, pred$upr[, g], col = COL[g], lty = 2, lwd = 1)
-  }  
+  matplot(newdata$age, pred$fit, type = "l", col = COL, lwd = 2, lty = 1, add = TRUE)
+  matplot(newdata$age, pred$lwr, type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+  matplot(newdata$age, pred$upr, type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
 }
 
 plot(c(18, 40), c(0, 3), type = "n", main = "Linear predictor",
@@ -962,7 +960,7 @@ used to align the cluster labels across multiple chains. Using `perm`, we
 specify how to permute the labels.
 
 ```{r psurvey-permuting-labels, echo = TRUE, eval = TRUE}
-perm <- list(c(3, 1, 2))             
+perm <- list(c(1, 3, 2))             
 mcmc_perm <- permute_cluster_labels(mcmc_pp, perm = perm)
 ```
 
@@ -1047,7 +1045,7 @@ for (i in order(pmcmc$certainty[, 1])[1:4]) {
   mtext(paste0("true g=", perm[[1]][psurvey1$g[psurvey1$i == i]]), 
         side = 3, line = 0.5, font = 2, cex = 0.8)
   legend("bottomright", legend = 1:mcmc_pp$modeGplus[1], title = "Cluster", 
-       col = COL, lty = 1, bty = "n")
+         col = COL, lty = 1, bty = "n")
 }
 ```
 
@@ -1083,7 +1081,7 @@ upr <- matrix(sum_new[-c(1:2), "97.5%"], ncol = 3, byrow = FALSE)
 
 par(mfrow = c(1, 1), mar = c(4, 4, 0.5, 0.5))
 matplot(x = newdata$age, y = fit, type = "l", col = COL, lwd = 3, lty = 1, 
-        xlab = "Age", ylab = "Clustering probability")
+        xlab = "Age", ylab = "Clustering probability", las = 1)
 matplot(x = newdata$age, y = lwr, type = "l", col = COL, lwd = 2, lty = 2, add = TRUE)
 matplot(x = newdata$age, y = upr, type = "l", col = COL, lwd = 2, lty = 2, add = TRUE)
 legend("topleft", legend = 1:3, title = "Cluster", col = COL, lwd = 3, lty = 1, bty = "n")
