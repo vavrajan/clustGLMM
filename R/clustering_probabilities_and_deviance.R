@@ -342,18 +342,18 @@ Working under zero offset."))
     }
     
     ### Effect names for summary outputs
-    param_names <- unlist(param_names[[ch]], use.names = F)
-    eff_names <- rep("", length(param_names))
-    names(eff_names) <- param_names
+    p_names <- unlist(param_names[[ch]], use.names = F)
+    eff_names <- rep("", length(p_names))
+    names(eff_names) <- p_names
     
-    pUigs <- grep("^pUig_int\\(", param_names)
+    pUigs <- grep("^pUig_int\\(", p_names)
     if(length(pUigs) > 0){
-      eff_names[pUigs] <- rep(names(mcmc$numbered_unique_ids), mcmc$G[ch])
+      eff_names[pUigs] <- rep(names(numbered_unique_ids), mcmc$G[ch])
     }
     
-    dis <- grep("^dev_i\\[", param_names)
+    dis <- grep("^dev_i\\[", p_names)
     if(length(dis) > 0){
-      eff_names[dis] <- names(mcmc$numbered_unique_ids)
+      eff_names[dis] <- names(numbered_unique_ids)
     }
     
     effect_names[[ch]] <- eff_names
