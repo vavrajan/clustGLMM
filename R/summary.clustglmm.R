@@ -28,6 +28,7 @@ summary.clustglmm <- function(object, burnin = 0, thin = 1, ...) {
     if (output == "probs") {
       fnames[[ch]] <- c("deviance")
       gnames[[ch]] <- object$param_names[[ch]][["pUig_int"]]
+      gnames[[ch]] <- gnames[[ch]][grep("\\(1\\)", gnames[[ch]])]
       cnames[[ch]] <- c()
       lnames[[ch]] <- object$param_names[[ch]][["dev_i"]]
     } else {
