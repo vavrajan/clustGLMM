@@ -40,7 +40,7 @@ if(basename(WD) != "presentation"){
 library(clustGLMM)                # version 1.1.0 (not public yet)
 data(psurvey, package = "clustGLMM")
 data(psurvey_latent, package = "clustGLMM")
-psurvey <- merge(psurvey, psurvey_latent, by = c("i", "j"))
+psurvey <- merge(psurvey, psurvey_latent, by = c("i", "j"), sort = FALSE)
 n <- length(unique(psurvey$i))
 ```
 
@@ -387,50 +387,64 @@ plot_diagnostics(mcmc, what = "sd_num", yspec = "income", burnin = 250)
 ```{r psurvey-mcmc-print, echo = TRUE, eval = FALSE}
 print(mcmc)
 ```
+\vspace*{-0.4cm}
+\footnotesize
 ```{r psurvey-mcmc-print2, echo = FALSE, eval = TRUE}
 out <- capture.output(print(mcmc))
-cat(c(out[c(2:17)]), sep = "\n")
+cat(c(out[c(2:22)]), sep = "\n")
 ```
+\normalsize
 
 ##
 
+\footnotesize
 ```{r psurvey-mcmc-print3, echo = FALSE, eval = TRUE}
-cat(c("...", out[19:32]), sep = "\n")
+cat(c("...", out[24:40]), sep = "\n")
 ```
-##
-
-```{r psurvey-mcmc-print4, echo = FALSE, eval = TRUE}
-cat(c("...", out[33:40]), sep = "\n")
-```
+\normalsize
 
 ##
+
 
 ```{r psurvey-mcmc-print-clusteringU, echo = TRUE, eval = FALSE}
 print(mcmc, which = "clustering")
 ```
+
+
 \vspace*{-0.5cm}
+\footnotesize
 ```{r psurvey-mcmc-print-clusteringU2, echo = FALSE, eval = TRUE}
 out <- capture.output(print(mcmc, which = "clustering"))
-cat(c(out[c(3:12,15:20)], "..."), sep = "\n")
+cat(c(out[c(2:23)]), sep = "\n")
 ```
+\normalsize
 
 # Post-processing and other functionalities
 
 ## 
 
-```{r psurvey-post-processing, echo = TRUE, results=FALSE}
+```{r psurvey-post-processing, echo = TRUE, results=FALSE, eval=FALSE}
 set.seed(12345)
 mcmc_pp <- post_processing(mcmc)
 ```
 
-```{r psurvey-mcmc-pp-print, echo = TRUE, eval = FALSE}
-print(mcmc_pp)
+```{r saving-psurvey-mcmc-pp, eval = F, echo = F}
+save(mcmc_pp, file = file.path(WD, "data", "psurvey_mcmc_pp.RData"))
 ```
 
-```{r psurvey-mcmc-pp-print2, echo = FALSE, eval = TRUE}
-out <- capture.output(print(mcmc_pp))
-cat(out[c(7:13, 17:22)], sep = "\n")
+```{r loading-psurvey-mcmc-pp, eval = T, echo = F}
+load(file.path(WD, "data", "psurvey_mcmc_pp.RData"))
 ```
+
+
+
+\vspace*{-0.5em}
+\footnotesize
+```{r psurvey-mcmc-pp-print2, echo = FALSE, eval = TRUE, R.options = list(width = 95)}
+out <- capture.output(print(mcmc_pp))
+cat(out[c(5:13, 15:24)], sep = "\n")
+```
+\normalsize
 
 ##
 
@@ -447,7 +461,7 @@ plot(mcmc_pp, "beta_num", which = "clusters_kerneldensity", chains = 2)
 ##
 
 ```{r psurvey-permuting-labels, echo = TRUE, results=FALSE}
-perm <- list();     perm[[1]] <- c(3, 2, 1);         perm[[2]] <- c(2, 3, 1)
+perm <- list();     perm[[1]] <- c(1, 3, 2);         perm[[2]] <- c(2, 3, 1)
 mcmc_pp <- permute_cluster_labels(mcmc_pp, perm = perm)
 ```
 \vspace*{-0.5cm}
@@ -464,69 +478,79 @@ plot_clusters(mcmc_pp, what = "beta_num", yspec = "income", dimspec = 7,
 ```{r psurvey-mcmc-summary, echo = TRUE, eval = FALSE}
 print(sum_pp <- summary(mcmc_pp), which = c("mcmc", "clustering"), chains = 1)
 ```
+\vspace*{-0.5cm}
 ```{r psurvey-mcmc-summary2, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
 sum_pp <- summary(mcmc_pp)
 out <- capture.output(print(sum_pp, which = c("mcmc", "clustering"), chains = 1))
-cat(out[c(2:19)], sep = "\n")
+cat(out[c(2:12, 14:19)], sep = "\n")
 ```
 
 ##
 
 ```{r psurvey-mcmc-summary-inv-param, echo = TRUE, eval = FALSE}
-print(sum_pp, which = c("inv_param"), chains = 1)
+print(sum_pp, which = c("inv_param"), chains = 2, max_nchar_details = 15)
 ```
-
-```{r psurvey-mcmc-summary-inv-param2, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
-out <- capture.output(print(sum_pp, which = c("inv_param"), chains = 1))
-cat(c(out[8:13], "...", out[19:28]), sep = "\n")
+\footnotesize
+```{r psurvey-mcmc-summary-inv-param2, echo = FALSE, eval = TRUE, R.options = list(digits = 2, width = 90)}
+out <- capture.output(print(sum_pp, which = c("inv_param"), chains = 2, max_nchar_details = 15))
+cat(c(out[8:13], "...", out[19:29]), sep = "\n")
 ```
+\normalsize
 
 ##
 
-```{r psurvey-mcmc-summary-group-param, echo = TRUE, eval = FALSE}
-print(sum_pp, which = c("group_param"), chains = 1)
+```{r psurvey-mcmc-summary-group-param, echo = TRUE, eval = FALSE, R.options = list(digits = 2)}
+print(sum_pp, which = c("group_param"), chains = 1, max_nchar_details = 10)
 ```
-
-```{r psurvey-mcmc-summary-group-param2, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
-out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1))
-cat(c(out[c(8:23)], "..."), sep = "\n")
+\footnotesize
+```{r psurvey-mcmc-summary-group-param2, echo = FALSE, eval = TRUE, R.options = list(digits = 2, width = 90)}
+out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1, max_nchar_details = 10))
+cat(c(out[c(7:23)]), sep = "\n")
 ```
+\normalsize
 
 ## 
 
-```{r psurvey-mcmc-summary-group-param3, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
-out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1))
-cat(c(out[c(26:41)], "..."), sep = "\n")
+\footnotesize
+```{r psurvey-mcmc-summary-group-param3, echo = FALSE, eval = TRUE, R.options = list(digits = 2, width = 90)}
+cat(c(out[c(25:41)]), sep = "\n")
 ```
+\normalsize
 
 ## 
 
-```{r psurvey-mcmc-summary-group-param4, echo = FALSE, eval = TRUE, R.options = list(digits = 2)}
-out <- capture.output(print(sum_pp, which = c("group_param"), chains = 1))
-cat(c(out[c(44:59)]), sep = "\n")
+\footnotesize
+```{r psurvey-mcmc-summary-group-param4, echo = FALSE, eval = TRUE, R.options = list(digits = 2, width = 90)}
+cat(c(out[c(43:59)]), sep = "\n")
 ```
+\normalsize
 
 ##
 
-```{r psurvey-mcmc-summary-2, echo = TRUE, eval = TRUE}
-print(sum_pp, which = "group_param", chains = 1, clusters = 1, pattern = "^beta_num")
+```{r psurvey-mcmc-summary-2, echo = TRUE, eval = FALSE}
+print(sum_pp, which = "group_param", chains = 1:2, clusters = 1, 
+      pattern = "^beta_num", max_nchar_details = 10)
 ```
 
-```{r psurvey-mcmc-summary-2-2, echo = FALSE, eval = FALSE, R.options = list(digits = 2)}
+\footnotesize
+```{r psurvey-mcmc-summary-2-2, echo = FALSE, eval = TRUE, R.options = list(digits = 3)}
 out <- capture.output(print(sum_pp, which = "group_param", chains = 1:2, 
-                            clusters = 1, pattern = "^beta_num"))
-cat(c(out[c(2:3,8:16,18:19,24:31)]), sep = "\n")
+                            clusters = 1, pattern = "^beta_num", max_nchar_details = 10))
+cat(c(out[c(2,8:16,18,24:31)]), sep = "\n")
 ```
+\normalsize
 
 ## Misclassification (we know the truth)
 
 ```{r psurvey-misclassification-U-samples, echo=TRUE, results=TRUE}
-psurvey[, paste0("Uclustering", 1)] <- mcmc_pp$clustering[psurvey$i, 1]
+psurvey[, paste0("Uclustering", 2)] <- mcmc_pp$clustering[psurvey$i, 2]
 # confusion matrix
-table(psurvey[psurvey$j == 1, c("g", paste0("Uclustering", 1))])
+psurvey1 <- psurvey[psurvey$j == 1, ]
+table(psurvey1[, c("g", paste0("Uclustering", 2))])
+with(psurvey1, mclust::classError(g, Uclustering2)$errorRate)
 ```
 
-## Prediction of missing values
+## Prediction of missing outcome values
 
 \vspace*{-0.3cm}
 ```{r psurvey-mcmc-naY, echo = FALSE, out.height = "85%"}
@@ -537,7 +561,7 @@ for (j in 1:nmis) {
   # true value
   abline(v = as.numeric(na_true_vals[[y]][j]), col = "seagreen", lty = 2)
   # 95% CI
-  abline(v = sum_pp$coda_summary[[1]]$quantiles[paste0("naY_",y,"[",j,"]"),
+  abline(v = sum_pp$coda_summary[[2]]$quantiles[paste0("naY_",y,"[",j,"]"),
                                                 c("2.5%","97.5%")], 
          col = "black", lty = 3)
 }
@@ -550,7 +574,7 @@ age_grid <- seq(18, 40, by = 0.1)
 newdata <- data.frame(age = age_grid)
 burnin <- 0
 thin <- 1
-ch <- 1
+ch <- 2
 par(mfrow = c(1, 2), mar = c(4, 4, 1, 0.5))
 for (y in c(mcmc_pp$Nums, mcmc_pp$Pois)) {
   ...
@@ -575,32 +599,34 @@ newdata <- data.frame(age = age_grid)
   
 burnin <- 0
 thin <- 1
-ch <- 1
+ch <- 2
 COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[ch], c = 80, l = 50)
+pred <- predpp <- list()
+
 
 par(mfrow = c(1, 2), mar = c(4, 4, 1, 0.5))
 for (y in c(mcmc_pp$Nums, mcmc_pp$Pois)) {
   plot_num_vs_x_grouped(psurvey, y = y, x = "age", g = paste0("Uclustering", ch), id = id, 
                         legend_placement = "topleft", add_lowess = FALSE)
   
-  pred <- predict(mcmc_pp, newdata, y = y, type = "response", method = "samples",
-                  burnin = burnin, thin = thin, chain = ch)
+  pred[[y]] <- predict(mcmc_pp, newdata, y = y, type = "response", method = "samples",
+                       burnin = burnin, thin = thin, chain = ch)
   
   for (g in mcmc_pp$clusters[[ch]]) {
-    lines(x = age_grid, y = pred$fit[, paste0("(", g, ")")], col = COL[g], lwd = 3)
-    lines(x = age_grid, y = pred$lwr[, paste0("(", g, ")")], col = COL[g], lty = 2)
-    lines(x = age_grid, y = pred$upr[, paste0("(", g, ")")], col = COL[g], lty = 2)
+    lines(x = age_grid, y = pred[[y]]$fit[, paste0("(", g, ")")], col = COL[g], lwd = 3)
+    lines(x = age_grid, y = pred[[y]]$lwr[, paste0("(", g, ")")], col = COL[g], lty = 2)
+    lines(x = age_grid, y = pred[[y]]$upr[, paste0("(", g, ")")], col = COL[g], lty = 2)
   }
   
   ## Posterior predictive distribution for each cluster separately
-  pred <- predict(mcmc_pp, newdata, y = y, 
-                  type = "posterior_predictive_response",
-                  posterior_predictive_by_cluster = TRUE,
-                  method = "samples",
-                  burnin = burnin, thin = thin, chain = ch)
+  predpp[[y]] <- predict(mcmc_pp, newdata, y = y, 
+                         type = "posterior_predictive_response",
+                         posterior_predictive_by_cluster = TRUE,
+                         method = "samples",
+                         burnin = burnin, thin = thin, chain = ch)
   for (g in mcmc_pp$clusters[[ch]]) {
-    lines(x = age_grid, y = pred$lwr[, g], col = COL[g], lty = 1)
-    lines(x = age_grid, y = pred$upr[, g], col = COL[g], lty = 1)
+    lines(x = age_grid, y = predpp[[y]]$lwr[, g], col = COL[g], lty = 1)
+    lines(x = age_grid, y = predpp[[y]]$upr[, g], col = COL[g], lty = 1)
   }
 }
 ```
@@ -612,28 +638,28 @@ par(mfrow = c(1, 3))
 for (y in mcmc_pp$Ords) {
   # Predicted spline curves 
   maxK <- mcmc_pp$Kord[y]
-  pred <- predict(mcmc_pp, newdata, y = y, type = "link", 
-                  what = "fg", method = "samples", 
-                  burnin = burnin, thin = thin, chain = ch)
+  pred[[y]] <- predict(mcmc_pp, newdata, y = y, type = "link", 
+                       what = "fg", method = "samples", 
+                       burnin = burnin, thin = thin, chain = ch)
   
   par(mar = c(4, 4, 2, 0.5))
   plot(x = 0, y = 0, type = "n",
-       xlim = range(age_grid), ylim = range(unlist(pred)),
+       xlim = range(age_grid), ylim = range(unlist(pred[[y]])),
        xlab = "age", ylab = "Linear predictor - ordered intercept",
        main = y)
   for (k in 1:maxK) {
     for (g in mcmc_pp$clusters[[ch]]) {
-      lines(x = age_grid, y = pred$fit[, paste0("(", g, ")"), paste0("k=", k)],
+      lines(x = age_grid, y = pred[[y]]$fit[, paste0("(", g, ")"), paste0("k=", k)],
             col = COL[g], lwd = 3)
-      lines(x = age_grid, y = pred$lwr[, paste0("(", g, ")"), paste0("k=", k)],
+      lines(x = age_grid, y = pred[[y]]$lwr[, paste0("(", g, ")"), paste0("k=", k)],
             col = COL[g], lty = 2)
-      lines(x = age_grid, y = pred$upr[, paste0("(", g, ")"), paste0("k=", k)],
+      lines(x = age_grid, y = pred[[y]]$upr[, paste0("(", g, ")"), paste0("k=", k)],
             col = COL[g], lty = 2)
     }
   }
   
   # Predicted probabilities
-  pred <- predict(mcmc_pp, newdata, y = y, type = "response", 
+  predpp[[y]] <- predict(mcmc_pp, newdata, y = y, type = "response", 
                   what = "fg", method = "samples", 
                   burnin = burnin, thin = thin, chain = ch)
   
@@ -649,11 +675,11 @@ for (y in mcmc_pp$Ords) {
   }
   for (k in 1:(maxK+1)) {
     for (g in mcmc_pp$clusters[[ch]]) {
-      lines(x = age_grid, y = k+pred$fit[, paste0("(", g, ")"), paste0("k=", k)],
+      lines(x = age_grid, y = k+predpp[[y]]$fit[, paste0("(", g, ")"), paste0("k=", k)],
             col = COL[g], lwd = 3)
-      lines(x = age_grid, y = k+pred$lwr[, paste0("(", g, ")"), paste0("k=", k)],
+      lines(x = age_grid, y = k+predpp[[y]]$lwr[, paste0("(", g, ")"), paste0("k=", k)],
             col = COL[g], lty = 2)
-      lines(x = age_grid, y = k+pred$upr[, paste0("(", g, ")"), paste0("k=", k)],
+      lines(x = age_grid, y = k+predpp[[y]]$upr[, paste0("(", g, ")"), paste0("k=", k)],
             col = COL[g], lty = 2)
     }
   }
@@ -664,6 +690,102 @@ for (y in mcmc_pp$Ords) {
                           group = paste0("Uclustering", ch), main = y)
 }
 ```
+## Clustering probability for a new subject
+
+$$
+u_{i,g}(\boldsymbol{\beta}, \boldsymbol{\tau}, \mathbf{c}, \boldsymbol{\Sigma}, \mathbf{w} \mid \mathbb{Y}_i, \mathcal{C}_i) 
+\propto
+w_g 
+\int 
+p\left(\mathbb{Y}_i \mid U_i = g, \mathbf{b}_i;\, \boldsymbol{\beta}^F, \boldsymbol{\beta}^{(g)}, \boldsymbol{\tau}^{(g)}, \mathbf{c}^{(g)}, \mathcal{C}_i \right)
+p\left(\mathbf{b}_i \mid U_i = g;\, \boldsymbol{\Sigma}^{(g)}\right)
+\mathrm{d} \mathbf{b}_i
+$$
+
+```{r new-data-501, echo = TRUE, eval = TRUE}
+new_data <- data.frame(i = 501, 
+                       age = seq(19, 39, length.out = 10),
+                       income = seq(110, 200, length.out = 10), 
+                       ntrips = rep(1:5, each = 2),
+                       satisfaction = c(0, 0, 0, 1, 1, 1, 1, 2, 2, 2))
+```
+
+```{r newdata-501-clustering, echo = TRUE, eval = FALSE, results='hide'}
+mcmc_new <- clustering_probabilities_and_deviance(mcmc_pp, data = new_data, id = "i", 
+    dynamic_prob = TRUE, start = 1, end = mcmc_pp$iter, thin = 1, NGQ = 3) 
+sum_new <- summary(mcmc_new)
+```
+
+```{r saving-mcmc-new, eval = F, echo = F}
+save(mcmc_new, file = file.path(WD, "data", "psurvey_mcmc_new.RData"))
+save(sum_new, file = file.path(WD, "data", "psurvey_sum_new.RData"))
+```
+
+```{r loading-mcmc-new, eval = T, echo = F}
+load(file.path(WD, "data", "psurvey_mcmc_new.RData"))
+load(file.path(WD, "data", "psurvey_sum_new.RData"))
+```
+
+<!-- ## -->
+
+<!-- ```{r summary-mcmc-new, echo = FALSE, eval = FALSE, R.options = list(digits = 3, width = 90)} -->
+<!-- print(sum_new, which = "group_param") -->
+<!-- ``` -->
+
+<!-- ```{r print-summary-mcmc-new-1, echo = FALSE, eval = TRUE, R.options = list(digits = 3, width = 90)} -->
+<!-- out <- capture.output(print(sum_new, which = "group_param")) -->
+<!-- cat(c(out[c(5:18)]), sep = "\n") -->
+<!-- ``` -->
+
+<!-- ## -->
+
+<!-- ```{r print-summary-mcmc-new-2, echo = FALSE, eval = TRUE, R.options = list(digits = 3, width = 90)} -->
+<!-- cat(c(out[c(20:32)]), sep = "\n") -->
+<!-- ``` -->
+
+<!-- ## -->
+
+<!-- ```{r print-summary-mcmc-new-3, echo = FALSE, eval = TRUE, R.options = list(digits = 3, width = 90)} -->
+<!-- cat(c(out[c(33:45)]), sep = "\n") -->
+<!-- ``` -->
+
+##
+
+\vspace*{-0.5cm}
+```{r psurvey-outcomes-vs-age-Uclustering2-newdata, echo=FALSE}
+par(mar = c(4, 4, 0.5, 0.5), mfrow = c(1,3))
+plot_num_vs_x_grouped(psurvey, "income", x = "age", g = paste0("Uclustering", ch),
+                      add_lowess = FALSE, legend_placement = "topleft")
+matplot(age_grid, pred[["income"]]$fit, type = "l", col = COL, lty = 1, lwd = 3, add = T)
+lines(new_data$age, new_data$income, type = "b", col = "darkviolet", pch = 16, lwd = 3)
+
+plot_num_vs_x_grouped(psurvey, "ntrips", x = "age", g = paste0("Uclustering", ch), 
+                      add_lowess = FALSE, legend_placement = "topleft")
+matplot(age_grid, pred[["ntrips"]]$fit, type = "l", col = COL, lty = 1, lwd = 3, add = T)
+lines(new_data$age, new_data$ntrips, type = "b", col = "darkviolet", pch = 16, lwd = 3)
+
+plot_cat_vs_x_grouped(psurvey, "satisfaction", x = "age", g = paste0("Uclustering", ch))
+ynewsat <- 0.2*(new_data$satisfaction==0) + 0.5*(new_data$satisfaction==1) + 0.8*(new_data$satisfaction==2)
+matplot(new_data$age, cbind(ynewsat, ynewsat+1, ynewsat+2), 
+        type = "b", col = "darkviolet", pch = 16, lwd = 3, add = T)
+```
+
+##
+
+\vspace*{-0.5cm}
+```{r psurvey-probability-new-data-plot, echo = FALSE, eval = TRUE}
+sumnew <- sum_new$coda_summary[[2]]$quantiles
+fit <- matrix(sumnew[-c(1:2), "50%"], ncol = 3, byrow = FALSE)
+lwr <- matrix(sumnew[-c(1:2), "2.5%"], ncol = 3, byrow = FALSE)
+upr <- matrix(sumnew[-c(1:2), "97.5%"], ncol = 3, byrow = FALSE)
+
+par(mfrow = c(1, 1), mar = c(4, 4, 0.5, 0.5))
+matplot(x = new_data$age, y = fit, type = "l", col = COL, lwd = 3, lty = 1, 
+        xlab = "Age", ylab = "Clustering probability", las = 1)
+matplot(x = new_data$age, y = lwr, type = "l", col = COL, lwd = 2, lty = 2, add = TRUE)
+matplot(x = new_data$age, y = upr, type = "l", col = COL, lwd = 2, lty = 2, add = TRUE)
+legend("right", legend = 1:3, title = "Cluster", col = COL, lwd = 3, lty = 1, bty = "n")
+```
 
 ## Conclusion
 
@@ -673,7 +795,7 @@ Thank you for your attention and feedback!
 * _Does it feel user-friendly and flexible enough?_
 * _Any functionality you would expect that was not mentioned?_
 
-__clustGLMM available on CRAN soon, hopefully...__
+__Introductory paper to clustGLMM coming soon...__
 
 \raggedright
 \nocite{*}

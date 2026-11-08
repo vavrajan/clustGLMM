@@ -1062,11 +1062,11 @@ respondent increases using `dynamic_prob = TRUE`.
 <!-- In this case we use all samples and a\ better approximation with `NGQ = 3`: -->
 
 ```{r psurvey-probability-new-data, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, results = FALSE}
-newdata <- data.frame(i = 501, age = seq(19, 37, length.out = 10),
-    income = seq(110, 180, length.out = 10), ntrips = 0:9,
+newdata <- data.frame(i = 501, age = seq(19, 39, length.out = 10),
+    income = seq(110, 200, length.out = 10), ntrips = rep(1:5, each = 2),
     satisfaction = c(0, 0, 0, 1, 1, 1, 1, 2, 2, 2))
 mcmc_new <- clustering_probabilities_and_deviance(mcmc_pp, data = newdata, id = "i", 
-    dynamic_prob = TRUE, start = 1, end = mcmc_pp$iter, thin = 10, NGQ = 1)                                              
+    dynamic_prob = TRUE, start = 1, end = mcmc_pp$iter, thin = 10, NGQ = 1)  
 ```
 
 We visualize the sequentially estimated clustering probabilities for
