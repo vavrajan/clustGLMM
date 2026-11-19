@@ -45,13 +45,21 @@ Package **clustGLMM** provides tools for Bayesian estimation of finite mixtures 
 
 # Introduction {#sec:introduction}
 
-Clustering longitudinal multivariate data is a key task in many fields, including medicine, psychology, and the social sciences, where repeated measurements of heterogeneous types are commonly collected for individuals. These data usually consist of a combination of continuous, count, binary, ordinal, and nominal outcome variables which are predicted through explanatory variables. Modeling such data structures in a clustering context using a multivariate regression setup requires the flexibility to jointly account for individual random effects and group-specific heterogeneity.
+<!-- Clustering longitudinal multivariate data is a key task in many fields, including medicine, psychology, and the social sciences, where repeated measurements of heterogeneous types are commonly collected for individuals. These data usually consist of a combination of continuous, count, binary, ordinal, and nominal outcome variables which are predicted through explanatory variables. Modeling such data structures in a clustering context using a multivariate regression setup requires the flexibility to jointly account for individual random effects and group-specific heterogeneity. -->
+
+<!-- This indicates the need for a unified, flexible, and extensible implementation for clustering mixed-type longitudinal data within a fully probabilistic framework based on a mixture model of multivariate generalized linear mixed models. Several R packages address only parts of this problem as they only allow to fit simplified versions of this model. Package **lcmm** [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package **flexmix** [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering the non-Gaussian case of a mixed model and a multivariate approach requiring the conditional independence assumption. Packages such as **MCMCglmm** [@Hadfield10MCMCglmm] and **mixAK** [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes. -->
+
+<!-- To address these limitations, we introduce the R package **clustGLMM**, which implements a Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a mixture of generalized linear mixed models (GLMMs), allowing for a flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, enabling a full posterior characterization of both, model parameters and latent cluster assignments. -->
+
+<!-- Package **clustGLMM** draws on principles from general-purpose Bayesian modeling tools such as **brms** [@Burkner17brms], which provides a high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and **coda** [@Plummer06coda] for MCMC output analysis. By focusing specifically on clustering, **clustGLMM** fills a gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a practical and extensible solution for researchers working with complex longitudinal data. In particular, a number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a convenient use in clustering applications.  -->
+
+Clustering longitudinal multivariate data is a key task in many fields, including medicine, psychology, and the social sciences, when repeated measurements of heterogeneous types are collected for individuals. These data usually consist of a combination of continuous, count, binary, ordinal, and nominal outcome variables which are predicted through explanatory variables. Modeling such data structures in a clustering context using a multivariate regression setup requires the flexibility to jointly account for individual random effects and group-specific heterogeneity.
 
 This indicates the need for a unified, flexible, and extensible implementation for clustering mixed-type longitudinal data within a fully probabilistic framework based on a mixture model of multivariate generalized linear mixed models. Several R packages address only parts of this problem as they only allow to fit simplified versions of this model. Package **lcmm** [@Proust-Lima-etal2017] provides tools to estimate latent class mixed models for continuous and categorical outcomes, but does not cover the full range of outcome types from the generalized linear modeling framework. Package **flexmix** [@Leisch04flexmix] supports finite mixture modeling with customizable components, with the currently available model drivers not covering the non-Gaussian case of a mixed model and a multivariate approach requiring the conditional independence assumption. Packages such as **MCMCglmm** [@Hadfield10MCMCglmm] and **mixAK** [@KomarekKomarkovaJSS14mixAK] offer Bayesian inference via Markov chain Monte Carlo (MCMC) sampling for generalized linear mixed models and mixture models, but require specialized formulations and offer limited clustering functionalities for mixed outcomes.
 
-To address these limitations, we introduce the R package **clustGLMM**, which implements a Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a mixture of generalized linear mixed models (GLMMs), allowing for a flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling, enabling a full posterior characterization of both, model parameters and latent cluster assignments.
+To address these limitations, we introduce the R package **clustGLMM**, which implements a Bayesian model-based clustering framework for longitudinal data with mixed outcome types as described by @Vavra-etal2024. The package models the data using a mixture of generalized linear mixed models (GLMMs), allowing for a flexible specification of outcome distributions and random effects. Inference is performed via MCMC sampling and the outputs are compatible with package **coda** [@Plummer06coda], enabling a full posterior characterization of both, model parameters and latent cluster assignments.
 
-Package **clustGLMM** draws on principles from general-purpose Bayesian modeling tools such as **brms** [@Burkner17brms], which provides a high-level interface to Bayesian GLMMs via Stan [@RStan] for MCMC sampling, and **coda** [@Plummer06coda] for MCMC output analysis. By focusing specifically on clustering, **clustGLMM** fills a gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a practical and extensible solution for researchers working with complex longitudinal data. In particular, a number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a convenient use in clustering applications. 
+By focusing specifically on clustering, **clustGLMM** fills a gap between general-purpose Bayesian modeling tools and more specialized latent class or mixture modeling packages, offering a practical and extensible solution for researchers working with complex longitudinal data. In particular, a number of post-processing procedures are provided to  inspect and assess the posterior MCMC draws, but also to identify cluster distributions and classify observations to allow for a convenient use in clustering applications. All computations and graphics in this paper have been done with **clustGLMM** version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of **clustGLMM** is always available from the Comprehensive R Archive Network (CRAN) at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a package vignette.
 
 <!-- All computations and graphics in this paper have been done with **clustGLMM** version `r packageVersion("clustGLMM")` and R version `r getRversion()` using R Markdown. The newest release version of **clustGLMM** is always available from the Comprehensive R Archive Network (CRAN) at [https://CRAN.R-project.org/package=clustGLMM](https://CRAN.R-project.org/package=clustGLMM "clustGLMM"), an up-to-date version of this paper is contained as a package vignette. -->
 
@@ -593,7 +601,7 @@ The MCMC sampling is by far the most time-consuming part of this function. The p
 
 This sampling is performed sequentially for all chains. In case this is very time-consuming, parallelization across chains might be attempted. This can be achieved by writing a function that calls `clustGLMM()` with the same settings for `nchains = 1` in parallel and then combines the results into one object. In addition, high memory demands might be caused, not only by the vast number of parameters of large dimension sizes but also due to auxiliary variables. For example, the C functions use a 4-component predictor dedicated to the fixed, group, random and offset part, and the final predictor is the sum of these four components. When some of the effects are updated, only the corresponding part of the predictor gets updated and the rest remains untouched. This approach is even more expensive for categorical outcomes where a separate predictor is kept for every non-baseline category. To reduce the memory demands, all operations with symmetric matrices are handled using only the upper triangle.
 
-Another potential source for long sampling times could be due to difficulty when determining a suitable proposal distribution via the N-R method initiated with the last known value. In case the N-R method does not converge or does not meet the required tolerance `tuning$double$tolerance` after the maximal number of steps `tuning$integer$maxiter`, the N-R procedure is started again from a different point (corresponding to the current best approximation scaled by a value uniformly sampled from $(0, 1)$). This is repeated until the required tolerance is met or the maximal number of N-R reiterations `tuning$integer$maxnrep` is reached. If the N-R method is not successfully terminated, the current best solution is used for the proposal distribution. Since this search for an optimal proposal distribution can be very time-consuming, the proposal distributions are updated only every `tuning$integer$freq_proposal_update`-th iteration. Since the acceptance rate could be very low, there is also an option to repeat the proposal step for the same parameters several times with `tuning$integer$times_proposal > 1`. Faster computation times could be achieved by adjusting these tuning parameters. However, a faster evaluation could also come at the cost of lower acceptance rates. We recommend to update the proposal distribution frequently when the stationary distribution has not been reached yet. The proposal distribution is scaled by `tuning$double$const_proposal_...` where `...` stands for any parameter updated via the M-H proposal. Similar to the prior hyperparameters, their value is fixed for every underlying parameter, e.g., one cannot set different values for two outcomes of the same type.
+Another potential source for long sampling times could be due to difficulty when determining a suitable proposal distribution via the N-R method initiated with the last known value. In case the N-R method does not converge or does not meet the required tolerance `tuning$double$tolerance` after the maximal number of steps `tuning$integer$maxiter`, the N-R procedure is started again from a different point (corresponding to the current best approximation scaled by a value uniformly sampled from $(0, 1)$). This is repeated until the required tolerance is met or the maximal number of N-R reiterations `tuning$integer$maxnrep` is reached. If the N-R method is not successfully terminated, the current best solution is used for the proposal distribution. Since this search for an optimal proposal distribution can be very time-consuming, the proposal distributions are updated only every `tuning$integer$freq_proposal_update`-th iteration. Since the acceptance rate could be very low, there is also an option to repeat the proposal step for the same parameters several times with `tuning$integer$times_proposal > 1`. Faster computation times could be achieved by adjusting these tuning parameters. However, a faster evaluation could also come at the cost of lower acceptance rates. We recommend to update the proposal distribution frequently when the stationary distribution has not been reached yet. The proposal distribution is scaled by `tuning$double$const_proposal_...` (where `...` stands for any parameter updated via the M-H proposal) to achieve the desired acceptance rate. Similar to the prior hyperparameters, their value is fixed for every underlying parameter, e.g., one cannot set different values for two outcomes of the same type. Similarly, there exist degrees of freedom `tuning$double$df_proposal_...` for multivariate Student-$t$ proposal distribution set to `Inf` by default (multivariate normal).
 
 Latent variables and model parameters are sampled in the following order (using either a Gibbs or M-H sampling step):
 
@@ -624,6 +632,7 @@ Given that some users may already be familiar with already established diagnosti
 
 The use of these tools, however, might be complicated by the large dimension of the parameter space of our model, which can easily contain hundreds of parameters and even thousands of values in case latent id-specific variables are also considered. We thus provide a set of plotting functions which provide diagnostic plots for selected specific individual parameters related to a given parameter name:
 
+* `plot_acceptance_param` - plots the cumulative mean of acceptance probability for given model parameter sampled through M-H proposal, use `plot_acceptance` for single block of parameters (fixed/group effects for separate outcomes and random effects for all outcomes are proposed jointly). 
 * `plot_ACF_param` - plots the auto-correlation function (ACF), use `plot_ACF` for a single scalar parameter choice.
 * `plot_ECDF_param` - plots the empirical cumulative distribution function (ECDF), use `plot_ECDF` for a single scalar parameter choice.
 * `plot_kerneldensity_param` - plots the kernel density estimate, use `plot_kerneldensity` for a single scalar parameter choice.
@@ -636,7 +645,7 @@ These functions are wrapped by the `plot` method for `"clustglmm"` objects that 
 By default, `plot(mcmc)` produces trace plots of the cluster occupancy numbers with the use of `plot_ng_trace_chain_split()` where separate plots are created for each chain and each plot contains the trace plots for all clusters within one chain. This default plot allows to easily identify which clusters are empty (or in the process of emptying). 
 For all other specifications, the  `plot` method for `"clustglmm"` objects plots all chains together into one plot but using only a single model parameter. If this is also desired for `what = "ng"`, set `ng_trace_chain_split = FALSE`. <!-- In addition, the `plot` method is also able to arrange plots for parameters of the same purpose, e.g., all regression coefficients for certain type of outcome. -->
 
-In case a univariate parameter is of interest, `plot_diagnostics()` displays the four plots consisting of ACF, ECDF, kernel density and trace plot on a $2 \times 2$ grid. To select the univariate parameter properly, one needs to provide (if applicable) `what` (the name of the parameter), `yspec` (to which outcome it belongs), `gspec` (to which group it corresponds) and `dimspec` (the specific dimension). The `settings` matrix provides the information on what has to be supplied for which parameter. There is also the possibility to include a line in the plot indicating the true value of the parameter, if known. 
+In case a univariate parameter is of interest, `plot_diagnostics()` displays the four plots consisting of ACF, ECDF, kernel density and trace plot on a $2 \times 2$ grid. To select the univariate parameter properly, one needs to provide (if applicable) `what` (the name of the parameter), `yspec` (to which outcome it belongs), `gspec` (to which group it corresponds) and `dimspec` (the specific dimension). The `settings` matrix provides the information on what has to be supplied for which parameter. There is also the possibility to include a line in the plot indicating the true value of the parameter, if known. Function `plot_acceptance()` takes the whole name of the parameter block, see the plausible column names of the output `accept` within `clustglmmm` object. 
 Table \@ref(tab:settings-table) summarizes the key parameter attributes.
 
 ```{r get-some-mcmc, echo = FALSE, results = FALSE, eval = TRUE, message = FALSE}
@@ -708,7 +717,7 @@ Once the cluster labels are aligned across chains, inference may be based on the
 
 ### Posterior description {#impl-summary}
 
-A first basic posterior exploration may be performed using the `summary` method for objects of class `"clustglmm"`. The outputs are obtained using the `summary` method for `"mcmc"` object with `na.rm = TRUE` after transforming the `"clustglmm"` object with `as_coda` for each chain separately. The `print` method automatically prints a `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. Since the list of model parameters can be long, we divided them into several groups: cluster-invariant parameters (`"inv_param"`), clustering-related parameters (`"clust_param"`, i.e., `Gplus`, `e0` and the component sizes), latent variables (`"latent_param"`) and group-specific parameters (`"group_param"`, i.e., the cluster-specific regression coefficients). Users can specify the groups of parameters which should be printed via argument `which`. Argument `which` may specify several groups and also include `"mcmc"` (to obtain a chain overview) and `"clustering"` (to obtain a clustering overview). The summary of the clustering is based on `clustering` and `certainty` in the `"clustglmm"` object where all subjects are classified into the cluster with the highest certainty. In addition, the posterior distribution of the model parameters can also be explored visually using the `plot` method.  <!-- If some subjects should remain unclassified (label 0) due to insufficient certainty level, this has to be done manually by the user. -->
+A first basic posterior exploration may be performed using the `summary` method for objects of class `"clustglmm"`. The outputs are obtained using the `summary` method for `"mcmc"` object with `na.rm = TRUE` after transforming the `"clustglmm"` object with `as_coda` for each chain separately. The `print` method automatically prints a `quantiles` table and the posterior mean from `statistics` for all chains contained in `$chains`, unless specified differently. Since the list of model parameters can be long, we divided them into several groups: cluster-invariant parameters (`"inv_param"`), clustering-related parameters (`"clust_param"`, i.e., `Gplus`, `e0` and the component sizes), latent variables (`"latent_param"`) and group-specific parameters (`"group_param"`, i.e., the cluster-specific regression coefficients). The summary table contains also a column with description of the effect name restricted to `max_nchar_details` characters. Users can specify the groups of parameters which should be printed via argument `which`. Argument `which` may specify several groups and also include `"mcmc"` (to obtain a chain overview), `"accept"` (acceptance summary) and `"clustering"` (to obtain a clustering overview). The summary of the clustering is based on `clustering` and `certainty` in the `"clustglmm"` object where all subjects are classified into the cluster with the highest certainty. In addition, the posterior distribution of the model parameters can also be explored visually using the `plot` method.  <!-- If some subjects should remain unclassified (label 0) due to insufficient certainty level, this has to be done manually by the user. -->
 
 We also provide functions for plotting the outcomes against one of the continuous covariates: `plot_num_vs_x_grouped()` and `plot_cat_vs_x_grouped()`. The argument `group` specifies the name of a column in `data` which partitions the subjects into groups, e.g., the resulting clustering. Every cluster is plotted with one of the colors obtained with `colorspace::rainbow_hcl()` with the color slate-grey being reserved for label 0 (unclassified). 
 
@@ -743,7 +752,7 @@ Moreover, `clustering` and `certainty` of the returned `"clustglmm"` object are 
 
 # Illustrative use of the package {#sec:psurvey}
 
-We created an artificial longitudinal dataset `psurvey` and included it in package **clustGLMM**. We use this dataset to demonstrate the use of the package and illustrate a broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
+We created an artificial longitudinal dataset `psurvey` and included it in package **clustGLMM** (see `generate_psurvey_data()`). We use this dataset to demonstrate the use of the package and illustrate a broad range of the functionality covered. The dataset emulates respondents observed repeatedly during their age span of 18--40 years. The total number of observations $n_i$ per person $i$ differs and the  observation times are uniformly distributed across the range of age years 18--40. Variable `age` is the predictor variable in the regression models, i.e., we are interested to assess how the outcome variables change with age for different groups of respondents.
 
 We observe three outcomes of different type:
 
@@ -872,11 +881,12 @@ save <- default_save(naY = TRUE)
 ```
 
 The default setting of the priors on the model parameters are obtained
-using `default_param()`. We change the rate of the Gamma prior on the
-precision of the normal prior on the numeric outcome to `15`.
+using `default_param()`. We change the rate of the gamma prior on the
+precision of the normal prior on the numeric outcome to `15` and 
+increase the rate parameter for $e_0$ to 200 to induce a sparse solution.
 
 ```{r psurvey-defaults-3, echo=TRUE}
-param <- default_param(prec_num_rte = 15)  
+param <- default_param(prec_num_rte = 15, e0_rte = 200)  
 ```
 
 In the following, we use the default options for the argument `tuning`
@@ -935,12 +945,31 @@ plot(mcmc_burnin, ng_trace_chain_split = FALSE)
 Figure \@ref(fig:psurvey-mcmc-burnin-plot-ng) clearly shows that some
 of the `r mcmc_burnin$G[1]` components are immediately emptied and that
 `r length(unique(mcmc_burnin$last[[1]]$U))` non-empty components remain
-in the end. One can continue sampling from the last iteration using:
+in the end. Next, we inspect the acceptance rates using:
+
+```{r psurvey-mcmc-burnin-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 4), output.lines=-(1:4)}
+print(summary(mcmc_burnin), which = "accept")
+```
+
+These rates exceed the usual recommendation, which would suggest to
+target a value between 25--35\%. Hence, before continuing the
+sampling, we adapt the `tuning` parameter and inflate the parameters
+$c_{\boldsymbol{\theta}_l}$ of the proposal distribution.  Increasing
+the default value of 1 flattens the proposal distribution, which
+induces lower acceptance rates:
+
+```{r set-tuning-const-proposal, echo = TRUE, results = TRUE}
+tuning <- default_tuning(const_proposal_e0 = 4.5, const_proposal_beta_poi = 2,  
+  const_proposal_beta_ord = 4, const_proposal_a_ord = 2.2, const_proposal_b = 1.5)
+```
+
+We continue sampling from the last iteration using the new `tuning`
+setting:
 
 ```{r psurvey-mcmc, echo=TRUE, results=FALSE}
-set.seed(1234)
-mcmc <- clustGLMM(formula, id = "i", family, data = psurvey, G = 10, 
-                  varying = varying, save = save, param = param, iter = 1000, 
+set.seed(12345)
+mcmc <- clustGLMM(formula, id = "i", family, data = psurvey, G = 10, iter = 1000, 
+                  varying = varying, save = save, param = param, tuning = tuning,
                   inits = mcmc_burnin$last, nchains = 1, standardize = TRUE)
 ```
 	
@@ -1040,7 +1069,9 @@ remaining draws are relabeled to
 In addition, the labels of each draw are - if possible - permuted
 according to the $k$-means clustering solution. Parameter draws where the
 $k$-means clustering solution does not induce a permutation are
-replaced with `NA`.
+replaced with `NA` and the proportion of these draws is referred to as
+non-permutation rate which is used to evaluate the quality of the
+cluster solution.
 
 ```{r psurvey-post-processing, echo = TRUE, results = TRUE}
 set.seed(123456)
@@ -1059,6 +1090,20 @@ Note that the success of this post-processing step may vary depending on the
 parameters used for clustering, the random initialization used for
 `kmeans()` as well as its argument specification, which can be changed
 by setting the arguments `cols`, `iter.max` and `nstart`.
+
+Overall, this post-processing step works well in case the data and the
+model specification result in a posterior reflecting a clear group
+structure. This is indicated by the posterior of the number of
+non-empty components having a clear mode and the non-permutation rate
+being low. Inspecting these quantities is recommended to assess the
+cluster solution. If they indicate that a poor cluster solution is
+extracted, modifying the model specification, i.e., the prior
+parameters or the data model, could be considered to guide the cluster
+extraction and improve the cluster solution obtained. Alternatively,
+one could decide to not extract clusters but use the mixture model to
+account for unobserved heterogeneity while focusing inference on
+cluster-invariant parameters using an unidentified model.  For more
+details on the CliPS approach see @Malsiner-Walli-etal2026clips.
 
 ## Inference {#subsec:psurvey-inference}
 
@@ -1112,6 +1157,20 @@ plot(mcmc_pp, what = "beta_num", yspec = "income", which = "clusters_kerneldensi
 Figure \@ref(fig:psurvey-mcmc-pp-beta-num-1) clearly demonstrates that
 one cluster differs from the other two that seem to be rather similar,
 in regard to `income`.
+
+With `which = "accept"` we can inspect, how changing the `tuning` parameters
+affected the acceptance rates for each group of model parameters:
+
+<!-- The following summary provides the acceptance rates in four consecutive stages -->
+<!-- aggregated for the key model M--H sampled parameters. In case the rate is too  -->
+<!-- low or too high one may tune the associated proposal constant in `tuning`. -->
+<!-- The graphical depiction is also provided with `plot(, which = "accept")`.  -->
+```{r psurvey-mcmc-summary-accept, echo = TRUE, results = TRUE, R.options = list(digits = 4), output.lines=-(1:4)}
+print(sum_mcmc, which = "accept")
+```
+
+Moreover, with `plot(, which = "accept")` we could inspect how the
+acceptance rates evolve over the whole sampling process.
 
 Next we provide the summary of the model parameters related to the
 component weights:
@@ -1222,30 +1281,26 @@ pred3 <- predict(mcmc_pp, newdata, y = "ntrips",
 In the following we plot the cluster-specific predicted values for `ntrips`.
 
 ```{r  psurvey-prediction, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="Cluster-specific predictions of `ntrips`. Linear predictor (left), predicted mean response with 95% credible intervals (middle) and samples from the predictive distribution (right).", fig.pos="H", out.width="100%", echo = TRUE, eval = TRUE}
-par(mar = c(4, 4, 1, 0.5), mfrow = c(1, 3))
+par(mar = c(4, 4, 2.5, 0.5), mfrow = c(1, 3))
 COL <- colorspace::rainbow_hcl(mcmc_pp$modeGplus[1], c = 80, l = 50)
+add_pred_lines <- function(pred) {
+  matplot(newdata$age, pred$fit, type = "l", col = COL, lwd = 2, lty = 1, add = TRUE)
+  matplot(newdata$age, pred$lwr, type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+  matplot(newdata$age, pred$upr, type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+}
 
-plot(c(18, 40), c(0, 3), type = "n", xlab = "age", ylab = expression(x * beta))
-for (g in 1:mcmc_pp$modeGplus[1]) {
-  lines(newdata$age, pred1$fit[, g], col = COL[g], lwd = 2)
-  lines(newdata$age, pred1$lwr[, g], col = COL[g], lty = 2, lwd = 1)
-  lines(newdata$age, pred1$upr[, g], col = COL[g], lty = 2, lwd = 1)
-}  
+plot(c(18, 40), c(0, 3), type = "n", main = "Linear predictor",
+     xlab = "age", ylab = expression(x * beta))
+add_pred_lines(pred1)
 legend("topleft", legend = 1:mcmc_pp$modeGplus[1], title = "Cluster", 
        col = COL, lty = 1, lwd = 2, bty = "n")
-plot(c(18, 40), c(0, 8), type = "n", xlab = "age", ylab = expression(exp(x * beta)))
-for (g in 1:mcmc_pp$modeGplus[1]) {
-  lines(newdata$age, pred2$fit[, g], col = COL[g], lwd = 2)
-  lines(newdata$age, pred2$lwr[, g], col = COL[g], lty = 2, lwd = 1)
-  lines(newdata$age, pred2$upr[, g], col = COL[g], lty = 2, lwd = 1)
-}
-plot(c(18, 40), c(0, 20), type = "n", xlab = "age",
-     ylab = expression(Y ~ "~" ~ Pois(exp(x * beta))))
-for (g in 1:mcmc_pp$modeGplus[1]) {
-  lines(newdata$age, pred3$fit[, g], col = COL[g], lwd = 2)
-  lines(newdata$age, pred3$lwr[, g], col = COL[g], lty = 2, lwd = 1)
-  lines(newdata$age, pred3$upr[, g], col = COL[g], lty = 2, lwd = 1)
-}    
+plot(c(18, 40), c(0, 8), type = "n", main = "Mean of the response",
+     xlab = "age", ylab = expression(exp(x * beta)))
+add_pred_lines(pred2)
+plot(c(18, 40), c(0, 20), type = "n", 
+     main = "Posterior predictive distribution of response",
+     xlab = "age", ylab = expression(Y ~ "~" ~ Pois(exp(x * beta))))
+add_pred_lines(pred3)
 ```
 
 ```{r psurvey-predict-income-and-ntrips, echo=FALSE, results=FALSE, fig.align="center", fig.width=10, fig.height=4, fig.cap="The estimated spline curves for income (left) and number of trips (right).", fig.pos="H", out.width="100%"}
@@ -1441,27 +1496,21 @@ So far we considered the classification of respondents based on the
 sampled indicators. Alternatively, the posterior distribution of the
 clustering probabilities $u_{i,g}$ could be determined and used to
 obtain clustering probabilities for already observed or new
-respondents. $u_{i,g}$ is the probability induced by the model that observation $i$ belongs
-to component $g$ where the random effects are integrated out. <!-- E.g., -->
-<!-- the probabilities for observation $i=1$ to belong to component -->
-<!-- $g=1,2,3$ is stored in `pmcmc$draws[[1]][["pUig_int(1)[1]"]]`, -->
-<!-- `pmcmc$draws[[1]][["pUig_int(2)[1]"]]` and -->
-<!-- `pmcmc$draws[[1]][["pUig_int(3)[1]"]]`. -->
-
-Function `clustering_probabilities_and_deviance()` evaluates these
-clustering probabilities at carefully chosen iterations (which could
-be parallelized), see \@ref(eq:integral-bi-approx).
+respondents. These clustering probabilities are obtained with
+`clustering_probabilities_and_deviance()`.
 
 ```{r psurvey-clustering-probabilities-and-deviance, echo=TRUE, results = FALSE}
-pmcmc <- clustering_probabilities_and_deviance(
-    mcmc_pp, data = psurvey, id = "i",
+pmcmc <- clustering_probabilities_and_deviance(mcmc_pp, data = psurvey, id = "i",
     start = 1, end = mcmc_pp$iter, thin = 10, chains = 1, NGQ = 1)
 ```
 
 Using `data = psurvey`, these clustering probabilities are determined
-for all original respondents.  We reduce the samples by using only
-everth 10-th sample (using thinning with `thin = 10`) and the rather
-crude Laplace approximation (`NGQ = 1`).
+for all respondents. To ensure that this example runs in a
+couple of seconds, we consider only every 10-th iteration (using
+thinning with `thin = 10`) and the rather crude Laplace approximation
+(`NGQ = 1`). In a real application, we suggest to use parallelization
+to reduce the computational burden and pursue a stepwise procedure to
+determine a suitable order comparing the approximations obtained.
 
 <!-- ```{r psurvey-clustering-probabilities-and-deviance-print, echo=TRUE, results = TRUE} -->
 <!-- pmcmc -->
@@ -1508,14 +1557,11 @@ respondent increases using `dynamic_prob = TRUE`.
 In this case we use all samples and a better approximation with `NGQ = 3`:
 
 ```{r psurvey-probability-new-data, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, results = FALSE}
-newdata <- data.frame(i = 501, 
-                      age = seq(19, 37, length.out = 10),
-                      income = seq(110, 180, length.out = 10),
-                      ntrips = 0:9,
-                      satisfaction = c(0, 0, 0, 1, 1, 1, 1, 2, 2, 2))
-mcmc_new <- clustering_probabilities_and_deviance(
-    mcmc_pp, data = newdata, id = "i", dynamic_prob = TRUE,
-    start = 1, end = mcmc_pp$iter, thin = 1, NGQ = 3)                                              
+newdata <- data.frame(i = 501, age = seq(19, 39, length.out = 10),
+    income = seq(110, 200, length.out = 10), ntrips = rep(1:5, each = 2),
+    satisfaction = c(0, 0, 0, 1, 1, 1, 1, 2, 2, 2))
+mcmc_new <- clustering_probabilities_and_deviance(mcmc_pp, data = newdata, id = "i", 
+    dynamic_prob = TRUE, start = 1, end = mcmc_pp$iter, thin = 10, NGQ = 3)                                            
 ```
 
 We visualize the sequentially estimated clustering probabilities for
@@ -1530,7 +1576,7 @@ upr <- matrix(sum_new[-c(1:2), "97.5%"], ncol = 3, byrow = FALSE)
 
 par(mfrow = c(1, 1), mar = c(4, 4, 0.5, 0.5))
 matplot(x = newdata$age, y = fit, type = "l", col = COL, lwd = 3, lty = 1, 
-        xlab = "Age", ylab = "Clustering probability")
+        xlab = "Age", ylab = "Clustering probability", las = 1)
 matplot(x = newdata$age, y = lwr, type = "l", col = COL, lwd = 2, lty = 2, add = TRUE)
 matplot(x = newdata$age, y = upr, type = "l", col = COL, lwd = 2, lty = 2, add = TRUE)
 legend("topleft", legend = 1:3, title = "Cluster", col = COL, lwd = 3, lty = 1, bty = "n")
@@ -1539,7 +1585,7 @@ legend("topleft", legend = 1:3, title = "Cluster", col = COL, lwd = 3, lty = 1, 
 As more and more observations for this new respondent are available
 the clustering probabilities evolve in time as depicted in Figure
 \@ref(fig:psurvey-probability-new-data-plot). The high income at young
-age lead to rather high clustering probabilities for one custer, which
+age lead to rather high clustering probabilities for one cluster, which
 shifts to another cluster due to the steady income growth and the high
 number of trips and level of satisfaction. These results also indicate
 how the clustering uncertainty decreases with more information being
@@ -1566,6 +1612,16 @@ missing observations, label switching, an unknown number of clusters,
 insufficient burn-in iterations, prediction and the clustering of new
 observations. We demonstrated the ease of usage as well as the broad
 range of functionality covered on an artificial dataset.
+
+The package was developed with a model-based clustering application in
+mind, assuming that distinctively different groups can be extracted
+from the data. We demonstrated the use of the package in such a
+situation. An alternative use case would be to fit mixtures of GLMMs
+to account for unobserved heterogeneity, while focusing inference on
+parameters which are constant across groups. In this case, no
+identification is required, but package **clustGLMM** is still
+useful to fit the model and perform posterior inference for parameters
+constant across groups.
 
 <!-- Although we consider our implementation to be very flexible, there -->
 <!-- some potential limitations for the user. For example, the prior -->
