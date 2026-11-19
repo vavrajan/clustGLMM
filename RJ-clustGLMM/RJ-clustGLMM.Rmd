@@ -44,7 +44,7 @@ preamble: |
   \newcommand{\indicator}{\mathbb{I}}
   \usepackage{float}
   \usepackage{pdflscape}
-  \renewcommand{\mid}{\;\middle\vert\!}
+  \renewcommand{\mid}{\middle\vert}
 output:
   rjtools::rjournal_pdf_article:
     toc: no
@@ -508,7 +508,7 @@ increase the rate parameter for $e_0$ to 200 to induce a sparse solution.
 param <- default_param(prec_num_rte = 15, e0_rte = 200)  
 ```
 
-For the following burn-in phase, we use the default options for the argument `tuning`
+In the following burn-in phase, we use the default options for the argument `tuning`
 when calling `clustGLMM()` which are obtained with `default_tuning()`.
 
 ## MCMC sampling {#subsec:psurvey-sample-chains}
