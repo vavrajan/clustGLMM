@@ -1124,8 +1124,13 @@ Therefore, the given outcomes are considered independent. ")
       effect_names[sdnames] <- refnames
       
       #corSigma, Sigma, InvSigma
-      mat_names <- param_names[grep("Sigma\\[(\\d+),(\\d+)\\]", param_names)]
-      positions <- regexec("Sigma\\[(\\d+),(\\d+)\\]", mat_names)
+      if(varying["InvSigma"]){
+        mat_names <- param_names[grep("Sigma\\(\\d+\\)\\[(\\d+),(\\d+)\\]", param_names)]
+        positions <- regexec("Sigma\\(\\d+\\)\\[(\\d+),(\\d+)\\]", mat_names)
+      }else{
+        mat_names <- param_names[grep("Sigma\\[(\\d+),(\\d+)\\]", param_names)]
+        positions <- regexec("Sigma\\[(\\d+),(\\d+)\\]", mat_names)
+      }
       extracted_numbers <- matrix(unlist(regmatches(mat_names, positions)), nrow = 3)
       coordinates <- cbind(as.numeric(extracted_numbers[2,]), as.numeric(extracted_numbers[3,]))
       coord_names <- matrix(refnames[coordinates], ncol = 2)
