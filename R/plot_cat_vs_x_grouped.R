@@ -61,7 +61,7 @@ function(data, y = "y", x = "x", group, xbreaks, main = NA, margin = 0.05, rever
     }else{
       axis(1, at = xbreaks)
     }
-    fx <- cut(data[,x], breaks = xbreaks)
+    fx <- cut(data[,x], breaks = xbreaks, include.lowest = TRUE)
   }
   if (YLAB != "") {
       axis(2, 0:(G0-1)+0.5, labels = labels, las = 2)
