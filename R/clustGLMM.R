@@ -1159,7 +1159,7 @@ Therefore, the given outcomes are considered independent. ")
       na_names <- c(na_names, 
                     paste0(which(matisYna[,iy]), 
                            ", ", id, "=",
-                           names(numbered_unique_ids)[data[matisYna[,iy], id]])
+                           data[matisYna[,iy], id])
                     )
     }
     effect_names[nas] <- na_names
