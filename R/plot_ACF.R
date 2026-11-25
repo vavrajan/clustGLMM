@@ -38,7 +38,7 @@ function(mcmc, scalar_samples,
        ylab = "", xlab = "", type= "n")
   mtext(text = "Lag", side = 1, line = 2.5, cex = labcex)
   mtext(text = "ACF", side = 2, line = 2.5, cex = labcex)
-  #mtext(whatLAB, side = 3, line = 0.5)
+  mtext(whatLAB, side = 3, line = 0.5)
   pom <- seq(-move.width, move.width, length.out = length(chains)+1)
   posun <- (pom[1:length(chains)]+pom[2:(1+length(chains))])/2
   chcount <- 0
