@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
 options(width = 104, digits = 4)
 ```
 
-The goal of this vignette is to replicate the analysis of PBC data
+The goal of this vignette is to expand the analysis of PBC data
 performed by [@KomarekKomarkovaJSS14mixAK] using package **clustGLMM**.
 This is the list of packages required for the analysis:
 
@@ -30,134 +30,105 @@ library("clustGLMM")
 
 ## PBC910
 
-We use the dataset from package **mixAK**.
+The sequential PBC data can be found as `pbcseq` in package
+`survival`. We restrict ourselves only to patients who survived the
+first 910 days (2.5 years) similarly as [@KomarekKomarkovaJSS14mixAK],
+who created `PBC910` in package `mixAK`. However, we plan to model more
+columns than `PBC910` provides so we create our data from object
+`pbcseq` by taking the same rows as `PBC910`.
 
 ```{r pbc-data}
 data("PBC910", package = "mixAK")
-data <- PBC910
+data("pbc", package = "survival")
+data <- merge(PBC910, pbcseq, by = c("id", "day", "platelet", "spiders"), sort = FALSE)
 dim(data)
 (n <- length(unique(data$id)))      # number of subjects in the data
 ```
 
-@KomarekKomarkovaJSS14mixAK used the following analysis:
-
-```{r GLMM-MCMC-from-mixAK}
-set.seed(20042007)
-mod <- GLMM_MCMC(y = PBC910[, c("lbili", "platelet", "spiders")], 
-    dist = c("gaussian", "poisson(log)", "binomial(logit)"), 
-    id = PBC910[, "id"],
-    x = list(lbili    = "empty", 
-             platelet = "empty", 
-             spiders  = PBC910[, "month"]),
-    z = list(lbili    = PBC910[, "month"], 
-             platelet = PBC910[, "month"], 
-             spiders  = "empty"),
-    random.intercept = rep(TRUE, 3),
-    prior.b = list(Kmax = 2), 
-    nMCMC = c(burn = 100, keep = 1000, thin = 10, info = 100),
-    parallel = FALSE)
-mod <- NMixRelabel(mod, type = "stephens", keep.comp.prob = TRUE)
-```
-
-```{r coda-mcmc-output}
-library("coda")
-colnames(mod[[1]]$mixture_b)
-name.Eb <- paste("b.Mean.", 1:5, sep = "")
-RegrChain1 <- mcmc(with(mod[[1]], 
-                        cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
-RegrChain2 <- mcmc(with(mod[[2]], 
-                        cbind(mixture_b[, name.Eb], alpha, sigma_eps)))
-colnames(RegrChain1) <- colnames(RegrChain2) <- 
-    c(paste(rep(c("lbili", "platelet", "spiders"), each = 2), 
-            ":", rep(c("Intcpt", "Slope"), 3), sep = ""),
-      "lbili:res_std_dev")
-summary(mcmc.list(RegrChain1, RegrChain2))
-
-ip <- getProfiles(t = "month",
-                  y = c("lbili", "platelet", "spiders", "jspiders"),
-                  id = "id", data = PBC910)
-delta <- 0.3
-tpred <- seq(0, 30, by = delta)
-fit <- fitted(mod[[1]], x =list("empty", "empty", tpred),
-              z =list(tpred, tpred, "empty"),
-              glmer = TRUE)
-names(fit) <- c("lbili", "platelet", "spiders")
-
-
-K <- mod[[1]]$prior.b$Kmax
-clCOL <- c("darkgreen", "red3")
-obsCOL <- "azure3"
-
-layout(autolayout(3))
-plotProfiles(ip = ip, data = PBC910, var = "lbili", tvar = "month",
-             auto.layout = FALSE, main = "Log(bilirubin)",
-             xlab = "Time (months)", ylab = "Log(bilirubin)", col = obsCOL)
-for (k in 1:K) lines(tpred, fit[["lbili"]][, k], col = clCOL[k], lwd = 2)
-plotProfiles(ip = ip, data = PBC910, var = "platelet", tvar = "month",
-             auto.layout = FALSE, main = "Platelet count",
-             xlab = "Time (months)", ylab = "Platelet count", col = obsCOL)
-for (k in 1:K) lines(tpred, fit[["platelet"]][, k], col = clCOL[k], lwd = 2)
-plotProfiles(ip = ip, data = PBC910, var = "jspiders", tvar = "month",
-             lines = FALSE, points = TRUE,
-             auto.layout = FALSE, main = "Blood vessel malform.",
-             xlab = "Time (months)", ylab = "Blood vessel malform. (jittered)",
-             bg = obsCOL, col = "grey70")
-for (k in 1:K) lines(tpred, fit[["spiders"]][, k], col = clCOL[k], lwd = 2)
-```
-
-
-We try to replicate this analysis using package **clustGLMM**. We prepare the data:
+Next we prepare the outcomes for analysis:
 
 ```{r data-transformations}
-data$time <- data$month
+data$ord_edema <- factor(data$edema, ordered = TRUE)
+data$lchol <- log(data$chol)
 ```
 
-The analysis in the paper used as outcome variables:
+An provide a quick overlook of the columns we aim to use:
+```{r head-data}
+head(data[, c("id", "month", "age", "sex", "trt", 
+              "lbili", "lchol", "platelet", "spiders", "hepato", "ord_edema", "stage")])
+summary(data[, c("id", "month", "age", "sex", "trt", 
+                 "lbili", "lchol", "platelet", "spiders", "hepato", "ord_edema", "stage")])
+```
 
-* numeric serum bilirubin (on log-scale), 
-* count variable platelet, 
-* binary indicators of blood vessel malformations in the skin (`spiders`).
+Notice that many outcome values are missing,
+which is an opportunity to demonstrate the
+capabilities of **clustGLMM** under _missing at random_ assumption. 
+Notice that the number of `NA` values among `lchol` is extremely high,
+see the following histogram of `NA` occurance rate per `patient`:
+```{r sum-NA-chol-per-patient}
+par(mfrow = c(1,1), mar = c(4,4,0.5,0.5))
+hh <- hist(100*tapply( is.na(data$lchol), data$id, mean),
+           breaks = c(-5,5,15,25,30,35,45,55,65,74.5,85,95,105),
+           xlab = "Percentage of NA per patient", main = "", freq = T,
+           ylim = c(0,85))
+text(x = c(0, 20, 32.5, 40, 50, 60, 70, 80, 100), 
+     y = hh$counts[c(1,3,5:10,12)], pos = 3,
+     labels = c("0", "1/4", "1/3", "2/5", "2/4", "3/5", "2/3", "3/4", "all"))
+```
+
+
+We plan to enrich the analysis in [@KomarekKomarkovaJSS14mixAK] by adding 
+more outcomes and explanatory variables. In particular, we aim to model:
+
+* serum bilirubin (mg/dl) on log-scale (`lbili`) as `gaussian`, 
+* serum cholesterol (mg/dl) on log-scale (`lchol`) as `gaussian`, 
+* platelet count (`platelet`) as `poisson`, 
+* blood vessel malformations in the skin (`spiders`) as `bernoulli` with `logit`,
+* presence of hepatomegaly or enlarged liver (`hepato`) as `bernoulli` with `logit`,
+* presence and seriousness of edema (`ord_edema`) as `cumulative` ordinal variable,
+* histologic stage of disease (`stage`) as `cumulative` ordinal variable.
 
 We create the `family` argument to declare the type of the considered
 outcomes for `clustGLMM` analysis:
 
 ```{r family}
-family <- c(lbili = "num", platelet = "poi", spiders = "bin")
+family <- c(lbili = "gaussian", 
+            lchol = "gaussian", 
+            platelet = "poisson", 
+            spiders = "bernoulli", 
+            hepato = "bernoulli", 
+            #ord_edema = "cumulative", 
+            stage = "cumulative")
 ```
 
-We create `formula` to specify the regression model:
+We create `formula` to specify the regression model so that only the linear trend of 
+`month` differentiates the groups while other effects are common to all. 
+Random intercept and slope is used for numeric variables only, while for the 
+remaining variables only random intercept suffices.
 
 ```{r formula}
 formula <- list()
 for (y in names(family)) {
-  formula[[y]] <- list()
-  formula[[y]]$fixed <- ~ 1
-  formula[[y]]$group <- ~ time 
-  formula[[y]]$random <- ~ 1
+  formula[[y]] <- list(fixed = ~ age + sex + trt,
+                       group = ~ month,
+                       random = as.formula(paste0("~ 1", 
+                                  ifelse(family[y] == "gaussian", " + month", ""))))
 }
-
-formula$spiders$fixed <- ~ time
-formula$spiders$group <- ~ 1
-formula$spiders$random <- ~ 1
 ```
 
-Below we show the summary of the variables considered within this
-analysis:
-
-```{r data-summary}
-summary(data[, c("time", names(family))])
-```
-
-We see that some of the outcome values are missing.  However, for
-`clustGLMM` there is no need for to omit the rows from the analysis as
-long as the missing values are among modelled outcomes.
-
-Now we examine how does the outcome evolve in time:
-```{r plot-pbc-vs-time}
-par(mfrow = c(1, 3), mar = c(4, 4, 1, 0.5))
-plot_num_vs_x_grouped(data, y = "lbili", x = "time", id = "id")
-plot_num_vs_x_grouped(data, y = "platelet", x = "time", id = "id")
-plot_cat_vs_x_grouped(data, y = "spiders", x = "time", main = "spiders")
+Now we examine how do the outcomes evolve in time:
+```{r plot-pbc-vs-month, fig.height = 8}
+layout(matrix(c(1,1,1,1,2,2,2,2,3,3,3,3,
+                4,4,4,5,5,5,6,6,6,7,7,7), nrow = 2, byrow = T))
+par(mar = c(4, 4, 0.5, 0.5))
+plot_num_vs_x_grouped(data, y = "lbili", x = "month", id = "id")
+plot_num_vs_x_grouped(data, y = "lchol", x = "month", id = "id")
+plot_num_vs_x_grouped(data, y = "platelet", x = "month", id = "id")
+par(mar = c(4, 4, 2.5, 0.5))
+plot_cat_vs_x_grouped(data, y = "spiders", x = "month", main = "spiders")
+plot_cat_vs_x_grouped(data, y = "hepato", x = "month", main = "hepato")
+plot_cat_vs_x_grouped(data, y = "ord_edema", x = "month", main = "ord_edema")
+plot_cat_vs_x_grouped(data, y = "stage", x = "month", main = "stage")
 ```
 
 ## Sampling MCMC using `clustGLMM`
@@ -165,21 +136,21 @@ plot_cat_vs_x_grouped(data, y = "spiders", x = "time", main = "spiders")
 Some of the key inputs for `clustGLMM` are already prepared (`family`,
 `formula`), but there still some key settings to be discussed.
 Non-effects parameters of the model may also be set to be
-group-specific.  The default setting is provided by
+group-specific. The adjusted default setting is provided by
 
 ```{r varying}
-(varying <- default_varying(prec_num = TRUE, InvSigma = TRUE))
+(varying <- default_varying(prec_num = TRUE, InvSigma = FALSE))
 ```
 
 Only precision of the errors of numeric outcomes and ordered
 intercepts are considered to be group-specific parameters by default.
 We set the precision matrix (`InvSigma`) of the vector of random
 intercepts to be group-specific as well, but keep its Wishart prior
-scale matrix `InvQ` common to all groups.  Missing outcome values will
+scale matrix `InvQ` common to all groups. Missing outcome values will
 be always predicted for the current cluster the individual is assigned
 to.
 
-Next, we can choose which parameters are returned.  We make just one
+Next, we can choose which parameters are returned. We make just one
 change compared to the default setting and that is to save the
 predicted missing values.
 
@@ -224,11 +195,24 @@ plot(mcmc_burnin)
 ```
 Apparently the number of patients within each cluster stabilizes in time.
 <!-- Apparently the number of non-empty groups is decreasing in time.  -->
-<!-- Moreover, it seems to differ between chains:  -->
-
+Moreover, the estimated clusters seems to differ between chains.
 ```{r plot-mcmc-burnin-Gplus, eval = FALSE, echo = FALSE}
 plot(mcmc_burnin, "Gplus")
 ```
+Next, we explore the acceptance rates:
+```{r mcmc-burnin-accept}
+print(summary(mcmc_burnin), which = "accept")
+```
+And we decide to adjust the proposal distributions:
+```{r adjust-tuning}
+tuning <- default_tuning(const_proposal_e0 = 3.5, 
+                         const_proposal_beta_poi = 1.5, const_proposal_beta_poi_fix = 1.2,
+                         const_proposal_beta_bin = 2, const_proposal_beta_bin_fix = 1.5,
+                         const_proposal_beta_ord = 3, const_proposal_beta_ord_fix = 1.5,
+                         const_proposal_a_ord = 1.5, 
+                         df_proposal_b = 20)
+```
+
 
 The current chains cannot be used for inference.
 We continue to sample from initial values set to `mcmc_burnin$last`:
@@ -259,6 +243,7 @@ Now we sample next $10\,000$ iterations.
 
 ```{r clustGLMM}
 set.seed(42)
+tuning$integer$times_proposal <- 10
 mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
                   G = 2, nchains = 2, iter = 10000, 
                   inits = mcmc_burnin$last,
@@ -269,7 +254,7 @@ mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
 #                   inits = mcmc$last,
 #                   varying = varying, save = save, tuning = tuning, param = param, 
 #                   standardize = TRUE)
-mcmc <- permute_cluster_labels(mcmc, perm = list(1:2, 2:1))
+# mcmc <- permute_cluster_labels(mcmc, perm = list(1:2, 2:1))
 ```
 
 ```{r plot-mcmc}
@@ -278,12 +263,34 @@ plot(mcmc)
 
 ```{r plot-mcmc-traceplots}
 plot(mcmc, "beta_num")
+plot(mcmc, "beta_num_fix")
 plot(mcmc, "prec_num")
 plot(mcmc, "beta_poi")
+plot(mcmc, "beta_poi_fix")
 plot(mcmc, "beta_bin")
+plot(mcmc, "beta_bin_fix")
+plot(mcmc, "beta_ord")
+plot(mcmc, "beta_ord_fix")
+plot(mcmc, "c_ord")
 plot(mcmc, "sdSigma")
 plot(mcmc, "corSigma")
 plot(mcmc, "w")
+```
+
+```{r plot-mcmc-ACF}
+plot(mcmc, "beta_num", which = "ACF")
+plot(mcmc, "beta_num_fix", which = "ACF")
+plot(mcmc, "prec_num", which = "ACF")
+plot(mcmc, "beta_poi", which = "ACF")
+plot(mcmc, "beta_poi_fix", which = "ACF")
+plot(mcmc, "beta_bin", which = "ACF")
+plot(mcmc, "beta_bin_fix", which = "ACF")
+plot(mcmc, "beta_ord", which = "ACF")
+plot(mcmc, "beta_ord_fix", which = "ACF")
+plot(mcmc, "c_ord", which = "ACF")
+plot(mcmc, "sdSigma", which = "ACF")
+plot(mcmc, "corSigma", which = "ACF")
+plot(mcmc, "w", which = "ACF")
 ```
 
 
