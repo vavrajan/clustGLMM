@@ -1156,11 +1156,13 @@ Therefore, the given outcomes are considered independent. ")
     matisYna <- matrix(cisYna, ncol = length(sorted_family))
     na_names <- c()
     for(iy in 1:length(sorted_family)){
-      na_names <- c(na_names, 
-                    paste0(which(matisYna[,iy]), 
-                           ", ", id, "=",
-                           data[matisYna[,iy], id])
-                    )
+      if(sum(matisYna[,iy])>0){
+        na_names <- c(na_names, 
+                      paste0(which(matisYna[,iy]), 
+                             ", ", id, "=",
+                             data[matisYna[,iy], id])
+                      )
+      }
     }
     effect_names[nas] <- na_names
     
