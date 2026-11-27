@@ -1,0 +1,1477 @@
+# Compute the Summary Statistics of `clustGLMM` Output
+
+Computes and prints the summary statistics for objects of class
+`"clustglmm"`, the output from function
+[`clustGLMM`](https://vavrajan.github.io/clustGLMM/reference/clustGLMM.md).
+
+## Usage
+
+``` r
+# S3 method for class 'clustglmm'
+summary(object, burnin = 0, thin = 1, ...)
+# S3 method for class 'summary.clustglmm'
+print(x, which = c("mcmc", "accept", "inv_param", "clust_param"), chains = 1L,
+      clusters, pattern = "", max_nchar_details = 25, ...)
+```
+
+## Arguments
+
+- object:
+
+  an object of class `"clustglmm"` (as returned by function
+  [`clustGLMM`](https://vavrajan.github.io/clustGLMM/reference/clustGLMM.md)).
+
+- burnin:
+
+  the length of burn-in period (default 0), i.e., the number of initial
+  samples to omit.
+
+- thin:
+
+  thinning rate (default 1); only every `thin`th value is kept (must be
+  a positive integer).
+
+- x:
+
+  an object of class `"summary.clustglmm"` (as returned by the `summary`
+  method for `"clustglmm"` objects) .
+
+- which:
+
+  a character vector that indicates which summaries should be printed.
+
+- chains:
+
+  a vector of chain numbers to print summary results for.
+
+- clusters:
+
+  a list of cluster labels for which group-specific parameters are
+  printed for each chain; if missing `x$clusters` is used.
+
+- pattern:
+
+  a pattern to be used for matching with
+  [`grep`](https://rdrr.io/r/base/grep.html) among parameter names to
+  include in the summary, an empty string by default (i.e., matches all
+  names from the selected category).
+
+- max_nchar_details:
+
+  a maximal number of characters for details to be printed in the
+  additional column, if longer the last three characters are replaced
+  with "...". If lower than 4, then such column of details is not added.
+
+- ...:
+
+  further arguments passed to or from other methods.
+
+## Details
+
+`print.summary` prints a summary for each chain selected by argument
+`chains`. Depending on what is selected with the `which` argument, the
+following summaries are printed:
+
+- mcmc:
+
+  an overview of the sampled chains,
+
+- accept:
+
+  an evolution (samples divided into 4 segments) of the average proposal
+  acceptance grouped by parameter type,
+
+- clustering:
+
+  a summary of the clustering,
+
+- inv_param:
+
+  cluster-invariant parameters,
+
+- clust_param:
+
+  clustering-related parameters (`Gplus`, `e0`, `w`),
+
+- latent_param:
+
+  latent parameters (random effects `b`, allocation indicators `U`,
+  missing outcome values `naY`),
+
+- group_param:
+
+  group-specific parameters.
+
+Regarding the `clustering` option it has to be noted that the summary is
+based on the sampled allocation indicators when using the raw output of
+[`clustGLMM`](https://vavrajan.github.io/clustGLMM/reference/clustGLMM.md),
+while it is based on the approximated clustering probabilities for the
+output of
+[`clustering_probabilities_and_deviance`](https://vavrajan.github.io/clustGLMM/reference/clustering_probabilities_and_deviance.md).
+
+When printing the summary of the parameters, the argument `pattern`
+allows to reduce the list of printed parameters. Group-specific
+parameters are printed only for the cluster labels in `clusters`. By
+default, only parameters for non-empty clusters are printed. The output
+of `summary` contains both `coda`-like tables (`"statistics"` and
+`"quantiles"`), but only a combination of these two is printed (all
+quantiles and the mean).
+
+## Value
+
+`summary` returns a list of:
+
+- call:
+
+  a string describing the model defined to be estimated,
+
+- G:
+
+  maximal number of clusters,
+
+- modeGplus:
+
+  the most frequent number of non-empty clusters per each chain,
+
+- clustering:
+
+  matrix of assigned clusters for each unit based on sampled indicators,
+
+- certainty:
+
+  matrix of certainties (the highest clustering probability among G
+  other) for each unit based on sampled indicators,
+
+- clusters:
+
+  labels of non-empty clusters for each chain separately,
+
+- coda_summary:
+
+  output of `coda` summary for each chain separately,
+
+- output:
+
+  the type of output that is summarized: `mcmc` samples for
+  [`clustGLMM`](https://vavrajan.github.io/clustGLMM/reference/clustGLMM.md),
+  `probs` approximation of clustering probabilities and deviance for
+  [`clustering_probabilities_and_deviance`](https://vavrajan.github.io/clustGLMM/reference/clustering_probabilities_and_deviance.md),
+
+- fnames:
+
+  vector of parameter names invariant to clustering,
+
+- gnames:
+
+  cluster-specific parameter names only for cluster 1,
+
+- lnames:
+
+  latent variable names (allocation indicators, random effects, missing
+  values),
+
+- cnames:
+
+  clustering related parameter names,
+
+- effect_names:
+
+  details on each model parameter to be added to summary table if
+  `max_nchar_details > 3`,
+
+- accept_summary:
+
+  a list of column means and standard deviations of `object$accept` and
+  evolution of grouped average acceptance by parameter names, again each
+  chain separately.
+
+## References
+
+Vávra, J., Komárek, A., Grün, B., Malsiner-Walli, G. Clusterwise
+multivariate regression of mixed-type panel data. Stat Comput 34, 46
+(2024). https://doi.org/10.1007/s11222-023-10304-5
+
+## Author
+
+Jan Vávra
+
+## See also
+
+[`clustGLMM`](https://vavrajan.github.io/clustGLMM/reference/clustGLMM.md),
+[`clustering_probabilities_and_deviance`](https://vavrajan.github.io/clustGLMM/reference/clustering_probabilities_and_deviance.md),
+`print.summary.clustglmm`,
+[`summary.mcmc`](https://rdrr.io/pkg/coda/man/summary.mcmc.html)
+
+## Examples
+
+``` r
+# \donttest{
+
+### Get some longitudinal mixed type data
+### here generated by generate_longitudinal_mixed_type_data()
+data("longitudinal_mixed_type_data")
+
+# Examples here demonstrate the basic use of the available functions on a toy dataset.
+# For more thorough analyses see the vignettes.
+
+
+###-----------------------------------------------------------------------------
+###     Prepare inputs for clustGLMM()
+###-----------------------------------------------------------------------------
+id <- "i"
+
+family <- c("num", "poi", "bin", "ord", "cat")
+names(family) <- Ys <- c("ynum", "ypoi", "ybin", "yord", "ycat")
+
+## Create list of formulae for each outcome
+formula <- list()
+for(y in Ys){
+  formula[[y]] <- list()
+  formula[[y]]$fixed <- ~ f
+  formula[[y]]$group <- ~ x
+  formula[[y]]$random <- ~ 1
+  formula[[y]]$offset <- ""
+}
+formula
+#> $ynum
+#> $ynum$fixed
+#> ~f
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ynum$group
+#> ~x
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ynum$random
+#> ~1
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ynum$offset
+#> [1] ""
+#> 
+#> 
+#> $ypoi
+#> $ypoi$fixed
+#> ~f
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ypoi$group
+#> ~x
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ypoi$random
+#> ~1
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ypoi$offset
+#> [1] ""
+#> 
+#> 
+#> $ybin
+#> $ybin$fixed
+#> ~f
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ybin$group
+#> ~x
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ybin$random
+#> ~1
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ybin$offset
+#> [1] ""
+#> 
+#> 
+#> $yord
+#> $yord$fixed
+#> ~f
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $yord$group
+#> ~x
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $yord$random
+#> ~1
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $yord$offset
+#> [1] ""
+#> 
+#> 
+#> $ycat
+#> $ycat$fixed
+#> ~f
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ycat$group
+#> ~x
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ycat$random
+#> ~1
+#> <environment: 0x000001cfd2c476d0>
+#> 
+#> $ycat$offset
+#> [1] ""
+#> 
+#> 
+# intercept term will be group-specific 
+# since it appears in $group which has a preference over $fixed
+
+## All other inputs need to be prepared,
+## unless the default values are desired (varying, save, howsave, param, tuning).
+## See the vignette for how these can be adjusted.
+
+###-----------------------------------------------------------------------------
+###     Calling clustGLMM()
+###-----------------------------------------------------------------------------
+
+Gmax <- 5     # maximal number of mixture components to be considered
+nchains <- 2  # number of chains to be sampled 
+
+## No inits specified
+set.seed(123456789)
+mcmc <- clustGLMM(formula = formula, id = id, family = family, 
+                  data = longitudinal_mixed_type_data, 
+                  G = Gmax, iter = 100, nchains = nchains)
+#> Inits are missing, calculating...
+#> Inits are ready.
+#> Settings ready, about to start for ch in 1:nchains.
+#> Inits for chain 1 are ready.
+#> Triggering C function.
+#> 
+#> Chain: 1, (1 %)Chain: 1, (2 %)Chain: 1, (3 %)Chain: 1, (4 %)Chain: 1, (5 %)Chain: 1, (6 %)Chain: 1, (7 %)Chain: 1, (8 %)Chain: 1, (9 %)Chain: 1, (10 %)Chain: 1, (11 %)Chain: 1, (12 %)Chain: 1, (13 %)Chain: 1, (14 %)Chain: 1, (15 %)Chain: 1, (16 %)Chain: 1, (17 %)Chain: 1, (18 %)Chain: 1, (19 %)Chain: 1, (20 %)Chain: 1, (21 %)Chain: 1, (22 %)Chain: 1, (23 %)Chain: 1, (24 %)Chain: 1, (25 %)Chain: 1, (26 %)Chain: 1, (27 %)Chain: 1, (28 %)Chain: 1, (29 %)Chain: 1, (30 %)Chain: 1, (31 %)Chain: 1, (32 %)Chain: 1, (33 %)Chain: 1, (34 %)Chain: 1, (35 %)Chain: 1, (36 %)Chain: 1, (37 %)Chain: 1, (38 %)Chain: 1, (39 %)Chain: 1, (40 %)Chain: 1, (41 %)Chain: 1, (42 %)Chain: 1, (43 %)Chain: 1, (44 %)Chain: 1, (45 %)Chain: 1, (46 %)Chain: 1, (47 %)Chain: 1, (48 %)Chain: 1, (49 %)Chain: 1, (50 %)Chain: 1, (51 %)Chain: 1, (52 %)Chain: 1, (53 %)Chain: 1, (54 %)Chain: 1, (55 %)Chain: 1, (56 %)Chain: 1, (57 %)Chain: 1, (58 %)Chain: 1, (59 %)Chain: 1, (60 %)Chain: 1, (61 %)Chain: 1, (62 %)Chain: 1, (63 %)Chain: 1, (64 %)Chain: 1, (65 %)Chain: 1, (66 %)Chain: 1, (67 %)Chain: 1, (68 %)Chain: 1, (69 %)Chain: 1, (70 %)Chain: 1, (71 %)Chain: 1, (72 %)Chain: 1, (73 %)Chain: 1, (74 %)Chain: 1, (75 %)Chain: 1, (76 %)Chain: 1, (77 %)Chain: 1, (78 %)Chain: 1, (79 %)Chain: 1, (80 %)Chain: 1, (81 %)Chain: 1, (82 %)Chain: 1, (83 %)Chain: 1, (84 %)Chain: 1, (85 %)Chain: 1, (86 %)Chain: 1, (87 %)Chain: 1, (88 %)Chain: 1, (89 %)Chain: 1, (90 %)Chain: 1, (91 %)Chain: 1, (92 %)Chain: 1, (93 %)Chain: 1, (94 %)Chain: 1, (95 %)Chain: 1, (96 %)Chain: 1, (97 %)Chain: 1, (98 %)Chain: 1, (99 %)Chain: 1, (100 %)
+#> Sampling of chain 1 is completed.
+#> Saving the last state of chain 1 is completed.
+#> Saving chain 1 is completed.
+#> Inits for chain 2 are ready.
+#> Triggering C function.
+#> 
+#> Chain: 2, (1 %)Chain: 2, (2 %)Chain: 2, (3 %)Chain: 2, (4 %)Chain: 2, (5 %)Chain: 2, (6 %)Chain: 2, (7 %)Chain: 2, (8 %)Chain: 2, (9 %)Chain: 2, (10 %)Chain: 2, (11 %)Chain: 2, (12 %)Chain: 2, (13 %)Chain: 2, (14 %)Chain: 2, (15 %)Chain: 2, (16 %)Chain: 2, (17 %)Chain: 2, (18 %)Chain: 2, (19 %)Chain: 2, (20 %)Chain: 2, (21 %)Chain: 2, (22 %)Chain: 2, (23 %)Chain: 2, (24 %)Chain: 2, (25 %)Chain: 2, (26 %)Chain: 2, (27 %)Chain: 2, (28 %)Chain: 2, (29 %)Chain: 2, (30 %)Chain: 2, (31 %)Chain: 2, (32 %)Chain: 2, (33 %)Chain: 2, (34 %)Chain: 2, (35 %)Chain: 2, (36 %)Chain: 2, (37 %)Chain: 2, (38 %)Chain: 2, (39 %)Chain: 2, (40 %)Chain: 2, (41 %)Chain: 2, (42 %)Chain: 2, (43 %)Chain: 2, (44 %)Chain: 2, (45 %)Chain: 2, (46 %)Chain: 2, (47 %)Chain: 2, (48 %)Chain: 2, (49 %)Chain: 2, (50 %)Chain: 2, (51 %)Chain: 2, (52 %)Chain: 2, (53 %)Chain: 2, (54 %)Chain: 2, (55 %)Chain: 2, (56 %)Chain: 2, (57 %)Chain: 2, (58 %)Chain: 2, (59 %)Chain: 2, (60 %)Chain: 2, (61 %)Chain: 2, (62 %)Chain: 2, (63 %)Chain: 2, (64 %)Chain: 2, (65 %)Chain: 2, (66 %)Chain: 2, (67 %)Chain: 2, (68 %)Chain: 2, (69 %)Chain: 2, (70 %)Chain: 2, (71 %)Chain: 2, (72 %)Chain: 2, (73 %)Chain: 2, (74 %)Chain: 2, (75 %)Chain: 2, (76 %)Chain: 2, (77 %)Chain: 2, (78 %)Chain: 2, (79 %)Chain: 2, (80 %)Chain: 2, (81 %)Chain: 2, (82 %)Chain: 2, (83 %)Chain: 2, (84 %)Chain: 2, (85 %)Chain: 2, (86 %)Chain: 2, (87 %)Chain: 2, (88 %)Chain: 2, (89 %)Chain: 2, (90 %)Chain: 2, (91 %)Chain: 2, (92 %)Chain: 2, (93 %)Chain: 2, (94 %)Chain: 2, (95 %)Chain: 2, (96 %)Chain: 2, (97 %)Chain: 2, (98 %)Chain: 2, (99 %)Chain: 2, (100 %)
+#> Sampling of chain 2 is completed.
+#> Saving the last state of chain 2 is completed.
+#> Saving chain 2 is completed.
+#> All chains have been sampled.
+                  
+###-----------------------------------------------------------------------------
+###     summary.clustglmm()
+###-----------------------------------------------------------------------------
+
+mcmc
+#> ###------------------------------------------------------------###
+#> ### Model Based Clustering for Generalized Linear Mixed Models ###
+#> ###------------------------------------------------------------###
+#> N = sample size: 400
+#> n = number of units: 100
+#> observations per unit (min | median | max): 4 | 4 | 4 
+#> G = maximal number of components: 5
+#> 
+#> Overview of outcomes: 
+#> num: ynum
+#> poi: ypoi
+#> bin: ybin
+#> ord: yord
+#> cat: ycat
+#> 
+#> Fixed effects invariant towards clustering (in order of appearance): 
+#> ynum ~ f
+#> ypoi ~ f
+#> ybin ~ f
+#> yord ~ f
+#> ycat ~ f
+#> 
+#> Random effects invariant towards clustering: 
+#> ynum ~ 1
+#> ypoi ~ 1
+#> ybin ~ 1
+#> yord ~ 1
+#> ycat ~ 1
+#> 
+#> The structure of covariance matrix Sigma for random effects: 
+#> ynum_(Intercept)
+#> ypoi_(Intercept)
+#> ybin_(Intercept)
+#> yord_(Intercept)
+#> ycat_(Intercept)
+#> 
+#> Group-specific effects for outcomes (in order of appearance): 
+#> ynum ~ x
+#> ypoi ~ x
+#> ybin ~ x
+#> yord ~ x
+#> ycat ~ x
+#> 
+#> Other group-specific parameters: prec_num, sd_num, var_num, c_ord, a_ord, pi_ord
+#> 
+#> MCMC sampling: 
+#> nchains = number of sampled chains: 2
+#> iter = length of the chain: 100
+#> Overall acceptance: 36.42% 
+#> Initialized by a random partition.
+s <- summary(mcmc)
+
+# Choose chains - summary is done separately for each of them
+print(s)
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> Iterations = 1:100
+#> Thinning interval = 1
+#> Number of chains = 1
+#> Sample size per chain = 100
+#> Overall acceptance: 36.38% 
+#> 
+#> Proposal acceptance rates grouped and summarized by parameters
+#> -----------------------------------------------------------------------
+#>                   Min % Mean % Max %
+#> e0                   66  66.00    66
+#> beta_poi_fix_ypoi    75  75.00    75
+#> beta_poi_ypoi        52  56.60    60
+#> beta_bin_fix_ybin    64  64.00    64
+#> beta_bin_ybin        46  53.20    60
+#> beta_ord_fix_yord     7   7.00     7
+#> beta_ord_yord        60  66.60    73
+#> a_ord_yord           42  44.40    49
+#> beta_cat_fix_ycat    48  48.00    48
+#> beta_ord_ycat        23  28.20    35
+#> b                    18  32.24    43
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Cluster-invariant parameters:
+#>                                           Effect        2.5%          25%
+#> beta_num_fix_ynum[1]                          f1 -0.23163651 -0.098946913
+#> beta_poi_fix_ypoi[1]                          f1 -0.21260227 -0.118234734
+#> beta_bin_fix_ybin[1]                          f1 -1.47263232 -0.946111980
+#> beta_ord_fix_yord[1]                          f1  0.18380359  0.439547400
+#> beta_cat_fix_ycat[1,1]                        f1 -0.40298926  0.018754716
+#> beta_cat_fix_ycat[1,2]                        f1 -0.02249618  0.397365339
+#> beta_cat_fix_ycat[1,3]                        f1 -0.64562769 -0.149750025
+#> InvSigma[1,1]          ynum_(Intercept)|ynum_...  0.60748712  2.896137462
+#> InvSigma[1,2]          ynum_(Intercept)|ypoi_... -0.83419196  0.051570819
+#> InvSigma[2,2]          ypoi_(Intercept)|ypoi_...  2.33629068  4.332854983
+#> InvSigma[1,3]          ynum_(Intercept)|ybin_... -0.50846135 -0.218062385
+#> InvSigma[2,3]          ypoi_(Intercept)|ybin_... -1.04746773 -0.341072095
+#> InvSigma[3,3]          ybin_(Intercept)|ybin_...  0.08709977  0.167690988
+#> InvSigma[1,4]          ynum_(Intercept)|yord_... -0.78204490 -0.140035393
+#> InvSigma[2,4]          ypoi_(Intercept)|yord_... -1.32532399 -0.806604942
+#> InvSigma[3,4]          ybin_(Intercept)|yord_... -0.33477142 -0.188438267
+#> InvSigma[4,4]          yord_(Intercept)|yord_...  0.91128243  1.317971791
+#> InvSigma[1,5]          ynum_(Intercept)|ycat_... -0.29618982 -0.152515258
+#> InvSigma[2,5]          ypoi_(Intercept)|ycat_... -0.70478181 -0.320565795
+#> InvSigma[3,5]          ybin_(Intercept)|ycat_... -0.10845428 -0.055805225
+#> InvSigma[4,5]          yord_(Intercept)|ycat_... -0.27500220 -0.086668305
+#> InvSigma[5,5]          ycat_(Intercept)|ycat_...  0.11099963  0.173784710
+#> Sigma[1,1]             ynum_(Intercept)|ynum_...  0.22082057  0.287132101
+#> Sigma[1,2]             ynum_(Intercept)|ypoi_... -0.14484781 -0.102673160
+#> Sigma[2,2]             ypoi_(Intercept)|ypoi_...  0.11193315  0.152647783
+#> Sigma[1,3]             ynum_(Intercept)|ybin_... -0.24447487 -0.016631685
+#> Sigma[2,3]             ypoi_(Intercept)|ybin_... -0.53878556 -0.002432001
+#> Sigma[3,3]             ybin_(Intercept)|ybin_...  2.40207389  3.517681406
+#> Sigma[1,4]             ynum_(Intercept)|yord_... -0.22284679 -0.094645315
+#> Sigma[2,4]             ypoi_(Intercept)|yord_... -0.05506657  0.031396082
+#> Sigma[3,4]             ybin_(Intercept)|yord_... -0.33024697  0.167640980
+#> Sigma[4,4]             yord_(Intercept)|yord_...  0.50613246  0.671148316
+#> Sigma[1,5]             ynum_(Intercept)|ycat_... -0.28291263 -0.117819666
+#> Sigma[2,5]             ypoi_(Intercept)|ycat_... -0.54235377 -0.035770093
+#> Sigma[3,5]             ybin_(Intercept)|ycat_... -0.61302001  0.374975712
+#> Sigma[4,5]             yord_(Intercept)|ycat_... -0.84966215 -0.159888140
+#> Sigma[5,5]             ycat_(Intercept)|ycat_...  1.92363827  3.361830119
+#> sdSigma[1]                      ynum_(Intercept)  0.46991549  0.535841192
+#> sdSigma[2]                      ypoi_(Intercept)  0.33456191  0.390700637
+#> sdSigma[3]                      ybin_(Intercept)  1.54984015  1.875548238
+#> sdSigma[4]                      yord_(Intercept)  0.71139634  0.819236214
+#> sdSigma[5]                      ycat_(Intercept)  1.38693103  1.833529281
+#> corSigma[1,2]          ynum_(Intercept)|ypoi_... -0.55589471 -0.456762506
+#> corSigma[1,3]          ynum_(Intercept)|ybin_... -0.18622921 -0.017944200
+#> corSigma[2,3]          ypoi_(Intercept)|ybin_... -0.19034451 -0.002315136
+#> corSigma[1,4]          ynum_(Intercept)|yord_... -0.37495564 -0.190165540
+#> corSigma[2,4]          ypoi_(Intercept)|yord_... -0.15961203  0.080264570
+#> corSigma[3,4]          ybin_(Intercept)|yord_... -0.13705812  0.076659843
+#> corSigma[1,5]          ynum_(Intercept)|ycat_... -0.32728950 -0.088433584
+#> corSigma[2,5]          ypoi_(Intercept)|ycat_... -0.21483789 -0.028542818
+#> corSigma[3,5]          ybin_(Intercept)|ycat_... -0.10515382  0.099547894
+#> corSigma[4,5]          yord_(Intercept)|ycat_... -0.30123468 -0.077773829
+#>                                 50%         Mean          75%       97.5%
+#> beta_num_fix_ynum[1]   -0.030092144 -0.008862305  0.075386318  0.26362173
+#> beta_poi_fix_ypoi[1]   -0.070566680 -0.071797123 -0.026053198  0.08159706
+#> beta_bin_fix_ybin[1]   -0.746226674 -0.746981298 -0.472757013 -0.16123955
+#> beta_ord_fix_yord[1]    0.439547400  0.428673295  0.439547400  0.52897780
+#> beta_cat_fix_ycat[1,1]  0.470348705  0.512686315  0.964088244  1.40371419
+#> beta_cat_fix_ycat[1,2]  0.902011447  0.931480772  1.410745997  1.89744342
+#> beta_cat_fix_ycat[1,3]  0.480334346  0.345573350  0.652846832  1.00013592
+#> InvSigma[1,1]           3.703369077  3.832426348  4.663610447  6.74777442
+#> InvSigma[1,2]           1.133145687  1.571242552  2.898528830  4.55341213
+#> InvSigma[2,2]           6.697418248  7.144300128  9.811430726 13.00669482
+#> InvSigma[1,3]          -0.121372883 -0.151381062 -0.057126440  0.14336017
+#> InvSigma[2,3]          -0.057530071 -0.169349765  0.033643347  0.22559481
+#> InvSigma[3,3]           0.260051722  0.260719674  0.328000852  0.54617955
+#> InvSigma[1,4]           0.086767656  0.114651405  0.371402319  1.13824454
+#> InvSigma[2,4]          -0.378189831 -0.380451214  0.053817424  0.63455327
+#> InvSigma[3,4]          -0.103703087 -0.115708966 -0.031262071  0.05650727
+#> InvSigma[4,4]           1.538062708  1.567813548  1.845276447  2.30490562
+#> InvSigma[1,5]          -0.059986832 -0.054325703  0.026413071  0.28758094
+#> InvSigma[2,5]          -0.089149754 -0.156473211  0.033389017  0.21241473
+#> InvSigma[3,5]          -0.027167489 -0.030010368 -0.006665527  0.06075377
+#> InvSigma[4,5]           0.001070046 -0.027191942  0.060006601  0.14902830
+#> InvSigma[5,5]           0.255103417  0.277428352  0.351103311  0.61652647
+#> Sigma[1,1]              0.349484957 15.594479600  0.396241435  2.59519284
+#> Sigma[1,2]             -0.068099872 -0.879386504 -0.001770459  0.09187899
+#> Sigma[2,2]              0.205772258  6.032894632  0.260095223  0.66801080
+#> Sigma[1,3]              0.094411635 -0.252087213  0.338663018  0.87442621
+#> Sigma[2,3]              0.084389256 -1.118453313  0.172200145  0.37219271
+#> Sigma[3,3]              5.125009627 13.012854673  7.085494850 13.27412824
+#> Sigma[1,4]             -0.035100935  0.138500713  0.038582026  0.20077500
+#> Sigma[2,4]              0.076935326  0.244486411  0.140390244  0.26735747
+#> Sigma[3,4]              0.332886823  1.085999645  0.598807059  1.12804020
+#> Sigma[4,4]              0.798943414  6.128092562  0.904527122  1.38375558
+#> Sigma[1,5]              0.022763563 -0.594181358  0.173353038  0.63023387
+#> Sigma[2,5]              0.054445379  0.012086165  0.183755571  0.52354053
+#> Sigma[3,5]              0.880424645  0.383156116  1.563114086  3.93281090
+#> Sigma[4,5]              0.093799434  0.084426370  0.367284273  0.79317010
+#> Sigma[5,5]              4.869510701 11.202473475  6.527599396 10.94791497
+#> sdSigma[1]              0.591172467  1.025363201  0.629476820  1.54237499
+#> sdSigma[2]              0.453621176  0.714729330  0.509995310  0.79901680
+#> sdSigma[3]              2.263829999  2.583971038  2.661839934  3.64312982
+#> sdSigma[4]              0.893835321  1.126696710  0.951065872  1.17625047
+#> sdSigma[5]              2.206693908  2.458881540  2.554915945  3.30867197
+#> corSigma[1,2]          -0.276318157 -0.228512529 -0.007184369  0.24611315
+#> corSigma[1,3]           0.074149490  0.086797435  0.176582475  0.33782043
+#> corSigma[2,3]           0.090987989  0.097554769  0.214613140  0.42221183
+#> corSigma[1,4]          -0.074286347 -0.057466057  0.054017965  0.32433257
+#> corSigma[2,4]           0.215936778  0.201854887  0.322751840  0.46381648
+#> corSigma[3,4]           0.186760542  0.181207695  0.293358392  0.50292517
+#> corSigma[1,5]           0.016749104  0.016463054  0.122692884  0.34788907
+#> corSigma[2,5]           0.071951334  0.100558187  0.212639103  0.47011999
+#> corSigma[3,5]           0.166992018  0.183024293  0.282635277  0.44385621
+#> corSigma[4,5]           0.045944628  0.062101136  0.225870313  0.38732771
+#> 
+#> Clustering-related parameters:
+#>                2.5%          25%          50%        Mean          75%
+#> Gplus  2.000000e+00 2.000000e+00 2.000000e+00 2.200000000 2.000000e+00
+#> e0     1.749825e-03 9.433511e-03 1.566769e-02 0.016837127 2.394863e-02
+#> w(1)  5.792817e-246 1.609660e-47 5.681006e-24 0.004896350 5.688615e-10
+#> w(2)   3.832929e-01 4.712978e-01 5.044180e-01 0.505564602 5.469908e-01
+#> w(3)   2.810766e-01 4.377852e-01 4.878845e-01 0.472816129 5.176217e-01
+#> w(4)  3.377149e-233 7.568573e-36 1.558597e-17 0.008538443 6.320944e-07
+#> w(5)   0.000000e+00 6.985784e-49 2.098086e-18 0.008184476 6.511439e-07
+#>            97.5%
+#> Gplus 5.00000000
+#> e0    0.03898613
+#> w(1)  0.08672688
+#> w(2)  0.61386913
+#> w(3)  0.57230565
+#> w(4)  0.08557239
+#> w(5)  0.12253819
+#> 
+print(s, chains = 2)
+#> -----------------------------------------------------------------------
+#> Chain 2
+#> -----------------------------------------------------------------------
+#> Iterations = 1:100
+#> Thinning interval = 1
+#> Number of chains = 1
+#> Sample size per chain = 100
+#> Overall acceptance: 36.45% 
+#> 
+#> Proposal acceptance rates grouped and summarized by parameters
+#> -----------------------------------------------------------------------
+#>                   Min % Mean % Max %
+#> e0                   68  68.00    68
+#> beta_poi_fix_ypoi    75  75.00    75
+#> beta_poi_ypoi        49  59.60    73
+#> beta_bin_fix_ybin    81  81.00    81
+#> beta_bin_ybin        49  55.80    62
+#> beta_ord_fix_yord    44  44.00    44
+#> beta_ord_yord        65  70.80    76
+#> a_ord_yord           37  42.20    48
+#> beta_cat_fix_ycat    50  50.00    50
+#> beta_ord_ycat        21  27.60    33
+#> b                    20  31.41    44
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Cluster-invariant parameters:
+#>                                           Effect         2.5%         25%
+#> beta_num_fix_ynum[1]                          f1 -0.286995450 -0.18277619
+#> beta_poi_fix_ypoi[1]                          f1 -0.095245942  0.08454125
+#> beta_bin_fix_ybin[1]                          f1 -1.149101884 -0.70136474
+#> beta_ord_fix_yord[1]                          f1 -0.216948094 -0.01981951
+#> beta_cat_fix_ycat[1,1]                        f1 -0.498344319 -0.09484194
+#> beta_cat_fix_ycat[1,2]                        f1 -0.178003068  0.24366965
+#> beta_cat_fix_ycat[1,3]                        f1 -0.712952699 -0.32295539
+#> InvSigma[1,1]          ynum_(Intercept)|ynum_...  1.394532740  4.48922902
+#> InvSigma[1,2]          ynum_(Intercept)|ypoi_... -0.006533719  0.50780970
+#> InvSigma[2,2]          ypoi_(Intercept)|ypoi_...  0.447169977  1.27667987
+#> InvSigma[1,3]          ynum_(Intercept)|ybin_... -0.452151594  0.06599326
+#> InvSigma[2,3]          ypoi_(Intercept)|ybin_... -0.197721820 -0.05180535
+#> InvSigma[3,3]          ybin_(Intercept)|ybin_...  0.477982038  0.87357394
+#> InvSigma[1,4]          ynum_(Intercept)|yord_... -1.326200435 -0.62758781
+#> InvSigma[2,4]          ypoi_(Intercept)|yord_... -0.481676858 -0.01981599
+#> InvSigma[3,4]          ybin_(Intercept)|yord_... -0.450452868 -0.19707808
+#> InvSigma[4,4]          yord_(Intercept)|yord_...  1.599184745  2.31483707
+#> InvSigma[1,5]          ynum_(Intercept)|ycat_... -0.617592688 -0.27659093
+#> InvSigma[2,5]          ypoi_(Intercept)|ycat_... -0.273636460 -0.13035090
+#> InvSigma[3,5]          ybin_(Intercept)|ycat_... -0.865734628 -0.50891718
+#> InvSigma[4,5]          yord_(Intercept)|ycat_... -0.906617621 -0.56999611
+#> InvSigma[5,5]          ycat_(Intercept)|ycat_...  0.306651549  0.48705951
+#> Sigma[1,1]             ynum_(Intercept)|ynum_...  0.159176059  0.20463366
+#> Sigma[1,2]             ynum_(Intercept)|ypoi_... -0.338318397 -0.18810520
+#> Sigma[2,2]             ypoi_(Intercept)|ypoi_...  0.390801154  0.50864052
+#> Sigma[1,3]             ynum_(Intercept)|ybin_... -0.858941201 -0.21468089
+#> Sigma[2,3]             ypoi_(Intercept)|ybin_... -0.167163046 -0.06943444
+#> Sigma[3,3]             ybin_(Intercept)|ybin_...  0.957038860  1.17042549
+#> Sigma[1,4]             ynum_(Intercept)|yord_... -0.231399662 -0.06565923
+#> Sigma[2,4]             ypoi_(Intercept)|yord_... -0.379175938 -0.15827784
+#> Sigma[3,4]             ybin_(Intercept)|yord_... -0.207013161 -0.05056467
+#> Sigma[4,4]             yord_(Intercept)|yord_...  0.280253464  0.36416193
+#> Sigma[1,5]             ynum_(Intercept)|ycat_... -0.307990510 -0.06848920
+#> Sigma[2,5]             ypoi_(Intercept)|ycat_... -0.423744655 -0.12589365
+#> Sigma[3,5]             ybin_(Intercept)|ycat_...  0.111312416  0.39606195
+#> Sigma[4,5]             yord_(Intercept)|ycat_... -0.063909354  0.09881784
+#> Sigma[5,5]             ycat_(Intercept)|ycat_...  1.042551486  1.70838014
+#> sdSigma[1]                      ynum_(Intercept)  0.398966852  0.45236236
+#> sdSigma[2]                      ypoi_(Intercept)  0.625139259  0.71318370
+#> sdSigma[3]                      ybin_(Intercept)  0.978276007  1.08186205
+#> sdSigma[4]                      yord_(Intercept)  0.529356356  0.60345715
+#> sdSigma[5]                      ycat_(Intercept)  1.020899916  1.30704828
+#> corSigma[1,2]          ynum_(Intercept)|ypoi_... -0.583464011 -0.41931880
+#> corSigma[1,3]          ynum_(Intercept)|ybin_... -0.501720425 -0.34695030
+#> corSigma[2,3]          ypoi_(Intercept)|ybin_... -0.229556119 -0.07592553
+#> corSigma[1,4]          ynum_(Intercept)|yord_... -0.434359585 -0.18562822
+#> corSigma[2,4]          ypoi_(Intercept)|yord_... -0.387198860 -0.25090021
+#> corSigma[3,4]          ybin_(Intercept)|yord_... -0.247480403 -0.06754818
+#> corSigma[1,5]          ynum_(Intercept)|ycat_... -0.273182961 -0.08366318
+#> corSigma[2,5]          ypoi_(Intercept)|ycat_... -0.334312489 -0.11704526
+#> corSigma[3,5]          ybin_(Intercept)|ycat_...  0.046256580  0.21868598
+#> corSigma[4,5]          yord_(Intercept)|ycat_... -0.038417651  0.12439608
+#>                                 50%          Mean          75%        97.5%
+#> beta_num_fix_ynum[1]   -0.117251619 -0.1110655716 -0.063175857  0.075284745
+#> beta_poi_fix_ypoi[1]    0.159258590  0.1528572195  0.223631602  0.397112070
+#> beta_bin_fix_ybin[1]   -0.417501625 -0.4922536806 -0.282082145 -0.043977802
+#> beta_ord_fix_yord[1]    0.036735353  0.0882997679  0.152235627  0.470623846
+#> beta_cat_fix_ycat[1,1]  0.134612518  0.1103094637  0.299933080  0.697473235
+#> beta_cat_fix_ycat[1,2]  0.478271783  0.4834430902  0.757277766  1.058764724
+#> beta_cat_fix_ycat[1,3] -0.150853591 -0.1619825401  0.027898426  0.296294646
+#> InvSigma[1,1]           5.347089835  5.2327020752  6.320722468  7.490173666
+#> InvSigma[1,2]           1.045463998  0.9477931818  1.295330799  2.051653388
+#> InvSigma[2,2]           1.862210866  1.8020048229  2.365904257  3.000825885
+#> InvSigma[1,3]           0.265613331  0.3527324372  0.682170034  1.147430401
+#> InvSigma[2,3]           0.042761372  0.0460690316  0.133770369  0.316448016
+#> InvSigma[3,3]           0.991842064  0.9997577974  1.168653996  1.574335667
+#> InvSigma[1,4]           0.080603801  0.1305519165  0.762811284  1.711115541
+#> InvSigma[2,4]           0.173747920  0.1699315981  0.376104042  0.930579575
+#> InvSigma[3,4]           0.115764497  0.0926245637  0.324522046  0.706827510
+#> InvSigma[4,4]           2.684087487  2.8998441707  3.498085661  4.625609051
+#> InvSigma[1,5]          -0.082775914 -0.0761256719  0.097181960  0.542630518
+#> InvSigma[2,5]          -0.030498062 -0.0268040377  0.056784365  0.286206476
+#> InvSigma[3,5]          -0.279337283 -0.3399756541 -0.155800188 -0.008447724
+#> InvSigma[4,5]          -0.345963491 -0.3608124693 -0.110693072  0.126970020
+#> InvSigma[5,5]           0.642004069  0.7343945723  0.880612905  1.575874144
+#> Sigma[1,1]              0.252695314 13.1717000986  0.341620732  1.250229033
+#> Sigma[1,2]             -0.133985238 -0.4263988910 -0.075420222 -0.004911891
+#> Sigma[2,2]              0.666275531  7.3273548635  1.056454937  2.491276476
+#> Sigma[1,3]             -0.080814332 -0.2779209738  0.001792441  0.095187368
+#> Sigma[2,3]             -0.002652137  0.1023474747  0.137732168  0.564942898
+#> Sigma[3,3]              1.302118480  8.5298722843  1.594937900  3.341358257
+#> Sigma[1,4]             -0.005979657 -0.9780932044  0.076352921  0.204909237
+#> Sigma[2,4]             -0.089578204 -0.8832067043  0.023504469  0.146676834
+#> Sigma[3,4]              0.004668745  0.2724890599  0.098871611  0.295884036
+#> Sigma[4,4]              0.445923807  6.7230092857  0.530696396  0.793401784
+#> Sigma[1,5]              0.008173283 -0.7397284718  0.069247288  0.274364299
+#> Sigma[2,5]              0.001033789  0.7361057666  0.132755968  0.720837205
+#> Sigma[3,5]              0.585060058  0.8768695170  0.759731833  1.136408905
+#> Sigma[4,5]              0.218042171  0.1673713893  0.317343257  0.505597805
+#> Sigma[5,5]              2.149290324  7.2012120377  2.601814339  3.920351261
+#> sdSigma[1]              0.502687932  0.9210664900  0.584475622  1.065281316
+#> sdSigma[2]              0.816254066  1.1525251584  1.027684516  1.576185076
+#> sdSigma[3]              1.141104057  1.4605749991  1.262905201  1.807711157
+#> sdSigma[4]              0.667775120  0.9300487768  0.728488907  0.889534009
+#> sdSigma[5]              1.466045800  1.6649597615  1.613014041  1.978983893
+#> corSigma[1,2]          -0.325502881 -0.3072817542 -0.192795542 -0.003601151
+#> corSigma[1,3]          -0.139431802 -0.1624095561  0.003421258  0.187973201
+#> corSigma[2,3]          -0.003463460  0.0192815798  0.135565345  0.256064139
+#> corSigma[1,4]          -0.020407109 -0.0002468264  0.212467400  0.422113065
+#> corSigma[2,4]          -0.141921169 -0.0994542788  0.040024829  0.302175167
+#> corSigma[3,4]           0.007019403  0.0262547004  0.127196321  0.324774820
+#> corSigma[1,5]           0.014791301  0.0044471366  0.084038348  0.281283169
+#> corSigma[2,5]           0.001176363 -0.0047977645  0.131040201  0.295224531
+#> corSigma[3,5]           0.341993601  0.3431179753  0.486520719  0.615113366
+#> corSigma[4,5]           0.223855421  0.2248792122  0.332326600  0.445342415
+#> 
+#> Clustering-related parameters:
+#>                2.5%          25%          50%        Mean          75%
+#> Gplus  2.000000e+00 3.000000e+00 3.000000e+00 3.100000000 3.000000e+00
+#> e0     4.552158e-03 1.052224e-02 2.452431e-02 0.030271753 3.530196e-02
+#> w(1)   2.304707e-53 1.026060e-01 1.788271e-01 0.170055411 2.356125e-01
+#> w(2)   2.662993e-01 4.618056e-01 5.039476e-01 0.490409432 5.353391e-01
+#> w(3)  4.024807e-205 1.720201e-30 7.361960e-13 0.020452185 7.351282e-06
+#> w(4)  1.302691e-165 2.445804e-35 8.746209e-15 0.005991606 7.725619e-08
+#> w(5)   1.322652e-01 2.373943e-01 3.010447e-01 0.313091366 3.909465e-01
+#>            97.5%
+#> Gplus 5.00000000
+#> e0    0.09670605
+#> w(1)  0.33000504
+#> w(2)  0.59546322
+#> w(3)  0.25208599
+#> w(4)  0.07422395
+#> w(5)  0.51519624
+#> 
+print(s, chains = c(1, 2))
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> Iterations = 1:100
+#> Thinning interval = 1
+#> Number of chains = 1
+#> Sample size per chain = 100
+#> Overall acceptance: 36.38% 
+#> 
+#> Proposal acceptance rates grouped and summarized by parameters
+#> -----------------------------------------------------------------------
+#>                   Min % Mean % Max %
+#> e0                   66  66.00    66
+#> beta_poi_fix_ypoi    75  75.00    75
+#> beta_poi_ypoi        52  56.60    60
+#> beta_bin_fix_ybin    64  64.00    64
+#> beta_bin_ybin        46  53.20    60
+#> beta_ord_fix_yord     7   7.00     7
+#> beta_ord_yord        60  66.60    73
+#> a_ord_yord           42  44.40    49
+#> beta_cat_fix_ycat    48  48.00    48
+#> beta_ord_ycat        23  28.20    35
+#> b                    18  32.24    43
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Cluster-invariant parameters:
+#>                                           Effect        2.5%          25%
+#> beta_num_fix_ynum[1]                          f1 -0.23163651 -0.098946913
+#> beta_poi_fix_ypoi[1]                          f1 -0.21260227 -0.118234734
+#> beta_bin_fix_ybin[1]                          f1 -1.47263232 -0.946111980
+#> beta_ord_fix_yord[1]                          f1  0.18380359  0.439547400
+#> beta_cat_fix_ycat[1,1]                        f1 -0.40298926  0.018754716
+#> beta_cat_fix_ycat[1,2]                        f1 -0.02249618  0.397365339
+#> beta_cat_fix_ycat[1,3]                        f1 -0.64562769 -0.149750025
+#> InvSigma[1,1]          ynum_(Intercept)|ynum_...  0.60748712  2.896137462
+#> InvSigma[1,2]          ynum_(Intercept)|ypoi_... -0.83419196  0.051570819
+#> InvSigma[2,2]          ypoi_(Intercept)|ypoi_...  2.33629068  4.332854983
+#> InvSigma[1,3]          ynum_(Intercept)|ybin_... -0.50846135 -0.218062385
+#> InvSigma[2,3]          ypoi_(Intercept)|ybin_... -1.04746773 -0.341072095
+#> InvSigma[3,3]          ybin_(Intercept)|ybin_...  0.08709977  0.167690988
+#> InvSigma[1,4]          ynum_(Intercept)|yord_... -0.78204490 -0.140035393
+#> InvSigma[2,4]          ypoi_(Intercept)|yord_... -1.32532399 -0.806604942
+#> InvSigma[3,4]          ybin_(Intercept)|yord_... -0.33477142 -0.188438267
+#> InvSigma[4,4]          yord_(Intercept)|yord_...  0.91128243  1.317971791
+#> InvSigma[1,5]          ynum_(Intercept)|ycat_... -0.29618982 -0.152515258
+#> InvSigma[2,5]          ypoi_(Intercept)|ycat_... -0.70478181 -0.320565795
+#> InvSigma[3,5]          ybin_(Intercept)|ycat_... -0.10845428 -0.055805225
+#> InvSigma[4,5]          yord_(Intercept)|ycat_... -0.27500220 -0.086668305
+#> InvSigma[5,5]          ycat_(Intercept)|ycat_...  0.11099963  0.173784710
+#> Sigma[1,1]             ynum_(Intercept)|ynum_...  0.22082057  0.287132101
+#> Sigma[1,2]             ynum_(Intercept)|ypoi_... -0.14484781 -0.102673160
+#> Sigma[2,2]             ypoi_(Intercept)|ypoi_...  0.11193315  0.152647783
+#> Sigma[1,3]             ynum_(Intercept)|ybin_... -0.24447487 -0.016631685
+#> Sigma[2,3]             ypoi_(Intercept)|ybin_... -0.53878556 -0.002432001
+#> Sigma[3,3]             ybin_(Intercept)|ybin_...  2.40207389  3.517681406
+#> Sigma[1,4]             ynum_(Intercept)|yord_... -0.22284679 -0.094645315
+#> Sigma[2,4]             ypoi_(Intercept)|yord_... -0.05506657  0.031396082
+#> Sigma[3,4]             ybin_(Intercept)|yord_... -0.33024697  0.167640980
+#> Sigma[4,4]             yord_(Intercept)|yord_...  0.50613246  0.671148316
+#> Sigma[1,5]             ynum_(Intercept)|ycat_... -0.28291263 -0.117819666
+#> Sigma[2,5]             ypoi_(Intercept)|ycat_... -0.54235377 -0.035770093
+#> Sigma[3,5]             ybin_(Intercept)|ycat_... -0.61302001  0.374975712
+#> Sigma[4,5]             yord_(Intercept)|ycat_... -0.84966215 -0.159888140
+#> Sigma[5,5]             ycat_(Intercept)|ycat_...  1.92363827  3.361830119
+#> sdSigma[1]                      ynum_(Intercept)  0.46991549  0.535841192
+#> sdSigma[2]                      ypoi_(Intercept)  0.33456191  0.390700637
+#> sdSigma[3]                      ybin_(Intercept)  1.54984015  1.875548238
+#> sdSigma[4]                      yord_(Intercept)  0.71139634  0.819236214
+#> sdSigma[5]                      ycat_(Intercept)  1.38693103  1.833529281
+#> corSigma[1,2]          ynum_(Intercept)|ypoi_... -0.55589471 -0.456762506
+#> corSigma[1,3]          ynum_(Intercept)|ybin_... -0.18622921 -0.017944200
+#> corSigma[2,3]          ypoi_(Intercept)|ybin_... -0.19034451 -0.002315136
+#> corSigma[1,4]          ynum_(Intercept)|yord_... -0.37495564 -0.190165540
+#> corSigma[2,4]          ypoi_(Intercept)|yord_... -0.15961203  0.080264570
+#> corSigma[3,4]          ybin_(Intercept)|yord_... -0.13705812  0.076659843
+#> corSigma[1,5]          ynum_(Intercept)|ycat_... -0.32728950 -0.088433584
+#> corSigma[2,5]          ypoi_(Intercept)|ycat_... -0.21483789 -0.028542818
+#> corSigma[3,5]          ybin_(Intercept)|ycat_... -0.10515382  0.099547894
+#> corSigma[4,5]          yord_(Intercept)|ycat_... -0.30123468 -0.077773829
+#>                                 50%         Mean          75%       97.5%
+#> beta_num_fix_ynum[1]   -0.030092144 -0.008862305  0.075386318  0.26362173
+#> beta_poi_fix_ypoi[1]   -0.070566680 -0.071797123 -0.026053198  0.08159706
+#> beta_bin_fix_ybin[1]   -0.746226674 -0.746981298 -0.472757013 -0.16123955
+#> beta_ord_fix_yord[1]    0.439547400  0.428673295  0.439547400  0.52897780
+#> beta_cat_fix_ycat[1,1]  0.470348705  0.512686315  0.964088244  1.40371419
+#> beta_cat_fix_ycat[1,2]  0.902011447  0.931480772  1.410745997  1.89744342
+#> beta_cat_fix_ycat[1,3]  0.480334346  0.345573350  0.652846832  1.00013592
+#> InvSigma[1,1]           3.703369077  3.832426348  4.663610447  6.74777442
+#> InvSigma[1,2]           1.133145687  1.571242552  2.898528830  4.55341213
+#> InvSigma[2,2]           6.697418248  7.144300128  9.811430726 13.00669482
+#> InvSigma[1,3]          -0.121372883 -0.151381062 -0.057126440  0.14336017
+#> InvSigma[2,3]          -0.057530071 -0.169349765  0.033643347  0.22559481
+#> InvSigma[3,3]           0.260051722  0.260719674  0.328000852  0.54617955
+#> InvSigma[1,4]           0.086767656  0.114651405  0.371402319  1.13824454
+#> InvSigma[2,4]          -0.378189831 -0.380451214  0.053817424  0.63455327
+#> InvSigma[3,4]          -0.103703087 -0.115708966 -0.031262071  0.05650727
+#> InvSigma[4,4]           1.538062708  1.567813548  1.845276447  2.30490562
+#> InvSigma[1,5]          -0.059986832 -0.054325703  0.026413071  0.28758094
+#> InvSigma[2,5]          -0.089149754 -0.156473211  0.033389017  0.21241473
+#> InvSigma[3,5]          -0.027167489 -0.030010368 -0.006665527  0.06075377
+#> InvSigma[4,5]           0.001070046 -0.027191942  0.060006601  0.14902830
+#> InvSigma[5,5]           0.255103417  0.277428352  0.351103311  0.61652647
+#> Sigma[1,1]              0.349484957 15.594479600  0.396241435  2.59519284
+#> Sigma[1,2]             -0.068099872 -0.879386504 -0.001770459  0.09187899
+#> Sigma[2,2]              0.205772258  6.032894632  0.260095223  0.66801080
+#> Sigma[1,3]              0.094411635 -0.252087213  0.338663018  0.87442621
+#> Sigma[2,3]              0.084389256 -1.118453313  0.172200145  0.37219271
+#> Sigma[3,3]              5.125009627 13.012854673  7.085494850 13.27412824
+#> Sigma[1,4]             -0.035100935  0.138500713  0.038582026  0.20077500
+#> Sigma[2,4]              0.076935326  0.244486411  0.140390244  0.26735747
+#> Sigma[3,4]              0.332886823  1.085999645  0.598807059  1.12804020
+#> Sigma[4,4]              0.798943414  6.128092562  0.904527122  1.38375558
+#> Sigma[1,5]              0.022763563 -0.594181358  0.173353038  0.63023387
+#> Sigma[2,5]              0.054445379  0.012086165  0.183755571  0.52354053
+#> Sigma[3,5]              0.880424645  0.383156116  1.563114086  3.93281090
+#> Sigma[4,5]              0.093799434  0.084426370  0.367284273  0.79317010
+#> Sigma[5,5]              4.869510701 11.202473475  6.527599396 10.94791497
+#> sdSigma[1]              0.591172467  1.025363201  0.629476820  1.54237499
+#> sdSigma[2]              0.453621176  0.714729330  0.509995310  0.79901680
+#> sdSigma[3]              2.263829999  2.583971038  2.661839934  3.64312982
+#> sdSigma[4]              0.893835321  1.126696710  0.951065872  1.17625047
+#> sdSigma[5]              2.206693908  2.458881540  2.554915945  3.30867197
+#> corSigma[1,2]          -0.276318157 -0.228512529 -0.007184369  0.24611315
+#> corSigma[1,3]           0.074149490  0.086797435  0.176582475  0.33782043
+#> corSigma[2,3]           0.090987989  0.097554769  0.214613140  0.42221183
+#> corSigma[1,4]          -0.074286347 -0.057466057  0.054017965  0.32433257
+#> corSigma[2,4]           0.215936778  0.201854887  0.322751840  0.46381648
+#> corSigma[3,4]           0.186760542  0.181207695  0.293358392  0.50292517
+#> corSigma[1,5]           0.016749104  0.016463054  0.122692884  0.34788907
+#> corSigma[2,5]           0.071951334  0.100558187  0.212639103  0.47011999
+#> corSigma[3,5]           0.166992018  0.183024293  0.282635277  0.44385621
+#> corSigma[4,5]           0.045944628  0.062101136  0.225870313  0.38732771
+#> 
+#> Clustering-related parameters:
+#>                2.5%          25%          50%        Mean          75%
+#> Gplus  2.000000e+00 2.000000e+00 2.000000e+00 2.200000000 2.000000e+00
+#> e0     1.749825e-03 9.433511e-03 1.566769e-02 0.016837127 2.394863e-02
+#> w(1)  5.792817e-246 1.609660e-47 5.681006e-24 0.004896350 5.688615e-10
+#> w(2)   3.832929e-01 4.712978e-01 5.044180e-01 0.505564602 5.469908e-01
+#> w(3)   2.810766e-01 4.377852e-01 4.878845e-01 0.472816129 5.176217e-01
+#> w(4)  3.377149e-233 7.568573e-36 1.558597e-17 0.008538443 6.320944e-07
+#> w(5)   0.000000e+00 6.985784e-49 2.098086e-18 0.008184476 6.511439e-07
+#>            97.5%
+#> Gplus 5.00000000
+#> e0    0.03898613
+#> w(1)  0.08672688
+#> w(2)  0.61386913
+#> w(3)  0.57230565
+#> w(4)  0.08557239
+#> w(5)  0.12253819
+#> 
+#> -----------------------------------------------------------------------
+#> Chain 2
+#> -----------------------------------------------------------------------
+#> Iterations = 1:100
+#> Thinning interval = 1
+#> Number of chains = 1
+#> Sample size per chain = 100
+#> Overall acceptance: 36.45% 
+#> 
+#> Proposal acceptance rates grouped and summarized by parameters
+#> -----------------------------------------------------------------------
+#>                   Min % Mean % Max %
+#> e0                   68  68.00    68
+#> beta_poi_fix_ypoi    75  75.00    75
+#> beta_poi_ypoi        49  59.60    73
+#> beta_bin_fix_ybin    81  81.00    81
+#> beta_bin_ybin        49  55.80    62
+#> beta_ord_fix_yord    44  44.00    44
+#> beta_ord_yord        65  70.80    76
+#> a_ord_yord           37  42.20    48
+#> beta_cat_fix_ycat    50  50.00    50
+#> beta_ord_ycat        21  27.60    33
+#> b                    20  31.41    44
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Cluster-invariant parameters:
+#>                                           Effect         2.5%         25%
+#> beta_num_fix_ynum[1]                          f1 -0.286995450 -0.18277619
+#> beta_poi_fix_ypoi[1]                          f1 -0.095245942  0.08454125
+#> beta_bin_fix_ybin[1]                          f1 -1.149101884 -0.70136474
+#> beta_ord_fix_yord[1]                          f1 -0.216948094 -0.01981951
+#> beta_cat_fix_ycat[1,1]                        f1 -0.498344319 -0.09484194
+#> beta_cat_fix_ycat[1,2]                        f1 -0.178003068  0.24366965
+#> beta_cat_fix_ycat[1,3]                        f1 -0.712952699 -0.32295539
+#> InvSigma[1,1]          ynum_(Intercept)|ynum_...  1.394532740  4.48922902
+#> InvSigma[1,2]          ynum_(Intercept)|ypoi_... -0.006533719  0.50780970
+#> InvSigma[2,2]          ypoi_(Intercept)|ypoi_...  0.447169977  1.27667987
+#> InvSigma[1,3]          ynum_(Intercept)|ybin_... -0.452151594  0.06599326
+#> InvSigma[2,3]          ypoi_(Intercept)|ybin_... -0.197721820 -0.05180535
+#> InvSigma[3,3]          ybin_(Intercept)|ybin_...  0.477982038  0.87357394
+#> InvSigma[1,4]          ynum_(Intercept)|yord_... -1.326200435 -0.62758781
+#> InvSigma[2,4]          ypoi_(Intercept)|yord_... -0.481676858 -0.01981599
+#> InvSigma[3,4]          ybin_(Intercept)|yord_... -0.450452868 -0.19707808
+#> InvSigma[4,4]          yord_(Intercept)|yord_...  1.599184745  2.31483707
+#> InvSigma[1,5]          ynum_(Intercept)|ycat_... -0.617592688 -0.27659093
+#> InvSigma[2,5]          ypoi_(Intercept)|ycat_... -0.273636460 -0.13035090
+#> InvSigma[3,5]          ybin_(Intercept)|ycat_... -0.865734628 -0.50891718
+#> InvSigma[4,5]          yord_(Intercept)|ycat_... -0.906617621 -0.56999611
+#> InvSigma[5,5]          ycat_(Intercept)|ycat_...  0.306651549  0.48705951
+#> Sigma[1,1]             ynum_(Intercept)|ynum_...  0.159176059  0.20463366
+#> Sigma[1,2]             ynum_(Intercept)|ypoi_... -0.338318397 -0.18810520
+#> Sigma[2,2]             ypoi_(Intercept)|ypoi_...  0.390801154  0.50864052
+#> Sigma[1,3]             ynum_(Intercept)|ybin_... -0.858941201 -0.21468089
+#> Sigma[2,3]             ypoi_(Intercept)|ybin_... -0.167163046 -0.06943444
+#> Sigma[3,3]             ybin_(Intercept)|ybin_...  0.957038860  1.17042549
+#> Sigma[1,4]             ynum_(Intercept)|yord_... -0.231399662 -0.06565923
+#> Sigma[2,4]             ypoi_(Intercept)|yord_... -0.379175938 -0.15827784
+#> Sigma[3,4]             ybin_(Intercept)|yord_... -0.207013161 -0.05056467
+#> Sigma[4,4]             yord_(Intercept)|yord_...  0.280253464  0.36416193
+#> Sigma[1,5]             ynum_(Intercept)|ycat_... -0.307990510 -0.06848920
+#> Sigma[2,5]             ypoi_(Intercept)|ycat_... -0.423744655 -0.12589365
+#> Sigma[3,5]             ybin_(Intercept)|ycat_...  0.111312416  0.39606195
+#> Sigma[4,5]             yord_(Intercept)|ycat_... -0.063909354  0.09881784
+#> Sigma[5,5]             ycat_(Intercept)|ycat_...  1.042551486  1.70838014
+#> sdSigma[1]                      ynum_(Intercept)  0.398966852  0.45236236
+#> sdSigma[2]                      ypoi_(Intercept)  0.625139259  0.71318370
+#> sdSigma[3]                      ybin_(Intercept)  0.978276007  1.08186205
+#> sdSigma[4]                      yord_(Intercept)  0.529356356  0.60345715
+#> sdSigma[5]                      ycat_(Intercept)  1.020899916  1.30704828
+#> corSigma[1,2]          ynum_(Intercept)|ypoi_... -0.583464011 -0.41931880
+#> corSigma[1,3]          ynum_(Intercept)|ybin_... -0.501720425 -0.34695030
+#> corSigma[2,3]          ypoi_(Intercept)|ybin_... -0.229556119 -0.07592553
+#> corSigma[1,4]          ynum_(Intercept)|yord_... -0.434359585 -0.18562822
+#> corSigma[2,4]          ypoi_(Intercept)|yord_... -0.387198860 -0.25090021
+#> corSigma[3,4]          ybin_(Intercept)|yord_... -0.247480403 -0.06754818
+#> corSigma[1,5]          ynum_(Intercept)|ycat_... -0.273182961 -0.08366318
+#> corSigma[2,5]          ypoi_(Intercept)|ycat_... -0.334312489 -0.11704526
+#> corSigma[3,5]          ybin_(Intercept)|ycat_...  0.046256580  0.21868598
+#> corSigma[4,5]          yord_(Intercept)|ycat_... -0.038417651  0.12439608
+#>                                 50%          Mean          75%        97.5%
+#> beta_num_fix_ynum[1]   -0.117251619 -0.1110655716 -0.063175857  0.075284745
+#> beta_poi_fix_ypoi[1]    0.159258590  0.1528572195  0.223631602  0.397112070
+#> beta_bin_fix_ybin[1]   -0.417501625 -0.4922536806 -0.282082145 -0.043977802
+#> beta_ord_fix_yord[1]    0.036735353  0.0882997679  0.152235627  0.470623846
+#> beta_cat_fix_ycat[1,1]  0.134612518  0.1103094637  0.299933080  0.697473235
+#> beta_cat_fix_ycat[1,2]  0.478271783  0.4834430902  0.757277766  1.058764724
+#> beta_cat_fix_ycat[1,3] -0.150853591 -0.1619825401  0.027898426  0.296294646
+#> InvSigma[1,1]           5.347089835  5.2327020752  6.320722468  7.490173666
+#> InvSigma[1,2]           1.045463998  0.9477931818  1.295330799  2.051653388
+#> InvSigma[2,2]           1.862210866  1.8020048229  2.365904257  3.000825885
+#> InvSigma[1,3]           0.265613331  0.3527324372  0.682170034  1.147430401
+#> InvSigma[2,3]           0.042761372  0.0460690316  0.133770369  0.316448016
+#> InvSigma[3,3]           0.991842064  0.9997577974  1.168653996  1.574335667
+#> InvSigma[1,4]           0.080603801  0.1305519165  0.762811284  1.711115541
+#> InvSigma[2,4]           0.173747920  0.1699315981  0.376104042  0.930579575
+#> InvSigma[3,4]           0.115764497  0.0926245637  0.324522046  0.706827510
+#> InvSigma[4,4]           2.684087487  2.8998441707  3.498085661  4.625609051
+#> InvSigma[1,5]          -0.082775914 -0.0761256719  0.097181960  0.542630518
+#> InvSigma[2,5]          -0.030498062 -0.0268040377  0.056784365  0.286206476
+#> InvSigma[3,5]          -0.279337283 -0.3399756541 -0.155800188 -0.008447724
+#> InvSigma[4,5]          -0.345963491 -0.3608124693 -0.110693072  0.126970020
+#> InvSigma[5,5]           0.642004069  0.7343945723  0.880612905  1.575874144
+#> Sigma[1,1]              0.252695314 13.1717000986  0.341620732  1.250229033
+#> Sigma[1,2]             -0.133985238 -0.4263988910 -0.075420222 -0.004911891
+#> Sigma[2,2]              0.666275531  7.3273548635  1.056454937  2.491276476
+#> Sigma[1,3]             -0.080814332 -0.2779209738  0.001792441  0.095187368
+#> Sigma[2,3]             -0.002652137  0.1023474747  0.137732168  0.564942898
+#> Sigma[3,3]              1.302118480  8.5298722843  1.594937900  3.341358257
+#> Sigma[1,4]             -0.005979657 -0.9780932044  0.076352921  0.204909237
+#> Sigma[2,4]             -0.089578204 -0.8832067043  0.023504469  0.146676834
+#> Sigma[3,4]              0.004668745  0.2724890599  0.098871611  0.295884036
+#> Sigma[4,4]              0.445923807  6.7230092857  0.530696396  0.793401784
+#> Sigma[1,5]              0.008173283 -0.7397284718  0.069247288  0.274364299
+#> Sigma[2,5]              0.001033789  0.7361057666  0.132755968  0.720837205
+#> Sigma[3,5]              0.585060058  0.8768695170  0.759731833  1.136408905
+#> Sigma[4,5]              0.218042171  0.1673713893  0.317343257  0.505597805
+#> Sigma[5,5]              2.149290324  7.2012120377  2.601814339  3.920351261
+#> sdSigma[1]              0.502687932  0.9210664900  0.584475622  1.065281316
+#> sdSigma[2]              0.816254066  1.1525251584  1.027684516  1.576185076
+#> sdSigma[3]              1.141104057  1.4605749991  1.262905201  1.807711157
+#> sdSigma[4]              0.667775120  0.9300487768  0.728488907  0.889534009
+#> sdSigma[5]              1.466045800  1.6649597615  1.613014041  1.978983893
+#> corSigma[1,2]          -0.325502881 -0.3072817542 -0.192795542 -0.003601151
+#> corSigma[1,3]          -0.139431802 -0.1624095561  0.003421258  0.187973201
+#> corSigma[2,3]          -0.003463460  0.0192815798  0.135565345  0.256064139
+#> corSigma[1,4]          -0.020407109 -0.0002468264  0.212467400  0.422113065
+#> corSigma[2,4]          -0.141921169 -0.0994542788  0.040024829  0.302175167
+#> corSigma[3,4]           0.007019403  0.0262547004  0.127196321  0.324774820
+#> corSigma[1,5]           0.014791301  0.0044471366  0.084038348  0.281283169
+#> corSigma[2,5]           0.001176363 -0.0047977645  0.131040201  0.295224531
+#> corSigma[3,5]           0.341993601  0.3431179753  0.486520719  0.615113366
+#> corSigma[4,5]           0.223855421  0.2248792122  0.332326600  0.445342415
+#> 
+#> Clustering-related parameters:
+#>                2.5%          25%          50%        Mean          75%
+#> Gplus  2.000000e+00 3.000000e+00 3.000000e+00 3.100000000 3.000000e+00
+#> e0     4.552158e-03 1.052224e-02 2.452431e-02 0.030271753 3.530196e-02
+#> w(1)   2.304707e-53 1.026060e-01 1.788271e-01 0.170055411 2.356125e-01
+#> w(2)   2.662993e-01 4.618056e-01 5.039476e-01 0.490409432 5.353391e-01
+#> w(3)  4.024807e-205 1.720201e-30 7.361960e-13 0.020452185 7.351282e-06
+#> w(4)  1.302691e-165 2.445804e-35 8.746209e-15 0.005991606 7.725619e-08
+#> w(5)   1.322652e-01 2.373943e-01 3.010447e-01 0.313091366 3.909465e-01
+#>            97.5%
+#> Gplus 5.00000000
+#> e0    0.09670605
+#> w(1)  0.33000504
+#> w(2)  0.59546322
+#> w(3)  0.25208599
+#> w(4)  0.07422395
+#> w(5)  0.51519624
+#> 
+
+# Different types of summary
+print(s, which = c("mcmc", "clustering"))
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> Iterations = 1:100
+#> Thinning interval = 1
+#> Number of chains = 1
+#> Sample size per chain = 100
+#> Overall acceptance: 36.38% 
+#> 
+#> Summary of the clustering based on sampled allocation indicators U
+#> -----------------------------------------------------------------------
+#> The most-frequent number of non-empty components: 2
+#> Empty components: 1, 4, 5
+#> Non-empty components: 2, 3
+#>  2  3 
+#> 52 48 
+#> Average certainty of clustering into a cluster: 
+#>         2         3 
+#> 0.9684615 0.9710417 
+#> 
+print(s, which = "inv_param")
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Cluster-invariant parameters:
+#>                                           Effect        2.5%          25%
+#> beta_num_fix_ynum[1]                          f1 -0.23163651 -0.098946913
+#> beta_poi_fix_ypoi[1]                          f1 -0.21260227 -0.118234734
+#> beta_bin_fix_ybin[1]                          f1 -1.47263232 -0.946111980
+#> beta_ord_fix_yord[1]                          f1  0.18380359  0.439547400
+#> beta_cat_fix_ycat[1,1]                        f1 -0.40298926  0.018754716
+#> beta_cat_fix_ycat[1,2]                        f1 -0.02249618  0.397365339
+#> beta_cat_fix_ycat[1,3]                        f1 -0.64562769 -0.149750025
+#> InvSigma[1,1]          ynum_(Intercept)|ynum_...  0.60748712  2.896137462
+#> InvSigma[1,2]          ynum_(Intercept)|ypoi_... -0.83419196  0.051570819
+#> InvSigma[2,2]          ypoi_(Intercept)|ypoi_...  2.33629068  4.332854983
+#> InvSigma[1,3]          ynum_(Intercept)|ybin_... -0.50846135 -0.218062385
+#> InvSigma[2,3]          ypoi_(Intercept)|ybin_... -1.04746773 -0.341072095
+#> InvSigma[3,3]          ybin_(Intercept)|ybin_...  0.08709977  0.167690988
+#> InvSigma[1,4]          ynum_(Intercept)|yord_... -0.78204490 -0.140035393
+#> InvSigma[2,4]          ypoi_(Intercept)|yord_... -1.32532399 -0.806604942
+#> InvSigma[3,4]          ybin_(Intercept)|yord_... -0.33477142 -0.188438267
+#> InvSigma[4,4]          yord_(Intercept)|yord_...  0.91128243  1.317971791
+#> InvSigma[1,5]          ynum_(Intercept)|ycat_... -0.29618982 -0.152515258
+#> InvSigma[2,5]          ypoi_(Intercept)|ycat_... -0.70478181 -0.320565795
+#> InvSigma[3,5]          ybin_(Intercept)|ycat_... -0.10845428 -0.055805225
+#> InvSigma[4,5]          yord_(Intercept)|ycat_... -0.27500220 -0.086668305
+#> InvSigma[5,5]          ycat_(Intercept)|ycat_...  0.11099963  0.173784710
+#> Sigma[1,1]             ynum_(Intercept)|ynum_...  0.22082057  0.287132101
+#> Sigma[1,2]             ynum_(Intercept)|ypoi_... -0.14484781 -0.102673160
+#> Sigma[2,2]             ypoi_(Intercept)|ypoi_...  0.11193315  0.152647783
+#> Sigma[1,3]             ynum_(Intercept)|ybin_... -0.24447487 -0.016631685
+#> Sigma[2,3]             ypoi_(Intercept)|ybin_... -0.53878556 -0.002432001
+#> Sigma[3,3]             ybin_(Intercept)|ybin_...  2.40207389  3.517681406
+#> Sigma[1,4]             ynum_(Intercept)|yord_... -0.22284679 -0.094645315
+#> Sigma[2,4]             ypoi_(Intercept)|yord_... -0.05506657  0.031396082
+#> Sigma[3,4]             ybin_(Intercept)|yord_... -0.33024697  0.167640980
+#> Sigma[4,4]             yord_(Intercept)|yord_...  0.50613246  0.671148316
+#> Sigma[1,5]             ynum_(Intercept)|ycat_... -0.28291263 -0.117819666
+#> Sigma[2,5]             ypoi_(Intercept)|ycat_... -0.54235377 -0.035770093
+#> Sigma[3,5]             ybin_(Intercept)|ycat_... -0.61302001  0.374975712
+#> Sigma[4,5]             yord_(Intercept)|ycat_... -0.84966215 -0.159888140
+#> Sigma[5,5]             ycat_(Intercept)|ycat_...  1.92363827  3.361830119
+#> sdSigma[1]                      ynum_(Intercept)  0.46991549  0.535841192
+#> sdSigma[2]                      ypoi_(Intercept)  0.33456191  0.390700637
+#> sdSigma[3]                      ybin_(Intercept)  1.54984015  1.875548238
+#> sdSigma[4]                      yord_(Intercept)  0.71139634  0.819236214
+#> sdSigma[5]                      ycat_(Intercept)  1.38693103  1.833529281
+#> corSigma[1,2]          ynum_(Intercept)|ypoi_... -0.55589471 -0.456762506
+#> corSigma[1,3]          ynum_(Intercept)|ybin_... -0.18622921 -0.017944200
+#> corSigma[2,3]          ypoi_(Intercept)|ybin_... -0.19034451 -0.002315136
+#> corSigma[1,4]          ynum_(Intercept)|yord_... -0.37495564 -0.190165540
+#> corSigma[2,4]          ypoi_(Intercept)|yord_... -0.15961203  0.080264570
+#> corSigma[3,4]          ybin_(Intercept)|yord_... -0.13705812  0.076659843
+#> corSigma[1,5]          ynum_(Intercept)|ycat_... -0.32728950 -0.088433584
+#> corSigma[2,5]          ypoi_(Intercept)|ycat_... -0.21483789 -0.028542818
+#> corSigma[3,5]          ybin_(Intercept)|ycat_... -0.10515382  0.099547894
+#> corSigma[4,5]          yord_(Intercept)|ycat_... -0.30123468 -0.077773829
+#>                                 50%         Mean          75%       97.5%
+#> beta_num_fix_ynum[1]   -0.030092144 -0.008862305  0.075386318  0.26362173
+#> beta_poi_fix_ypoi[1]   -0.070566680 -0.071797123 -0.026053198  0.08159706
+#> beta_bin_fix_ybin[1]   -0.746226674 -0.746981298 -0.472757013 -0.16123955
+#> beta_ord_fix_yord[1]    0.439547400  0.428673295  0.439547400  0.52897780
+#> beta_cat_fix_ycat[1,1]  0.470348705  0.512686315  0.964088244  1.40371419
+#> beta_cat_fix_ycat[1,2]  0.902011447  0.931480772  1.410745997  1.89744342
+#> beta_cat_fix_ycat[1,3]  0.480334346  0.345573350  0.652846832  1.00013592
+#> InvSigma[1,1]           3.703369077  3.832426348  4.663610447  6.74777442
+#> InvSigma[1,2]           1.133145687  1.571242552  2.898528830  4.55341213
+#> InvSigma[2,2]           6.697418248  7.144300128  9.811430726 13.00669482
+#> InvSigma[1,3]          -0.121372883 -0.151381062 -0.057126440  0.14336017
+#> InvSigma[2,3]          -0.057530071 -0.169349765  0.033643347  0.22559481
+#> InvSigma[3,3]           0.260051722  0.260719674  0.328000852  0.54617955
+#> InvSigma[1,4]           0.086767656  0.114651405  0.371402319  1.13824454
+#> InvSigma[2,4]          -0.378189831 -0.380451214  0.053817424  0.63455327
+#> InvSigma[3,4]          -0.103703087 -0.115708966 -0.031262071  0.05650727
+#> InvSigma[4,4]           1.538062708  1.567813548  1.845276447  2.30490562
+#> InvSigma[1,5]          -0.059986832 -0.054325703  0.026413071  0.28758094
+#> InvSigma[2,5]          -0.089149754 -0.156473211  0.033389017  0.21241473
+#> InvSigma[3,5]          -0.027167489 -0.030010368 -0.006665527  0.06075377
+#> InvSigma[4,5]           0.001070046 -0.027191942  0.060006601  0.14902830
+#> InvSigma[5,5]           0.255103417  0.277428352  0.351103311  0.61652647
+#> Sigma[1,1]              0.349484957 15.594479600  0.396241435  2.59519284
+#> Sigma[1,2]             -0.068099872 -0.879386504 -0.001770459  0.09187899
+#> Sigma[2,2]              0.205772258  6.032894632  0.260095223  0.66801080
+#> Sigma[1,3]              0.094411635 -0.252087213  0.338663018  0.87442621
+#> Sigma[2,3]              0.084389256 -1.118453313  0.172200145  0.37219271
+#> Sigma[3,3]              5.125009627 13.012854673  7.085494850 13.27412824
+#> Sigma[1,4]             -0.035100935  0.138500713  0.038582026  0.20077500
+#> Sigma[2,4]              0.076935326  0.244486411  0.140390244  0.26735747
+#> Sigma[3,4]              0.332886823  1.085999645  0.598807059  1.12804020
+#> Sigma[4,4]              0.798943414  6.128092562  0.904527122  1.38375558
+#> Sigma[1,5]              0.022763563 -0.594181358  0.173353038  0.63023387
+#> Sigma[2,5]              0.054445379  0.012086165  0.183755571  0.52354053
+#> Sigma[3,5]              0.880424645  0.383156116  1.563114086  3.93281090
+#> Sigma[4,5]              0.093799434  0.084426370  0.367284273  0.79317010
+#> Sigma[5,5]              4.869510701 11.202473475  6.527599396 10.94791497
+#> sdSigma[1]              0.591172467  1.025363201  0.629476820  1.54237499
+#> sdSigma[2]              0.453621176  0.714729330  0.509995310  0.79901680
+#> sdSigma[3]              2.263829999  2.583971038  2.661839934  3.64312982
+#> sdSigma[4]              0.893835321  1.126696710  0.951065872  1.17625047
+#> sdSigma[5]              2.206693908  2.458881540  2.554915945  3.30867197
+#> corSigma[1,2]          -0.276318157 -0.228512529 -0.007184369  0.24611315
+#> corSigma[1,3]           0.074149490  0.086797435  0.176582475  0.33782043
+#> corSigma[2,3]           0.090987989  0.097554769  0.214613140  0.42221183
+#> corSigma[1,4]          -0.074286347 -0.057466057  0.054017965  0.32433257
+#> corSigma[2,4]           0.215936778  0.201854887  0.322751840  0.46381648
+#> corSigma[3,4]           0.186760542  0.181207695  0.293358392  0.50292517
+#> corSigma[1,5]           0.016749104  0.016463054  0.122692884  0.34788907
+#> corSigma[2,5]           0.071951334  0.100558187  0.212639103  0.47011999
+#> corSigma[3,5]           0.166992018  0.183024293  0.282635277  0.44385621
+#> corSigma[4,5]           0.045944628  0.062101136  0.225870313  0.38732771
+#> 
+print(s, which = "clust_param")
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Clustering-related parameters:
+#>                2.5%          25%          50%        Mean          75%
+#> Gplus  2.000000e+00 2.000000e+00 2.000000e+00 2.200000000 2.000000e+00
+#> e0     1.749825e-03 9.433511e-03 1.566769e-02 0.016837127 2.394863e-02
+#> w(1)  5.792817e-246 1.609660e-47 5.681006e-24 0.004896350 5.688615e-10
+#> w(2)   3.832929e-01 4.712978e-01 5.044180e-01 0.505564602 5.469908e-01
+#> w(3)   2.810766e-01 4.377852e-01 4.878845e-01 0.472816129 5.176217e-01
+#> w(4)  3.377149e-233 7.568573e-36 1.558597e-17 0.008538443 6.320944e-07
+#> w(5)   0.000000e+00 6.985784e-49 2.098086e-18 0.008184476 6.511439e-07
+#>            97.5%
+#> Gplus 5.00000000
+#> e0    0.03898613
+#> w(1)  0.08672688
+#> w(2)  0.61386913
+#> w(3)  0.57230565
+#> w(4)  0.08557239
+#> w(5)  0.12253819
+#> 
+print(s, which = "latent_param")
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Latent variables:
+#>        Observation  2.5% 25% 50% Mean  75% 97.5%
+#> U[1]           i=1 3.000   3   3 3.00 3.00 3.000
+#> U[2]           i=2 3.000   3   3 3.08 3.00 5.000
+#> U[3]           i=3 2.000   2   2 2.00 2.00 2.000
+#> U[4]           i=4 2.000   2   2 2.09 2.00 3.575
+#> U[5]           i=5 2.000   2   2 2.00 2.00 2.000
+#> U[6]           i=6 1.950   3   3 2.94 3.00 3.000
+#> U[7]           i=7 3.000   3   3 3.02 3.00 3.000
+#> U[8]           i=8 2.000   2   2 2.03 2.00 2.000
+#> U[9]           i=9 2.000   2   2 2.04 2.00 2.000
+#> U[10]         i=10 2.000   3   3 2.95 3.00 3.000
+#> U[11]         i=11 2.000   3   3 2.97 3.00 3.000
+#> U[12]         i=12 2.000   2   2 2.00 2.00 2.000
+#> U[13]         i=13 3.000   3   3 3.04 3.00 3.000
+#> U[14]         i=14 1.950   3   3 2.94 3.00 3.000
+#> U[15]         i=15 2.000   2   2 2.02 2.00 2.000
+#> U[16]         i=16 3.000   3   3 3.00 3.00 3.000
+#> U[17]         i=17 3.000   3   3 2.99 3.00 3.000
+#> U[18]         i=18 2.000   2   2 2.00 2.00 2.000
+#> U[19]         i=19 3.000   3   3 3.02 3.00 3.000
+#> U[20]         i=20 2.000   2   2 2.05 2.00 2.000
+#> U[21]         i=21 2.000   3   3 2.86 3.00 5.000
+#> U[22]         i=22 2.000   2   2 2.08 2.00 4.000
+#> U[23]         i=23 3.000   3   3 2.96 3.00 3.000
+#> U[24]         i=24 2.000   2   2 2.03 2.00 2.000
+#> U[25]         i=25 3.000   3   3 2.98 3.00 3.000
+#> U[26]         i=26 2.000   2   2 2.03 2.00 2.000
+#> U[27]         i=27 2.000   2   2 1.99 2.00 2.000
+#> U[28]         i=28 2.000   2   2 2.02 2.00 2.000
+#> U[29]         i=29 2.000   2   2 2.07 2.00 3.000
+#> U[30]         i=30 3.000   3   3 3.00 3.00 3.000
+#> U[31]         i=31 2.000   2   2 1.99 2.00 2.000
+#> U[32]         i=32 3.000   3   3 3.00 3.00 3.000
+#> U[33]         i=33 3.000   3   3 3.04 3.00 3.000
+#> U[34]         i=34 3.000   3   3 3.03 3.00 3.000
+#> U[35]         i=35 3.000   3   3 2.99 3.00 3.000
+#> U[36]         i=36 3.000   3   3 2.98 3.00 3.000
+#> U[37]         i=37 3.000   3   3 3.02 3.00 3.000
+#> U[38]         i=38 3.000   3   3 2.98 3.00 3.000
+#> U[39]         i=39 2.000   2   2 2.00 2.00 2.000
+#> U[40]         i=40 3.000   3   3 3.03 3.00 3.000
+#> U[41]         i=41 2.000   2   2 1.99 2.00 2.000
+#> U[42]         i=42 3.000   3   3 3.08 3.00 4.525
+#> U[43]         i=43 3.000   3   3 3.00 3.00 3.000
+#> U[44]         i=44 2.000   2   2 2.06 2.00 3.050
+#> U[45]         i=45 2.000   2   2 2.03 2.00 2.000
+#> U[46]         i=46 3.000   3   3 2.99 3.00 3.000
+#> U[47]         i=47 2.000   2   2 2.12 2.00 4.000
+#> U[48]         i=48 2.000   2   2 2.01 2.00 2.000
+#> U[49]         i=49 2.000   2   2 2.25 2.25 3.000
+#> U[50]         i=50 2.475   3   3 2.97 3.00 3.000
+#> U[51]         i=51 3.000   3   3 3.06 3.00 4.050
+#> U[52]         i=52 3.000   3   3 3.01 3.00 3.000
+#> U[53]         i=53 2.000   2   2 2.00 2.00 2.000
+#> U[54]         i=54 3.000   3   3 3.00 3.00 3.000
+#> U[55]         i=55 2.000   2   2 2.00 2.00 2.000
+#> U[56]         i=56 3.000   3   3 3.04 3.00 3.000
+#> U[57]         i=57 2.000   2   2 2.00 2.00 2.000
+#> U[58]         i=58 2.000   2   2 2.03 2.00 2.000
+#> U[59]         i=59 2.000   2   2 1.99 2.00 2.000
+#> U[60]         i=60 2.000   2   2 2.00 2.00 2.000
+#> U[61]         i=61 3.000   3   3 3.00 3.00 3.000
+#> U[62]         i=62 3.000   3   3 3.02 3.00 3.000
+#> U[63]         i=63 2.000   2   2 2.00 2.00 2.000
+#> U[64]         i=64 2.000   2   2 2.00 2.00 2.000
+#> U[65]         i=65 2.000   2   2 1.99 2.00 2.000
+#> U[66]         i=66 2.000   2   2 2.00 2.00 2.000
+#> U[67]         i=67 2.000   2   2 2.02 2.00 2.000
+#> U[68]         i=68 3.000   3   3 3.01 3.00 3.000
+#> U[69]         i=69 2.000   2   2 2.00 2.00 2.000
+#> U[70]         i=70 3.000   3   3 2.97 3.00 3.000
+#> U[71]         i=71 2.000   2   2 2.30 3.00 3.000
+#> U[72]         i=72 1.000   3   3 2.92 3.00 3.000
+#> U[73]         i=73 2.000   3   3 2.87 3.00 3.000
+#> U[74]         i=74 2.000   2   2 2.04 2.00 2.000
+#> U[75]         i=75 2.000   3   3 2.97 3.00 4.050
+#> U[76]         i=76 2.000   2   2 2.14 2.00 4.000
+#> U[77]         i=77 3.000   3   3 3.03 3.00 3.000
+#> U[78]         i=78 3.000   3   3 3.00 3.00 3.000
+#> U[79]         i=79 3.000   3   3 3.00 3.00 3.000
+#> U[80]         i=80 3.000   3   3 3.00 3.00 3.000
+#> U[81]         i=81 2.000   2   2 2.00 2.00 2.000
+#> U[82]         i=82 2.000   2   2 2.34 3.00 3.000
+#> U[83]         i=83 2.000   2   2 2.02 2.00 2.000
+#> U[84]         i=84 3.000   3   3 3.00 3.00 3.000
+#> U[85]         i=85 3.000   3   3 3.00 3.00 3.000
+#> U[86]         i=86 3.000   3   3 3.00 3.00 3.000
+#> U[87]         i=87 2.000   2   2 2.02 2.00 2.000
+#> U[88]         i=88 2.000   2   2 2.12 2.00 4.000
+#> U[89]         i=89 2.000   2   2 2.03 2.00 2.000
+#> U[90]         i=90 2.000   2   2 2.02 2.00 2.000
+#> U[91]         i=91 3.000   3   3 3.00 3.00 3.000
+#> U[92]         i=92 2.000   2   2 1.99 2.00 2.000
+#> U[93]         i=93 2.000   2   2 2.20 2.00 4.000
+#> U[94]         i=94 2.000   2   2 2.07 2.00 3.050
+#> U[95]         i=95 3.000   3   3 3.02 3.00 3.000
+#> U[96]         i=96 2.000   2   2 2.01 2.00 2.000
+#> U[97]         i=97 2.000   2   2 2.04 2.00 2.000
+#> U[98]         i=98 2.000   2   2 2.00 2.00 2.000
+#> U[99]         i=99 3.000   3   3 3.00 3.00 3.000
+#> U[100]       i=100 2.000   2   2 2.00 2.00 2.000
+#> 
+print(s, which = "group_param")
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Parameters specific for cluster g=2:
+#>                            Effect       2.5%          25%         50%
+#> beta_num_ynum(2)[1]   (Intercept) -2.0700377 -1.864497514 -1.76229817
+#> beta_num_ynum(2)[2]             x  0.9406859  1.211177447  1.34512118
+#> prec_num_ynum(2)                   1.1973844  1.670009433  1.80388486
+#> sd_num_ynum(2)                     0.6758524  0.714682908  0.74455307
+#> var_num_ynum(2)                    0.4567768  0.510771691  0.55435932
+#> beta_poi_ypoi(2)[1]   (Intercept) -0.7826338 -0.570047975 -0.49480046
+#> beta_poi_ypoi(2)[2]             x  0.4150012  1.258175101  1.45556744
+#> beta_bin_ybin(2)[1]   (Intercept) -2.2080307 -1.662979287 -1.02469023
+#> beta_bin_ybin(2)[2]             x  0.8603329  2.487840414  2.88128284
+#> beta_ord_yord(2)[1]             x -0.9677725 -0.348016429 -0.06003301
+#> c_ord_yord(2)[1]                  -2.2049406 -1.767023185 -1.57906226
+#> c_ord_yord(2)[2]                  -1.4467956 -0.813068445 -0.64276134
+#> c_ord_yord(2)[3]                  -0.3915656  0.030739742  0.22766059
+#> c_ord_yord(2)[4]                   0.7422784  0.948515921  1.15099145
+#> pi_ord_yord(2)[1]                  0.0993077  0.145913282  0.17092911
+#> pi_ord_yord(2)[2]                  0.0896990  0.140982160  0.17301449
+#> pi_ord_yord(2)[3]                  0.1506976  0.188593005  0.20702134
+#> pi_ord_yord(2)[4]                  0.1475851  0.179363736  0.19735072
+#> pi_ord_yord(2)[5]                  0.1721514  0.205844101  0.24030807
+#> beta_cat_ycat(2)[1,1] (Intercept) -0.7089034 -0.307945810 -0.01929057
+#> beta_cat_ycat(2)[1,2] (Intercept) -0.9170859 -0.009332365  0.15814976
+#> beta_cat_ycat(2)[1,3] (Intercept) -1.1977821 -0.567679470 -0.12492811
+#> beta_cat_ycat(2)[2,1]           x -1.6206843 -0.301170290  0.49306886
+#> beta_cat_ycat(2)[2,2]           x -1.0761309 -0.146708637  0.41455108
+#> beta_cat_ycat(2)[2,3]           x -1.2157077  0.151636999  0.82651369
+#>                               Mean        75%       97.5%
+#> beta_num_ynum(2)[1]   -1.757971148 -1.6714548 -1.49728135
+#> beta_num_ynum(2)[2]    1.333760870  1.5245211  1.74052854
+#> prec_num_ynum(2)       1.771517809  1.9578224  2.18926096
+#> sd_num_ynum(2)         0.765803230  0.7738211  0.91406351
+#> var_num_ynum(2)        0.600941344  0.5987990  0.83563139
+#> beta_poi_ypoi(2)[1]   -0.482713189 -0.4106263 -0.01890735
+#> beta_poi_ypoi(2)[2]    1.375509946  1.5439203  1.80704096
+#> beta_bin_ybin(2)[1]   -1.025640975 -0.6131201  0.28257550
+#> beta_bin_ybin(2)[2]    2.880443544  3.4887325  4.45392217
+#> beta_ord_yord(2)[1]   -0.094734568  0.1195629  0.77750566
+#> c_ord_yord(2)[1]      -1.617329606 -1.4479101 -1.07407943
+#> c_ord_yord(2)[2]      -0.687640712 -0.4678651 -0.20439671
+#> c_ord_yord(2)[3]       0.193026956  0.3887072  0.66015714
+#> c_ord_yord(2)[4]       1.154108365  1.3501607  1.57064528
+#> pi_ord_yord(2)[1]      0.168972746  0.1903239  0.25473289
+#> pi_ord_yord(2)[2]      0.169468988  0.1965663  0.23706862
+#> pi_ord_yord(2)[3]      0.208889105  0.2270620  0.27162145
+#> pi_ord_yord(2)[4]      0.210131910  0.2430123  0.30153841
+#> pi_ord_yord(2)[5]      0.242537252  0.2791838  0.32251577
+#> beta_cat_ycat(2)[1,1]  0.001923335  0.2593018  0.87631328
+#> beta_cat_ycat(2)[1,2]  0.158454787  0.4664024  1.09778472
+#> beta_cat_ycat(2)[1,3] -0.066664636  0.2070705  1.36412686
+#> beta_cat_ycat(2)[2,1]  0.255481596  1.0040242  1.60442355
+#> beta_cat_ycat(2)[2,2]  0.330504515  0.7254718  1.99215615
+#> beta_cat_ycat(2)[2,3]  0.805724495  1.6108902  2.21168770
+#> 
+#> Parameters specific for cluster g=3:
+#>                            Effect        2.5%         25%         50%
+#> beta_num_ynum(3)[1]   (Intercept)  1.10490907  1.42846085  1.57180012
+#> beta_num_ynum(3)[2]             x -1.98282403 -1.70156351 -1.55562439
+#> prec_num_ynum(3)                   0.59584787  0.81123288  0.88201435
+#> sd_num_ynum(3)                     0.96825641  1.02195739  1.06478573
+#> var_num_ynum(3)                    0.93752071  1.04439709  1.13376875
+#> beta_poi_ypoi(3)[1]   (Intercept)  0.94118033  1.22588167  1.30557152
+#> beta_poi_ypoi(3)[2]             x -2.31972787 -2.23669066 -2.01421781
+#> beta_bin_ybin(3)[1]   (Intercept) -0.56375227 -0.08830498  0.26248959
+#> beta_bin_ybin(3)[2]             x  1.94207093  3.35388664  4.40449493
+#> beta_ord_yord(3)[1]             x -1.49890116 -0.65697403  0.04009778
+#> c_ord_yord(3)[1]                  -3.26263407 -2.67141926 -2.49270849
+#> c_ord_yord(3)[2]                  -2.37847009 -1.72972779 -1.54994949
+#> c_ord_yord(3)[3]                  -1.54774667 -1.04722881 -0.79115033
+#> c_ord_yord(3)[4]                  -0.24707739  0.10118116  0.41791150
+#> pi_ord_yord(3)[1]                  0.03687554  0.06468192  0.07637093
+#> pi_ord_yord(3)[2]                  0.03820465  0.06218489  0.09858922
+#> pi_ord_yord(3)[3]                  0.07861036  0.10514030  0.12477308
+#> pi_ord_yord(3)[4]                  0.22836204  0.25108881  0.28523530
+#> pi_ord_yord(3)[5]                  0.29388419  0.34718918  0.39701662
+#> beta_cat_ycat(3)[1,1] (Intercept) -2.10299470 -1.60251989 -1.37429863
+#> beta_cat_ycat(3)[1,2] (Intercept) -2.74637176 -1.58333556 -0.81217294
+#> beta_cat_ycat(3)[1,3] (Intercept) -0.71267755 -0.34655213  0.23619563
+#> beta_cat_ycat(3)[2,1]           x  1.02467634  1.26348363  1.84432573
+#> beta_cat_ycat(3)[2,2]           x -3.04514154 -1.20140422 -0.56718372
+#> beta_cat_ycat(3)[2,3]           x -1.91557961 -1.13079727 -0.74906903
+#>                              Mean         75%      97.5%
+#> beta_num_ynum(3)[1]    1.56148678  1.67542204  1.9853758
+#> beta_num_ynum(3)[2]   -1.50990854 -1.36190332 -0.8165585
+#> prec_num_ynum(3)       0.87618559  0.95749089  1.0666442
+#> sd_num_ynum(3)         1.07650365  1.11026654  1.2956495
+#> var_num_ynum(3)        1.16540856  1.23269182  1.6788497
+#> beta_poi_ypoi(3)[1]    1.28554962  1.37466794  1.4511077
+#> beta_poi_ypoi(3)[2]   -1.92722469 -1.75252899 -1.0632479
+#> beta_bin_ybin(3)[1]    0.37892624  0.78995207  1.6706460
+#> beta_bin_ybin(3)[2]    4.23756021  4.94978914  6.4147543
+#> beta_ord_yord(3)[1]   -0.15142856  0.36444092  0.8543274
+#> c_ord_yord(3)[1]      -2.47245406 -2.22841473 -1.7939975
+#> c_ord_yord(3)[2]      -1.57316775 -1.29882156 -0.9187280
+#> c_ord_yord(3)[3]      -0.83137573 -0.56861561 -0.2870344
+#> c_ord_yord(3)[4]       0.35441262  0.63142530  0.8766203
+#> pi_ord_yord(3)[1]      0.08260902  0.09722867  0.1425833
+#> pi_ord_yord(3)[2]      0.09635688  0.12671149  0.1540567
+#> pi_ord_yord(3)[3]      0.12991639  0.15893016  0.1945444
+#> pi_ord_yord(3)[4]      0.27658250  0.29469235  0.3198091
+#> pi_ord_yord(3)[5]      0.41453522  0.47472662  0.5614569
+#> beta_cat_ycat(3)[1,1] -1.29879235 -1.03041347 -0.3868920
+#> beta_cat_ycat(3)[1,2] -0.97608911 -0.24665980  0.7266000
+#> beta_cat_ycat(3)[1,3]  0.19725968  0.61827342  1.3765659
+#> beta_cat_ycat(3)[2,1]  1.92523731  2.32118903  3.9309458
+#> beta_cat_ycat(3)[2,2] -0.25301269  1.01157018  1.6277163
+#> beta_cat_ycat(3)[2,3] -0.62102756 -0.07114256  1.0540814
+#> 
+
+# Restricting the rows by pattern
+print(s, which = "group_param", pattern = "^beta_num")
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Parameters specific for cluster g=2:
+#>                          Effect       2.5%       25%       50%      Mean
+#> beta_num_ynum(2)[1] (Intercept) -2.0700377 -1.864498 -1.762298 -1.757971
+#> beta_num_ynum(2)[2]           x  0.9406859  1.211177  1.345121  1.333761
+#>                           75%     97.5%
+#> beta_num_ynum(2)[1] -1.671455 -1.497281
+#> beta_num_ynum(2)[2]  1.524521  1.740529
+#> 
+#> Parameters specific for cluster g=3:
+#>                          Effect      2.5%       25%       50%      Mean
+#> beta_num_ynum(3)[1] (Intercept)  1.104909  1.428461  1.571800  1.561487
+#> beta_num_ynum(3)[2]           x -1.982824 -1.701564 -1.555624 -1.509909
+#>                           75%      97.5%
+#> beta_num_ynum(3)[1]  1.675422  1.9853758
+#> beta_num_ynum(3)[2] -1.361903 -0.8165585
+#> 
+print(s, which = "group_param", pattern = "num")
+#> -----------------------------------------------------------------------
+#> Chain 1
+#> -----------------------------------------------------------------------
+#> 
+#> Summary of the parameter estimates
+#> -----------------------------------------------------------------------
+#> Parameters specific for cluster g=2:
+#>                          Effect       2.5%        25%        50%       Mean
+#> beta_num_ynum(2)[1] (Intercept) -2.0700377 -1.8644975 -1.7622982 -1.7579711
+#> beta_num_ynum(2)[2]           x  0.9406859  1.2111774  1.3451212  1.3337609
+#> prec_num_ynum(2)                 1.1973844  1.6700094  1.8038849  1.7715178
+#> sd_num_ynum(2)                   0.6758524  0.7146829  0.7445531  0.7658032
+#> var_num_ynum(2)                  0.4567768  0.5107717  0.5543593  0.6009413
+#>                            75%      97.5%
+#> beta_num_ynum(2)[1] -1.6714548 -1.4972814
+#> beta_num_ynum(2)[2]  1.5245211  1.7405285
+#> prec_num_ynum(2)     1.9578224  2.1892610
+#> sd_num_ynum(2)       0.7738211  0.9140635
+#> var_num_ynum(2)      0.5987990  0.8356314
+#> 
+#> Parameters specific for cluster g=3:
+#>                          Effect       2.5%        25%        50%       Mean
+#> beta_num_ynum(3)[1] (Intercept)  1.1049091  1.4284608  1.5718001  1.5614868
+#> beta_num_ynum(3)[2]           x -1.9828240 -1.7015635 -1.5556244 -1.5099085
+#> prec_num_ynum(3)                 0.5958479  0.8112329  0.8820144  0.8761856
+#> sd_num_ynum(3)                   0.9682564  1.0219574  1.0647857  1.0765037
+#> var_num_ynum(3)                  0.9375207  1.0443971  1.1337687  1.1654086
+#>                            75%      97.5%
+#> beta_num_ynum(3)[1]  1.6754220  1.9853758
+#> beta_num_ynum(3)[2] -1.3619033 -0.8165585
+#> prec_num_ynum(3)     0.9574909  1.0666442
+#> sd_num_ynum(3)       1.1102665  1.2956495
+#> var_num_ynum(3)      1.2326918  1.6788497
+#> 
+# }
+```
