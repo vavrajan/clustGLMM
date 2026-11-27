@@ -273,15 +273,15 @@ formula
 #> $ynum
 #> $ynum$fixed
 #> ~f
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ynum$group
 #> ~x
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ynum$random
 #> ~1
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ynum$offset
 #> [1] ""
@@ -290,15 +290,15 @@ formula
 #> $ypoi
 #> $ypoi$fixed
 #> ~f
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ypoi$group
 #> ~x
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ypoi$random
 #> ~1
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ypoi$offset
 #> [1] ""
@@ -307,15 +307,15 @@ formula
 #> $ybin
 #> $ybin$fixed
 #> ~f
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ybin$group
 #> ~x
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ybin$random
 #> ~1
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ybin$offset
 #> [1] ""
@@ -324,15 +324,15 @@ formula
 #> $yord
 #> $yord$fixed
 #> ~f
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $yord$group
 #> ~x
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $yord$random
 #> ~1
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $yord$offset
 #> [1] ""
@@ -341,15 +341,15 @@ formula
 #> $ycat
 #> $ycat$fixed
 #> ~f
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ycat$group
 #> ~x
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ycat$random
 #> ~1
-#> <environment: 0x5e237dbdf0a0>
+#> <environment: 0x623c2b4ceff8>
 #> 
 #> $ycat$offset
 #> [1] ""
@@ -683,11 +683,11 @@ predict(mcmc, newdata[1:5,], y="ycat", type="link", what="fg")
 #> , , k=1
 #> 
 #>           (2)       (3)
-#> 1 0.001923336 -1.298792
-#> 2 0.004503958 -1.279346
-#> 3 0.007084580 -1.259899
-#> 4 0.009665203 -1.240452
-#> 5 0.012245825 -1.221005
+#> 1 0.001923323 -1.298792
+#> 2 0.004503945 -1.279346
+#> 3 0.007084567 -1.259899
+#> 4 0.009665190 -1.240452
+#> 5 0.012245812 -1.221005
 #> 
 #> , , k=2
 #> 
@@ -701,7 +701,7 @@ predict(mcmc, newdata[1:5,], y="ycat", type="link", what="fg")
 #> , , k=3
 #> 
 #>           (2)       (3)
-#> 1 -0.06666464 0.1972597
+#> 1 -0.06666463 0.1972597
 #> 2 -0.05852600 0.1909867
 #> 3 -0.05038737 0.1847137
 #> 4 -0.04224874 0.1784407
@@ -716,7 +716,7 @@ predict(mcmc, newdata[1:5,], y="ycat", type="link", what="fg")
 #> 2 -0.6975979 -2.072510
 #> 3 -0.6851574 -2.042026
 #> 4 -0.6727169 -2.011541
-#> 5 -0.6602763 -1.981057
+#> 5 -0.6602764 -1.981057
 #> 
 #> , , k=2
 #> 
@@ -724,7 +724,7 @@ predict(mcmc, newdata[1:5,], y="ycat", type="link", what="fg")
 #> 1 -0.9170859 -2.746372
 #> 2 -0.9037124 -2.732300
 #> 3 -0.8903390 -2.718229
-#> 4 -0.8769655 -2.704158
+#> 4 -0.8769656 -2.704158
 #> 5 -0.8635921 -2.690087
 #> 
 #> , , k=3
