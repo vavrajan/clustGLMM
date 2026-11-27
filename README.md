@@ -144,10 +144,10 @@ print(sum_mcmc, which = "group_param", clusters = 1, pattern = "ntrips")
     ## -----------------------------------------------------------------------
     ## Parameters specific for cluster g=1:
     ##                            Effect        2.5%         25%         50%       Mean
-    ## beta_poi_ntrips(1)[1] (Intercept) -1.31467040 -1.18195652 -1.13156033 -1.1368997
+    ## beta_poi_ntrips(1)[1] (Intercept) -1.31467038 -1.18195651 -1.13156031 -1.1368997
     ## beta_poi_ntrips(1)[2]         age  0.07480618  0.07715431  0.07854806  0.0785877
     ##                               75%       97.5%
-    ## beta_poi_ntrips(1)[1] -1.07528403 -0.98680942
+    ## beta_poi_ntrips(1)[1] -1.07528402 -0.98680941
     ## beta_poi_ntrips(1)[2]  0.07982884  0.08324393
 
 The clustering solution can also be inspected:
