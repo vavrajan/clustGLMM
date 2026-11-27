@@ -179,15 +179,15 @@ formula
 #> $ynum
 #> $ynum$fixed
 #> ~f
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ynum$group
 #> ~x
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ynum$random
 #> ~1
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ynum$offset
 #> [1] ""
@@ -196,15 +196,15 @@ formula
 #> $ypoi
 #> $ypoi$fixed
 #> ~f
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ypoi$group
 #> ~x
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ypoi$random
 #> ~1
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ypoi$offset
 #> [1] ""
@@ -213,15 +213,15 @@ formula
 #> $ybin
 #> $ybin$fixed
 #> ~f
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ybin$group
 #> ~x
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ybin$random
 #> ~1
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ybin$offset
 #> [1] ""
@@ -230,15 +230,15 @@ formula
 #> $yord
 #> $yord$fixed
 #> ~f
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $yord$group
 #> ~x
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $yord$random
 #> ~1
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $yord$offset
 #> [1] ""
@@ -247,15 +247,15 @@ formula
 #> $ycat
 #> $ycat$fixed
 #> ~f
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ycat$group
 #> ~x
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ycat$random
 #> ~1
-#> <environment: 0x5df5555eac38>
+#> <environment: 0x5e237f105068>
 #> 
 #> $ycat$offset
 #> [1] ""
