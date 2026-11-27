@@ -93,7 +93,7 @@ outcomes for `clustGLMM` analysis:
 
 ```{r family}
 family <- c(lbili = "gaussian", 
-            lchol = "gaussian", 
+            # lchol = "gaussian", 
             platelet = "poisson", 
             spiders = "bernoulli", 
             hepato = "bernoulli", 
@@ -139,7 +139,7 @@ Non-effects parameters of the model may also be set to be
 group-specific. The adjusted default setting is provided by
 
 ```{r varying}
-(varying <- default_varying(prec_num = TRUE, InvSigma = FALSE))
+(varying <- default_varying(prec_num = TRUE, InvSigma = FALSE, c_ord = TRUE))
 ```
 
 Only precision of the errors of numeric outcomes and ordered
@@ -182,7 +182,7 @@ for initial 1000 iterations.
 ```{r clustGLMM-burnin, message = FALSE}
 set.seed(123456789)
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-                         G = 2, nchains = 2, iter = 1000, 
+                         G = 2, nchains = 4, iter = 1000, 
                          varying = varying, save = save, tuning = tuning, param = param,
                          standardize = TRUE)
 ```
@@ -195,7 +195,7 @@ plot(mcmc_burnin)
 ```
 Apparently the number of patients within each cluster stabilizes in time.
 <!-- Apparently the number of non-empty groups is decreasing in time.  -->
-Moreover, the estimated clusters seems to differ between chains.
+<!-- Moreover, the estimated clusters seems to differ between chains. -->
 ```{r plot-mcmc-burnin-Gplus, eval = FALSE, echo = FALSE}
 plot(mcmc_burnin, "Gplus")
 ```
@@ -219,10 +219,13 @@ We continue to sample from initial values set to `mcmc_burnin$last`:
 
 ```{r clustGLMM-burnin2, message = FALSE}
 mcmc_burnin <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-                         G = 2, nchains = 2, iter = 1000, 
+                         G = 2, nchains = 4, iter = 1000, 
                          inits = mcmc_burnin$last,
                          varying = varying, save = save, tuning = tuning, param = param,
                          standardize = TRUE)
+# inits <- mcmc_burnin$inits
+# last <- mcmc_burnin$last
+# save(inits, last, file = file.path(getwd(), "mcmc_inits_last.RData"))
 ```
 
 We plot the same traceplots for the cluster occupancy numbers to detect
@@ -235,8 +238,9 @@ potential changes, which actually occur from time to time:
 plot(mcmc_burnin)
 ```
 ```{r plot-mcmc-burnin-clusters}
-plot(mcmc_burnin, "beta_num", "clusters_kerneldensity", chain = 1)
-plot(mcmc_burnin, "beta_num", "clusters_kerneldensity", chain = 2)
+for(ch in mcmc_burnin$chains){
+  plot(mcmc_burnin, "beta_num", "clusters_kerneldensity", chain = ch)
+}
 ```
 
 Now we sample next $10\,000$ iterations.
@@ -244,16 +248,20 @@ Now we sample next $10\,000$ iterations.
 ```{r clustGLMM}
 set.seed(42)
 tuning$integer$times_proposal <- 10
-mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-                  G = 2, nchains = 2, iter = 10000, 
-                  inits = mcmc_burnin$last,
-                  varying = varying, save = save, tuning = tuning, param = param, 
-                  standardize = TRUE)
 # mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
-#                   G = 2, nchains = 2, iter = 10000, 
-#                   inits = mcmc$last,
+#                   G = 2, nchains = 4, iter = 10000, 
+#                   inits = mcmc_burnin$last,
 #                   varying = varying, save = save, tuning = tuning, param = param, 
 #                   standardize = TRUE)
+load(file.path("mcmc_inits_last.RData"))
+mcmc <- clustGLMM(formula = formula, id = "id", family = family, data = data,
+                  G = 2, nchains = 4, iter = 10000,
+                  inits = last,
+                  varying = varying, save = save, tuning = tuning, param = param,
+                  standardize = TRUE)
+inits <- mcmc$inits
+last <- mcmc$last
+save(inits, last, file = file.path(getwd(), "mcmc_inits_last.RData"))
 # mcmc <- permute_cluster_labels(mcmc, perm = list(1:2, 2:1))
 ```
 
@@ -275,11 +283,12 @@ plot(mcmc, "c_ord")
 plot(mcmc, "sdSigma")
 plot(mcmc, "corSigma")
 plot(mcmc, "w")
+plot(mcmc, "loglik")
 ```
 
 ```{r plot-mcmc-ACF}
-plot(mcmc, "beta_num", which = "ACF")
-plot(mcmc, "beta_num_fix", which = "ACF")
+plot(mcmc, "beta_num", which = "ACF", thin = 10)
+plot(mcmc, "beta_num_fix", which = "ACF", thin = 10)
 plot(mcmc, "prec_num", which = "ACF")
 plot(mcmc, "beta_poi", which = "ACF")
 plot(mcmc, "beta_poi_fix", which = "ACF")
@@ -316,27 +325,209 @@ plot(mcmc, "c_ord", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "sdSigma", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "corSigma", "clusters_kerneldensity", chain = ch)
 plot(mcmc, "w", "clusters_kerneldensity", chain = ch)
+
+for(ch in mcmc$chains){
+  plot(mcmc, "beta_num", "clusters_kerneldensity", chain = ch)
+}
+for(ch in mcmc$chains){
+  plot(mcmc, "beta_poi", "clusters_kerneldensity", chain = ch)
+}
+for(ch in mcmc$chains){
+  plot(mcmc, "beta_bin", "clusters_kerneldensity", chain = ch)
+}
+for(ch in mcmc$chains){
+  plot(mcmc, "beta_ord", "clusters_kerneldensity", chain = ch)
+}
+for(ch in mcmc$chains){
+  plot(mcmc, "c_ord", "clusters_kerneldensity", chain = ch)
+}
+
 ```
 
-```{r post-processing}
+
+
+```{r summary-mcmc-group}
+sum_mcmc <- summary(mcmc, burnin = 0, thin = 10)
+print(sum_mcmc, which = "accept")
+print(sum_mcmc, which = "latent_param", pattern = "^naY")
+print(sum_mcmc, which = "inv_param", pattern = "^sdSigma", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "inv_param", pattern = "^corSigma", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "inv_param", pattern = "^beta", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "inv_param", pattern = "^beta.*\\[1\\]$", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "inv_param", pattern = "^beta.*\\[2\\]$", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "inv_param", pattern = "^beta.*\\[3\\]$", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "group_param")
+print(sum_mcmc, which = "group_param", pattern = "^beta_num", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "group_param", pattern = "^beta_poi", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "group_param", pattern = "^beta_bin", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "group_param", pattern = "^beta_ord", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "group_param", pattern = "^c_ord", chains = 1:mcmc$nchains)
+print(sum_mcmc, which = "group_param", pattern = "^pi_ord", chains = 1:mcmc$nchains)
+```
+```{r mcmc-naY-platelet, echo=TRUE, results=TRUE}
+par(mar = c(4, 4, 0.5, 0.5), mfrow = c(3, 5))
+for (j in seq_len(sum(is.na(data$platelet)))) {
+  plot_kerneldensity(mcmc, what = "naY", yspec = "platelet", dimspec = j, labcex = 0.8)
+  abline(v = sum_mcmc$coda_summary[[1]]$quantiles[paste0("naY_platelet[", j, "]"),
+         c("2.5%", "97.5%")], col = "black", lty = 3)
+}
+```
+
+```{r post-processing, eval = FALSE}
 mcmc_pp <- post_processing(mcmc)
 ```
 
 ```{r Uclustering}
-for(ch in 1:2){
+for(ch in mcmc$chains){
   data[, paste0("Uclustering", ch)] <- mcmc$clustering[as.character(data$id), ch]
 }
 ```
 
-```{r plot-pbc-vs-time-clustered-ch-1, fig.height = 6, fig.width = 8}
-par(mfrow = c(1, 3), mar = c(4, 4, 1, 0.5))
-plot_num_vs_x_grouped(data, y = "lbili", x = "time", group = "Uclustering1", id = "id")
-plot_num_vs_x_grouped(data, y = "platelet", x = "time", group = "Uclustering1", id = "id")
-plot_cat_vs_x_grouped(data, y = "spiders", x = "time", group = "Uclustering1", main = "spiders")
+```{r plot-pbc-vs-time-clustered-ch, fig.height = 6, fig.width = 8}
+for(ch in mcmc$chains){
+  par(mfrow = c(2, 3), mar = c(4, 4, 1, 0.5))
+  layout(matrix(c(1,1,1,2,2,2,
+                  3,3,4,4,5,5), nrow = 2, byrow = T))
+  plot_num_vs_x_grouped(data, y = "lbili", x = "month", group = paste0("Uclustering",ch), id = "id")
+  plot_num_vs_x_grouped(data, y = "platelet", x = "month", group = paste0("Uclustering",ch), id = "id")
+  plot_cat_vs_x_grouped(data, y = "spiders", x = "month", group = paste0("Uclustering",ch), main = "spiders")
+  plot_cat_vs_x_grouped(data, y = "hepato", x = "month", group = paste0("Uclustering",ch), main = "hepato")
+  plot_cat_vs_x_grouped(data, y = "stage", x = "month", group = paste0("Uclustering",ch), main = "stage")
+}
 ```
-```{r plot-pbc-vs-time-clustered-ch-2, fig.height = 6, fig.width = 8}
-par(mfrow = c(1, 3), mar = c(4, 4, 1, 0.5))
-plot_num_vs_x_grouped(data, y = "lbili", x = "time", group = "Uclustering2", id = "id")
-plot_num_vs_x_grouped(data, y = "platelet", x = "time", group = "Uclustering2", id = "id")
-plot_cat_vs_x_grouped(data, y = "spiders", x = "time", group = "Uclustering2", main = "spiders")
+```{r}
+newdata <- list()
+for(s in c("m", "f")){
+  newdata[[s]] <- list()
+  for(t in 0:1){
+    newdata[[s]][[as.character(t)]] <- data.frame(month = seq(0, 30, by = 0.2), 
+                                    sex = factor(s, levels = c("m", "f"), labels = c("m", "f")),
+                                    trt = t,
+                                    age = median(data$age[!duplicated(data$id)]))
+  }
+}
+# newdata <- expand.grid(month = seq(0, 30, by = 0.2), 
+#                        sex = factor(c("m", "f"), levels = c("m", "f"), labels = c("m", "f")),
+#                        trt = 0,
+#                        age = median(data$age[!duplicated(data$id)]))
+
+for(ch in mcmc$chains){
+  pred <- list()
+  for(y in c(mcmc$Nums, mcmc$Pois, mcmc$Bins, mcmc$Ords)){
+    for(s in c("m", "f")){
+      for(t in 0:1){
+        pred[[y]][[s]][[as.character(t)]] <- predict(mcmc, newdata[[s]][[as.character(t)]], 
+                                                     y = y, type = "link", chain = ch)
+      }
+    }
+  }
+  
+  par(mar = c(4, 4, 2.5, 0.5), mfrow = c(1, 3))
+  layout(matrix(c(1,1,1,2,2,2,
+                  3,3,4,4,5,5), nrow = 2, byrow = T))
+  COL <- colorspace::rainbow_hcl(mcmc$modeGplus[ch], c = 80, l = 50)
+  
+  for(y in c(mcmc$Nums, mcmc$Pois, mcmc$Bins, mcmc$Ords)){
+    plot(c(0,30), range(pred[[y]]), type = "n", main = y,
+          xlab = "age", ylab = expression(x * beta))
+    
+    for(s in c("m", "f")){
+      for(t in 0:1){
+        matplot(newdata[[s]][[as.character(t)]]$month, 
+                matrix(pred[[y]][[s]][[as.character(t)]]$fit, 
+                       nrow = nrow(newdata[[s]][[as.character(t)]]))[,1:mcmc$modeGplus[ch]], 
+                type = "l", col = COL, 
+                lwd = ifelse(t == 1, 2, 1), 
+                lty = ifelse(s == "m", 2, 3), 
+                add = TRUE)
+        # matplot(newdata[[s]][[as.character(t)]]$month, 
+        #         pred[[y]][[s]][[as.character(t)]]$lwr, 
+        #         type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+        # matplot(newdata[[s]][[as.character(t)]]$month, 
+        #         pred[[y]][[s]][[as.character(t)]]$upr, 
+        #         type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+        
+      }
+    }
+    legend("topleft", legend = 1:mcmc$modeGplus[1], title = "Cluster", 
+           col = COL, lty = 1, lwd = 2, bty = "n")
+    legend("top", legend = c("m", "f"), lty = 1:2, title = "sex", bty = "n")
+    legend("topright", legend = 0:1, lwd = 2:3, title = "trt", bty = "n")
+  }
+}
 ```
+
+```{r}
+newdata <- list()
+for(s in c("m", "f")){
+  newdata[[s]] <- list()
+  for(t in 0:1){
+    newdata[[s]][[as.character(t)]] <- data.frame(month = seq(0, 30, by = 0.2), 
+                                    sex = factor(s, levels = c("m", "f"), labels = c("m", "f")),
+                                    trt = t,
+                                    age = median(data$age[!duplicated(data$id)]))
+  }
+}
+
+plot_num_vs_x_grouped(data, y = y, x = "month", 
+                      group = paste0("Uclustering",ch), id = "id", add_lowess = FALSE)
+for(ch in mcmc$chains){
+  pred <- list()
+  for(y in c(mcmc$Nums, mcmc$Pois)){
+    for(s in c("m", "f")){
+      for(t in 0:1){
+        pred[[y]][[s]][[as.character(t)]] <- predict(mcmc, newdata[[s]][[as.character(t)]], 
+                                                     y = y, type = "response", chain = ch)
+      }
+    }
+  }
+  
+  par(mar = c(4, 4, 2.5, 0.5), mfrow = c(2, 4))
+  COL <- colorspace::rainbow_hcl(mcmc$modeGplus[ch], c = 80, l = 50)
+  
+  for(y in c(mcmc$Nums, mcmc$Pois)){
+    for(s in c("m", "f")){
+      for(t in 0:1){
+        plot_num_vs_x_grouped(data[data$sex==s & data$trt==t,], 
+                              y = y, x = "month",  
+                              group = paste0("Uclustering",ch), 
+                              id = "id", add_lowess = FALSE, 
+                              ylim = range(data[,y]))
+        matplot(newdata[[s]][[as.character(t)]]$month, 
+                pred[[y]][[s]][[as.character(t)]]$fit, 
+                type = "l", col = COL, lwd = 2, lty = 1, add = TRUE)
+        matplot(newdata[[s]][[as.character(t)]]$month,
+                pred[[y]][[s]][[as.character(t)]]$lwr,
+                type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+        matplot(newdata[[s]][[as.character(t)]]$month,
+                pred[[y]][[s]][[as.character(t)]]$upr,
+                type = "l", col = COL, lwd = 1, lty = 2, add = TRUE)
+        legend("topleft", title = paste0("sex = ", s, ", trt = ", t),
+               legend = NA, bty = "n")
+        
+      }
+    }
+  }
+}
+```
+
+
+
+
+```{r}
+table(mcmc$clustering[,1], mcmc$clustering[,2])
+```
+
+
+```{r}
+library(survival)
+for(ch in mcmc$chains){
+  fit <- survfit(as.formula(paste0("Surv((fu.days - 910) / 365.24*12, status == 2) ~ Uclustering", ch)),
+                 data = data[!duplicated(data$id),])
+  plot(fit, col = rainbow_hcl(2, c = 80, l = 70),
+       xlab = "Follow-up period after day 910 [months]",
+       ylab = "Survival probability")
+}
+```
+
+
