@@ -4,7 +4,7 @@ function(mcmc, scalar_samples,
          burnin = 0, thin = 1, lag.max = 30, iterations, chains,
          dolegend = FALSE, legend.pos = "topright",
          COL, move.width = 0.3, labcex = 1, whatLAB){
-  opar <- par(mar = c(3.5, 3.5, 0.8, 0.8))
+  opar <- par(mar = c(3.5, 3.5, 2, 0.8))
   on.exit(par(opar))
   
   if(missing(chains)){chains = mcmc$chains}

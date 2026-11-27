@@ -1,6 +1,7 @@
 plot_num_vs_x_grouped <- 
 function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
-         add_lowess = TRUE, alpha = 0.7, legend_placement = "topright"){
+         add_lowess = TRUE, alpha = 0.7, legend_placement = "topright",
+         xlim, ylim){
   stopifnot(is.data.frame(data))
   stopifnot(is.character(y), length(y) == 1)
   stopifnot(is.character(x), length(x) == 1)
@@ -52,9 +53,15 @@ function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
   }
   
   if(isxfactor){
+    if(missing(xlim)){
+      xlim <- 0.5+c(0,nlevels(data[,x]))
+    }
+    if(missing(ylim)){
+      ylim <- range(data[,y], na.rm=TRUE)
+    }
     plot(x = c(0,1), y = c(0,1), type = "n", 
-         xlim = 0.5+c(0,nlevels(data[,x])),
-         ylim = range(data[,y], na.rm=TRUE),
+         xlim = xlim,
+         ylim = ylim,
          xlab = x,
          ylab = y,
          xaxt = "n")
@@ -70,9 +77,15 @@ function(data, y = "y", x = "x", group, id = "i", units, xbreaks,
               at = 1:nlevels(data[,x]) + jitter[ig])
     }
   }else{
+    if(missing(xlim)){
+      xlim <- range(data[,x], na.rm=TRUE)
+    }
+    if(missing(ylim)){
+      ylim <- range(data[,y], na.rm=TRUE)
+    }
     plot(x = c(0,1), y = c(0,1), type = "n", 
-         xlim = range(data[,x], na.rm=TRUE),
-         ylim = range(data[,y], na.rm=TRUE),
+         xlim = xlim,
+         ylim = ylim,
          xlab = x,
          ylab = y)
     for(i in units){
